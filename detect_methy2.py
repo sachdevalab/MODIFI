@@ -301,7 +301,7 @@ class Contig():
         ## transform data to dataframe
         df = pd.DataFrame(data, columns=['pos', 'IPD', 'feature_type', 'strand', 'score'])
         ## output the dataframe to csv
-        df.to_csv(f'customized/bin_df3.csv', index=False)
+        df.to_csv(line_data, index=False)
         ## plot line plot with seaborn
     
     def plot_ipd_dist(self):
@@ -381,25 +381,13 @@ def extract_ipd_ratio(file_path):
             df.loc[df['strand'] == 0, 'tMean'].tolist(), df.loc[df['strand'] == 1, 'tMean'].tolist(),\
             df.loc[df['strand'] == 0, 'modelPrediction'].tolist(), df.loc[df['strand'] == 1, 'modelPrediction'].tolist()
 
-def extract_context(fasta):
-    ## load the fasta using biopython
-    from Bio import SeqIO
-    for record in SeqIO.parse(fasta, "fasta"):
-        print(record.id)
-        ## convert the sequence to string of number, 0 for A, 1 for C, 2 for G, 3 for T, 4 for N
-        seq = str(record.seq)
-        ## convert to capital
-        seq = seq.upper()
-        seq = seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
-        print(seq[:100])
-        break
-
-gff = "split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.reprocess.gff"
-csv = "split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.csv"
-fasta = "split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.fasta"
+gff = "borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.reprocess.gff"
+csv = "borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.csv"
+fasta = "borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.fasta"
 # bam_file = "all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
-bam_file = "customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam"
-subread_bam = "all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
+bam_file = "borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam"
+subread_bam = "borg/all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
+line_data = 'borg/customized/bin_df3.csv'
 
 
 print ("start")

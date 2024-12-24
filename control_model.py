@@ -16,7 +16,7 @@ def extract_ipd_ratio(file_path):
     df = df[df['strand'] == 1]
     ### convert the modelPrediction column to list
     # control_list = df['modelPrediction'].tolist()
-    control_list = df['ipdRatio'].tolist()
+    control_list = df['tMean'].tolist()
     return control_list
 
 def extract_context(fasta):
@@ -39,11 +39,11 @@ def prepare_data(seq, control_list):
         X.append(seq[i-8:i+4])
     return X, y
 
-gff = "split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.reprocess.gff"
-csv = "split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.csv"
-fasta = "split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.fasta"
+gff = "borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.reprocess.gff"
+csv = "borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.csv"
+fasta = "borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C.fasta"
 # bam_file = "all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
-bam_file = "customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam"
+bam_file = "borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam"
 
 # X, y = make_regression(random_state=0)
 # print (X[:2], "y", y[:2])
