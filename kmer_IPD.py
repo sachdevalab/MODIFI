@@ -52,51 +52,45 @@ def count_kmer(X, y):
         kmer_dict[kmer].append(y[i])
     ## sort the kmer_dict by the length of the value
     kmer_dict = dict(sorted(kmer_dict.items(), key=lambda item: len(item[1]), reverse=True))
-    i = 0
+    plot_kmer(kmer_dict)
+
+    # i = 0
+    # data = []
+    # for kmer in kmer_dict:
+    #     # print (kmer, len(kmer_dict[kmer]), kmer_dict[kmer], np.mean(kmer_dict[kmer]), np.std(kmer_dict[kmer]))
+    #     data.append([kmer, len(kmer_dict[kmer]), np.mean(kmer_dict[kmer]), np.std(kmer_dict[kmer]), min(kmer_dict[kmer]), max(kmer_dict[kmer])])
+    #     i += 1
+    #     if i > 100:
+    #         break
+    # df = pd.DataFrame(data, columns=['kmer', 'count', 'mean', 'std', 'min', 'max'])
+    # df.to_csv("/home/shuaiw/Methy/borg/customized/kmer_ipd_distribution_k4.csv", index=False)
+    # # return kmer_dict
+
+def plot_kmer(kmer_dict):
     data = []
+    i = 0
     for kmer in kmer_dict:
-        # print (kmer, len(kmer_dict[kmer]), kmer_dict[kmer], np.mean(kmer_dict[kmer]), np.std(kmer_dict[kmer]))
-        data.append([kmer, len(kmer_dict[kmer]), np.mean(kmer_dict[kmer]), np.std(kmer_dict[kmer]), min(kmer_dict[kmer]), max(kmer_dict[kmer])])
+        for ipd in kmer_dict[kmer]:
+            data.append([kmer, ipd])
         i += 1
-        if i > 100:
-            break
-    df = pd.DataFrame(data, columns=['kmer', 'count', 'mean', 'std', 'min', 'max'])
-    df.to_csv("/home/shuaiw/Methy/borg/customized/kmer_ipd_distribution.csv", index=False)
-    # return kmer_dict
+        if i > 5:
+            continue
+    df = pd.DataFrame(data, columns=['kmer', 'ipd'])
+    ### plot a histogram distribution of the ipd for each kmer, plot each kmer in a subfigure 
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    # Create a FacetGrid for subplots
+    g = sns.FacetGrid(df, row="kmer", row_wrap=3, sharex=True, sharey=False)
+    g.map(sns.histplot, "ipd", bins=30)
+    
+    # Adjust the layout
+    g.tight_layout()
+    
+    # Save the plot
+    plt.savefig("tmp/kmer_ipd_histograms.pdf")
+    
 
-def model(X, y, seed):
-    # Assuming X and y are defined and properly shaped
-    X = np.array(X).reshape(-1, 1)
-    y = np.array(y)
-    # 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, random_state=seed, test_size=0.1)
 
-    # reg = HistGradientBoostingRegressor(
-    #     learning_rate=0.15,
-    #     max_iter=60000,
-    #     max_depth=12,
-    #     random_state=seed,
-    # )
-
-    reg = RandomForestRegressor(
-            n_estimators=100,
-            max_depth=12,
-            random_state=seed,
-    )
-
-    # reg = SVR(    ### very slow
-    #         kernel='rbf',
-    #         C=1.0,
-    #         epsilon=0.1
-    #     )
-
-    reg.fit(X_train, y_train)
-    # reg.predict(X_test)
-    result = reg.score(X_test, y_test)
-    print (result)
-    print (reg.predict(X_test[1:5]))
-    print (y_test[1:5])
 
 def run_single_contig(csv, fasta):
     seq = extract_context(fasta)
@@ -105,7 +99,7 @@ def run_single_contig(csv, fasta):
     if len(control_list) != len(seq):
         print ("different length of control list", len(control_list), len(seq), csv)
         return [], []
-    X, y = prepare_data(seq, control_list)
+    X, y = prepare_data(seq, control_list, 2, 2)
     return X, y
 
 def run_multiple_contigs(dir):
@@ -124,7 +118,7 @@ def run_multiple_contigs(dir):
             print ("length of X, y", len(X), len(y), i)
             all_X += X
             all_y += y
-            if i > 4:
+            if i > 0:
                 break
     return all_X, all_y
 
@@ -140,6 +134,7 @@ if __name__ == "__main__":
     # X, y = run_single_contig(csv, fasta)
     X, y = run_multiple_contigs(dir)
     count_kmer(X, y)
+    
 
     # model(X, y, seed)
 
