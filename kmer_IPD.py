@@ -31,34 +31,44 @@ def extract_context(fasta):
         seq = str(record.seq)
         ## convert to capital
         seq = seq.upper()
-        seq = seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
+        # seq = seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
         return seq
 
 def prepare_data(seq, control_list, up=8, down=4):
     # print(seq[:100])
-    # seq, control_list = seq[:1000], control_list[:1000]
     X = []
     y = control_list[up:len(seq) - down]
     for i in range(up, len(seq) - down):
-        kmer = []
-        for z in range(i-up, i+down):
-            # print (z, i-up, i+down)
-            kmer.append(int(seq[z]))
-        # print (kmer)
-        X.append(kmer)
-        # break
-        # X.append(seq[i-up:i+down])
+        X.append(seq[i-up:i+down])
     return X, y
+
+def count_kmer(X, y):
+    # X, y = X[:1000], y[:1000]
+    kmer_dict = {}
+    for i in range(len(X)):
+        kmer = X[i]
+        if kmer not in kmer_dict:
+            kmer_dict[kmer] = []
+        kmer_dict[kmer].append(y[i])
+    ## sort the kmer_dict by the length of the value
+    kmer_dict = dict(sorted(kmer_dict.items(), key=lambda item: len(item[1]), reverse=True))
+    i = 0
+    data = []
+    for kmer in kmer_dict:
+        # print (kmer, len(kmer_dict[kmer]), kmer_dict[kmer], np.mean(kmer_dict[kmer]), np.std(kmer_dict[kmer]))
+        data.append([kmer, len(kmer_dict[kmer]), np.mean(kmer_dict[kmer]), np.std(kmer_dict[kmer]), min(kmer_dict[kmer]), max(kmer_dict[kmer])])
+        i += 1
+        if i > 100:
+            break
+    df = pd.DataFrame(data, columns=['kmer', 'count', 'mean', 'std', 'min', 'max'])
+    df.to_csv("/home/shuaiw/Methy/borg/customized/kmer_ipd_distribution.csv", index=False)
+    # return kmer_dict
 
 def model(X, y, seed):
     # Assuming X and y are defined and properly shaped
-    # X = np.array(X).reshape(-1, 1)
-    X = np.array(X)
+    X = np.array(X).reshape(-1, 1)
     y = np.array(y)
-    print (len(X), len(y))
-    for i in range(10):
-        print (X[i], y[i])
-
+    # 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, random_state=seed, test_size=0.1)
 
@@ -114,7 +124,7 @@ def run_multiple_contigs(dir):
             print ("length of X, y", len(X), len(y), i)
             all_X += X
             all_y += y
-            if i > 50:
+            if i > 4:
                 break
     return all_X, all_y
 
@@ -129,8 +139,9 @@ if __name__ == "__main__":
     
     # X, y = run_single_contig(csv, fasta)
     X, y = run_multiple_contigs(dir)
+    count_kmer(X, y)
 
-    model(X, y, seed)
+    # model(X, y, seed)
 
 
 
