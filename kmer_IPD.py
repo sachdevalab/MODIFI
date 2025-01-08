@@ -80,7 +80,7 @@ def plot_kmer(kmer_dict):
     import seaborn as sns
     import matplotlib.pyplot as plt
     # Create a FacetGrid for subplots
-    g = sns.FacetGrid(df, row="kmer", row_wrap=3, sharex=True, sharey=False)
+    g = sns.FacetGrid(df, col="kmer", col_wrap=3, sharex=True, sharey=False)
     g.map(sns.histplot, "ipd", bins=30)
     
     # Adjust the layout
