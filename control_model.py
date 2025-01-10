@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import os
 
+
 def extract_ipd_ratio(file_path):
     ## open it using pandas
     IPD_ratio_list, reverse_IPD_ratio_list = [], []
@@ -88,17 +89,17 @@ def model(X, y, seed):
     print (reg.predict(X_test[1:5]))
     print (y_test[1:5])
 
-def run_single_contig(csv, fasta):
+def run_single_contig(csv, fasta, up=8, down=4):
     seq = extract_context(fasta)
     control_list = extract_ipd_ratio(csv)
     # print ("length of control list", len(control_list), len(seq))
     if len(control_list) != len(seq):
         print ("different length of control list", len(control_list), len(seq), csv)
         return [], []
-    X, y = prepare_data(seq, control_list)
+    X, y = prepare_data(seq, control_list, up, down)
     return X, y
 
-def run_multiple_contigs(dir):
+def run_multiple_contigs(dir, up=8, down=4):
     all_X, all_y = [], []
     i = 0
     for file in os.listdir(dir):
@@ -107,14 +108,14 @@ def run_multiple_contigs(dir):
             fasta = dir + file.replace(".csv", ".fasta")
             if not os.path.exists(fasta):
                 continue
-            X, y = run_single_contig(csv, fasta)
+            X, y = run_single_contig(csv, fasta, up, down)
             if len(X) == 0:
                 continue
             i += 1
             print ("length of X, y", len(X), len(y), i)
             all_X += X
             all_y += y
-            if i > 50:
+            if i > 100:
                 break
     return all_X, all_y
 

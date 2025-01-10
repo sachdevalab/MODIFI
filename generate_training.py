@@ -33,7 +33,7 @@ def extract_context(fasta):
         seq = str(record.seq)
         ## convert to capital
         seq = seq.upper()
-        seq = seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
+        # seq = seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
         return seq
 
 def prepare_data(seq, control_list, score_list, up=8, down=4):
@@ -43,7 +43,13 @@ def prepare_data(seq, control_list, score_list, up=8, down=4):
     ### convert the element in control_list to string
     control_list = [str(i) for i in control_list]
     for i in range(up, len(seq) - down):
-        X.append(seq[i-up:i+down] + ' ' + ' '.join(control_list[i-up:i+down]))
+        kmer = []
+        for z in range(i-up, i+down):
+            # print (z, i-up, i+down)
+            kmer.append(seq[z])
+        # print (kmer)
+        X.append(' '.join(kmer + control_list[i-up:i+down]))
+        # X.append(seq[i-up:i+down] + ' ' + ' '.join(control_list[i-up:i+down]))
     new_y = []
     for i in range(len(y)):
         if y[i] > 10:
@@ -118,7 +124,7 @@ def run_multiple_contigs(dir):
             print ("length of X, y", len(X), len(y), i)
             all_X += X
             all_y += y
-            if i > 10:
+            if i > 5:
                 break
     return all_X, all_y
 

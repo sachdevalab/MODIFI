@@ -51,7 +51,13 @@ def count_kmer(X, y):
             kmer_dict[kmer] = []
         kmer_dict[kmer].append(y[i])
     ## sort the kmer_dict by the length of the value
-    kmer_dict = dict(sorted(kmer_dict.items(), key=lambda item: len(item[1]), reverse=True))
+    new_kmer_dict = {}
+    for kmer in kmer_dict:
+        if len(kmer_dict[kmer]) > 100:
+            new_kmer_dict[kmer] = kmer_dict[kmer]
+    kmer_dict = new_kmer_dict
+    kmer_dict = dict(sorted(kmer_dict.items(), key=lambda item: max(item[1]), reverse=True))
+    #kmer_dict = dict(sorted(kmer_dict.items(), key=lambda item: len(item[1]), reverse=True))
     plot_kmer(kmer_dict)
 
     # i = 0
@@ -73,18 +79,22 @@ def plot_kmer(kmer_dict):
         for ipd in kmer_dict[kmer]:
             data.append([kmer, ipd])
         i += 1
-        if i > 5:
-            continue
+        if i > 50:
+            break
+    print ("IPD num", len(data))
     df = pd.DataFrame(data, columns=['kmer', 'ipd'])
     ### plot a histogram distribution of the ipd for each kmer, plot each kmer in a subfigure 
     import seaborn as sns
     import matplotlib.pyplot as plt
+    ## define figure size
+    plt.figure(figsize=(10, 50))
     # Create a FacetGrid for subplots
-    g = sns.FacetGrid(df, col="kmer", col_wrap=3, sharex=True, sharey=False)
+    g = sns.FacetGrid(df, col="kmer", col_wrap=1, sharex=True, sharey=False, aspect=3 )
     g.map(sns.histplot, "ipd", bins=30)
     
     # Adjust the layout
     g.tight_layout()
+
     
     # Save the plot
     plt.savefig("tmp/kmer_ipd_histograms.pdf")
@@ -99,7 +109,7 @@ def run_single_contig(csv, fasta):
     if len(control_list) != len(seq):
         print ("different length of control list", len(control_list), len(seq), csv)
         return [], []
-    X, y = prepare_data(seq, control_list, 2, 2)
+    X, y = prepare_data(seq, control_list, 7, 2)
     return X, y
 
 def run_multiple_contigs(dir):
@@ -118,7 +128,7 @@ def run_multiple_contigs(dir):
             print ("length of X, y", len(X), len(y), i)
             all_X += X
             all_y += y
-            if i > 0:
+            if i > 9:
                 break
     return all_X, all_y
 
