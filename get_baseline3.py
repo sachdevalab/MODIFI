@@ -64,12 +64,13 @@ class Contig:
         self.reverse_ipd_sum = {}
 
 def get_reverse_cmplement(kmer):
-    kmer_dict = {'A':'T', 'T':'A', 'C':'G', 'G':'C'}
+    kmer_dict = {'A':'T', 'T':'A', 'C':'G', 'G':'C', 'N':'N'}
     complement_kmer = ''
     for i in range(len(kmer)):
         complement_kmer += kmer_dict[kmer[i]]
-    reverse_kmer = complement_kmer[::-1]
-    return reverse_kmer
+    # reverse_kmer = complement_kmer[::-1]
+    # return reverse_kmer
+    return complement_kmer
 
 def extract_ipd_ratio_all(file_path):
     ## open it using pandas
@@ -79,17 +80,17 @@ def extract_ipd_ratio_all(file_path):
     ipd_sum_for_control_dict = defaultdict(dict)
     ipd_sum_for_control_reverse_dict = defaultdict(dict)
 
-    df = pd.read_csv(file_path, nrows=10000)
+    df = pd.read_csv(file_path, nrows=1000000)
     print ("length of df", len(df))
     for index, row in df.iterrows():
         contig = row['refName']
         contig = contig.replace('"', '')
-        if len(contig_forward_dict_dict[contig]) > 50000000:
-            continue
-        if len(contig_forward_dict_dict[contig]) == 1:
-            print (contig)
-        if len(contig_forward_dict_dict) > 4:
-            break 
+        # if len(contig_forward_dict_dict[contig]) > 50000000:
+        #     continue
+        # if len(contig_forward_dict_dict[contig]) == 1:
+        #     print (contig)
+        # if len(contig_forward_dict_dict) > 4:
+        #     break 
         pos = int(row['tpl']) 
         ipd = float(row['tMean'])
         ipd_sum_control = row['modelPrediction']
@@ -104,7 +105,7 @@ def extract_ipd_ratio_all(file_path):
     print ("ipd is loaded", len(contig_forward_dict_dict))
     return contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, ipd_sum_for_control_reverse_dict
 
-def count_kmer(contig_forward_dict_dict, seq):
+def count_kmer(contig_forward_dict_dict, seq, strand = 1):
 
     kmer_baseline_dict = defaultdict(list)
     save_kmer_dict = {}
@@ -112,6 +113,8 @@ def count_kmer(contig_forward_dict_dict, seq):
         contig_forward_dict = contig_forward_dict_dict[contig]
 
         seq = seq_dict[contig]
+        if strand == 0:
+            seq = get_reverse_cmplement(seq)
         observed_IPD_list = get_IPD_list(len(seq), contig_forward_dict)
         kmer_baseline_dict, save_kmer = prepare_data(seq, observed_IPD_list, kmer_baseline_dict, 8, 4)
         save_kmer_dict[contig] = save_kmer
@@ -128,7 +131,7 @@ def count_kmer(contig_forward_dict_dict, seq):
     return save_kmer_dict, mean_dict, median_dict, kmer_baseline_dict
 
 def align_kmer(contig_forward_dict_dict, ipd_sum_for_control_dict, \
-               kmer_baseline_dict, save_kmer_dict, mean_dict, median_dict, test_csv):
+               kmer_baseline_dict, save_kmer_dict, mean_dict, median_dict, test_csv, strand = 1):
     data = []
     for contig in contig_forward_dict_dict:
         if contig not in ipd_sum_for_control_dict:
@@ -143,11 +146,11 @@ def align_kmer(contig_forward_dict_dict, ipd_sum_for_control_dict, \
             #     continue
             if kmer in kmer_baseline_dict and pos in contig_forward_dict:
                 # print (pos, kmer, len(kmer_baseline_dict[kmer]), np.mean(kmer_baseline_dict[kmer]), contig_forward_dict[pos][0], ipd_sum_for_control[pos])
-                data.append([contig, pos, kmer, len(kmer_baseline_dict[kmer]), \
+                data.append([contig, pos, strand, kmer, len(kmer_baseline_dict[kmer]), \
                 mean_dict[kmer], median_dict[kmer], \
                 contig_forward_dict[pos][0], ipd_sum_for_control[pos]])
 
-    df = pd.DataFrame(data, columns=['contig', 'pos', 'kmer', 'count', 'estimated', 'median', 'real', 'ipd_sum'])
+    df = pd.DataFrame(data, columns=['contig', 'pos', 'strand', 'kmer', 'count', 'estimated', 'median', 'real', 'ipd_sum'])
     df.to_csv(test_csv, index=False)
 
 
@@ -171,7 +174,13 @@ if __name__ == "__main__":
 
     contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, ipd_sum_for_control_reverse_dict = extract_ipd_ratio_all(csv)
     print ("ipd is loaded")
-    save_kmer_dict, mean_dict, median_dict, kmer_baseline_dict = count_kmer(contig_forward_dict_dict, seq_dict)
+
+    # save_kmer_dict, mean_dict, median_dict, kmer_baseline_dict = count_kmer(contig_forward_dict_dict, seq_dict, 1)
+    # print ("kmer is counted")
+    # align_kmer(contig_forward_dict_dict, ipd_sum_for_control_dict, kmer_baseline_dict, save_kmer_dict, mean_dict, median_dict, test_csv, 1)
+    # print ("kmer is aligned")
+
+    save_kmer_dict, mean_dict, median_dict, kmer_baseline_dict = count_kmer(contig_reverse_dict_dict, seq_dict, 0)
     print ("kmer is counted")
-    align_kmer(contig_forward_dict_dict, ipd_sum_for_control_dict, kmer_baseline_dict, save_kmer_dict, mean_dict, median_dict, test_csv)
+    align_kmer(contig_reverse_dict_dict, ipd_sum_for_control_reverse_dict, kmer_baseline_dict, save_kmer_dict, mean_dict, median_dict, test_csv, 0)
     print ("kmer is aligned")
