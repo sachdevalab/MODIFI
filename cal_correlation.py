@@ -105,6 +105,6 @@ def count_log_csv(csv):
 
 # log = "slurm-705929.out"
 # read_log(log)
-csv = "/home/shuaiw/methylation/data/borg/human/test_result4.csv"
+csv = "/home/shuaiw/methylation/data/borg/human/test_result5.csv"
 read_log_csv(csv)
 # count_log_csv(csv)

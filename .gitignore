@@ -6,6 +6,7 @@ __pycache__/
 # slurm logs
 slurm-*
 tmp/
+*.time
 
 # C extensions
 *.so
