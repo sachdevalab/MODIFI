@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import random
 import pickle
 import os
+from scipy.stats import pearsonr
 
 def read_subread_bam(bam_file):
     """
@@ -98,23 +99,25 @@ def extract_context(fasta):
         # if record.id != "NC_000001.11":
         #     continue
         ## convert the sequence to string of number, 0 for A, 1 for C, 2 for G, 3 for T, 4 for N
-        seq = str(record.seq)
+        seq = str(record.seq)[:50000000]
         ## convert to capital
         raw_seq = seq.upper()
         seq_dict[record.id] = raw_seq
         # seq = raw_seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
     return seq_dict
 
-def prepare_data(seq, control_list, kmer_baseline_dict, up=6, down=2):
+def prepare_data(seq, control_list, kmer_baseline_dict, up=7, down=3):
     # print(seq[:100])
     # seq, control_list = seq[:1000], control_list[:1000]
     save_kmer = {}  ## {pos:kmer}
     
     # y = control_list[up:len(seq) - down]
     for i in range(up, len(seq) - down):
-        if seq[i] == 'N':
-            continue
+        # if seq[i] == 'N':
+        #     continue
         kmer = seq[i-up:i+down]
+        if 'N' in kmer:
+            continue  # Skip kmers containing 'N'
         ipd = control_list[i]
         if ipd == 0:
             continue
@@ -190,26 +193,26 @@ def extract_ipd_ratio_all(file_path):
         contig = field[0]
         ## remove " in the contig name
         contig = contig.replace('"', '')
-        if len(contig_forward_dict_dict[contig]) > 10000000:
+        if len(contig_forward_dict_dict[contig]) > 50000000:
             continue
         if len(contig_forward_dict_dict[contig]) == 1:
             print (contig)
-        if len(contig_forward_dict_dict) > 3:
-            break 
+        # if len(contig_forward_dict_dict) > 4:
+        #     break 
         # print ('ipd', contig)
         # print (field[0], field[1], field[2], field[3], field[4], field[5])
         pos = int(field[1]) #- 1
         ipd = float(field[5])
         ipd_sum_control = field[7]
         strand = int(field[2])
-        if strand == 0:
+        if strand == 1:
             contig_forward_dict_dict[contig][pos] = [ipd]
             ipd_sum_for_control_dict[contig][pos] = ipd_sum_control
             
         # elif strand == 1:
         #     contig_reverse_dict[pos] = [ipd]
         i+= 1
-        # if i > 1000:
+        # if i > 20000000:
         #     break
     f.close()
     print ("ipd is loaded", len(contig_forward_dict_dict))
@@ -221,9 +224,18 @@ def extract_ipd_ratio_all(file_path):
 
         seq = seq_dict[contig]
         observed_IPD_list = get_IPD_list(len(seq), contig_forward_dict)
-        kmer_baseline_dict, save_kmer = prepare_data(seq, observed_IPD_list, kmer_baseline_dict)
+        kmer_baseline_dict, save_kmer = prepare_data(seq, observed_IPD_list, kmer_baseline_dict, 8, 4)
         save_kmer_dict[contig] = save_kmer
     print ("kmer is counted")
+    import pickle
+    with open(save_kmer_file, 'wb') as f:
+        pickle.dump(kmer_baseline_dict, f)
+    
+    mean_dict, median_dict = {}, {}
+    for kmer in kmer_baseline_dict:
+        mean_dict[kmer] = np.mean(kmer_baseline_dict[kmer])
+        median_dict[kmer] = np.median(kmer_baseline_dict[kmer])
+    print ("mean and median is computed")
 
     data = []
     for contig in contig_forward_dict_dict:
@@ -235,20 +247,24 @@ def extract_ipd_ratio_all(file_path):
         print (contig, len(contig_forward_dict), len(ipd_sum_for_control), len(save_kmer))
         for pos in save_kmer:
             kmer = save_kmer[pos]
+            if len(kmer_baseline_dict[kmer]) < 10:
+                continue
             if kmer in kmer_baseline_dict and pos in contig_forward_dict:
                 # print (pos, kmer, len(kmer_baseline_dict[kmer]), np.mean(kmer_baseline_dict[kmer]), contig_forward_dict[pos][0], ipd_sum_for_control[pos])
                 data.append([contig, pos, kmer, len(kmer_baseline_dict[kmer]), \
-                np.mean(kmer_baseline_dict[kmer]), np.median(kmer_baseline_dict[kmer]), \
+                mean_dict[kmer], median_dict[kmer], \
                 contig_forward_dict[pos][0], ipd_sum_for_control[pos]])
 
     df = pd.DataFrame(data, columns=['contig', 'pos', 'kmer', 'count', 'estimated', 'median', 'real', 'ipd_sum'])
     df.to_csv(test_csv, index=False)
+    
 
 ref = "/home/shuaiw/methylation/data/borg/hg38/GCF_000001405.40_GRCh38.p14_genomic.fasta"
 # ref = "/home/shuaiw/methylation/data/borg/hg38/NC_000001.11.fasta"
 subread_bam = "/home/shuaiw/methylation/data/borg/human/human_000733.subreads.align.bam"
 csv = "/home/shuaiw/methylation/data/borg/human/human_000733_subreads.csv"
-test_csv = "/home/shuaiw/methylation/data/borg/human/test_result2.csv"
+test_csv = "/home/shuaiw/methylation/data/borg/human/test_result4.csv"
+save_kmer_file = "/home/shuaiw/methylation/data/borg/human/kmer_baseline_dict.pkl"
 
 seq_dict = extract_context(ref)
 print ("ref loaded")
