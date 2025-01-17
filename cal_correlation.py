@@ -40,8 +40,8 @@ def plot(predicted_list, real_list):
 
 def read_log_csv(csv):
 
-    # df = pd.read_csv(csv, nrows=10000)
-    df = pd.read_csv(csv)
+    df = pd.read_csv(csv, nrows=100000000)
+    # df = pd.read_csv(csv)
     print ("length of df", len(df))
     ## cal correlation between estimated column and real column
     corr = pearsonr(df['estimated'], df['real'])
@@ -105,6 +105,6 @@ def count_log_csv(csv):
 
 # log = "slurm-705929.out"
 # read_log(log)
-csv = "/home/shuaiw/methylation/data/borg/human/test_result5.csv"
+csv = "/home/shuaiw/methylation/data/borg/human/test_result4.csv"
 read_log_csv(csv)
 # count_log_csv(csv)
