@@ -1,5 +1,12 @@
+"""
+load ipd from bam, refer to
+https://github.com/PacificBiosciences/kineticsTools/blob/master/kineticsTools/KineticWorker.py#L661
+"""
+
+
 from pbcore.io import AlignmentSet
 import numpy as np
+
 
 # Raw ipd record
 ipdRec = [('tpl', '<u4'), ('strand', '<i8'), ('ipd', '<f4')]
@@ -88,6 +95,98 @@ def _loadRawIpds(alnHitIter, targetStart=-
 
     return np.concatenate([s0Ipds, s1Ipds])
 
+def _chunkRawIpds(rawIpds):
+    """
+    Return a list of view recarrays into the rawIpds recarray, one for each unique (tpl, stand) level
+    """
+    views = []
+
+    # Bail out if we have no data
+    if rawIpds.size == 0:
+        return views
+
+    start = 0
+    tpl = rawIpds['tpl']
+    strand = rawIpds['strand']
+
+    # Start off at the first chunk
+    curIdx = (tpl[0], strand[0])
+    for i in range(1, rawIpds.shape[0]):
+        newIdx = (tpl[i], strand[i])
+
+        # In this case we are still int he same chunk -- continue
+        if curIdx == newIdx:
+            continue
+
+        # In this case we have completed the chunk -- emit the chunk
+        else:
+            obj = {'tpl': curIdx[0], 'strand': curIdx[1],
+                    'data': rawIpds[start:i]}
+            views.append(obj)
+            start = i
+            curIdx = newIdx
+    # Make sure to return final chunk
+    obj = {'tpl': curIdx[0], 'strand': curIdx[1], 'data': rawIpds[start:]}
+    views.append(obj)
+
+    # # If the user has specified a maximum coverage level to use, enforce it
+    # # here -- just take the first n reads
+    # if self.options.maxCoverage is not None:
+    #     maxCov = self.options.maxCoverage
+    #     for x in views:
+    #         d = x['data']
+    #         d = d[0:maxCov]
+    #         x['data'] = d
+
+    return views
+
+def _computePositionSyntheticControl(caseObservations, capValue):
+    """Summarize the observed ipds at one template position/strand, using the synthetic ipd model"""
+
+    # Compute stats on the observed ipds
+    d = caseObservations['data']['ipd']
+    res = dict()
+
+    # # ref00000x name
+    # res['refId'] = self.refId
+
+    # # FASTA header name
+    # res['refName'] = self.refName
+
+    # NOTE -- this is where the strand flipping occurs -- make sure to
+    # reproduce this in the all calling methods
+    strand = res['strand'] = 1 - caseObservations['strand']
+    tpl = res['tpl'] = caseObservations['tpl']
+    res['coverage'] = d.size
+
+    # Don't compute these stats - they just take time and confuse things
+    # res['mean'] = d.mean().item()
+    # res['median'] = np.median(d).item()
+    # res['std'] = np.std(d).item()
+    # Compute the predicted IPD from the model
+    # NOTE! The ipd model is in the observed read strand
+    # if modelPrediction is None:
+    #     modelPrediction = self.meanIpdFunc(tpl, strand).item()
+    # res['modelPrediction'] = modelPrediction
+
+    # res['base'] = self.cognateBaseFunc(tpl, strand)
+
+    # Store in case of methylated fraction estimtion:
+    res['rawData'] = d
+
+    percentile = min(90, (1.0 - 1.0 / (d.size - 1)) * 100)
+    localPercentile = np.percentile(d, percentile)
+    capValue = max(capValue, localPercentile)
+
+    # np.minimum(d, capValue, out=d)  # this version will send capped IPDs
+    # to modified fraction estimator
+    d = np.minimum(d, capValue)
+
+    # Trimmed stats
+    res['tMean'] = d.mean().item()
+    res['tErr'] = np.std(d).item() / np.sqrt(d.size)
+    print (res['tpl'], res['strand'], res['tMean'], res['tErr'], res['coverage'])
+
 # subread_bam = "/home/shuaiw/methylation/data/borg/human/human_000733.subreads.align.bam"
 
 # subread_bam = "/home/shuaiw/methylation/data/borg/split_bam_dir2/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_7580_L.bam"
@@ -101,7 +200,7 @@ alignments = AlignmentSet(subread_bam,
                                 referenceFastaFname=fasta)
 
 refInfo = alignments.referenceInfoTable
-print ("refInfo", refInfo)
+print ("refInfo", refInfo.shape, len(refInfo), refInfo)
 
 
 refGroupId = alignments.referenceInfo(
@@ -109,23 +208,14 @@ refGroupId = alignments.referenceInfo(
 hits = [hit for hit in alignments.readsInRange(refGroupId,
                                                     max(0, 0), 10000)]
 
-rawIpds = _loadRawIpds(hits, 0, 10000, 1.0)
-print ("rawIpds", rawIpds)
-for i in range(10):
-    print (rawIpds[i])
+factor = 1.0 / alignments.readGroupTable[0].FrameRate
+print ("factor", factor)
+rawIpds = _loadRawIpds(hits, 0, 1000, factor)
+print ("rawIpds", rawIpds.shape)
+caseChunks = _chunkRawIpds(rawIpds)
+# print ("chunks", chunks)
 
 ipdVect = rawIpds['ipd']
-# print (ipdVect.mean().item(), rawIpds.size)
-## cal the mean of the locus 1 and strand 0
-first_locus = []
-for i in range(len(rawIpds)):
-    if rawIpds[i]['tpl'] == 2 and rawIpds[i]['strand'] == 0:
-        print (rawIpds[i])
-        # print ("")
-        first_locus.append(rawIpds[i]['ipd'])
-print ("mean of the locus 1 and strand 0", np.mean(first_locus), len(first_locus)  )
-
-
 if ipdVect.size < 10:
     # Default is there is no coverage
     capValue = 5.0
@@ -135,3 +225,30 @@ else:
     capValue = np.percentile(ipdVect, 99)
 
 print ("capValue", capValue)
+
+goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
+for x in goodSites:
+    print (x['tpl'], x['strand'], x['data']['ipd'].size)
+    _computePositionSyntheticControl(x, capValue)
+    break
+
+
+
+# print ("rawIpds", rawIpds)
+# for i in range(10):
+#     print (rawIpds[i])
+
+# 
+# # print (ipdVect.mean().item(), rawIpds.size)
+# ## cal the mean of the locus 1 and strand 0
+# first_locus = []
+# for i in range(len(rawIpds)):
+#     if rawIpds[i]['tpl'] == 2 and rawIpds[i]['strand'] == 0:
+#         print (rawIpds[i])
+#         # if rawIpds[i]['ipd'] == 0:
+#         #     continue
+#         # print ("")
+#         first_locus.append(rawIpds[i]['ipd'])
+# print ("mean of the locus 1 and strand 0", np.mean(first_locus), len(first_locus)  )
+
+
