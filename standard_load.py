@@ -205,10 +205,9 @@ print ("refInfo", refInfo.shape, len(refInfo), refInfo)
 
 refGroupId = alignments.referenceInfo(
         'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595').Name
-hits = [hit for hit in alignments.readsInRange(refGroupId,
-                                                    max(0, 0), 10000)]
+hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 10000)]
 
-factor = 1.0 / alignments.readGroupTable[0].FrameRate
+factor = 1.0 / alignments.readGroupTable[0].FrameRate  ## The frame rate represents the speed of data acquisition in frames per second during sequencing.
 print ("factor", factor)
 rawIpds = _loadRawIpds(hits, 0, 1000, factor)
 print ("rawIpds", rawIpds.shape)
@@ -230,25 +229,8 @@ goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
 for x in goodSites:
     print (x['tpl'], x['strand'], x['data']['ipd'].size)
     _computePositionSyntheticControl(x, capValue)
-    break
-
-
-
-# print ("rawIpds", rawIpds)
-# for i in range(10):
-#     print (rawIpds[i])
-
-# 
-# # print (ipdVect.mean().item(), rawIpds.size)
-# ## cal the mean of the locus 1 and strand 0
-# first_locus = []
-# for i in range(len(rawIpds)):
-#     if rawIpds[i]['tpl'] == 2 and rawIpds[i]['strand'] == 0:
-#         print (rawIpds[i])
-#         # if rawIpds[i]['ipd'] == 0:
-#         #     continue
-#         # print ("")
-#         first_locus.append(rawIpds[i]['ipd'])
-# print ("mean of the locus 1 and strand 0", np.mean(first_locus), len(first_locus)  )
+    # break
+    if x['tpl'] > 5:
+        break
 
 
