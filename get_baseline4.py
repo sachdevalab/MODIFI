@@ -29,7 +29,7 @@ def extract_context(fasta):
         # if record.id != "NC_000001.11":
         #     continue
         ## convert the sequence to string of number, 0 for A, 1 for C, 2 for G, 3 for T, 4 for N
-        seq = str(record.seq)[:50000000]
+        seq = str(record.seq)#[:50000000]
         ## convert to capital
         raw_seq = seq.upper()
         seq_dict[record.id] = raw_seq
@@ -138,8 +138,8 @@ def align_kmer(contig_forward_dict_dict, ipd_sum_for_control_dict, \
         print (contig, len(contig_forward_dict), len(ipd_sum_for_control), len(save_kmer))
         for pos in save_kmer:
             kmer = save_kmer[pos]
-            # if kmer_num_dict[kmer] < 10:
-            #     continue
+            if kmer_num_dict[kmer] < 10:
+                continue
             if kmer in kmer_baseline_dict and pos in contig_forward_dict:
                 # print (pos, kmer, len(kmer_baseline_dict[kmer]), np.mean(kmer_baseline_dict[kmer]), contig_forward_dict[pos][0], ipd_sum_for_control[pos])
                 data.append([contig, pos, strand, kmer, kmer_num_dict[kmer], \
