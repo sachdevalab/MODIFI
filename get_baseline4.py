@@ -102,6 +102,47 @@ def extract_ipd_ratio_all(file_path):
     print ("ipd is loaded", len(contig_forward_dict_dict))
     return contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, ipd_sum_for_control_reverse_dict
 
+class IPD_sum:
+    def __init__(self,forward_ipd, reverse_ipd, forward_ipd_sum, reverse_ipd_sum):
+        self.forward_ipd = forward_ipd
+        self.reverse_ipd = reverse_ipd
+        self.forward_ipd_sum = forward_ipd_sum
+        self.reverse_ipd_sum = reverse_ipd_sum
+
+def process_chunk(chunk, contig_forward_dict_dict, contig_reverse_dict_dict, \
+                  ipd_sum_for_control_dict, ipd_sum_for_control_reverse_dict):
+    print("Processing chunk of size", len(chunk))
+    for index, row in chunk.iterrows():
+        contig = row['refName']
+        contig = contig.replace('"', '')
+        # Add your processing logic here
+        pos = int(row['tpl']) 
+        ipd = float(row['tMean'])
+        ipd_sum_control = row['modelPrediction']
+
+        if int(row['strand']) == 1:
+            contig_forward_dict_dict[contig][pos] = [ipd]
+            ipd_sum_for_control_dict[contig][pos] = ipd_sum_control
+        else:
+            contig_reverse_dict_dict[contig][pos] = [ipd]
+            ipd_sum_for_control_reverse_dict[contig][pos] = ipd_sum_control
+    return contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, ipd_sum_for_control_reverse_dict
+
+def extract_ipd_ratio_all_chunk(file_path, chunksize=10000):
+    contig_forward_dict_dict = defaultdict(dict)
+    contig_reverse_dict_dict = defaultdict(dict)
+    ipd_sum_for_control_dict = defaultdict(dict)
+    ipd_sum_for_control_reverse_dict = defaultdict(dict)
+
+    chunk_iter = pd.read_csv(file_path, chunksize=chunksize,nrows=100000)
+    for chunk in chunk_iter:
+        contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, \
+            ipd_sum_for_control_reverse_dict = process_chunk(chunk, contig_forward_dict_dict,\
+                                                              contig_reverse_dict_dict, ipd_sum_for_control_dict, \
+                                                                ipd_sum_for_control_reverse_dict)
+    print ("ipd is loaded", len(contig_forward_dict_dict))
+    return contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, ipd_sum_for_control_reverse_dict
+
 def count_kmer(contig_forward_dict_dict, seq, strand = 1):
 
     # kmer_baseline_dict = defaultdict(list)
@@ -152,9 +193,7 @@ def align_kmer(contig_forward_dict_dict, ipd_sum_for_control_dict, \
 
     
 
-if __name__ == "__main__":
-
-    
+if __name__ == "__main__":   
     # ref = "/home/shuaiw/methylation/data/borg/hg38/NC_000001.11.fasta"
     # subread_bam = "/home/shuaiw/methylation/data/borg/human/human_000733.subreads.align.bam"
 
@@ -167,8 +206,10 @@ if __name__ == "__main__":
     seq_dict = extract_context(ref)
     print ("ref loaded")
 
-    contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, ipd_sum_for_control_reverse_dict = extract_ipd_ratio_all(csv)
+    contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, ipd_sum_for_control_reverse_dict = extract_ipd_ratio_all_chunk(csv)
     print ("ipd is loaded")
+    # contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, ipd_sum_for_control_reverse_dict = extract_ipd_ratio_all(csv)
+    # print ("ipd is loaded")
 
     save_kmer_dict, mean_dict, median_dict, kmer_baseline_dict, kmer_num_dict = count_kmer(contig_forward_dict_dict, seq_dict, 1)
     print ("kmer is counted")

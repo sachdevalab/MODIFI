@@ -113,18 +113,17 @@ rawIpds = _loadRawIpds(hits, 0, 10000, 1.0)
 print ("rawIpds", rawIpds)
 for i in range(10):
     print (rawIpds[i])
-    print ("")
 
 ipdVect = rawIpds['ipd']
 # print (ipdVect.mean().item(), rawIpds.size)
 ## cal the mean of the locus 1 and strand 0
 first_locus = []
 for i in range(len(rawIpds)):
-    if rawIpds[i]['tpl'] == 1 and rawIpds[i]['strand'] == 0:
-        # print (rawIpds[i])
+    if rawIpds[i]['tpl'] == 2 and rawIpds[i]['strand'] == 0:
+        print (rawIpds[i])
         # print ("")
         first_locus.append(rawIpds[i]['ipd'])
-print ("mean of the locus 1 and strand 0", np.mean(first_locus))
+print ("mean of the locus 1 and strand 0", np.mean(first_locus), len(first_locus)  )
 
 
 if ipdVect.size < 10:
