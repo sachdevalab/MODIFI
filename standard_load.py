@@ -1,6 +1,6 @@
 """
 load ipd from bam, refer to
-https://github.com/PacificBiosciences/kineticsTools/blob/master/kineticsTools/KineticWorker.py#L661
+https://github.com/PacificBiosciences/kineticsTools/blob/master/kineticsTools/KineticWorker.py
 """
 
 
@@ -187,6 +187,37 @@ def _computePositionSyntheticControl(caseObservations, capValue):
     res['tErr'] = np.std(d).item() / np.sqrt(d.size)
     print (res['tpl'], res['strand'], res['tMean'], res['tErr'], res['coverage'])
 
+def handle_each_ref(each_ref, alignments, factor):
+    # refGroupId = alignments.referenceInfo(
+    #         'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595').Name
+    refGroupId = alignments.referenceInfo(each_ref.Name).Name
+    hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
+
+
+    rawIpds = _loadRawIpds(hits, 0, each_ref.Length, factor)
+
+    print ("rawIpds", rawIpds.shape)
+    caseChunks = _chunkRawIpds(rawIpds)
+    # print ("chunks", chunks)
+
+    ipdVect = rawIpds['ipd']
+    if ipdVect.size < 10:
+        # Default is there is no coverage
+        capValue = 5.0
+    else:
+        # Compute IPD quantiles on the current block -- will be used for
+        # trimming extreme IPDs
+        capValue = np.percentile(ipdVect, 99)
+
+    print ("capValue", capValue)
+
+    goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
+    for x in goodSites:
+        print (x['tpl'], x['strand'], x['data']['ipd'].size)
+        _computePositionSyntheticControl(x, capValue)
+        # break
+        if x['tpl'] > 5:
+            break
 # subread_bam = "/home/shuaiw/methylation/data/borg/human/human_000733.subreads.align.bam"
 
 # subread_bam = "/home/shuaiw/methylation/data/borg/split_bam_dir2/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_7580_L.bam"
@@ -198,39 +229,16 @@ fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/1.fa"
 print ("loading alignments", subread_bam)
 alignments = AlignmentSet(subread_bam,
                                 referenceFastaFname=fasta)
+factor = 1.0 / alignments.readGroupTable[0].FrameRate  ## The frame rate represents the speed of data acquisition in frames per second during sequencing.
+print ("factor", factor)
 
 refInfo = alignments.referenceInfoTable
 print ("refInfo", refInfo.shape, len(refInfo), refInfo)
 
+for each_ref in refInfo:
+    print (each_ref.Name, each_ref.Length)
+    handle_each_ref(each_ref, alignments, factor)
 
-refGroupId = alignments.referenceInfo(
-        'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595').Name
-hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 10000)]
 
-factor = 1.0 / alignments.readGroupTable[0].FrameRate  ## The frame rate represents the speed of data acquisition in frames per second during sequencing.
-print ("factor", factor)
-rawIpds = _loadRawIpds(hits, 0, 1000, factor)
-print ("rawIpds", rawIpds.shape)
-caseChunks = _chunkRawIpds(rawIpds)
-# print ("chunks", chunks)
-
-ipdVect = rawIpds['ipd']
-if ipdVect.size < 10:
-    # Default is there is no coverage
-    capValue = 5.0
-else:
-    # Compute IPD quantiles on the current block -- will be used for
-    # trimming extreme IPDs
-    capValue = np.percentile(ipdVect, 99)
-
-print ("capValue", capValue)
-
-goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
-for x in goodSites:
-    print (x['tpl'], x['strand'], x['data']['ipd'].size)
-    _computePositionSyntheticControl(x, capValue)
-    # break
-    if x['tpl'] > 5:
-        break
 
 
