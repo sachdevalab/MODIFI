@@ -6,6 +6,9 @@ https://github.com/PacificBiosciences/kineticsTools/blob/master/kineticsTools/Ki
 
 from pbcore.io import AlignmentSet
 import numpy as np
+import os
+import pandas as pd
+from collections import defaultdict
 
 
 # Raw ipd record
@@ -140,18 +143,18 @@ def _chunkRawIpds(rawIpds):
 
     return views
 
-def _computePositionSyntheticControl(caseObservations, capValue):
+def _computePositionSyntheticControl(caseObservations, capValue, refId, refName):
     """Summarize the observed ipds at one template position/strand, using the synthetic ipd model"""
 
     # Compute stats on the observed ipds
     d = caseObservations['data']['ipd']
     res = dict()
 
-    # # ref00000x name
-    # res['refId'] = self.refId
+    # ref00000x name
+    res['refId'] = refId
 
-    # # FASTA header name
-    # res['refName'] = self.refName
+    # FASTA header name
+    res['refName'] = refName
 
     # NOTE -- this is where the strand flipping occurs -- make sure to
     # reproduce this in the all calling methods
@@ -185,13 +188,133 @@ def _computePositionSyntheticControl(caseObservations, capValue):
     # Trimmed stats
     res['tMean'] = d.mean().item()
     res['tErr'] = np.std(d).item() / np.sqrt(d.size)
-    print (res['tpl'], res['strand'], res['tMean'], res['tErr'], res['coverage'])
+    # print (res['tpl'], res['strand'], res['tMean'], res['tErr'], res['coverage'])
 
-def handle_each_ref(each_ref, alignments, factor):
+
+    return res
+
+def get_IPD_list(contig_length, contig_dict):
+    average_IPD = []
+    for pos in range(contig_length):
+        if pos not in contig_dict:
+            average_IPD.append(0)
+        else:
+            average_IPD.append(round(np.mean(contig_dict[pos]), 1))
+    return average_IPD
+             
+def extract_context(fasta):
+    ## load the fasta using biopython
+    print ("loading fasta")
+    seq_dict = {}
+    from Bio import SeqIO
+    for record in SeqIO.parse(fasta, "fasta"):
+        print(record.id)
+        # if record.id != "NC_000001.11":
+        #     continue
+        ## convert the sequence to string of number, 0 for A, 1 for C, 2 for G, 3 for T, 4 for N
+        seq = str(record.seq)
+        ## convert to capital
+        raw_seq = seq.upper()
+        seq_dict[record.id] = raw_seq
+        # seq = raw_seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
+    return seq_dict
+
+def prepare_data(seq, ipd_list, kmer_baseline_dict, kmer_num_dict, up=7, down=3):
+    # save_kmer = {}  ## {pos:kmer}
+    
+    # y = control_list[up:len(seq) - down]
+    for i in range(up, len(seq) - down):
+        kmer = seq[i-up:i+down]
+        if 'N' in kmer:
+            continue  # Skip kmers containing 'N'
+        ipd = float(ipd_list[i])
+        if ipd == 0:
+            continue
+        # kmer_baseline_dict[kmer].append(ipd)
+        kmer_baseline_dict[kmer] += ipd
+        kmer_num_dict[kmer] += 1
+        # save_kmer[i] = kmer    
+    return kmer_baseline_dict, kmer_num_dict
+
+class Contig:
+    def __init__(self, name):
+        self.name = name
+        self.forward_dict = {}
+        self.reverse_dict = {}
+        self.forward_ipd_sum = {}
+        self.reverse_ipd_sum = {}
+
+def get_reverse_cmplement(kmer):
+    kmer_dict = {'A':'T', 'T':'A', 'C':'G', 'G':'C', 'N':'N'}
+    complement_kmer = ''
+    for i in range(len(kmer)):
+        complement_kmer += kmer_dict[kmer[i]]
+    # reverse_kmer = complement_kmer[::-1]
+    # return reverse_kmer
+    return complement_kmer
+
+def count_kmer(contig_forward_dict_dict, seq, strand = 1):
+
+    # kmer_baseline_dict = defaultdict(list)
+    kmer_baseline_dict = defaultdict(float)   ## sum
+    kmer_num_dict = defaultdict(int)  # count
+    for contig in contig_forward_dict_dict:
+        
+        contig_forward_dict = contig_forward_dict_dict[contig]
+        # print (contig, len(contig_forward_dict),contig_forward_dict)
+
+        seq = seq_dict[contig]
+        if strand == 0:
+            seq = get_reverse_cmplement(seq)
+        observed_IPD_list = get_IPD_list(len(seq), contig_forward_dict)
+        kmer_baseline_dict, kmer_num_dict = prepare_data(seq, observed_IPD_list, kmer_baseline_dict, kmer_num_dict, up, down)
+    print ("kmer is counted")
+    
+    mean_dict, median_dict = {}, {}
+    for kmer in kmer_baseline_dict:
+        mean_dict[kmer] = round(kmer_baseline_dict[kmer]/kmer_num_dict[kmer], 3) ## calculate the mean of each kmer
+        median_dict[kmer] = 0
+    print ("mean and median is computed", len(mean_dict), 'kmers')
+    return mean_dict, median_dict, kmer_baseline_dict, kmer_num_dict
+
+def align_kmer(contig_forward_dict_dict, \
+               kmer_baseline_dict, kmer_num_dict, mean_dict, median_dict, df, strand = 1):
+    data = []
+    for contig in contig_forward_dict_dict:
+        contig_forward_dict = contig_forward_dict_dict[contig]
+        print (contig, len(contig_forward_dict))
+
+        seq = seq_dict[contig]
+        for pos in range(up, len(seq) - down):
+            kmer = seq[pos-up:pos+down]
+            if 'N' in kmer:
+                continue  # Skip kmers containing 'N'
+            # if kmer_num_dict[kmer] < 10:
+            #     continue
+            if kmer in kmer_baseline_dict and pos in contig_forward_dict:
+                # print (pos, kmer, len(kmer_baseline_dict[kmer]), np.mean(kmer_baseline_dict[kmer]), contig_forward_dict[pos][0], ipd_sum_for_control[pos])
+                data.append([contig, pos, strand, kmer, kmer_num_dict[kmer], \
+                mean_dict[kmer], median_dict[kmer], \
+                contig_forward_dict[pos][0]])
+
+                ## To do, make it more quick
+                row_index = df.loc[(df['tpl'] == pos) & (df['strand'] == strand)].index
+                if not row_index.empty:
+                    df.loc[row_index, 'kmer'] = kmer
+                    df.loc[row_index, 'count'] = kmer_num_dict[kmer]
+                    df.loc[row_index, 'mean'] = mean_dict[kmer]
+                    df.loc[row_index, 'median'] = median_dict[kmer]
+    return df
+
+
+
+
+def handle_each_ref(each_ref, alignments, factor, outdir):
     # refGroupId = alignments.referenceInfo(
     #         'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595').Name
     refGroupId = alignments.referenceInfo(each_ref.Name).Name
-    hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
+    # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
+    hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 1000)]
 
 
     rawIpds = _loadRawIpds(hits, 0, each_ref.Length, factor)
@@ -212,32 +335,71 @@ def handle_each_ref(each_ref, alignments, factor):
     print ("capValue", capValue)
 
     goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
+    result = []
+    contig_forward_dict_dict = defaultdict(dict)
+    contig_reverse_dict_dict = defaultdict(dict)
     for x in goodSites:
-        print (x['tpl'], x['strand'], x['data']['ipd'].size)
-        _computePositionSyntheticControl(x, capValue)
+        # print (x['tpl'], x['strand'], x['data']['ipd'].size)
+        res = _computePositionSyntheticControl(x, capValue, refGroupId, each_ref.Name)
+        result.append(pd.DataFrame(res))
+
+        if int(res['strand']) == 1:
+            contig_forward_dict_dict[res['refName']][res['tpl']] = [res['tMean']]
+        else:
+            contig_reverse_dict_dict[res['refName']][res['tpl']] = [res['tMean']]
         # break
-        if x['tpl'] > 5:
-            break
-# subread_bam = "/home/shuaiw/methylation/data/borg/human/human_000733.subreads.align.bam"
+        # if x['tpl'] > 5:
+        #     break
 
-# subread_bam = "/home/shuaiw/methylation/data/borg/split_bam_dir2/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_7580_L.bam"
-# fasta = "/home/shuaiw/methylation/data/borg/split_bam_dir2/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_7580_L.fasta"
+    mean_dict, median_dict, kmer_baseline_dict, kmer_num_dict = count_kmer(contig_forward_dict_dict, seq_dict, 1)
+    print ("kmer is counted")
+    
+    combined_df = pd.concat(result, ignore_index=True)
+    combined_df['kmer'] = None
+    combined_df['count'] = None
+    combined_df['mean'] = None
+    combined_df['median'] = None
 
-subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/1.align.bam"
-fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/1.fa"
+    combined_df = align_kmer(contig_forward_dict_dict, kmer_baseline_dict, kmer_num_dict, mean_dict, median_dict, combined_df, strand = 1)
 
-print ("loading alignments", subread_bam)
-alignments = AlignmentSet(subread_bam,
-                                referenceFastaFname=fasta)
-factor = 1.0 / alignments.readGroupTable[0].FrameRate  ## The frame rate represents the speed of data acquisition in frames per second during sequencing.
-print ("factor", factor)
 
-refInfo = alignments.referenceInfoTable
-print ("refInfo", refInfo.shape, len(refInfo), refInfo)
+    df_file = os.path.join(outdir, each_ref.Name + ".ipd.csv")
+    combined_df.to_csv(df_file, index=False)
 
-for each_ref in refInfo:
-    print (each_ref.Name, each_ref.Length)
-    handle_each_ref(each_ref, alignments, factor)
+
+if __name__ == "__main__":
+    # subread_bam = "/home/shuaiw/methylation/data/borg/human/human_000733.subreads.align.bam"
+
+    # subread_bam = "/home/shuaiw/methylation/data/borg/split_bam_dir2/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_7580_L.bam"
+    # fasta = "/home/shuaiw/methylation/data/borg/split_bam_dir2/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_7580_L.fasta"
+
+    up = 8
+    down = 4
+
+    subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/1.align.bam"
+    fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/1.fa"
+    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds/"
+
+    ## build outdir if not exists
+    
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
+    print ("loading alignments", subread_bam)
+    alignments = AlignmentSet(subread_bam,
+                                    referenceFastaFname=fasta)
+    factor = 1.0 / alignments.readGroupTable[0].FrameRate  ## The frame rate represents the speed of data acquisition in frames per second during sequencing.
+    print ("factor", factor)
+
+    refInfo = alignments.referenceInfoTable
+    print ("refInfo", refInfo.shape, len(refInfo), refInfo)
+
+    seq_dict = extract_context(fasta)
+    print ("ref loaded", len(seq_dict))
+
+    for each_ref in refInfo:
+        print (each_ref.Name, each_ref.Length)
+        handle_each_ref(each_ref, alignments, factor, outdir)
 
 
 

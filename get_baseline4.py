@@ -134,7 +134,7 @@ def extract_ipd_ratio_all_chunk(file_path, chunksize=10000):
     ipd_sum_for_control_dict = defaultdict(dict)
     ipd_sum_for_control_reverse_dict = defaultdict(dict)
 
-    chunk_iter = pd.read_csv(file_path, chunksize=chunksize,nrows=100000)
+    chunk_iter = pd.read_csv(file_path, chunksize=chunksize,nrows=10000000)
     for chunk in chunk_iter:
         contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, \
             ipd_sum_for_control_reverse_dict = process_chunk(chunk, contig_forward_dict_dict,\
@@ -197,8 +197,8 @@ if __name__ == "__main__":
     # ref = "/home/shuaiw/methylation/data/borg/hg38/NC_000001.11.fasta"
     # subread_bam = "/home/shuaiw/methylation/data/borg/human/human_000733.subreads.align.bam"
 
-    ref = "/home/shuaiw/Methy/borg/contigs/break_contigs.fasta"
-    csv = "/home/shuaiw/Methy/borg/break_contigs/break_contigs.csv"
+    ref = "/home/shuaiw/methylation/data/borg/contigs/break_contigs.fasta"
+    csv = "/home/shuaiw/methylation/data/borg/break_contigs/break_contigs.csv"
     test_csv = "/home/shuaiw/methylation/data/borg/human/test_result6.csv"
 
     save_kmer_file = "/home/shuaiw/methylation/data/borg/human/kmer_baseline_dict.pkl"

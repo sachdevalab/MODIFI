@@ -127,8 +127,8 @@ def extract_ipd_ratio_all_chunk(file_path, chunksize=100000000):
     ipd_sum_for_control_dict = defaultdict(dict)
     ipd_sum_for_control_reverse_dict = defaultdict(dict)
 
-    # chunk_iter = pd.read_csv(file_path, chunksize=chunksize,nrows=100000000)
-    chunk_iter = pd.read_csv(file_path, chunksize=chunksize)
+    chunk_iter = pd.read_csv(file_path, chunksize=chunksize,nrows=1000000)
+    # chunk_iter = pd.read_csv(file_path, chunksize=chunksize)
     for chunk in chunk_iter:
         contig_forward_dict_dict, contig_reverse_dict_dict, ipd_sum_for_control_dict, \
             ipd_sum_for_control_reverse_dict = process_chunk(chunk, contig_forward_dict_dict,\
@@ -175,8 +175,8 @@ def align_kmer(contig_forward_dict_dict, ipd_sum_for_control_dict, \
             kmer = seq[pos-up:pos+down]
             if 'N' in kmer:
                 continue  # Skip kmers containing 'N'
-            # if kmer_num_dict[kmer] < 10:
-            #     continue
+            if kmer_num_dict[kmer] < 10:
+                continue
             if kmer in kmer_baseline_dict and pos in contig_forward_dict:
                 # print (pos, kmer, len(kmer_baseline_dict[kmer]), np.mean(kmer_baseline_dict[kmer]), contig_forward_dict[pos][0], ipd_sum_for_control[pos])
                 data.append([contig, pos, strand, kmer, kmer_num_dict[kmer], \
