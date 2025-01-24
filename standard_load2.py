@@ -151,7 +151,7 @@ def _computePositionSyntheticControl(caseObservations, capValue, refId, refName)
     res = dict()
 
     # ref00000x name
-    res['refId'] = refId
+    # res['refId'] = refId
 
     # FASTA header name
     res['refName'] = refName
@@ -175,7 +175,7 @@ def _computePositionSyntheticControl(caseObservations, capValue, refId, refName)
     # res['base'] = self.cognateBaseFunc(tpl, strand)
 
     # Store in case of methylated fraction estimtion:
-    res['rawData'] = d
+    # res['rawData'] = d   # discard it
 
     percentile = min(90, (1.0 - 1.0 / (d.size - 1)) * 100)
     localPercentile = np.percentile(d, percentile)
@@ -303,15 +303,20 @@ def align_kmer(contig_forward_dict_dict, \
                     df.loc[row_index, 'median'] = median_dict[kmer]
     return df
 
-
-
+def get_kmer(seq, i, up=7, down=3):
+    if i - up < 0 or i + down > len(seq):
+        return None
+    kmer = seq[i-up:i+down]
+    if 'N' in kmer:
+        return None
+    return kmer
 
 def handle_each_ref(each_ref, alignments, factor, outdir):
     # refGroupId = alignments.referenceInfo(
     #         'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595').Name
     refGroupId = alignments.referenceInfo(each_ref.Name).Name
-    # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
-    hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 1000)]
+    hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
+    # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 100000)]
 
 
     rawIpds = _loadRawIpds(hits, 0, each_ref.Length, factor)
@@ -333,35 +338,58 @@ def handle_each_ref(each_ref, alignments, factor, outdir):
 
     goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
     result = []
-    contig_forward_dict_dict = defaultdict(dict)
-    contig_reverse_dict_dict = defaultdict(dict)
+    seq = seq_dict[each_ref.Name]
+    complement_seq = get_reverse_cmplement(seq)
+
+    kmer_baseline_dict = defaultdict(float)   ## sum
+    kmer_num_dict = defaultdict(int)  # count
     for x in goodSites:
         # print (x['tpl'], x['strand'], x['data']['ipd'].size)
         res = _computePositionSyntheticControl(x, capValue, refGroupId, each_ref.Name)
-        result.append(pd.DataFrame(res))
 
-        if int(res['strand']) == 1:
-            contig_forward_dict_dict[res['refName']][res['tpl']] = [res['tMean']]
+        
+        if res['strand'] == 1:
+            kmer = get_kmer(seq, res['tpl'])
+            res['kmer'] = kmer
         else:
-            contig_reverse_dict_dict[res['refName']][res['tpl']] = [res['tMean']]
-        # break
-        # if x['tpl'] > 5:
-        #     break
+            res['kmer'] = None
+            continue
+        #     kmer = get_kmer(complement_seq, res['tpl'])
+        #     res['kmer'] = kmer
+        
+        if kmer is None:
+            continue
+        kmer_baseline_dict[kmer] += res['tMean']
+        kmer_num_dict[kmer] += 1
+        result.append(pd.DataFrame([res]))
+    print ("kmer is counted", len(kmer_baseline_dict), len(kmer_num_dict))
 
-    mean_dict, median_dict, kmer_baseline_dict, kmer_num_dict = count_kmer(contig_forward_dict_dict, seq_dict, 1)
-    print ("kmer is counted")
     
     combined_df = pd.concat(result, ignore_index=True)
-    combined_df['kmer'] = None
+    print ("combined_df", combined_df)
+    print (len(combined_df), 'rows')
     combined_df['count'] = None
     combined_df['mean'] = None
-    combined_df['median'] = None
 
-    combined_df = align_kmer(contig_forward_dict_dict, kmer_baseline_dict, kmer_num_dict, mean_dict, median_dict, combined_df, strand = 1)
+    ## cal mean for each kmer
+    kmer_mean_dict = {}
+    for kmer in kmer_baseline_dict:
+        kmer_mean_dict[kmer] = round(kmer_baseline_dict[kmer]/kmer_num_dict[kmer], 3)
+    print ("mean is computed", len(kmer_mean_dict), 'kmers')
+
+    for index, row in combined_df.iterrows():
+        kmer = row['kmer']
+        if kmer is None:
+            combined_df.loc[index, 'count'] = 0
+            combined_df.loc[index, 'mean'] = 1
+        else: 
+            combined_df.loc[index, 'count'] = kmer_num_dict[kmer]
+            combined_df.loc[index, 'mean'] = kmer_mean_dict[kmer]
 
 
-    df_file = os.path.join(outdir, each_ref.Name + ".ipd.csv")
+    df_file = os.path.join(outdir, each_ref.Name + ".ipd2.csv")
     combined_df.to_csv(df_file, index=False)
+    print ("df saved", df_file)
 
 
 if __name__ == "__main__":
