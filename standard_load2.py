@@ -9,6 +9,9 @@ import numpy as np
 import os
 import pandas as pd
 from collections import defaultdict
+import pickle
+from sklearn.mixture import GaussianMixture
+from scipy.stats import norm
 
 
 # Raw ipd record
@@ -311,19 +314,19 @@ def get_kmer(seq, i, up=7, down=3):
         return None
     return kmer
 
-def load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_dict):
+def load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_dict,all_ref_IPDs):
     # refGroupId = alignments.referenceInfo(
     #         'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595').Name
     refGroupId = alignments.referenceInfo(each_ref.Name).Name
     hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
     # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 100000)]
+    print ("hits", len(hits))
 
 
     rawIpds = _loadRawIpds(hits, 0, each_ref.Length, factor)
-
     print ("rawIpds", rawIpds.shape)
     caseChunks = _chunkRawIpds(rawIpds)
-    # print ("chunks", chunks)
+    print ("chunks")
 
     ipdVect = rawIpds['ipd']
     if ipdVect.size < 10:
@@ -336,13 +339,19 @@ def load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_
 
     print ("capValue", capValue)
 
-    goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
+    # goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
     result = []
     seq = seq_dict[each_ref.Name]
     complement_seq = get_reverse_cmplement(seq)
+    print ("goodSites")
 
 
-    for x in goodSites:
+    # for x in goodSites:
+    for x in caseChunks:
+        if x['data']['ipd'].size > 2:
+            pass
+        else:
+            continue
         # print (x['tpl'], x['strand'], x['data']['ipd'].size)
         res = _computePositionSyntheticControl(x, capValue, refGroupId, each_ref.Name)
 
@@ -367,46 +376,81 @@ def load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_
     combined_df = pd.concat(result, ignore_index=True)
     # print ("combined_df", combined_df)
     print (len(combined_df), 'rows')
-    return combined_df, kmer_baseline_dict, kmer_num_dict
+    df_file = os.path.join(outdir, each_ref.Name + ".ipd1.csv")
+    combined_df.to_csv(df_file, index=False)
+    print ("raw ipd df saved", df_file)
+    # all_ref_IPDs[each_ref.Name] = combined_df
+    return combined_df, kmer_baseline_dict, kmer_num_dict,all_ref_IPDs
+
+def p_value_right_tail(x, mu, sigma):
+    """
+    Calculate the one-tailed p-value for x being in the right tail of a normal distribution.
+
+    Parameters:
+    x (float): The observed value
+    mu (float): The mean of the normal distribution
+    sigma (float): The standard deviation of the normal distribution
+
+    Returns:
+    float: The p-value for x being in the right tail
+    """
+    # Calculate the z-score
+    z = (x - mu) / sigma
+    
+    # Calculate the right-tail p-value
+    p_value = 1 - norm.cdf(z)
+    # print (x, mu, sigma, p_value)
+    return p_value
 
 def normalize_IPD(each_ref, combined_df, kmer_mean_dict, kmer_num_dict):
     combined_df['count'] = None
-    combined_df['mean'] = None
-
-
+    combined_df['control'] = None
 
     for index, row in combined_df.iterrows():
         kmer = row['kmer']
         if kmer is None:
             combined_df.loc[index, 'count'] = 0
-            combined_df.loc[index, 'mean'] = 1
+            combined_df.loc[index, 'control'] = 1
         else: 
             combined_df.loc[index, 'count'] = kmer_num_dict[kmer]
-            combined_df.loc[index, 'mean'] = kmer_mean_dict[kmer]
+            combined_df.loc[index, 'control'] = kmer_mean_dict[kmer]
 
-
+    combined_df = get_ipd_ratio(combined_df)
     df_file = os.path.join(outdir, each_ref.Name + ".ipd2.csv")
     combined_df.to_csv(df_file, index=False)
     print ("df saved", df_file)
 
+def get_ipd_ratio(df):
+    print ('get ipd_ratio')
+    ## get ratio which is the ratio between estimated and ipdsum
+    df['ipd_ratio'] = df['tMean'] / df['control'] 
+    # data = df['ipd_ratio'].values.reshape(-1, 1)
+    # gmm = GaussianMixture(n_components=1, covariance_type='full', random_state=42)
+    # gmm.fit(data)
+    # mean = gmm.means_[0][0]
+    # std = np.sqrt(gmm.covariances_[0][0])
+    ## simply calculate mean and std for ipd_ratio
+    mean = df['ipd_ratio'].mean()
+    std = df['ipd_ratio'].std()
+    ## ofr each value, calculate the probability belong to the model
+    ## add pvalue column to the dataframe
+    df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
+
 
 if __name__ == "__main__":
-    # subread_bam = "/home/shuaiw/methylation/data/borg/human/human_000733.subreads.align.bam"
-
-    # subread_bam = "/home/shuaiw/methylation/data/borg/split_bam_dir2/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_7580_L.bam"
-    # fasta = "/home/shuaiw/methylation/data/borg/split_bam_dir2/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_7580_L.fasta"
-
     up = 8
     down = 4
 
-    # subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/1.align.bam"
-    # fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/1.fa"
-    subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
-    fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
-    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds/"
+    subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/12.align.bam"
+    fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa"
+    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/"
+
+
+    # subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
+    # fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
+    # outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds/"
 
     ## build outdir if not exists
-    
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
@@ -427,17 +471,21 @@ if __name__ == "__main__":
     all_ref_IPDs = {}
     for each_ref in refInfo:
         print (each_ref.Name, each_ref.Length)
-        combined_df, kmer_baseline_dict, kmer_num_dict = load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_dict)
-        all_ref_IPDs[each_ref.Name] = combined_df
+        combined_df, kmer_baseline_dict, kmer_num_dict,all_ref_IPDs = load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_dict,all_ref_IPDs)
     print ("all_ref_IPDs", len(all_ref_IPDs))
     ## cal mean for each kmer
     kmer_mean_dict = {}
     for kmer in kmer_baseline_dict:
         kmer_mean_dict[kmer] = round(kmer_baseline_dict[kmer]/kmer_num_dict[kmer], 3)
     print ("mean is computed", len(kmer_mean_dict), 'kmers')
+    ## use pickle to save the kmer_mean_dict
+    with open(os.path.join(outdir, 'kmer_mean_dict.pkl'), 'wb') as f:
+        pickle.dump(kmer_mean_dict, f)
 
     for each_ref in refInfo:
-        combined_df = all_ref_IPDs[each_ref.Name]
+        # combined_df = all_ref_IPDs[each_ref.Name]
+        df_file = os.path.join(outdir, each_ref.Name + ".ipd1.csv")
+        combined_df = pd.read_csv(df_file)
         normalize_IPD(each_ref, combined_df, kmer_mean_dict, kmer_num_dict)
 
 
