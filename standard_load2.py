@@ -311,7 +311,7 @@ def get_kmer(seq, i, up=7, down=3):
         return None
     return kmer
 
-def handle_each_ref(each_ref, alignments, factor, outdir):
+def load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_dict):
     # refGroupId = alignments.referenceInfo(
     #         'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595').Name
     refGroupId = alignments.referenceInfo(each_ref.Name).Name
@@ -341,8 +341,7 @@ def handle_each_ref(each_ref, alignments, factor, outdir):
     seq = seq_dict[each_ref.Name]
     complement_seq = get_reverse_cmplement(seq)
 
-    kmer_baseline_dict = defaultdict(float)   ## sum
-    kmer_num_dict = defaultdict(int)  # count
+
     for x in goodSites:
         # print (x['tpl'], x['strand'], x['data']['ipd'].size)
         res = _computePositionSyntheticControl(x, capValue, refGroupId, each_ref.Name)
@@ -366,16 +365,15 @@ def handle_each_ref(each_ref, alignments, factor, outdir):
 
     
     combined_df = pd.concat(result, ignore_index=True)
-    print ("combined_df", combined_df)
+    # print ("combined_df", combined_df)
     print (len(combined_df), 'rows')
+    return combined_df, kmer_baseline_dict, kmer_num_dict
+
+def normalize_IPD(each_ref, combined_df, kmer_mean_dict, kmer_num_dict):
     combined_df['count'] = None
     combined_df['mean'] = None
 
-    ## cal mean for each kmer
-    kmer_mean_dict = {}
-    for kmer in kmer_baseline_dict:
-        kmer_mean_dict[kmer] = round(kmer_baseline_dict[kmer]/kmer_num_dict[kmer], 3)
-    print ("mean is computed", len(kmer_mean_dict), 'kmers')
+
 
     for index, row in combined_df.iterrows():
         kmer = row['kmer']
@@ -401,8 +399,10 @@ if __name__ == "__main__":
     up = 8
     down = 4
 
-    subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/1.align.bam"
-    fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/1.fa"
+    # subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/1.align.bam"
+    # fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/1.fa"
+    subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
+    fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
     outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds/"
 
     ## build outdir if not exists
@@ -422,9 +422,23 @@ if __name__ == "__main__":
     seq_dict = extract_context(fasta)
     print ("ref loaded", len(seq_dict))
 
+    kmer_baseline_dict = defaultdict(float)   ## sum
+    kmer_num_dict = defaultdict(int)  # count
+    all_ref_IPDs = {}
     for each_ref in refInfo:
         print (each_ref.Name, each_ref.Length)
-        handle_each_ref(each_ref, alignments, factor, outdir)
+        combined_df, kmer_baseline_dict, kmer_num_dict = load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_dict)
+        all_ref_IPDs[each_ref.Name] = combined_df
+    print ("all_ref_IPDs", len(all_ref_IPDs))
+    ## cal mean for each kmer
+    kmer_mean_dict = {}
+    for kmer in kmer_baseline_dict:
+        kmer_mean_dict[kmer] = round(kmer_baseline_dict[kmer]/kmer_num_dict[kmer], 3)
+    print ("mean is computed", len(kmer_mean_dict), 'kmers')
+
+    for each_ref in refInfo:
+        combined_df = all_ref_IPDs[each_ref.Name]
+        normalize_IPD(each_ref, combined_df, kmer_mean_dict, kmer_num_dict)
 
 
 

@@ -34,11 +34,38 @@ def read_log(log):
 
     plot(predicted_list, real_list)
 
-def plot(predicted_list, real_list):
+def plot(predicted_list, real_list, file_name):
+    import seaborn as sns
     import matplotlib.pyplot as plt
-    plt.scatter(predicted_list, real_list)
-    ## svae the plot
-    plt.savefig("tmp/scatter.pdf")
+    from scipy.stats import pearsonr
+
+    # Create a scatter plot using seaborn
+    sns.scatterplot(x=predicted_list, y=real_list, s=10)
+
+    # Add x label and y label
+    plt.xlabel("Predicted IPD")
+    plt.ylabel("Observed IPD")
+
+    # Calculate the Pearson correlation coefficient
+    corr, _ = pearsonr(predicted_list, real_list)
+    print("Pearson correlation:", corr)
+
+    # Add the correlation as text on the plot
+    plt.text(0.05, 0.95, f'Pearson correlation: {corr:.2f}', transform=plt.gca().transAxes, 
+             fontsize=8, verticalalignment='top')
+
+    # # Set x and y limits
+    # plt.xlim(0, 5)
+    # plt.ylim(0, 5)
+
+    # Make sure the x and y axis are the same
+    plt.axis('equal')
+
+    # Save the plot
+    plt.savefig(file_name)
+
+    # Close the plot
+    plt.close()
 
 def read_log_csv(csv):
 
@@ -163,37 +190,39 @@ def count_log_csv(csv):
     mae_ipd_sum = np.mean(np.abs(df['real'] - df['ipd_sum']))
     print ("MAE between real and estimated", mae)
     print ("MAE between real and ipdsum", mae_ipd_sum)
+    plot(df['estimated'], df['real'], "tmp/our_scatter.pdf")
+    plot(df['ipd_sum'], df['real'], "tmp/ipd_sum_scatter.pdf")
 
-    estimate_dict = defaultdict(list)
-    ipdsum_dict = defaultdict(list)
-    real_dict = defaultdict(list)
-    ## enumerate the row
-    for index, row in df.iterrows():
-        # print(index, row['kmer'])
-        estimate_dict[row['kmer']].append(row['estimated'])
-        ipdsum_dict[row['kmer']].append(row['ipd_sum'])
-        real_dict[row['kmer']].append(row['real'])
-    ## sort the kmer with the length of value list
-    sorted_estimate = sorted(estimate_dict.items(), key=lambda x: len(x[1]), reverse=True)
-    for i in range(10):
-        kmer = sorted_estimate[i][0]
-        ## round two for each element in estimate_dict[kmer]
-        estimate_dict[kmer] = [round(x, 2) for x in estimate_dict[kmer]]
-        ## cal MAE between real and estimated
-        mae = np.mean(np.abs(np.array(real_dict[kmer]) - np.array(estimate_dict[kmer])))
-        mae_ipd_sum = np.mean(np.abs(np.array(real_dict[kmer]) - np.array(ipdsum_dict[kmer])))
-        print ("kmer", kmer, mae, mae_ipd_sum, pearsonr(real_dict[kmer], estimate_dict[kmer]), pearsonr(real_dict[kmer], ipdsum_dict[kmer]))
-        print ("real", real_dict[kmer][:10], np.mean(real_dict[kmer]))
-        print ("estimated", estimate_dict[kmer][:10], np.mean(estimate_dict[kmer]))
-        print ("ipdsum", ipdsum_dict[kmer][:10], np.mean(ipdsum_dict[kmer]))
-        print ("")
-        break
+    # estimate_dict = defaultdict(list)
+    # ipdsum_dict = defaultdict(list)
+    # real_dict = defaultdict(list)
+    # ## enumerate the row
+    # for index, row in df.iterrows():
+    #     # print(index, row['kmer'])
+    #     estimate_dict[row['kmer']].append(row['estimated'])
+    #     ipdsum_dict[row['kmer']].append(row['ipd_sum'])
+    #     real_dict[row['kmer']].append(row['real'])
+    # ## sort the kmer with the length of value list
+    # sorted_estimate = sorted(estimate_dict.items(), key=lambda x: len(x[1]), reverse=True)
+    # for i in range(10):
+    #     kmer = sorted_estimate[i][0]
+    #     ## round two for each element in estimate_dict[kmer]
+    #     estimate_dict[kmer] = [round(x, 2) for x in estimate_dict[kmer]]
+    #     ## cal MAE between real and estimated
+    #     mae = np.mean(np.abs(np.array(real_dict[kmer]) - np.array(estimate_dict[kmer])))
+    #     mae_ipd_sum = np.mean(np.abs(np.array(real_dict[kmer]) - np.array(ipdsum_dict[kmer])))
+    #     print ("kmer", kmer, mae, mae_ipd_sum, pearsonr(real_dict[kmer], estimate_dict[kmer]), pearsonr(real_dict[kmer], ipdsum_dict[kmer]))
+    #     print ("real", real_dict[kmer][:10], np.mean(real_dict[kmer]))
+    #     print ("estimated", estimate_dict[kmer][:10], np.mean(estimate_dict[kmer]))
+    #     print ("ipdsum", ipdsum_dict[kmer][:10], np.mean(ipdsum_dict[kmer]))
+    #     print ("")
+    #     break
 
 
 # log = "slurm-705929.out"
 # read_log(log)
-csv = "/home/shuaiw/methylation/data/borg/human/test_result6.csv"
+csv = "/home/shuaiw/methylation/data/borg/human/test_result5.csv"
 df = read_log_csv(csv)
-# count_log_csv(csv)
-get_ipd_ratio(df)
+count_log_csv(csv)
+# get_ipd_ratio(df)
 # get_raw_ipd(df)
