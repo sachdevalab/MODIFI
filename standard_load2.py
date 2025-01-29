@@ -12,6 +12,10 @@ from collections import defaultdict
 import pickle
 from sklearn.mixture import GaussianMixture
 from scipy.stats import norm
+import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from multiprocessing import Manager, Process, Lock
+
 
 
 # Raw ipd record
@@ -314,19 +318,32 @@ def get_kmer(seq, i, up=7, down=3):
         return None
     return kmer
 
-def load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_dict,all_ref_IPDs):
+def load_IPD1(each_ref):
+    print ('hi')
+    # t0 = time.time()
+    alignments = AlignmentSet(subread_bam, referenceFastaFname=fasta)
+    refGroupId = alignments.referenceInfo(each_ref.Name).Name
+    for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length):
+        pass
+    # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
+    # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 100000)]
+    print ("11 hits", alignments.referenceInfo(each_ref.Name).Name)
+
+def load_IPD(each_ref, kmer_baseline_dict, kmer_num_dict):
     # refGroupId = alignments.referenceInfo(
     #         'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595').Name
+    t0 = time.time()
+    alignments = AlignmentSet(subread_bam, referenceFastaFname=fasta)
     refGroupId = alignments.referenceInfo(each_ref.Name).Name
     hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
-    # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 100000)]
-    print ("hits", len(hits))
+    # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 1000)]
+    print ("hits", len(hits), time.time()-t0)
 
 
     rawIpds = _loadRawIpds(hits, 0, each_ref.Length, factor)
     print ("rawIpds", rawIpds.shape)
     caseChunks = _chunkRawIpds(rawIpds)
-    print ("chunks")
+    print ("chunks", time.time()-t0)
 
     ipdVect = rawIpds['ipd']
     if ipdVect.size < 10:
@@ -337,13 +354,13 @@ def load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_
         # trimming extreme IPDs
         capValue = np.percentile(ipdVect, 99)
 
-    print ("capValue", capValue)
+    print ("capValue", capValue, time.time()-t0)
 
     # goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
     result = []
     seq = seq_dict[each_ref.Name]
     complement_seq = get_reverse_cmplement(seq)
-    print ("goodSites")
+    print ("goodSites", time.time()-t0)
 
 
     # for x in goodSites:
@@ -362,25 +379,34 @@ def load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_
         else:
             res['kmer'] = None
             continue
-        #     kmer = get_kmer(complement_seq, res['tpl'])
-        #     res['kmer'] = kmer
         
         if kmer is None:
             continue
-        kmer_baseline_dict[kmer] += res['tMean']
-        kmer_num_dict[kmer] += 1
+
+        # kmer_baseline_dict[kmer] += res['tMean']
+        # kmer_num_dict[kmer] += 1
+        with lock:
+            if kmer not in kmer_baseline_dict:
+                kmer_baseline_dict[kmer] = 0.0
+            kmer_baseline_dict[kmer] += res['tMean']
+            if kmer not in kmer_num_dict:
+                kmer_num_dict[kmer] = 0
+            kmer_num_dict[kmer] += 1
+
         result.append(pd.DataFrame([res]))
-    print ("kmer is counted", len(kmer_baseline_dict), len(kmer_num_dict))
+    print ("kmer is counted", len(kmer_baseline_dict), len(kmer_num_dict), time.time()-t0)
 
     
     combined_df = pd.concat(result, ignore_index=True)
     # print ("combined_df", combined_df)
     print (len(combined_df), 'rows')
+
     df_file = os.path.join(outdir, each_ref.Name + ".ipd1.csv")
     combined_df.to_csv(df_file, index=False)
     print ("raw ipd df saved", df_file)
+
     # all_ref_IPDs[each_ref.Name] = combined_df
-    return combined_df, kmer_baseline_dict, kmer_num_dict,all_ref_IPDs
+    return combined_df
 
 def p_value_right_tail(x, mu, sigma):
     """
@@ -435,7 +461,21 @@ def get_ipd_ratio(df):
     ## ofr each value, calculate the probability belong to the model
     ## add pvalue column to the dataframe
     df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
+    return df
 
+def process_reference(each_ref):
+    print(f"{each_ref.Name}, {each_ref.Length}")
+    return load_IPD(each_ref)
+
+def normalize_IPD_wrapper(ref):
+    try:
+        df_file = os.path.join(outdir, ref.Name + ".ipd1.csv")
+        combined_df = pd.read_csv(df_file)
+        normalize_IPD(ref, combined_df, kmer_mean_dict, kmer_num_dict)
+        return ref.Name
+    except Exception as e:
+        print(f"An error occurred while processing {ref.Name}: {e}")
+        return None
 
 if __name__ == "__main__":
     up = 8
@@ -448,7 +488,9 @@ if __name__ == "__main__":
 
     # subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
     # fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
-    # outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds/"
+    # outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds2/"
+
+    num_processes = 10
 
     ## build outdir if not exists
     if not os.path.exists(outdir):
@@ -466,13 +508,35 @@ if __name__ == "__main__":
     seq_dict = extract_context(fasta)
     print ("ref loaded", len(seq_dict))
 
-    kmer_baseline_dict = defaultdict(float)   ## sum
-    kmer_num_dict = defaultdict(int)  # count
+    manager = Manager()
+    kmer_baseline_dict = manager.dict()
+    kmer_num_dict = manager.dict()
+    lock = Lock()
+
+    # kmer_baseline_dict = defaultdict(float)   ## sum
+    # kmer_num_dict = defaultdict(int)  # count
+
     all_ref_IPDs = {}
-    for each_ref in refInfo:
-        print (each_ref.Name, each_ref.Length)
-        combined_df, kmer_baseline_dict, kmer_num_dict,all_ref_IPDs = load_IPD(each_ref, alignments, factor, outdir, kmer_baseline_dict, kmer_num_dict,all_ref_IPDs)
-    print ("all_ref_IPDs", len(all_ref_IPDs))
+
+    # for each_ref in refInfo:
+    #     print (each_ref.Name, each_ref.Length)
+    #     combined_df = load_IPD(each_ref, kmer_baseline_dict, kmer_num_dict)
+
+    # Using ProcessPoolExecutor for multithreading
+    with ProcessPoolExecutor(max_workers=num_processes) as executor:  # Adjust max_workers as needed
+        future_to_ref = {executor.submit(load_IPD, ref, kmer_baseline_dict, kmer_num_dict): ref for ref in refInfo}
+        results = []
+        for future in as_completed(future_to_ref):
+            ref = future_to_ref[future]
+            try:
+                result = future.result()
+                results.append(result)
+            except Exception as e:
+                print(f"An error occurred while processing {ref}: {e}")
+
+    
+    print ("IPD loaded")
+    print ("kmer saved", len(kmer_baseline_dict), len(kmer_num_dict))
     ## cal mean for each kmer
     kmer_mean_dict = {}
     for kmer in kmer_baseline_dict:
@@ -481,12 +545,32 @@ if __name__ == "__main__":
     ## use pickle to save the kmer_mean_dict
     with open(os.path.join(outdir, 'kmer_mean_dict.pkl'), 'wb') as f:
         pickle.dump(kmer_mean_dict, f)
+    ## also save kmer_num_dict
+    with open(os.path.join(outdir, 'kmer_num_dict.pkl'), 'wb') as f:
+        pickle.dump(kmer_num_dict, f)
 
-    for each_ref in refInfo:
-        # combined_df = all_ref_IPDs[each_ref.Name]
-        df_file = os.path.join(outdir, each_ref.Name + ".ipd1.csv")
-        combined_df = pd.read_csv(df_file)
-        normalize_IPD(each_ref, combined_df, kmer_mean_dict, kmer_num_dict)
+    ## load kmer_mean_dict
+    # with open(os.path.join(outdir, 'kmer_mean_dict.pkl'), 'rb') as f:
+    #     kmer_mean_dict = pickle.load(f)
+    #     print ("kmer_mean_dict loaded", len(kmer_mean_dict))
+
+    # for each_ref in refInfo:
+    #     # combined_df = all_ref_IPDs[each_ref.Name]
+    #     df_file = os.path.join(outdir, each_ref.Name + ".ipd1.csv")
+    #     combined_df = pd.read_csv(df_file)
+    #     normalize_IPD(each_ref, combined_df, kmer_mean_dict, kmer_num_dict)
+
+    # Using ProcessPoolExecutor for multithreading
+    with ProcessPoolExecutor(max_workers=num_processes) as executor:
+        future_to_ref = {executor.submit(normalize_IPD_wrapper, ref): ref for ref in refInfo}
+        for future in as_completed(future_to_ref):
+            ref = future_to_ref[future]
+            try:
+                result = future.result()
+                if result is not None:
+                    print(f"Normalization completed for {result}")
+            except Exception as e:
+                print(f"An error occurred while processing {ref.Name}: {e}")
 
 
 
