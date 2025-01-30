@@ -1,0 +1,69 @@
+### Chromohalobacter salexigens DSM-3043; 250 bp library (whole-genome amplified DNA), SRR1981081
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981081/m140501_222154_42177R_c100646972550000001823120609101435_s1_p0.1.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981081/m140501_222154_42177R_c100646972550000001823120609101435_s1_p0.2.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981081/m140501_222154_42177R_c100646972550000001823120609101435_s1_p0.3.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981081/m140501_222154_42177R_c100646972550000001823120609101435_s1_p0.bas.h5.1
+### Chromohalobacter salexigens DSM-3043; 250 bp library (whole-genome amplified DNA), SRR1981082
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981082/m140502_044117_42177R_c100646972550000001823120609101436_s1_p0.1.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981082/m140502_044117_42177R_c100646972550000001823120609101436_s1_p0.2.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981082/m140502_044117_42177R_c100646972550000001823120609101436_s1_p0.3.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981082/m140502_044117_42177R_c100646972550000001823120609101436_s1_p0.bas.h5.1
+### Chromohalobacter salexigens DSM-3043; 20,000 bp library (native DNA), SRR1981108
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981108/m140425_023843_42156_c100647522550000001823120609101496_s1_p0.1.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981108/m140425_023843_42156_c100647522550000001823120609101496_s1_p0.2.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981108/m140425_023843_42156_c100647522550000001823120609101496_s1_p0.3.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981108/m140425_023843_42156_c100647522550000001823120609101496_s1_p0.bas.h5.1
+### Chromohalobacter salexigens DSM-3043; 20,000 bp library (native DNA), SRR1981110
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981110/m140427_022519_42156_c100646512550000001823120609101413_s1_p0.1.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981110/m140427_022519_42156_c100646512550000001823120609101413_s1_p0.2.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981110/m140427_022519_42156_c100646512550000001823120609101413_s1_p0.3.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981110/m140427_022519_42156_c100646512550000001823120609101413_s1_p0.bas.h5.1
+### Chromohalobacter salexigens DSM-3043; 20,000 bp library (native DNA), SRR1981111
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981111/m140430_160313_42156_c100647382550000001823120609101495_s1_p0.1.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981111/m140430_160313_42156_c100647382550000001823120609101495_s1_p0.2.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981111/m140430_160313_42156_c100647382550000001823120609101495_s1_p0.3.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981111/m140430_160313_42156_c100647382550000001823120609101495_s1_p0.bas.h5.1
+### Chromohalobacter salexigens DSM-3043; 20,000 bp library (native DNA), SRR1981113
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981113/m140430_222636_42156_c100647382550000001823120609101496_s1_p0.bas.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981113/m140430_222636_42156_c100647382550000001823120609101496_s1_p0.3.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981113/m140430_222636_42156_c100647382550000001823120609101496_s1_p0.2.bax.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981113/m140430_222636_42156_c100647382550000001823120609101496_s1_p0.1.bax.h5.1
+### Chromohalobacter salexigens DSM-3043; 250 bp library (native DNA), SRR1981078
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981078/m140422_003122_42177R_c100640712550000001823122210151426_s1_p0.bas.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981078/m140422_003122_42177R_c100640712550000001823122210151426_s1_p0.1.bas.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981078/m140422_003122_42177R_c100640712550000001823122210151426_s1_p0.2.bas.h5.1
+https://sra-pub-src-1.s3.amazonaws.com/SRR1981078/m140422_003122_42177R_c100640712550000001823122210151426_s1_p0.3.bas.h5.1
+### Helicobacter pylori J99; 20,000 bp library (whole-genome amplified DNA), SRR1980763
+https://sra-pub-src-1.s3.amazonaws.com/SRR1980763/m140319_005819_42177R_c100630892550000001823123209121467_s1_p0.bax.h5.1
+### Helicobacter pylori J99; 20,000 bp library (whole-genome amplified DNA), SRR1980764
+https://sra-pub-src-1.s3.amazonaws.com/SRR1980764/m140319_071717_42177R_c100630712550000001823123209121476_s1_p0.bas.h5.1
+### Helicobacter pylori J99; 20,000 bp library (whole-genome amplified DNA), SRR1980765
+https://sra-pub-src-1.s3.amazonaws.com/SRR1980765/m140323_202411_42177R_c100640742550000001823122210151490_s1_p0.bas.h5.1
+### Helicobacter pylori J99; 20,000 bp library (whole-genome amplified DNA), SRR1980766
+https://sra-pub-src-1.s3.amazonaws.com/SRR1980766/m140402_113323_42177R_c100640962550000001823122210151412_s1_p0.bas.h5.1
+### Helicobacter pylori J99; 20,000 bp library (whole-genome amplified DNA), SRR1980767
+https://sra-pub-src-1.s3.amazonaws.com/SRR1980767/m140408_003733_42177R_c100640762550000001823122210151470_s1_p0.bas.h5.1
+### Helicobacter pylori J99; 20,000 bp library (whole-genome amplified DNA), SRR1980768
+https://sra-pub-src-1.s3.amazonaws.com/SRR1980768/m140408_065718_42177R_c100640762550000001823122210151471_s1_p0.bas.h5.1
+### Helicobacter pylori J99; 20,000 bp library (whole-genome amplified DNA), SRR1980769
+https://sra-pub-src-1.s3.amazonaws.com/SRR1980769/m140408_131831_42177R_c100640762550000001823122210151472_s1_p0.bas.h5.1
+### Helicobacter pylori J99; 20,000 bp library (native DNA), SRR1980757
+https://sra-pub-src-1.s3.amazonaws.com/SRR1980757/m140128_055159_42177R_c100622922550000001823111308061457_s1_p0.bas.h5.1
+### Escherichia coli O104:H4 str. C227-11; 250 bp library (whole-genome amplified DNA), SRR1980035	
+https://sra-pub-src-1.s3.amazonaws.com/SRR1980035/m131114_194021_42177R_c100582372550000001823096804281422_s1_p0.bas.h5.1
+### Escherichia coli O104:H4 str. C227-11; 250 bp library (native DNA), SRR1980027	
+https://sra-pub-src-1.s3.amazonaws.com/SRR1980027/m131105_010519_42177R_c100585802550000001823104304281443_s1_p0.bas.h5.1
+### Mock JF8 , SRR4429746
+https://sra-pub-src-1.s3.amazonaws.com/SRR4429746/m150428_181019_42177R_c100782092550000001823155208111574_s1_p0.bas.h5.1
+### Helicobacter pylori strain 26695 , SRR4430512	
+https://sra-pub-src-1.s3.amazonaws.com/SRR4430512/m140130_082505_42177R_c100623362550000001823111308061482_s1_p0.bas.h5.1
+### E. coli strain BAA-2215 , SRR5678371	
+https://sra-pub-src-1.s3.amazonaws.com/SRR5678371/m170323_053009_42156_c101187332550000001823278408081760_s1_p0.bas.h5.1
+### E. coli strain BAA-2196, SRR5678370
+https://sra-pub-src-1.s3.amazonaws.com/SRR5678370/m170323_114806_42156_c101187332550000001823278408081761_s1_p0.1.bax.h5.1
+### E. coli strain BAA-2440, SRR5678369	
+https://sra-pub-src-1.s3.amazonaws.com/SRR5678369/m170324_002632_42156_c101187332550000001823278408081763_s1_p0.bas.h5.1
+### E. coli DH5a, SRR5678378	
+https://sra-pub-src-1.s3.amazonaws.com/SRR5678378/m170129_164247_42177R_c101159472550000001823249707191747_s1_p0.bas.h5.1
+### H. pylori JP26, SRR5678374
+https://sra-pub-src-1.s3.amazonaws.com/SRR5678374/m170130_080241_42177R_c101160792550000001823271007071761_s1_p0.bas.h5.1

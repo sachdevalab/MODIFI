@@ -481,14 +481,14 @@ if __name__ == "__main__":
     up = 8
     down = 4
 
-    subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/12.align.bam"
-    fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa"
-    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/"
+    # subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/12.align.bam"
+    # fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa"
+    # outdir = "/home/shuaiw/methylation/data/borg/b_contigs/"
 
 
-    # subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
-    # fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
-    # outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds2/"
+    subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
+    fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
+    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds3/"
 
     num_processes = 10
 
@@ -518,10 +518,6 @@ if __name__ == "__main__":
 
     all_ref_IPDs = {}
 
-    # for each_ref in refInfo:
-    #     print (each_ref.Name, each_ref.Length)
-    #     combined_df = load_IPD(each_ref, kmer_baseline_dict, kmer_num_dict)
-
     # Using ProcessPoolExecutor for multithreading
     with ProcessPoolExecutor(max_workers=num_processes) as executor:  # Adjust max_workers as needed
         future_to_ref = {executor.submit(load_IPD, ref, kmer_baseline_dict, kmer_num_dict): ref for ref in refInfo}
@@ -534,7 +530,6 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"An error occurred while processing {ref}: {e}")
 
-    
     print ("IPD loaded")
     print ("kmer saved", len(kmer_baseline_dict), len(kmer_num_dict))
     ## cal mean for each kmer
@@ -546,6 +541,8 @@ if __name__ == "__main__":
     with open(os.path.join(outdir, 'kmer_mean_dict.pkl'), 'wb') as f:
         pickle.dump(kmer_mean_dict, f)
     ## also save kmer_num_dict
+    ## convert kmer_num_dict to normal dict
+    kmer_num_dict = dict(kmer_num_dict)
     with open(os.path.join(outdir, 'kmer_num_dict.pkl'), 'wb') as f:
         pickle.dump(kmer_num_dict, f)
 
@@ -553,12 +550,10 @@ if __name__ == "__main__":
     # with open(os.path.join(outdir, 'kmer_mean_dict.pkl'), 'rb') as f:
     #     kmer_mean_dict = pickle.load(f)
     #     print ("kmer_mean_dict loaded", len(kmer_mean_dict))
-
-    # for each_ref in refInfo:
-    #     # combined_df = all_ref_IPDs[each_ref.Name]
-    #     df_file = os.path.join(outdir, each_ref.Name + ".ipd1.csv")
-    #     combined_df = pd.read_csv(df_file)
-    #     normalize_IPD(each_ref, combined_df, kmer_mean_dict, kmer_num_dict)
+    # with open(os.path.join(outdir, 'kmer_num_dict.pkl'), 'rb') as f:
+    #     print (os.path.join(outdir, 'kmer_num_dict.pkl'))
+    #     kmer_num_dict = pickle.load(f)
+    #     print ("kmer_num_dict loaded", len(kmer_num_dict))
 
     # Using ProcessPoolExecutor for multithreading
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
