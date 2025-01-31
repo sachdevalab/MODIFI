@@ -16,7 +16,9 @@ import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import Manager, Process, Lock
 
-
+# Global variable for alignments
+global alignments
+alignments = None
 
 # Raw ipd record
 ipdRec = [('tpl', '<u4'), ('strand', '<i8'), ('ipd', '<f4')]
@@ -211,11 +213,11 @@ def get_IPD_list(contig_length, contig_dict):
              
 def extract_context(fasta):
     ## load the fasta using biopython
-    print ("loading fasta")
+    # print ("loading fasta")
     seq_dict = {}
     from Bio import SeqIO
     for record in SeqIO.parse(fasta, "fasta"):
-        print(record.id)
+        # print(record.id)
         # if record.id != "NC_000001.11":
         #     continue
         ## convert the sequence to string of number, 0 for A, 1 for C, 2 for G, 3 for T, 4 for N
@@ -334,6 +336,7 @@ def load_IPD(each_ref, kmer_baseline_dict, kmer_num_dict):
     #         'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595').Name
     t0 = time.time()
     alignments = AlignmentSet(subread_bam, referenceFastaFname=fasta)
+    # global alignments
     refGroupId = alignments.referenceInfo(each_ref.Name).Name
     hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
     # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 1000)]
@@ -488,7 +491,11 @@ if __name__ == "__main__":
 
     subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
     fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
-    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds3/"
+    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds5/"
+
+    # subread_bam = "/home/shuaiw/borg/large_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
+    # fasta = "/home/shuaiw/borg/contigs/large.contigs.fa"
+    # outdir = "/home/shuaiw/methylation/data/borg/large_contigs/ipds/"
 
     num_processes = 10
 
@@ -503,7 +510,7 @@ if __name__ == "__main__":
     print ("factor", factor)
 
     refInfo = alignments.referenceInfoTable
-    print ("refInfo", refInfo.shape, len(refInfo), refInfo)
+    # print ("refInfo", refInfo.shape, len(refInfo), refInfo)
 
     seq_dict = extract_context(fasta)
     print ("ref loaded", len(seq_dict))
@@ -516,10 +523,10 @@ if __name__ == "__main__":
     # kmer_baseline_dict = defaultdict(float)   ## sum
     # kmer_num_dict = defaultdict(int)  # count
 
-    all_ref_IPDs = {}
-
     # Using ProcessPoolExecutor for multithreading
-    with ProcessPoolExecutor(max_workers=num_processes) as executor:  # Adjust max_workers as needed
+    # with ProcessPoolExecutor(max_workers=num_processes) as executor:  # Adjust max_workers as needed
+    ## use thread pool
+    with ProcessPoolExecutor(max_workers=num_processes) as executor:
         future_to_ref = {executor.submit(load_IPD, ref, kmer_baseline_dict, kmer_num_dict): ref for ref in refInfo}
         results = []
         for future in as_completed(future_to_ref):

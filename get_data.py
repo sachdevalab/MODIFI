@@ -29,7 +29,7 @@ with open(input_file, 'r') as f:
     for line in f:
         if line.startswith('###'):
             annotation = line.strip().split('###')[1].strip()
-            strain = annotation.split(',')[0].strip().replace(' ', '_')
+            strain = annotation.split(',')[0].strip().replace(' ', '_').replace(';', '_').replace('(', '_').replace(')', '_')
             print (strain)
         elif line.startswith('http'):
             url = line.strip()
@@ -52,10 +52,12 @@ with open(input_file, 'r') as f:
             download_file(url4, output_path4)
 
             cmd = f"""
-            bax2bam -o {bam_dir}/{strain}.bam {output_dir}/{file_name} {output_dir}/{file_name2} {output_dir}/{file_name3} {output_dir}/{file_name4}
+            bax2bam -o {bam_dir}/{strain} {output_dir}/{file_name2} {output_dir}/{file_name3} {output_dir}/{file_name4}
             """ 
+            print(cmd)
+            os.system(cmd)
         i += 1
-        if i > 3:
-            break
+        # if i > 3:
+        #     break
 
 print("All files downloaded and converted.")
