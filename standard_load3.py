@@ -13,7 +13,7 @@ import pickle
 from sklearn.mixture import GaussianMixture
 from scipy.stats import norm
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExecutor
 from multiprocessing import Manager, Process, Lock
 
 # alignments = None
@@ -329,9 +329,17 @@ def load_IPD1(each_ref):
     # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 100000)]
     print ("11 hits", alignments.referenceInfo(each_ref.Name).Name)
 
-def load_IPD(each_ref, kmer_baseline_dict, kmer_num_dict):
+def load_IPD(each_ref, kmer_baseline_dict, kmer_num_dict,contig_bam):
     t0 = time.time()
-    alignments = AlignmentSet(subread_bam, referenceFastaFname=fasta)
+    alignments = AlignmentSet(contig_bam, referenceFastaFname=fasta)
+    refInfo = alignments.referenceInfoTable
+    # print ("refInfo", refInfo.shape, len(refInfo))
+    for my_ref in refInfo:
+        if my_ref.Name == each_ref:
+            each_ref = my_ref
+            break
+    print ("ref loaded", each_ref.Name, each_ref.Length, time.time()-t0)
+    factor = 1.0 / alignments.readGroupTable[0].FrameRate
     # global alignments
     refGroupId = alignments.referenceInfo(each_ref.Name).Name
     hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
@@ -483,27 +491,28 @@ if __name__ == "__main__":
     # outdir = "/home/shuaiw/methylation/data/borg/b_contigs/"
 
 
-    # subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
-    # fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
-    # outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds5/"
+    subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
+    fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
+    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds7/"
+    bam_dir = "/home/shuaiw/methylation/data/borg/b_contigs/bams/"
 
-    subread_bam = "/home/shuaiw/borg/large_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
-    fasta = "/home/shuaiw/borg/contigs/large.contigs.fa"
-    outdir = "/home/shuaiw/methylation/data/borg/large_contigs/ipds/"
+    # subread_bam = "/home/shuaiw/borg/large_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
+    # fasta = "/home/shuaiw/borg/contigs/large.contigs.fa"
+    # outdir = "/home/shuaiw/methylation/data/borg/large_contigs/ipds/"
 
-    num_processes = 10
+    num_processes = 20
 
     ## build outdir if not exists
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-    print ("loading alignments", subread_bam)
-    alignments = AlignmentSet(subread_bam,
-                                    referenceFastaFname=fasta)
-    factor = 1.0 / alignments.readGroupTable[0].FrameRate  ## The frame rate represents the speed of data acquisition in frames per second during sequencing.
-    print ("factor", factor)
+    # print ("loading alignments", subread_bam)
+    # alignments = AlignmentSet(subread_bam,
+    #                                 referenceFastaFname=fasta)
+    # factor = 1.0 / alignments.readGroupTable[0].FrameRate  ## The frame rate represents the speed of data acquisition in frames per second during sequencing.
+    # print ("factor", factor)
 
-    refInfo = alignments.referenceInfoTable
+    # refInfo = alignments.referenceInfoTable
     # print ("refInfo", refInfo.shape, len(refInfo), refInfo)
 
     seq_dict = extract_context(fasta)
@@ -519,14 +528,15 @@ if __name__ == "__main__":
     # kmer_num_dict = defaultdict(int)  # count
 
     # Using ProcessPoolExecutor for multithreading
-    with ProcessPoolExecutor(max_workers=num_processes) as executor:  # Adjust max_workers as needed
-    # with ProcessPoolExecutor(max_workers=num_processes) as executor:
+    # with ProcessPoolExecutor(max_workers=num_processes) as executor:  # Adjust max_workers as needed
+    with ThreadPoolExecutor(max_workers=num_processes) as executor:
         future_to_ref = {}
-        for each_ref in refInfo[:10]:
-            # print (each_ref.Name, each_ref.Length)
-            # refGroupId = alignments.referenceInfo(each_ref.Name).Name
-            # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, each_ref.Length)]
-            future = executor.submit(load_IPD, each_ref, kmer_baseline_dict, kmer_num_dict)
+        for each_ref in seq_dict:
+            contig_bam = os.path.join(bam_dir, each_ref + ".bam")
+            if not os.path.exists(contig_bam) or not os.path.isfile(contig_bam+'.bai'):
+                print (f"{contig_bam} not exists")
+                continue
+            future = executor.submit(load_IPD, each_ref, kmer_baseline_dict, kmer_num_dict, contig_bam)
             future_to_ref[future] = each_ref
         # future_to_ref = {executor.submit(load_IPD, ref, kmer_baseline_dict, kmer_num_dict): ref for ref in refInfo}
         results = []
@@ -536,10 +546,10 @@ if __name__ == "__main__":
                 result = future.result()
                 results.append(result)
             except Exception as e:
-                print(f"An error occurred while processing {ref.Name}: {e}")
+                print(f"An error occurred while processing {ref}: {e}")
 
     print ("IPD loaded")
-    """
+    # """
     print ("kmer saved", len(kmer_baseline_dict), len(kmer_num_dict))
     ## cal mean for each kmer
     kmer_mean_dict = {}
@@ -566,7 +576,7 @@ if __name__ == "__main__":
 
     # Using ProcessPoolExecutor for multithreading
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
-        future_to_ref = {executor.submit(normalize_IPD_wrapper, ref): ref for ref in refInfo}
+        future_to_ref = {executor.submit(normalize_IPD_wrapper, ref): ref for ref in seq_dict}
         for future in as_completed(future_to_ref):
             ref = future_to_ref[future]
             try:
@@ -574,8 +584,8 @@ if __name__ == "__main__":
                 if result is not None:
                     print(f"Normalization completed for {result}")
             except Exception as e:
-                print(f"An error occurred while processing {ref.Name}: {e}")
-    """
+                print(f"An error occurred while processing {ref}: {e}")
+    # """
 
 
 

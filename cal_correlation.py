@@ -5,6 +5,8 @@ import numpy as np
 from sklearn.mixture import GaussianMixture
 from scipy.stats import norm
 
+
+
 def read_log(log):
     f = open(log)
     f.readline()
@@ -107,7 +109,7 @@ def p_value_right_tail(x, mu, sigma):
     # Calculate the right-tail p-value
     p_value = 1 - norm.cdf(z)
     
-    return p_value[0]
+    return p_value
 
 def calculate_x_from_pvalue(p_value, mu, sigma, tail="right"):
     """
@@ -158,9 +160,6 @@ def get_ipd_ratio(df):
     df = df[df['pvalue'] < 0.01]
     ## svae the df to tmp/ipd_ratio_methy.csv
     df.to_csv("tmp/ipd_ratio_methy.csv", index=False)
-
-
-
 
 def get_raw_ipd(df):
     ## plot the distribution of ipd_ratio and save the plot in pdf
@@ -218,11 +217,98 @@ def count_log_csv(csv):
     #     print ("")
     #     break
 
+class Benchmark:
+    def __init__(self, ipd_summary, our):
+        self.ipd_summary = ipd_summary
+        self.our = our
+        self.ipd_dict = {}
+        self.our_dict = {}
+        self.save_our_all = {}
+        self.ratio_ana_dict = {}
+
+    def read_ipd_summary(self):
+        df = pd.read_csv(self.ipd_summary)
+        ## keep the rows with strand == 1
+        df = df[df['strand'] == 1]
+        self.ratio_ana(df)
+        ## keep the rows with score > 30
+        df = df[df['score'] > 30]
+        for index,row in df.iterrows():
+            self.ipd_dict[row['tpl']] = row['score']
+            
+    def ratio_ana(self, df):
+        mean = df['ipdRatio'].mean()
+        std = df['ipdRatio'].std()
+        ## ofr each value, calculate the probability belong to the model
+        ## add pvalue column to the dataframe
+        df['pvalue'] = df['ipdRatio'].apply(lambda x: p_value_right_tail(x, mean, std))
+        for index, row in df.iterrows():
+            if row['pvalue'] < 0.05:
+                self.ratio_ana_dict[row['tpl']] = row['pvalue']
+        
+    def read_our(self):
+        df = pd.read_csv(self.our)
+        ## only keep the rows with pvalue < 0.01
+        for index, row in df.iterrows():
+            if row['pvalue'] < 0.05:
+                self.our_dict[row['tpl']+1] = row['ipd_ratio']
+
+            self.save_our_all[row['tpl']+1] = row
+
+    
+    def compare(self):
+        recall = 0
+        for tpl in self.ipd_dict:
+            if tpl in self.our_dict:
+                recall += 1
+            else:
+                print (tpl, self.ipd_dict[tpl], "not in our")
+                # if tpl in self.save_our_all:
+                #     print (self.save_our_all[tpl])
+        print (recall, len(self.ipd_dict), len(self.our_dict))
+        print ("recall", recall / len(self.ipd_dict))
+        print ("precision", recall / len(self.our_dict))
+
+    def compare2(self):
+        recall = 0
+        for tpl in self.ratio_ana_dict:
+            if tpl in self.our_dict:
+                recall += 1
+            else:
+                print (tpl, self.ratio_ana_dict[tpl], "not in our")
+                # if tpl in self.save_our_all:
+                #     print (self.save_our_all[tpl])
+        print (recall, len(self.ratio_ana_dict), len(self.our_dict))
+        print ("recall", recall / len(self.ratio_ana_dict))
+        print ("precision", recall / len(self.our_dict))
+
+    def compare3(self):
+        recall = 0
+        for tpl in self.ratio_ana_dict:
+            if tpl in self.ratio_ana_dict:
+                recall += 1
+            else:
+                print (tpl, self.ipd_dict[tpl], "not in our")
+                # if tpl in self.save_our_all:
+                #     print (self.save_our_all[tpl])
+        print (recall, len(self.ipd_dict), len(self.ratio_ana_dict))
+        print ("recall", recall / len(self.ipd_dict))
+        print ("precision", recall / len(self.ratio_ana_dict))
+
+
+
 
 # log = "slurm-705929.out"
 # read_log(log)
-csv = "/home/shuaiw/methylation/data/borg/human/test_result5.csv"
-df = read_log_csv(csv)
-count_log_csv(csv)
+# csv = "/home/shuaiw/methylation/data/borg/human/test_result5.csv"
+# df = read_log_csv(csv)
+# count_log_csv(csv)
 # get_ipd_ratio(df)
 # get_raw_ipd(df)
+
+infer = "/home/shuaiw/methylation/data/borg/b_contigs/ipds4/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595.ipd2.csv"
+ipd_summary = "/home/shuaiw/methylation/data/borg/b_contigs/1.csv"
+bench = Benchmark(ipd_summary, infer)
+bench.read_ipd_summary()
+bench.read_our()
+bench.compare3()
