@@ -216,8 +216,8 @@ def extract_context(fasta):
     from Bio import SeqIO
     for record in SeqIO.parse(fasta, "fasta"):
         # print(record.id)
-        # if record.id != "NC_000001.11":
-        #     continue
+        if record.id != "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_219069_438138":
+            continue
         ## convert the sequence to string of number, 0 for A, 1 for C, 2 for G, 3 for T, 4 for N
         seq = str(record.seq)
         ## convert to capital
@@ -447,7 +447,7 @@ def normalize_IPD(each_ref, combined_df, kmer_mean_dict, kmer_num_dict):
             combined_df.loc[index, 'control'] = kmer_mean_dict[kmer]
 
     combined_df = get_ipd_ratio(combined_df)
-    df_file = os.path.join(outdir, each_ref.Name + ".ipd2.csv")
+    df_file = os.path.join(outdir, each_ref + ".ipd2.csv")
     combined_df.to_csv(df_file, index=False)
     print ("df saved", df_file)
 
@@ -474,12 +474,12 @@ def process_reference(each_ref):
 
 def normalize_IPD_wrapper(ref):
     try:
-        df_file = os.path.join(outdir, ref.Name + ".ipd1.csv")
+        df_file = os.path.join(outdir, ref + ".ipd1.csv")
         combined_df = pd.read_csv(df_file)
         normalize_IPD(ref, combined_df, kmer_mean_dict, kmer_num_dict)
-        return ref.Name
+        return ref
     except Exception as e:
-        print(f"An error occurred while processing {ref.Name}: {e}")
+        print(f"An error occurred while processing {ref}: {e}")
         return None
 
 if __name__ == "__main__":
@@ -500,20 +500,11 @@ if __name__ == "__main__":
     # fasta = "/home/shuaiw/borg/contigs/large.contigs.fa"
     # outdir = "/home/shuaiw/methylation/data/borg/large_contigs/ipds/"
 
-    num_processes = 20
+    num_processes = 3
 
     ## build outdir if not exists
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-
-    # print ("loading alignments", subread_bam)
-    # alignments = AlignmentSet(subread_bam,
-    #                                 referenceFastaFname=fasta)
-    # factor = 1.0 / alignments.readGroupTable[0].FrameRate  ## The frame rate represents the speed of data acquisition in frames per second during sequencing.
-    # print ("factor", factor)
-
-    # refInfo = alignments.referenceInfoTable
-    # print ("refInfo", refInfo.shape, len(refInfo), refInfo)
 
     seq_dict = extract_context(fasta)
     print ("ref loaded", len(seq_dict))
@@ -524,10 +515,6 @@ if __name__ == "__main__":
 
     lock = Lock()
 
-    # kmer_baseline_dict = defaultdict(float)   ## sum
-    # kmer_num_dict = defaultdict(int)  # count
-
-    # Using ProcessPoolExecutor for multithreading
     # with ProcessPoolExecutor(max_workers=num_processes) as executor:  # Adjust max_workers as needed
     with ThreadPoolExecutor(max_workers=num_processes) as executor:
         future_to_ref = {}
@@ -556,23 +543,6 @@ if __name__ == "__main__":
     for kmer in kmer_baseline_dict:
         kmer_mean_dict[kmer] = round(kmer_baseline_dict[kmer]/kmer_num_dict[kmer], 3)
     print ("mean is computed", len(kmer_mean_dict), 'kmers')
-    ## use pickle to save the kmer_mean_dict
-    with open(os.path.join(outdir, 'kmer_mean_dict.pkl'), 'wb') as f:
-        pickle.dump(kmer_mean_dict, f)
-    ## also save kmer_num_dict
-    ## convert kmer_num_dict to normal dict
-    kmer_num_dict = dict(kmer_num_dict)
-    with open(os.path.join(outdir, 'kmer_num_dict.pkl'), 'wb') as f:
-        pickle.dump(kmer_num_dict, f)
-
-    ## load kmer_mean_dict
-    # with open(os.path.join(outdir, 'kmer_mean_dict.pkl'), 'rb') as f:
-    #     kmer_mean_dict = pickle.load(f)
-    #     print ("kmer_mean_dict loaded", len(kmer_mean_dict))
-    # with open(os.path.join(outdir, 'kmer_num_dict.pkl'), 'rb') as f:
-    #     print (os.path.join(outdir, 'kmer_num_dict.pkl'))
-    #     kmer_num_dict = pickle.load(f)
-    #     print ("kmer_num_dict loaded", len(kmer_num_dict))
 
     # Using ProcessPoolExecutor for multithreading
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
