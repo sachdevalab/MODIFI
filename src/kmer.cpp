@@ -26,7 +26,7 @@ unsigned int *kmer_num_table;
 float *kmer_mean_table;
 long array_size;
 
-
+int MAX_KMER_COUNT = 100000;
 
 int thread_num;
 std::mutex kmer_mutex;
@@ -152,6 +152,11 @@ struct IPD_Result {
     map<int, float> rev_ipd_map;
 };
 
+struct IPD_Control {
+    int kmer_count;
+    float control;
+};
+
 // load ipd
 IPD_Result load_ipd(string raw_ipd){
     map<int, float> for_ipd_map;
@@ -181,9 +186,9 @@ IPD_Result load_ipd(string raw_ipd){
         getline(ss, tErr, ',');
         // cout << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << endl;
 
-        int tpl_int = stoi(tpl);
+        int tpl_int = stoi(tpl) - 1;
         float tMean_float = stof(tMean);
-        if (strand == "0"){
+        if (strand == "1"){
             for_ipd_map[tpl_int] = tMean_float;
         }
         else{
@@ -200,6 +205,64 @@ IPD_Result load_ipd(string raw_ipd){
     return result;
 
 }
+
+void update_ipd(string raw_ipd, map<int, IPD_Control> for_control_map, map<int, IPD_Control> rev_control_map, string control_ipd){
+    ifstream ipd_file;
+    ipd_file.open(raw_ipd, ios::in);
+    ofstream control_file;
+    control_file.open(control_ipd, ios::out);
+    string line;
+    string ref;
+    float control, ipd_ratio;
+    int kmer_count;
+
+    // skip first line
+    getline(ipd_file, line);
+    control_file << "refName,strand,tpl,coverage,tMean,tErr,control,ipd_ratio,kmer_count" << endl;
+    while (getline(ipd_file, line)){
+        stringstream ss(line);
+        // sep line by ,
+        string refName;
+        getline(ss, refName, ',');
+        string strand;
+        getline(ss, strand, ',');
+        string tpl;
+        getline(ss, tpl, ',');
+        string coverage;
+        getline(ss, coverage, ',');
+        string tMean;
+        getline(ss, tMean, ',');
+        string tErr;
+        getline(ss, tErr, ',');
+        // cout << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << endl;
+        int tpl_int = stoi(tpl) -1;
+        float tMean_float = stof(tMean);
+        if (strand == "1"){
+            if (for_control_map.find(tpl_int) != for_control_map.end()){
+                control = for_control_map[tpl_int].control;
+                kmer_count = for_control_map[tpl_int].kmer_count;
+                ipd_ratio = tMean_float/control;
+                control_file << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << "\t" << control << "\t" << ipd_ratio << "\t" << kmer_count << endl;
+            }
+            // else{
+            //     cout << "No control value for " << tpl_int << endl;
+            // }
+        }
+        else{
+            if (rev_control_map.find(tpl_int) != rev_control_map.end()){
+                control = rev_control_map[tpl_int].control;
+                kmer_count = rev_control_map[tpl_int].kmer_count;
+                ipd_ratio = tMean_float/control;
+                control_file << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << "\t" << control << "\t" << ipd_ratio << "\t" << kmer_count << endl;
+            }
+        }
+        ref = refName;
+
+    }
+    ipd_file.close();
+    control_file.close();
+}
+
 
 
 int slide_kmer(string fasta_file, Encode encoder, string raw_ipd){
@@ -240,18 +303,30 @@ int slide_kmer(string fasta_file, Encode encoder, string raw_ipd){
         }
         if (all_valid != false){
             int for_real_pos = j + 7;
-            if (ipd_result.rev_ipd_map.find(for_real_pos) != ipd_result.rev_ipd_map.end()) {
+            if (ipd_result.for_ipd_map.find(for_real_pos) != ipd_result.for_ipd_map.end()) {
                 // lock_guard<mutex> guard(kmer_mutex); // Lock the mutex
-                if (kmer_num_table[kmer_index] < 100000){
-                    kmer_ipd_sum[kmer_index] += ipd_result.rev_ipd_map[for_real_pos];
+                if (kmer_num_table[kmer_index] < MAX_KMER_COUNT){
+                    kmer_ipd_sum[kmer_index] += ipd_result.for_ipd_map[for_real_pos];
                     kmer_num_table[kmer_index] += 1;
-                    cout<< for_real_pos << " "<<kmer_index<< " ipd "<<kmer_ipd_sum[kmer_index]<< " num " << kmer_num_table[kmer_index]  <<endl;
+                    // cout<< for_real_pos << " "<<kmer_index<< " ipd "<<kmer_ipd_sum[kmer_index]<< " num " << kmer_num_table[kmer_index]  <<endl;
                 }
                 else{
                     cout << kmer_index<< " <<<too high kmer count>>>  "<<kmer_num_table[kmer_index]<<endl;
                 }
             }
             // to do, for reverse ref
+            int rev_real_pos = j + 2;
+            if (ipd_result.rev_ipd_map.find(rev_real_pos) != ipd_result.rev_ipd_map.end()) {
+                // lock_guard<mutex> guard(kmer_mutex); // Lock the mutex
+                if (kmer_num_table[comple_kmer_index] < MAX_KMER_COUNT){
+                    kmer_ipd_sum[comple_kmer_index] += ipd_result.rev_ipd_map[rev_real_pos];
+                    kmer_num_table[comple_kmer_index] += 1;
+                    // cout<< rev_real_pos << " "<<comple_kmer_index<< " ipd "<<kmer_ipd_sum[comple_kmer_index]<< " num " << kmer_num_table[comple_kmer_index]  <<endl;
+                }
+                else{
+                    cout << comple_kmer_index<< " <<<too high kmer count>>>  "<<kmer_num_table[comple_kmer_index]<<endl;
+                }
+            }
         }
         // cout << "kmer_index is "<<kmer_index<<endl;
     }        
@@ -261,10 +336,13 @@ int slide_kmer(string fasta_file, Encode encoder, string raw_ipd){
 }
 
 
-int map_control(string fasta_file, Encode encoder, string raw_ipd){
+int map_control(string fasta_file, Encode encoder, string raw_ipd, string control_ipd){
     IPD_Result ipd_result = load_ipd(raw_ipd);
     Fasta fasta;
     string ref_seq = fasta.get_ref_seq(fasta_file);
+
+    map<int, IPD_Control> for_control_map;
+    map<int, IPD_Control> rev_control_map;
 
     int ref_len, m, e;
     char n;
@@ -272,7 +350,7 @@ int map_control(string fasta_file, Encode encoder, string raw_ipd){
     unsigned int kmer_index, comple_kmer_index;
     time_t t0 = time(0);
 
-    // cout <<"check fitness..."<<endl;
+    cout <<"check control..."<<endl;
     ref_len= ref_seq.length();
     // cout <<"genome len is "<<ref_len<<endl;
  
@@ -298,7 +376,7 @@ int map_control(string fasta_file, Encode encoder, string raw_ipd){
         }
         if (all_valid != false){
             int for_real_pos = j + 7;
-            if (ipd_result.rev_ipd_map.find(for_real_pos) != ipd_result.rev_ipd_map.end()) {
+            if (ipd_result.for_ipd_map.find(for_real_pos) != ipd_result.for_ipd_map.end()) {
                 // lock_guard<mutex> guard(kmer_mutex); // Lock the mutex
                     if (kmer_num_table[kmer_index] > 0){
                         control = kmer_mean_table[kmer_index];
@@ -306,14 +384,34 @@ int map_control(string fasta_file, Encode encoder, string raw_ipd){
                     else{
                         control = 1;
                     }
-                    ipd_ratio = ipd_result.rev_ipd_map[for_real_pos]/control;
+                    IPD_Control control_ipd_obj;
+                    control_ipd_obj.kmer_count = kmer_num_table[kmer_index];
+                    control_ipd_obj.control = control;
+                    for_control_map[for_real_pos] = control_ipd_obj;
+                    // for_control_map[for_real_pos] = control;
+                    // ipd_ratio = ipd_result.rev_ipd_map[for_real_pos]/control;
             }
             // to do, for reverse ref
+            int rev_real_pos = j + 2;
+            if (ipd_result.rev_ipd_map.find(rev_real_pos) != ipd_result.rev_ipd_map.end()) {
+                // lock_guard<mutex> guard(kmer_mutex); // Lock the mutex
+                    if (kmer_num_table[comple_kmer_index] > 0){
+                        control = kmer_mean_table[comple_kmer_index];
+                    }
+                    else{
+                        control = 1;
+                    }
+                    IPD_Control control_ipd_obj;
+                    control_ipd_obj.kmer_count = kmer_num_table[comple_kmer_index];
+                    control_ipd_obj.control = control;
+                    rev_control_map[rev_real_pos] = control_ipd_obj;
+            }
         }
         // cout << "kmer_index is "<<kmer_index<<endl;
     }        
     delete [] ref_int;
     delete [] ref_comple_int;
+    update_ipd(raw_ipd, for_control_map, rev_control_map,control_ipd);
     return 0;
 }
 
@@ -350,6 +448,32 @@ void parallele_each_genome(string genome_list_file, Encode encoder, int start_g,
 
     list_file.close();
 }
+
+void parallele_each_genome_control(string genome_list_file, Encode encoder, int start_g, int end_g, string ipd_dir, string control_dir){
+    ifstream list_file;
+    list_file.open(genome_list_file, ios::in);
+
+    string each_genome;
+    // float match_rate;
+    int genome_index = 0;
+    while (getline(list_file, each_genome)){
+        if (genome_index >= start_g & genome_index < end_g){
+            // extract chr name from each_genome name
+            string base_name = get_base_name(each_genome);
+            string raw_ipd = ipd_dir + "/" + base_name + ".ipd1.csv";
+            string control_ipd = control_dir + "/" + base_name + ".ipd2.csv";
+            map_control(each_genome, encoder, raw_ipd, control_ipd);
+            // cout << genome_index << " index " <<record_match_rate[genome_index].genome << " is " << record_match_rate[genome_index].match_rate << endl;
+        }
+        if (genome_index > 9998){
+            cout << "Too many genomes for record_match_rate!" << endl;
+        }
+        genome_index += 1;
+    }
+
+    list_file.close();
+}
+
 struct Genome_count {
     int genome_num;
     int each_thread_g_num;
@@ -374,7 +498,6 @@ Genome_count assign_parallele(string genome_list_file, int thread_num){
     genome_count.each_thread_g_num = each_thread_g_num;
     // return each_thread_g_num;
     return genome_count;
-
 }
 
 // calculate mean of each kmer
@@ -391,6 +514,7 @@ int main(){
     string fasta_file = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa";
     string raw_ipd = "/home/shuaiw/methylation/data/borg/b_contigs/test/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_219069_438138.ipd1.csv";
     string ipd_dir = "/home/shuaiw/methylation/data/borg/b_contigs/test/";
+    string control_dir = "/home/shuaiw/methylation/data/borg/b_contigs/control/";
     string fasta_list = "test.fasta.list";
 
     int up = 7;
@@ -408,6 +532,7 @@ int main(){
     encoder.constructer(k);
 
     Genome_count genome_count = assign_parallele(fasta_list, thread_num);
+
     int start_g = 0;
     int end_g = 0;
     std::vector<std::thread>threads;
@@ -428,5 +553,21 @@ int main(){
 
     kmer_mean_table = new float[array_size];
     calculate_mean();
+
+    start_g = 0;
+    end_g = 0;
+    for (int i=0; i<thread_num; i++){
+        start_g = i*genome_count.each_thread_g_num;
+        end_g = (i+1)*genome_count.each_thread_g_num;
+        if (i == thread_num - 1){
+            end_g = genome_count.genome_num+1;
+        }
+        // cout << i << "\t" << start_g <<"\t" << end_g << endl;
+        threads.push_back(thread(parallele_each_genome_control, fasta_list, encoder, start_g, end_g, ipd_dir, control_dir));
+    }
+	for (auto&th : threads)
+		th.join();
+    threads.clear();
+
     return 0;
 }
