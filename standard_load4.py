@@ -329,7 +329,7 @@ def load_IPD1(each_ref):
     # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 100000)]
     print ("11 hits", alignments.referenceInfo(each_ref.Name).Name)
 
-def load_IPD(each_ref, kmer_baseline_dict, kmer_num_dict,contig_bam):
+def load_IPD(each_ref, contig_bam):
     t0 = time.time()
     alignments = AlignmentSet(contig_bam, referenceFastaFname=fasta)
     refInfo = alignments.referenceInfoTable
@@ -363,12 +363,6 @@ def load_IPD(each_ref, kmer_baseline_dict, kmer_num_dict,contig_bam):
 
     # goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
     result = []
-    seq = seq_dict[each_ref.Name]
-    complement_seq = get_reverse_cmplement(seq)
-    print ("goodSites", time.time()-t0)
-
-
-    # for x in goodSites:
     for x in caseChunks:
         if x['data']['ipd'].size > 2:
             pass
@@ -376,32 +370,10 @@ def load_IPD(each_ref, kmer_baseline_dict, kmer_num_dict,contig_bam):
             continue
         # print (x['tpl'], x['strand'], x['data']['ipd'].size)
         res = _computePositionSyntheticControl(x, capValue, refGroupId, each_ref.Name)
-
-        
-        if res['strand'] == 1:
-            kmer = get_kmer(seq, res['tpl'])
-            res['kmer'] = kmer
-        else:
-            res['kmer'] = None
-            continue
-        
-        if kmer is None:
-            continue
-
-        # kmer_baseline_dict[kmer] += res['tMean']
-        # kmer_num_dict[kmer] += 1
-        with lock:
-            if kmer not in kmer_baseline_dict:
-                kmer_baseline_dict[kmer] = 0.0
-            kmer_baseline_dict[kmer] += res['tMean']
-            if kmer not in kmer_num_dict:
-                kmer_num_dict[kmer] = 0
-            kmer_num_dict[kmer] += 1
-
+        # if res['strand'] == 1:
         result.append(pd.DataFrame([res]))
-    print ("kmer is counted", len(kmer_baseline_dict), len(kmer_num_dict), time.time()-t0)
 
-    
+    print ("raw ipd is counted", time.time()-t0)
     combined_df = pd.concat(result, ignore_index=True)
     # print ("combined_df", combined_df)
     print (len(combined_df), 'rows')
@@ -409,8 +381,6 @@ def load_IPD(each_ref, kmer_baseline_dict, kmer_num_dict,contig_bam):
     df_file = os.path.join(outdir, each_ref.Name + ".ipd1.csv")
     combined_df.to_csv(df_file, index=False)
     print ("raw ipd df saved", df_file)
-
-    # all_ref_IPDs[each_ref.Name] = combined_df
     return combined_df
 
 def p_value_right_tail(x, mu, sigma):
@@ -472,35 +442,24 @@ def process_reference(each_ref):
     print(f"{each_ref.Name}, {each_ref.Length}")
     return load_IPD(each_ref)
 
-def normalize_IPD_wrapper(ref):
-    try:
-        df_file = os.path.join(outdir, ref + ".ipd1.csv")
-        combined_df = pd.read_csv(df_file)
-        normalize_IPD(ref, combined_df, kmer_mean_dict, kmer_num_dict)
-        return ref
-    except Exception as e:
-        print(f"An error occurred while processing {ref}: {e}")
-        return None
 
 if __name__ == "__main__":
     up = 8
     down = 4
 
-    # subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/12.align.bam"
-    # fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa"
-    # outdir = "/home/shuaiw/methylation/data/borg/b_contigs/"
+    subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/12.align.bam"
+    fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa"
+    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/test/"
 
-
-    subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
-    fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
-    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds8/"
-    bam_dir = "/home/shuaiw/methylation/data/borg/b_contigs/bams/"
+    # subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
+    # fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
+    # outdir = "/home/shuaiw/methylation/data/borg/b_contigs/ipds8/"
+    # bam_dir = "/home/shuaiw/methylation/data/borg/b_contigs/bams/"
 
     # subread_bam = "/home/shuaiw/borg/large_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
     # fasta = "/home/shuaiw/borg/contigs/large.contigs.fa"
     # outdir = "/home/shuaiw/methylation/data/borg/large_contigs/ipds/"
 
-    num_processes = 20
 
     ## build outdir if not exists
     if not os.path.exists(outdir):
@@ -509,53 +468,10 @@ if __name__ == "__main__":
     seq_dict = extract_context(fasta)
     print ("ref loaded", len(seq_dict))
 
-    manager = Manager()
-    kmer_baseline_dict = manager.dict()
-    kmer_num_dict = manager.dict()
-
-    lock = Lock()
-
-    # with ProcessPoolExecutor(max_workers=num_processes) as executor:  # Adjust max_workers as needed
-    with ThreadPoolExecutor(max_workers=num_processes) as executor:
-        future_to_ref = {}
-        for each_ref in seq_dict:
-            contig_bam = os.path.join(bam_dir, each_ref + ".bam")
-            if not os.path.exists(contig_bam) or not os.path.isfile(contig_bam+'.bai'):
-                print (f"{contig_bam} not exists")
-                continue
-            future = executor.submit(load_IPD, each_ref, kmer_baseline_dict, kmer_num_dict, contig_bam)
-            future_to_ref[future] = each_ref
-        # future_to_ref = {executor.submit(load_IPD, ref, kmer_baseline_dict, kmer_num_dict): ref for ref in refInfo}
-        results = []
-        for future in as_completed(future_to_ref):
-            ref = future_to_ref[future]
-            try:
-                result = future.result()
-                results.append(result)
-            except Exception as e:
-                print(f"An error occurred while processing {ref}: {e}")
+    for each_ref in seq_dict:
+        load_IPD(each_ref, subread_bam)
 
     print ("IPD loaded")
-    # """
-    print ("kmer saved", len(kmer_baseline_dict), len(kmer_num_dict))
-    ## cal mean for each kmer
-    kmer_mean_dict = {}
-    for kmer in kmer_baseline_dict:
-        kmer_mean_dict[kmer] = round(kmer_baseline_dict[kmer]/kmer_num_dict[kmer], 3)
-    print ("mean is computed", len(kmer_mean_dict), 'kmers')
-
-    # Using ProcessPoolExecutor for multithreading
-    with ProcessPoolExecutor(max_workers=num_processes) as executor:
-        future_to_ref = {executor.submit(normalize_IPD_wrapper, ref): ref for ref in seq_dict}
-        for future in as_completed(future_to_ref):
-            ref = future_to_ref[future]
-            try:
-                result = future.result()
-                if result is not None:
-                    print(f"Normalization completed for {result}")
-            except Exception as e:
-                print(f"An error occurred while processing {ref}: {e}")
-    # """
 
 
 
