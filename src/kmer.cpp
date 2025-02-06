@@ -54,7 +54,7 @@ void Encode::constructer(int given_k){
     this->generate_complement();
     this->generate_base(given_k);
     cout <<"Encoder is established."<<endl;
-}
+};
 
 void Encode::generate_coder(void){
     // A:65 97 T:116 84 C:99 67 G: 103 71
@@ -261,6 +261,64 @@ int get_fitness(string fasta_file, Encode encoder, string raw_ipd){
     return 0;
 }
 
+string get_base_name(string fasta_file) {
+    size_t last_slash = fasta_file.find_last_of('/');
+    size_t last_dot = fasta_file.find_last_of('.');
+    if (last_slash != string::npos && last_dot != string::npos && last_dot > last_slash) {
+        return fasta_file.substr(last_slash + 1, last_dot - last_slash - 1);
+    }
+    return "";
+}
+
+void parallele_each_genome(string genome_list_file, Encode encoder, int start_g, int end_g){
+    ifstream list_file;
+    list_file.open(genome_list_file, ios::in);
+
+    string each_genome;
+    // float match_rate;
+    int genome_index = 0;
+    while (getline(list_file, each_genome)){
+        if (genome_index >= start_g & genome_index < end_g){
+            // extract chr name from each_genome name
+            string base_name = get_base_name(each_genome);
+            string raw_ipd = "/home/shuaiw/methylation/data/borg/b_contigs/test/" + base_name + ".ipd1.csv";
+            get_fitness(each_genome, encoder, raw_ipd);
+            // cout << genome_index << " index " <<record_match_rate[genome_index].genome << " is " << record_match_rate[genome_index].match_rate << endl;
+        }
+        if (genome_index > 9998){
+            cout << "Too many genomes for record_match_rate!" << endl;
+        }
+        genome_index += 1;
+    }
+
+    list_file.close();
+}
+struct Genome_count {
+    int genome_num;
+    int each_thread_g_num;
+};
+
+Genome_count assign_parallele(string genome_list_file, int thread_num){
+    ifstream list_file;
+    list_file.open(genome_list_file, ios::in);
+    string each_genome;
+    int genome_num = 0;
+    while (getline(list_file, each_genome)){
+        genome_num += 1;
+    }
+    list_file.close();
+
+    int each_thread_g_num = genome_num/thread_num;
+    cout<<"There is "<<genome_num<<" genomes."<<endl;
+    cout<<"Each thread process "<<each_thread_g_num<<" genomes"<<endl;
+
+    Genome_count genome_count ;
+    genome_count.genome_num = genome_num;
+    genome_count.each_thread_g_num = each_thread_g_num;
+    // return each_thread_g_num;
+    return genome_count;
+
+}
 
 // calculate mean of each kmer
 void calculate_mean(){
@@ -271,14 +329,19 @@ void calculate_mean(){
     }
 }
 
+
 int main(){
     string fasta_file = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa";
     string raw_ipd = "/home/shuaiw/methylation/data/borg/b_contigs/test/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_219069_438138.ipd1.csv";
 
+    string fasta_list = "test.fasta.list";
+
     int up = 7;
     int down = 3;
     int k = up + down;
+    int thread_num = 2;
     array_size = pow(4, k);
+
     kmer_ipd_sum = new long double[array_size];
     kmer_num_table = new unsigned int[array_size];
     memset(kmer_ipd_sum, 0, sizeof(long double)*array_size);
@@ -287,8 +350,24 @@ int main(){
     Encode encoder;
     encoder.constructer(k);
 
+    Genome_count genome_count = assign_parallele(fasta_list, thread_num);
+    int start_g = 0;
+    int end_g = 0;
+    std::vector<std::thread>threads;
+    for (int i=0; i<thread_num; i++){
+        start_g = i*genome_count.each_thread_g_num;
+        end_g = (i+1)*genome_count.each_thread_g_num;
+        if (i == thread_num - 1){
+            end_g = genome_count.genome_num+1;
+        }
+        // cout << i << "\t" << start_g <<"\t" << end_g << endl;
+        threads.push_back(thread(parallele_each_genome, fasta_list, encoder, start_g, end_g));
+    }
+	for (auto&th : threads)
+		th.join();
+    threads.clear();
     
-    get_fitness(fasta_file, encoder, raw_ipd);
+    // get_fitness(fasta_file, encoder, raw_ipd);
 
     kmer_mean_table = new float[array_size];
     calculate_mean();
