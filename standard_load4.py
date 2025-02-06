@@ -447,8 +447,8 @@ if __name__ == "__main__":
     up = 8
     down = 4
 
-    subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/12.align.bam"
-    fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa"
+    subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
+    fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
     outdir = "/home/shuaiw/methylation/data/borg/b_contigs/test/"
 
     # subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
