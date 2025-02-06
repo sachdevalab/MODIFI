@@ -1,0 +1,1 @@
+python split_bam.py --bam /home/shuaiw/methylation/data/borg/large_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam --whole_ref /home/shuaiw/borg/contigs/large.contigs.fa --work_dir /home/shuaiw/methylation/data/borg/large_contigs/ --threads 10

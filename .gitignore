@@ -9,6 +9,7 @@ tmp/
 *.time
 *pdf
 nohup.out
+.snakemake/
 
 # C extensions
 *.so

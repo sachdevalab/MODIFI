@@ -29,7 +29,7 @@ long array_size;
 
 
 int thread_num;
-std::mutex mtx;  
+std::mutex kmer_mutex;
 
 class Encode{
     public:
@@ -202,7 +202,7 @@ IPD_Result load_ipd(string raw_ipd){
 }
 
 
-int get_fitness(string fasta_file, Encode encoder, string raw_ipd){
+int slide_kmer(string fasta_file, Encode encoder, string raw_ipd){
     IPD_Result ipd_result = load_ipd(raw_ipd);
     Fasta fasta;
     string ref_seq = fasta.get_ref_seq(fasta_file);
@@ -213,8 +213,6 @@ int get_fitness(string fasta_file, Encode encoder, string raw_ipd){
     int e;
     unsigned int kmer_index, comple_kmer_index;
     time_t t0 = time(0);
-    int covert_num, comple_num;
-    short convert_ref[300];
 
     // cout <<"check fitness..."<<endl;
     ref_len= ref_seq.length();
@@ -243,13 +241,14 @@ int get_fitness(string fasta_file, Encode encoder, string raw_ipd){
         if (all_valid != false){
             int for_real_pos = j + 7;
             if (ipd_result.rev_ipd_map.find(for_real_pos) != ipd_result.rev_ipd_map.end()) {
+                // lock_guard<mutex> guard(kmer_mutex); // Lock the mutex
                 if (kmer_num_table[kmer_index] < 100000){
                     kmer_ipd_sum[kmer_index] += ipd_result.rev_ipd_map[for_real_pos];
                     kmer_num_table[kmer_index] += 1;
                     cout<< for_real_pos << " "<<kmer_index<< " ipd "<<kmer_ipd_sum[kmer_index]<< " num " << kmer_num_table[kmer_index]  <<endl;
                 }
                 else{
-                    cout << "<<<too high kmer count>>>  "<<kmer_num_table[kmer_index]<<endl;
+                    cout << kmer_index<< " <<<too high kmer count>>>  "<<kmer_num_table[kmer_index]<<endl;
                 }
             }
             // to do, for reverse ref
@@ -261,6 +260,64 @@ int get_fitness(string fasta_file, Encode encoder, string raw_ipd){
     return 0;
 }
 
+
+int map_control(string fasta_file, Encode encoder, string raw_ipd){
+    IPD_Result ipd_result = load_ipd(raw_ipd);
+    Fasta fasta;
+    string ref_seq = fasta.get_ref_seq(fasta_file);
+
+    int ref_len, m, e;
+    char n;
+    float control, ipd_ratio;
+    unsigned int kmer_index, comple_kmer_index;
+    time_t t0 = time(0);
+
+    // cout <<"check fitness..."<<endl;
+    ref_len= ref_seq.length();
+    // cout <<"genome len is "<<ref_len<<endl;
+ 
+    int *ref_int = new int[ref_len];
+    int *ref_comple_int = new int[ref_len];
+    for (int j = 0; j < ref_len; j++){
+        ref_int[j] = (int)ref_seq[j];
+        ref_comple_int[j] = encoder.comple[ref_int[j]];
+    }
+    for (int j = 0; j < ref_len-encoder.k+1; j++){
+        int max_dp = 0;
+        kmer_index = 0;
+        comple_kmer_index = 0;
+        bool all_valid = true;
+        for (int z = 0; z < encoder.k; z++){
+            m = encoder.coder[ref_int[j+z]];
+            if (m == 5){
+                all_valid = false;
+                break;
+            }
+            kmer_index += m*encoder.base[z]; 
+            comple_kmer_index += encoder.coder[ref_comple_int[j+z]]*encoder.base[(encoder.k-1-z)];  
+        }
+        if (all_valid != false){
+            int for_real_pos = j + 7;
+            if (ipd_result.rev_ipd_map.find(for_real_pos) != ipd_result.rev_ipd_map.end()) {
+                // lock_guard<mutex> guard(kmer_mutex); // Lock the mutex
+                    if (kmer_num_table[kmer_index] > 0){
+                        control = kmer_mean_table[kmer_index];
+                    }
+                    else{
+                        control = 1;
+                    }
+                    ipd_ratio = ipd_result.rev_ipd_map[for_real_pos]/control;
+            }
+            // to do, for reverse ref
+        }
+        // cout << "kmer_index is "<<kmer_index<<endl;
+    }        
+    delete [] ref_int;
+    delete [] ref_comple_int;
+    return 0;
+}
+
+
 string get_base_name(string fasta_file) {
     size_t last_slash = fasta_file.find_last_of('/');
     size_t last_dot = fasta_file.find_last_of('.');
@@ -270,7 +327,7 @@ string get_base_name(string fasta_file) {
     return "";
 }
 
-void parallele_each_genome(string genome_list_file, Encode encoder, int start_g, int end_g){
+void parallele_each_genome(string genome_list_file, Encode encoder, int start_g, int end_g, string ipd_dir){
     ifstream list_file;
     list_file.open(genome_list_file, ios::in);
 
@@ -281,8 +338,8 @@ void parallele_each_genome(string genome_list_file, Encode encoder, int start_g,
         if (genome_index >= start_g & genome_index < end_g){
             // extract chr name from each_genome name
             string base_name = get_base_name(each_genome);
-            string raw_ipd = "/home/shuaiw/methylation/data/borg/b_contigs/test/" + base_name + ".ipd1.csv";
-            get_fitness(each_genome, encoder, raw_ipd);
+            string raw_ipd = ipd_dir + "/" + base_name + ".ipd1.csv";
+            slide_kmer(each_genome, encoder, raw_ipd);
             // cout << genome_index << " index " <<record_match_rate[genome_index].genome << " is " << record_match_rate[genome_index].match_rate << endl;
         }
         if (genome_index > 9998){
@@ -333,7 +390,7 @@ void calculate_mean(){
 int main(){
     string fasta_file = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa";
     string raw_ipd = "/home/shuaiw/methylation/data/borg/b_contigs/test/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_219069_438138.ipd1.csv";
-
+    string ipd_dir = "/home/shuaiw/methylation/data/borg/b_contigs/test/";
     string fasta_list = "test.fasta.list";
 
     int up = 7;
@@ -361,13 +418,13 @@ int main(){
             end_g = genome_count.genome_num+1;
         }
         // cout << i << "\t" << start_g <<"\t" << end_g << endl;
-        threads.push_back(thread(parallele_each_genome, fasta_list, encoder, start_g, end_g));
+        threads.push_back(thread(parallele_each_genome, fasta_list, encoder, start_g, end_g, ipd_dir));
     }
 	for (auto&th : threads)
 		th.join();
     threads.clear();
     
-    // get_fitness(fasta_file, encoder, raw_ipd);
+    // slide_kmer(fasta_file, encoder, raw_ipd);
 
     kmer_mean_table = new float[array_size];
     calculate_mean();

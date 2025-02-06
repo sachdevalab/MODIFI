@@ -330,7 +330,7 @@ def load_IPD1(each_ref):
     # hits = [hit for hit in alignments.readsInRange(refGroupId, 0, 100000)]
     print ("11 hits", alignments.referenceInfo(each_ref.Name).Name)
 
-def load_IPD(each_ref, contig_bam):
+def load_IPD(each_ref, contig_bam, df_file):
     t0 = time.time()
     alignments = AlignmentSet(contig_bam, referenceFastaFname=fasta)
     refInfo = alignments.referenceInfoTable
@@ -379,7 +379,7 @@ def load_IPD(each_ref, contig_bam):
     # print ("combined_df", combined_df)
     print (len(combined_df), 'rows')
 
-    df_file = os.path.join(outdir, each_ref.Name + ".ipd1.csv")
+    # df_file = os.path.join(outdir, each_ref.Name + ".ipd1.csv")
     combined_df.to_csv(df_file, index=False)
     print ("raw ipd df saved", df_file)
     return combined_df
@@ -448,9 +448,13 @@ if __name__ == "__main__":
     up = 8
     down = 4
 
-    subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
-    fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
-    outdir = "/home/shuaiw/methylation/data/borg/b_contigs/test/"
+    # subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
+    # fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
+    # outdir = "/home/shuaiw/methylation/data/borg/b_contigs/test/"
+
+    subread_bam = sys.argv[1]
+    fasta = sys.argv[2]
+    outputfile = sys.argv[3]
 
     # subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
     # fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
@@ -463,17 +467,13 @@ if __name__ == "__main__":
 
 
     ## build outdir if not exists
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
+    # if not os.path.exists(outdir):
+    #     os.makedirs(outdir)
 
     seq_dict = extract_context(fasta)
     print ("ref loaded", len(seq_dict))
 
     for each_ref in seq_dict:
-        load_IPD(each_ref, subread_bam)
+        load_IPD(each_ref, subread_bam, outputfile)
 
     print ("IPD loaded")
-
-
-
-
