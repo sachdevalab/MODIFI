@@ -7,9 +7,14 @@ import glob
 # fa_dir = "/home/shuaiw/methylation/data/borg/b_contigs/contigs"
 # output_dir = "/home/shuaiw/methylation/data/borg/b_contigs/test1"
 
-bam_dir = "/home/shuaiw/methylation/data/borg/large_contigs/bams"
-fa_dir = "/home/shuaiw/methylation/data/borg/large_contigs/contigs"
-output_dir = "/home/shuaiw/methylation/data/borg/large_contigs/ipd1"
+# bam_dir = "/home/shuaiw/methylation/data/borg/large_contigs/bams"
+# fa_dir = "/home/shuaiw/methylation/data/borg/large_contigs/contigs"
+# output_dir = "/home/shuaiw/methylation/data/borg/large_contigs/ipd1"
+
+bam_dir = "/home/shuaiw/borg/all_borg/bams"
+fa_dir = "/home/shuaiw/borg/all_borg/contigs"
+output_dir = "/home/shuaiw/borg/all_borg/ipd1"
+
 script_path = "/home/shuaiw/Methy/standard_load5.py"
 
 ## check if output_dir exists, if not, create it
@@ -30,4 +35,7 @@ rule load_ipd:
     output:
         f"{output_dir}/{{sample}}.ipd1.csv"
     shell:
-        "python {script_path} {input.bam} {input.ref} {output}"
+        """
+        set -euo pipefail
+        python {script_path} {input.bam} {input.ref} {output} 
+        """

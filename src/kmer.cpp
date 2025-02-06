@@ -242,7 +242,7 @@ void update_ipd(string raw_ipd, map<int, IPD_Control> for_control_map, map<int, 
                 control = for_control_map[tpl_int].control;
                 kmer_count = for_control_map[tpl_int].kmer_count;
                 ipd_ratio = tMean_float/control;
-                control_file << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << "\t" << control << "\t" << ipd_ratio << "\t" << kmer_count << endl;
+                control_file << refName << "," << strand << "," << tpl << "," << coverage << "," << tMean << "," << tErr << "," << control << "," << ipd_ratio << "," << kmer_count << endl;
             }
             // else{
             //     cout << "No control value for " << tpl_int << endl;
@@ -253,7 +253,7 @@ void update_ipd(string raw_ipd, map<int, IPD_Control> for_control_map, map<int, 
                 control = rev_control_map[tpl_int].control;
                 kmer_count = rev_control_map[tpl_int].kmer_count;
                 ipd_ratio = tMean_float/control;
-                control_file << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << "\t" << control << "\t" << ipd_ratio << "\t" << kmer_count << endl;
+                control_file << refName << "," << strand << "," << tpl << "," << coverage << "," << tMean << "," << tErr << "," << control << "," << ipd_ratio << "," << kmer_count << endl;
             }
         }
         ref = refName;
@@ -510,17 +510,23 @@ void calculate_mean(){
 }
 
 
-int main(){
-    string fasta_file = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa";
-    string raw_ipd = "/home/shuaiw/methylation/data/borg/b_contigs/test/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_219069_438138.ipd1.csv";
-    string ipd_dir = "/home/shuaiw/methylation/data/borg/b_contigs/test/";
-    string control_dir = "/home/shuaiw/methylation/data/borg/b_contigs/control/";
-    string fasta_list = "test.fasta.list";
+int main(int argc, char *argv[]){
+    // string fasta_file = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa";
+    // string raw_ipd = "/home/shuaiw/methylation/data/borg/b_contigs/test/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_219069_438138.ipd1.csv";
+    
+    // string ipd_dir = "/home/shuaiw/methylation/data/borg/b_contigs/test/";
+    // string control_dir = "/home/shuaiw/methylation/data/borg/b_contigs/control/";
+    // string fasta_list = "test.fasta.list";
+
+    string ipd_dir = argv[1];
+    string control_dir = argv[2];
+    string fasta_list = argv[3];
+    int thread_num = stod(argv[4]);
 
     int up = 7;
     int down = 3;
     int k = up + down;
-    int thread_num = 2;
+    
     array_size = pow(4, k);
 
     kmer_ipd_sum = new long double[array_size];

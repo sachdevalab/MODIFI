@@ -40,18 +40,21 @@ def handle_each_contig(contig,ref,contig_bam,bam,whole_ref):
     os.system(f"samtools faidx {whole_ref} {contig} > {ref}")
     os.system(f"samtools faidx {ref}")
 
-    # samfile = pysam.AlignmentFile(bam, "rb")
-    # Create a new header that only includes the specific contig
-    # new_header = samfile.header.to_dict().copy()
-    
-    # new_header['SQ'] = [sq for sq in new_header['SQ'] if sq['SN'] == contig]
 
-    # contig_samfile = pysam.AlignmentFile(contig_bam, "wb", header=new_header)
-    # for read in samfile.fetch(contig):
-    #     read.reference_id = 0
-    #     contig_samfile.write(read)
-    # contig_samfile.close()
-    # samfile.close()
+    #  Create a new header that only includes the specific contig
+    samfile = pysam.AlignmentFile(bam, "rb")
+    new_header = samfile.header.to_dict().copy()
+    
+    new_header['SQ'] = [sq for sq in new_header['SQ'] if sq['SN'] == contig]
+
+    contig_samfile = pysam.AlignmentFile(contig_bam, "wb", header=new_header)
+    for read in samfile.fetch(contig):
+        read.reference_id = 0
+        contig_samfile.write(read)
+    contig_samfile.close()
+    samfile.close()
+    ## index the bam file
+    os.system(f"samtools index {contig_bam}")
 
 def main():
     parser = argparse.ArgumentParser(description="Split BAM file by reference.")
