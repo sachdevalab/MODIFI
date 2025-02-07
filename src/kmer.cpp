@@ -488,6 +488,9 @@ Genome_count assign_parallele(string genome_list_file, int thread_num){
         genome_num += 1;
     }
     list_file.close();
+    if (genome_num < thread_num){
+        thread_num = genome_num;
+    }
 
     int each_thread_g_num = genome_num/thread_num;
     cout<<"There is "<<genome_num<<" genomes."<<endl;
