@@ -7,13 +7,13 @@ import glob
 # fa_dir = "/home/shuaiw/methylation/data/borg/b_contigs/contigs"
 # output_dir = "/home/shuaiw/methylation/data/borg/b_contigs/test1"
 
-# bam_dir = "/home/shuaiw/methylation/data/borg/large_contigs/bams"
-# fa_dir = "/home/shuaiw/methylation/data/borg/large_contigs/contigs"
-# output_dir = "/home/shuaiw/methylation/data/borg/large_contigs/ipd1"
+bam_dir = "/home/shuaiw/methylation/data/borg/large_contigs/bams"
+fa_dir = "/home/shuaiw/methylation/data/borg/large_contigs/contigs"
+output_dir = "/home/shuaiw/methylation/data/borg/large_contigs/ipd1"
 
-bam_dir = "/home/shuaiw/borg/all_borg/bams"
-fa_dir = "/home/shuaiw/borg/all_borg/contigs"
-output_dir = "/home/shuaiw/borg/all_borg/ipd1"
+# bam_dir = "/home/shuaiw/borg/all_borg/bams"
+# fa_dir = "/home/shuaiw/borg/all_borg/contigs"
+# output_dir = "/home/shuaiw/borg/all_borg/ipd1"
 
 script_path = "/home/shuaiw/Methy/standard_load5.py"
 

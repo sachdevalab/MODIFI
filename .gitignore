@@ -10,6 +10,7 @@ tmp/
 *pdf
 nohup.out
 .snakemake/
+*png
 
 # C extensions
 *.so

@@ -31,20 +31,6 @@ sub_dirs=[".", "ipd", "control", "ipd_ratio", "bams", "contigs"]
 for sub in sub_dirs:
     os.makedirs(os.path.join(work_dir, sub), exist_ok=True)
 
-# rule split_bam:
-#     input:
-#         whole_bam = f"{whole_bam}",
-#         whole_ref = f"{whole_ref}",
-#         work_dir = f"{work_dir}"
-#     output:
-#         touch(f"{work_dir}/split_bam_done.txt")
-#     shell:
-#         """
-#         set -euo pipefail
-#         python split_bam.py --bam {input.whole_bam} --whole_ref {input.whole_ref} --work_dir {input.work_dir} --threads 100
-#         touch {output}
-#         """
-
 # Function to get sample names after split_bam rule
 def get_samples():
     bam_files = glob.glob(f"{work_dir}/bams/*.bam")
@@ -60,43 +46,18 @@ def get_samples():
 #     input:
 #         expand(f"{work_dir}/control/{{sample}}.ipd2.csv", sample=get_samples())
 
-# rule all:
-#     input:
-#         expand(f"{work_dir}/ipd/{{sample}}.ipd1.csv", sample=get_samples())
-
-# rule load_ipd:
-#     input:
-#         split_done=os.path.join(work_dir, "split_bam_done.txt"),  # Ensures `split_bam` runs first
-#         bam=os.path.join(work_dir, "bams", "{sample}.bam"),
-#         ref=os.path.join(work_dir, "contigs", "{sample}.fa")
-#     output:
-#         os.path.join(work_dir, "ipd", "{sample}.ipd1.csv")
-#     shell:
-#         """
-#         python standard_load5.py {input.bam} {input.ref} {output} 
-#         """
-
-rule control:
+rule all:
     input:
-        ipd=os.path.join(work_dir, "ipd")
+        expand(f"{work_dir}/ipd/{{sample}}.ipd1.csv", sample=get_samples())
+
+rule load_ipd:
+    input:
+        split_done=os.path.join(work_dir, "split_bam_done.txt"),  # Ensures `split_bam` runs first
+        bam=os.path.join(work_dir, "bams", "{sample}.bam"),
+        ref=os.path.join(work_dir, "contigs", "{sample}.fa")
     output:
-        control_dir=os.path.join(work_dir, "control"),
-        # log=touch(f"{work_dir}/load_ipd_done.txt")
+        os.path.join(work_dir, "ipd", "{sample}.ipd1.csv")
     shell:
         """
-        ls {work_dir}/contigs/*.fa > {work_dir}/contigs_list.txt
-        echo ./src/test {input.ipd} {output.control_dir} {work_dir}/contigs_list.txt 100
-        ./src/test {input.ipd} {output.control_dir} {work_dir}/contigs_list.txt 100
-        # touch {log}
+        python /home/shuaiw/Methy/standard_load5.py {input.bam} {input.ref} {output} 
         """
-
-# rule ipd_ratio:
-#     input:
-#         control=f"{work_dir}/control/{{sample}}.ipd2.csv"
-#     output:
-#         f"{work_dir}/ipd_ratio/{{sample}}.ipd3.csv"
-#     shell:
-#         """
-#         set -euo pipefail
-#         python comp_ipd_ratio.py {input.control} {output}
-#         """
