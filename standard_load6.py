@@ -95,18 +95,6 @@ def _loadRawIpds(alignments, refGroupId, each_ref, df_file, factor=1.0):
             for tpl_val, ipd_val in zip(tpl, ipd):
                 s1dict[tpl_val].append(ipd_val)
 
-        # dfTemp = np.zeros(nm, dtype=ipdRec)
-        # dfTemp['ipd'] = ipd
-        # dfTemp['tpl'] = tpl
-        # dfTemp['strand'] = aln.isReverseStrand
-        # print ("ipd", ipd)
-        # ipdVect = np.concatenate([ipdVect, ipd])
-        # if aln.isForwardStrand:
-        #     for i in range(ipd.size):
-        #         s0dict[tpl[i]].append(ipd[i])
-        # else:
-        #     for i in range(ipd.size):
-        #         s1dict[tpl[i]].append(ipd[i])
     print ("load takes", time.time()-t0)
     if len(ipdVect) < 10:
         # Default is there is no coverage
@@ -124,7 +112,7 @@ def _loadRawIpds(alignments, refGroupId, each_ref, df_file, factor=1.0):
         if pos in s0dict:
             res = dict()
             d = np.array(s0dict[pos])
-            if d.size <= 2:
+            if len(d) <= 2:
                 continue
 
             res['refName'] = each_ref.Name
@@ -133,20 +121,17 @@ def _loadRawIpds(alignments, refGroupId, each_ref, df_file, factor=1.0):
             # reproduce this in the all calling methods
             strand = res['strand'] = 1 - 0
             res['tpl'] = pos
-            res['coverage'] = d.size
+            res['coverage'] = len(d)
 
-            percentile = min(90, (1.0 - 1.0 / (d.size - 1)) * 100)
+            percentile = min(90, (1.0 - 1.0 / (len(d) - 1)) * 100)
             localPercentile = np.percentile(d, percentile)
             local_capValue = max(capValue, localPercentile)
 
-            # np.minimum(d, capValue, out=d)  # this version will send capped IPDs
-            # to modified fraction estimator
             d = np.minimum(d, local_capValue)
 
             # Trimmed stats
-            res['tMean'] = d.mean().item()
-            res['tErr'] = np.std(d).item() / np.sqrt(d.size)
-
+            res['tMean'] = np.mean(d).item()
+            res['tErr'] = np.std(d).item() / np.sqrt(len(d))
             result.append(res)
     
     print ("one strand done", time.time()-t0)
@@ -155,28 +140,25 @@ def _loadRawIpds(alignments, refGroupId, each_ref, df_file, factor=1.0):
         if pos in s1dict:
             res = dict()
             d = np.array(s1dict[pos])
-            if d.size <= 2:
+            if len(d) <= 2:
                 continue
 
             res['refName'] = each_ref.Name
 
             # NOTE -- this is where the strand flipping occurs -- make sure to
             # reproduce this in the all calling methods
-            strand = res['strand'] = 1 - 1
+            res['strand'] = 1 - 1
             res['tpl'] = pos
-            res['coverage'] = d.size
+            res['coverage'] = len(d)
 
-            percentile = min(90, (1.0 - 1.0 / (d.size - 1)) * 100)
+            percentile = min(90, (1.0 - 1.0 / (len(d) - 1)) * 100)
             localPercentile = np.percentile(d, percentile)
             local_capValue = max(capValue, localPercentile)
-
-            # np.minimum(d, capValue, out=d)  # this version will send capped IPDs
-            # to modified fraction estimator
             d = np.minimum(d, local_capValue)
 
             # Trimmed stats
-            res['tMean'] = d.mean().item()
-            res['tErr'] = np.std(d).item() / np.sqrt(d.size)
+            res['tMean'] = np.mean(d).item()
+            res['tErr'] = np.std(d).item() / np.sqrt(len(d))
 
             result.append(res)
 
@@ -185,26 +167,6 @@ def _loadRawIpds(alignments, refGroupId, each_ref, df_file, factor=1.0):
     combined_df = pd.DataFrame(result)
     combined_df.to_csv(df_file, index=False)
     print ("raw ipd df saved", df_file)
-
-    # for pos in range(0, each_ref.Length):
-    #     if pos in s1dict:
-    #         obj = {'tpl': pos, 'strand': "1",
-    #                 'data': np.array(s1dict[pos])}
-    #         views.append(obj)
-        
-    # print ("start sorting")
-    # print (s0list)
-    # t0 = time.time()
-    # # Sort the set of ipd observations
-    # s0Ipds = np.concatenate(s0list)
-    # sortOrder = np.argsort(s0Ipds['tpl'])
-    # s0Ipds = s0Ipds[sortOrder]
-
-    # s1Ipds = np.concatenate(s1list)
-    # sortOrder = np.argsort(s1Ipds['tpl'])
-    # s1Ipds = s1Ipds[sortOrder]
-    # print ("sorting done", time.time()-t0)
-    # print (s1Ipds)
 
 
 def _loadRawIpds2(alignments, refGroupId, each_ref, factor=1.0):
