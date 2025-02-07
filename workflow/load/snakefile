@@ -16,18 +16,22 @@ import os
 # whole_ref = "/home/shuaiw/borg/all_borg/all_borg.fasta"
 # work_dir = "/home/shuaiw/methylation/data/borg/new_test"
 
-whole_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
-whole_ref = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
-work_dir = "/home/shuaiw/methylation/data/borg/new_test"
+# whole_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
+# whole_ref = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
+# work_dir = "/home/shuaiw/methylation/data/borg/new_test2"
 
 # bam_dir = "/home/shuaiw/borg/all_borg/bams"
 # fa_dir = "/home/shuaiw/borg/all_borg/contigs"
 # work_dir = "/home/shuaiw/borg/all_borg/ipd1"
 
+configfile: "../config.yaml"
 
+whole_bam = config["whole_bam"]
+whole_ref = config["whole_ref"]
+work_dir = config["work_dir"]
 
 # Create required directories dynamically
-sub_dirs=[".", "ipd", "control", "ipd_ratio", "bams", "contigs"]
+sub_dirs=[".", "ipd", "control", "bams", "contigs"]
 for sub in sub_dirs:
     os.makedirs(os.path.join(work_dir, sub), exist_ok=True)
 
