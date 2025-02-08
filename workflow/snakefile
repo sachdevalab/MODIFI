@@ -36,15 +36,15 @@ os.makedirs(work_dir, exist_ok=True)
 
 rule all:
     input:
-        "split/done.txt",
-        "load/done.txt",
-        "control/done.txt",
-        "compare/done.txt"
+        os.path.join(work_dir, "split_done.txt"),
+        os.path.join(work_dir, "load_done.txt"),
+        os.path.join(work_dir, "control_done.txt"),
+        os.path.join(work_dir, "compare_done.txt")
 
 rule split:
     input:
     output:
-        touch("split/done.txt")
+        touch(os.path.join(work_dir, "split_done.txt"))
     shell:
         """
         cd split && snakemake
@@ -54,9 +54,9 @@ rule split:
 
 rule load:
     input:
-        "split/done.txt"
+        os.path.join(work_dir, "split_done.txt")
     output:
-        touch("load/done.txt")
+        touch(os.path.join(work_dir, "load_done.txt"))
     shell:
         """
         cd load && snakemake
@@ -66,9 +66,9 @@ rule load:
 
 rule control:
     input:
-        "load/done.txt"
+        os.path.join(work_dir, "load_done.txt")
     output:
-        touch("control/done.txt")
+        touch(os.path.join(work_dir, "control_done.txt"))
     shell:
         """
         cd control && snakemake
@@ -78,9 +78,9 @@ rule control:
 
 rule compare:
     input:
-        "control/done.txt"
+        os.path.join(work_dir, "control_done.txt")
     output:
-        touch("compare/done.txt")
+        touch(os.path.join(work_dir, "compare_done.txt"))
     shell:
         """
         cd compare && snakemake

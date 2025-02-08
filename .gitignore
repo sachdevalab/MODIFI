@@ -11,6 +11,7 @@ tmp/
 nohup.out
 .snakemake/
 *png
+done.txt
 
 # C extensions
 *.so

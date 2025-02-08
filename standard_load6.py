@@ -106,22 +106,20 @@ def _loadRawIpds(alignments, refGroupId, each_ref, df_file, factor=1.0):
     print ("capValue", capValue)
     print ("pos num", len(s0dict), len(s1dict))
 
+    ref_Name = each_ref.Name
+
     # s0Ipds, s1Ipds = [], []
     result = []
     for pos in range(0, each_ref.Length):
         if pos in s0dict:
-            res = dict()
             d = np.array(s0dict[pos])
             if len(d) <= 2:
                 continue
 
-            res['refName'] = each_ref.Name
-
             # NOTE -- this is where the strand flipping occurs -- make sure to
             # reproduce this in the all calling methods
-            strand = res['strand'] = 1 - 0
-            res['tpl'] = pos
-            res['coverage'] = len(d)
+            strand = 1 - 0
+            coverage = len(d)
 
             percentile = min(90, (1.0 - 1.0 / (len(d) - 1)) * 100)
             localPercentile = np.percentile(d, percentile)
@@ -130,26 +128,22 @@ def _loadRawIpds(alignments, refGroupId, each_ref, df_file, factor=1.0):
             d = np.minimum(d, local_capValue)
 
             # Trimmed stats
-            res['tMean'] = np.mean(d).item()
-            res['tErr'] = np.std(d).item() / np.sqrt(len(d))
-            result.append(res)
+            tMean = np.mean(d).item()
+            tErr = np.std(d).item() / np.sqrt(len(d))
+            result.append([ref_Name, strand, pos, coverage, tMean, tErr])
     
     print ("one strand done", time.time()-t0)
 
     for pos in range(0, each_ref.Length):   
         if pos in s1dict:
-            res = dict()
             d = np.array(s1dict[pos])
             if len(d) <= 2:
                 continue
 
-            res['refName'] = each_ref.Name
-
             # NOTE -- this is where the strand flipping occurs -- make sure to
             # reproduce this in the all calling methods
-            res['strand'] = 1 - 1
-            res['tpl'] = pos
-            res['coverage'] = len(d)
+            strand = 1 - 1
+            coverage = len(d)
 
             percentile = min(90, (1.0 - 1.0 / (len(d) - 1)) * 100)
             localPercentile = np.percentile(d, percentile)
@@ -157,14 +151,14 @@ def _loadRawIpds(alignments, refGroupId, each_ref, df_file, factor=1.0):
             d = np.minimum(d, local_capValue)
 
             # Trimmed stats
-            res['tMean'] = np.mean(d).item()
-            res['tErr'] = np.std(d).item() / np.sqrt(len(d))
+            tMean = np.mean(d).item()
+            tErr = np.std(d).item() / np.sqrt(len(d))
 
-            result.append(res)
+            result.append([ref_Name, strand, pos, coverage, tMean, tErr])
 
     print ("raw ipd is counted", time.time()-t0)
     # combined_df = pd.concat(result, ignore_index=True)
-    combined_df = pd.DataFrame(result)
+    combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'coverage', 'tMean', 'tErr'])
     combined_df.to_csv(df_file, index=False)
     print ("raw ipd df saved", df_file)
 
@@ -409,13 +403,15 @@ if __name__ == "__main__":
     up = 8
     down = 4
 
-    subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
-    fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
-    outputfile = "/home/shuaiw/methylation/data/borg/b_contigs/test/test.csv"
+    # subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
+    # fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
+    # subread_bam = "/home/shuaiw/methylation/data/borg/new_test4/bams/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_267_C.bam"
+    # fasta = "/home/shuaiw/methylation/data/borg/new_test4/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_267_C.fa"
+    # outputfile = "/home/shuaiw/methylation/data/borg/b_contigs/test/test.csv"
 
-    # subread_bam = sys.argv[1]
-    # fasta = sys.argv[2]
-    # outputfile = sys.argv[3]
+    subread_bam = sys.argv[1]
+    fasta = sys.argv[2]
+    outputfile = sys.argv[3]
 
     # subread_bam = "/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
     # fasta = "/home/shuaiw/borg/contigs/break_contigs.fasta"
