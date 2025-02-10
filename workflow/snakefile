@@ -47,7 +47,7 @@ rule split:
         touch(os.path.join(work_dir, "split_done.txt"))
     shell:
         """
-        cd split && snakemake
+        cd split && snakemake  --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
         cd ..
         touch {output}
         """
@@ -59,7 +59,7 @@ rule load:
         touch(os.path.join(work_dir, "load_done.txt"))
     shell:
         """
-        cd load && snakemake
+        cd load && snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
         cd ..
         touch {output}
         """
@@ -71,7 +71,7 @@ rule control:
         touch(os.path.join(work_dir, "control_done.txt"))
     shell:
         """
-        cd control && snakemake
+        cd control && snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
         cd ..
         touch {output}
         """ 
@@ -83,7 +83,7 @@ rule compare:
         touch(os.path.join(work_dir, "compare_done.txt"))
     shell:
         """
-        cd compare && snakemake
+        cd compare && snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
         cd ..
         touch {output}
         """

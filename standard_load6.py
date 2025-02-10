@@ -434,3 +434,5 @@ if __name__ == "__main__":
         load_IPD(each_ref, subread_bam, outputfile)
 
     print ("IPD loaded")
+
+    # python /home/shuaiw/Methy/standard_load6.py /home/shuaiw/methylation/data/borg/new_test5/bams/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_766_C.bam /home/shuaiw/methylation/data/borg/new_test5/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_766_C.fa /home/shuaiw/methylation/data/borg/new_test5/ipd/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_766_C.ipd1.csv

@@ -63,5 +63,5 @@ rule load_ipd:
         os.path.join(work_dir, "ipd", "{sample}.ipd1.csv")
     shell:
         """
-        python /home/shuaiw/Methy/standard_load6.py {input.bam} {input.ref} {output} 
+        python /home/shuaiw/Methy/standard_load7.py {input.bam} {input.ref} {output} 
         """

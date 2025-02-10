@@ -8,6 +8,7 @@ import sys
 import argparse
 from Bio import SeqIO
 
+pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
 
 def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000):
     # Ensure the output directory exists
@@ -55,6 +56,7 @@ def handle_each_contig(contig,ref,contig_bam,bam,whole_ref):
     samfile.close()
     ## index the bam file
     os.system(f"samtools index {contig_bam}")
+    os.system(f"{pbindex_bin} {contig_bam}")
 
 def main():
     parser = argparse.ArgumentParser(description="Split BAM file by reference.")
