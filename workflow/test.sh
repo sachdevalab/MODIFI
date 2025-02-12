@@ -1,3 +1,4 @@
 sbatch --partition standard --wrap "/usr/bin/time -v -o large.time snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/large_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam whole_ref=/home/shuaiw/methylation/data/borg/contigs/large.contigs.fa work_dir=/home/shuaiw/methylation/data/borg/new_test6"
 sbatch --partition standard --wrap "/usr/bin/time -v -o test_100.time snakemake --config whole_bam=/home/shuaiw/borg/test_100/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam whole_ref=/home/shuaiw/borg/contigs/test_100.fa work_dir=/home/shuaiw/methylation/data/borg/new_test7"
+snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/new_test7/bams/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_91_L.bam whole_ref=/home/shuaiw/methylation/data/borg/new_test7/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_91_L.fa work_dir=/home/shuaiw/methylation/data/borg/new_test8
 

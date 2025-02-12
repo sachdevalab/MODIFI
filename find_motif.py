@@ -135,10 +135,10 @@ def read_streme(streme_output):
                         motif_sites[r + ":" + str(i) + "-"] = motif_new
     print ("motif number", len(motifs), motifs, len(motif_sites))
     # Print the first 5 elements of motif_sites
-    for i, (key, value) in enumerate(motif_sites.items()):
-        if i >= 100:
-            break
-        print(f"{key}: {value}")
+    # for i, (key, value) in enumerate(motif_sites.items()):
+    #     if i >= 100:
+    #         break
+    #     print(f"{key}: {value}")
     return motifs, motif_sites
 # Alternatively, you can parse the GFF file manually without using gffutils
 def parse_gff(file_path):
@@ -312,10 +312,17 @@ def get_reverse_complement_seq(sequence):
 
 def load_ipd_ratio(csv, ref_seq):
     df = pd.read_csv(csv, sep = ",")
-    ## filter the ipd_ratio with pvalue < 0.01
-    df = df[df['pvalue'] < 0.01]
     for_dict = {}
     rev_dict = {}
+    for_dict_all = {}
+    rev_dict_all = {}
+    for index, row in df.iterrows():
+        if row['strand'] == 1:
+            for_dict_all[row['tpl']] = [row['ipd_ratio'], row['pvalue']]
+        else:
+            rev_dict_all[row['tpl']] = [row['ipd_ratio'], row['pvalue']]
+    ## filter the ipd_ratio with pvalue < 0.01
+    df = df[df['pvalue'] < 0.01]
     for index, row in df.iterrows():
         if row['strand'] == 1:
             for_dict[row['tpl']] = row['pvalue']
@@ -340,7 +347,7 @@ def load_ipd_ratio(csv, ref_seq):
             print (f">rev_{site}\n{get_reverse_complement_seq(seq)}", file = context_f)
     context_f.close()
 
-    return for_dict, rev_dict
+    return for_dict, rev_dict, for_dict_all, rev_dict_all
 
 def generate_control(control_fasta, ref_seq, for_dict, rev_dict, max_seq_num, flank_len):
     ### randomly select max_seq_num sites from ref_seq and the site should not in for_dict and rev_dict
@@ -371,42 +378,20 @@ def read_ref(ref):
     #     seq_dict[record.id] = record.seq
     # return seq_dict
         REF[record.id] = record.seq
-        return str(record.seq)
-    
+        return str(record.seq), record.id
+
+def motif_stastics(ref_id, motifs, motif_sites, for_dict, rev_dict):
+    for i in for_dict:
+        tag = ref_id + ":" + str(i) + "+"
+        # print (tag)
+        if tag in motif_sites:
+            print (tag, motif_sites[tag], for_dict[i])
 
 ### SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L borg
 ### SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_494_C  Methanoperedens_43_0_circular
 #### SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_267_C Methanoperedens_43_25_c
 
 if __name__ == "__main__":
-    # prefix = 'break_contigs/break_contigs'
-    # prefix = 'seven_contigs/seven_contigs'
-
-    # prefix = 'split_test/split'
-
-    # gff_file = f'{prefix}.reprocess.gff'
-    # figure_name = f'{prefix}_heatmap.pdf'
-    # matrix_file = f'{prefix}_motif_matrix.csv'
-    # context_fasta = f'{prefix}.context.fasta'
-
-    # gff_folder = 'borg/split_bam_dir/'
-    # # merge_gff(gff_folder, gff_file)
-
-
-    # prefix = 'test'
-    # # motif_info_dict, motif_dict = parse_gff(gff_file)
-    # matrix_file = f'tmp/{prefix}_motif_matrix.csv'
-    # figure_name = f'tmp/{prefix}_heatmap.pdf'
-    # motif_info_dict, motif_dict = load_motifs("borg/split_bam_dir/")
-    # ##motif_info_dict = add_benchmark(motif_info_dict, motif_dict)
-    # get_motif_matrix(motif_info_dict, motif_dict)
-    # heatmap(matrix_file)
-
-
-    # cluster_contigs(matrix_file)
-    # run_streme(context_fasta)
-    # streme_output = "break_contigs/test.context_streme/"
-    # read_streme(streme_output)
 
     raw_gff = "/home/shuaiw/methylation/data/borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_10_L.gff"
     # raw_gff = "/home/shuaiw/methylation/data/borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_11_C.gff"
@@ -417,11 +402,12 @@ if __name__ == "__main__":
     control_fasta = "/home/shuaiw/methylation/data/borg/b_contigs/test2/" + "control.fasta"
     max_seq_num = 1000
     flank_len = 25
-    ref_seq = read_ref(ref)
-    # for_dict, rev_dict = load_ipd_ratio(ipd_ratio, ref_seq)
+    ref_seq, ref_id = read_ref(ref)
+    for_dict, rev_dict, for_dict_all, rev_dict_all = load_ipd_ratio(ipd_ratio, ref_seq)
     # generate_control(control_fasta, ref_seq, for_dict, rev_dict, max_seq_num, flank_len)
     # read_streme(streme_output)
 
-    read_streme (streme_output)
+    motifs, motif_sites = read_streme (streme_output)
+    motif_stastics(ref_id, motifs, motif_sites, for_dict_all, rev_dict_all)
 
     # streme -p /home/shuaiw/methylation/data/borg/b_contigs/test2/context.fasta -n /home/shuaiw/methylation/data/borg/b_contigs/test2/control.fasta --oc ~/borg/streme_output

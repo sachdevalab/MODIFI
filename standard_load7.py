@@ -211,7 +211,9 @@ def load_IPD(each_ref, contig_bam, df_file):
     refGroupId = alignments.referenceInfo(each_ref.Name).Name
 
     chunks_num = int(each_ref.Length/max_region)
-    # print ("chunks_num", chunks_num)
+    chunks_num = 1 if chunks_num < 1 else chunks_num
+        
+    print ("chunks_num", chunks_num)
     result = []
     for i in range(chunks_num):
         start = i*max_region

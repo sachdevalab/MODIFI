@@ -48,6 +48,11 @@ def handle_each_contig(contig,ref,contig_bam,bam,whole_ref):
     
     new_header['SQ'] = [sq for sq in new_header['SQ'] if sq['SN'] == contig]
 
+    ### covert the too large read group id to fit int32, and convert it to hexadecimal
+    ### not working, need to fix it
+    # for i, rg in enumerate(new_header['RG']):
+    #     rg['ID'] = hex(i)
+
     contig_samfile = pysam.AlignmentFile(contig_bam, "wb", header=new_header)
     for read in samfile.fetch(contig):
         read.reference_id = 0
