@@ -243,7 +243,7 @@ class Benchmark:
         print ("read is done")
         ## keep the rows with strand == 1
         df = df[df['strand'] == 1]
-        df = df[df['refName'] == "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_954_L"]
+        df = df[df['refName'] == contig]
         self.ratio_ana(df)
         ## keep the rows with score > 30
         df = df[df['score'] > 30]
@@ -271,7 +271,7 @@ class Benchmark:
 
     def read_our_all(self):
         df = pd.read_csv(self.our)
-        df = df[df['strand'] == 0]
+        df = df[df['strand'] == 1]
         ## only keep the rows with pvalue < 0.01
         for index, row in df.iterrows():
             if row['pvalue'] < 0.05:
@@ -344,8 +344,9 @@ if __name__ == "__main__":
     # infer = "/home/shuaiw/methylation/data/borg/b_contigs/ipds4/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595.ipd2.csv"
     # ipd_summary = "/home/shuaiw/methylation/data/borg/b_contigs/1.csv"
 
+    contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_882_L"
     ipd_summary = "/home/shuaiw/methylation/data/borg/test_100/test_100.csv"
-    infer = "/home/shuaiw/methylation/data/borg/new_test7/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_954_L.ipd3.csv"
+    infer = f"/home/shuaiw/methylation/data/borg/new_test7/ipd_ratio/{contig}.ipd3.csv"
 
     bench = Benchmark(ipd_summary, infer)
     bench.read_ipd_summary_all()

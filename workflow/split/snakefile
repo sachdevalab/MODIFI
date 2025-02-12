@@ -20,11 +20,11 @@ rule split_bam:
         whole_ref = f"{whole_ref}",
         work_dir = f"{work_dir}"
     output:
-        touch(f"{work_dir}/split_bam_done.txt")
+        # touch(os.path.join(work_dir, "split_bam_done.txt"))
     shell:
         """
         set -euo pipefail
         python /home/shuaiw/Methy/split_bam.py --bam {input.whole_bam} --whole_ref {input.whole_ref} --work_dir {input.work_dir} --threads 100
-        touch {output}
+        # touch {output}
         """
 
