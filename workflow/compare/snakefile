@@ -19,20 +19,21 @@ for sub in sub_dirs:
 
 # Function to get sample names after split_bam rule
 def get_samples():
-    bam_files = glob.glob(f"{work_dir}/bams/*.bam")
+    bam_files = glob.glob(os.path.join(work_dir, "bams", "*.bam"))
     samples = list(set(f.split("/")[-1].replace(".bam", "") for f in bam_files))
-    print (samples)
+    print (len(samples), "samples")
     return samples
 
 rule all:
     input:
-        expand(f"{work_dir}/ipd_ratio/{{sample}}.ipd3.csv", sample=get_samples())
+        # expand(f"{work_dir}/ipd_ratio/{{sample}}.ipd3.csv", sample=get_samples())
+        expand(os.path.join(work_dir, "ipd_ratio", "{sample}.ipd3.csv"), sample=get_samples())
 
 rule ipd_ratio:
     input:
-        control=f"{work_dir}/control/{{sample}}.ipd2.csv"
+        control=os.path.join(work_dir, "control", "{sample}.ipd2.csv")
     output:
-        f"{work_dir}/ipd_ratio/{{sample}}.ipd3.csv"
+        os.path.join(work_dir, "ipd_ratio", "{sample}.ipd3.csv")
     shell:
         """
         set -euo pipefail

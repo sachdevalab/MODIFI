@@ -178,6 +178,8 @@ IPD_Result load_ipd(string raw_ipd){
         getline(ss, strand, ',');
         string tpl;
         getline(ss, tpl, ',');
+        string base;
+        getline(ss, base, ',');
         string coverage;
         getline(ss, coverage, ',');
         string tMean;
@@ -218,7 +220,7 @@ void update_ipd(string raw_ipd, map<int, IPD_Control> for_control_map, map<int, 
 
     // skip first line
     getline(ipd_file, line);
-    control_file << "refName,strand,tpl,coverage,tMean,tErr,control,ipd_ratio,kmer_count" << endl;
+    control_file << "refName,strand,tpl,base,coverage,tMean,tErr,control,ipd_ratio,kmer_count" << endl;
     while (getline(ipd_file, line)){
         stringstream ss(line);
         // sep line by ,
@@ -228,6 +230,8 @@ void update_ipd(string raw_ipd, map<int, IPD_Control> for_control_map, map<int, 
         getline(ss, strand, ',');
         string tpl;
         getline(ss, tpl, ',');
+        string base;
+        getline(ss, base, ',');
         string coverage;
         getline(ss, coverage, ',');
         string tMean;
@@ -242,7 +246,7 @@ void update_ipd(string raw_ipd, map<int, IPD_Control> for_control_map, map<int, 
                 control = for_control_map[tpl_int].control;
                 kmer_count = for_control_map[tpl_int].kmer_count;
                 ipd_ratio = tMean_float/control;
-                control_file << refName << "," << strand << "," << tpl << "," << coverage << "," << tMean << "," << tErr << "," << control << "," << ipd_ratio << "," << kmer_count << endl;
+                control_file << refName << "," << strand << "," << tpl << ","<< base << "," << coverage << "," << tMean << "," << tErr << "," << control << "," << ipd_ratio << "," << kmer_count << endl;
             }
             // else{
             //     cout << "No control value for " << tpl_int << endl;

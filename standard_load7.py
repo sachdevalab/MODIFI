@@ -23,7 +23,7 @@ import logging
 # Raw ipd record
 ipdRec = [('tpl', '<u4'), ('strand', '<i8'), ('ipd', '<f4')]
 mapQvThreshold = 0
-maxAlignments = 1500
+maxAlignments = 10000 ##1500
 randomSeed = None
 max_region = 100000
 
@@ -61,8 +61,8 @@ def _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor=1.0):
             if ((hit.mapQV >= mapQvThreshold) and
                 (hit.identity >= MIN_IDENTITY) and
                 (hit.readLength >= MIN_READLENGTH))]
-    # logging.info("Retrieved %d hits" % len(hits), time.time()-t0)
-    print ("Retrieved %d hits" % len(hits), time.time()-t0)
+    # logging.info("Retrieved %d hits" % len(hits), round(time.time()-t0))
+    print ("Retrieved %d hits" % len(hits), "time", round(time.time()-t0), "downsample ratio", round(maxAlignments/len(hits), 2))
     if len(hits) > maxAlignments:
         # XXX a bit of a hack - to ensure deterministic behavior when
         # running in parallel, re-seed the RNG before each call
@@ -113,7 +113,7 @@ def _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor=1.0):
             for tpl_val, ipd_val in zip(tpl, ipd):
                 s1dict[tpl_val].append(ipd_val)
 
-    print ("load takes", time.time()-t0)
+    print ("load takes", round(time.time()-t0))
     if len(ipdVect) < 10:
         # Default is there is no coverage
         capValue = 5.0
@@ -135,10 +135,6 @@ def cal_mean(s0dict, s1dict, each_ref, capValue, start, end, t0):
             d = np.array(s0dict[pos])
             if len(d) <= 2:
                 continue
-
-            # NOTE -- this is where the strand flipping occurs -- make sure to
-            # reproduce this in the all calling methods
-            strand = 1 - 0
             coverage = len(d)
 
             percentile = min(90, (1.0 - 1.0 / (len(d) - 1)) * 100)
@@ -150,9 +146,10 @@ def cal_mean(s0dict, s1dict, each_ref, capValue, start, end, t0):
             # Trimmed stats
             tMean = np.mean(d).item()
             tErr = np.std(d).item() / np.sqrt(len(d))
-            result.append([ref_Name, strand, pos, coverage, tMean, tErr])
+            # print (ref_seq[pos])
+            result.append([ref_Name, 1, pos, complement_ref_seq[pos], coverage, tMean, tErr])
     
-    print ("one strand done", time.time()-t0)
+    print ("one strand done", round(time.time()-t0))
 
     for pos in range(start, end):   
         if pos in s1dict:
@@ -160,9 +157,6 @@ def cal_mean(s0dict, s1dict, each_ref, capValue, start, end, t0):
             if len(d) <= 2:
                 continue
 
-            # NOTE -- this is where the strand flipping occurs -- make sure to
-            # reproduce this in the all calling methods
-            strand = 1 - 1
             coverage = len(d)
 
             percentile = min(90, (1.0 - 1.0 / (len(d) - 1)) * 100)
@@ -174,9 +168,9 @@ def cal_mean(s0dict, s1dict, each_ref, capValue, start, end, t0):
             tMean = np.mean(d).item()
             tErr = np.std(d).item() / np.sqrt(len(d))
 
-            result.append([ref_Name, strand, pos, coverage, tMean, tErr])
+            result.append([ref_Name, 0, pos, ref_seq[pos], coverage, tMean, tErr])
 
-    print ("raw ipd is counted", time.time()-t0)
+    print ("raw ipd is counted", round(time.time()-t0))
     return result
 
 def extract_context(fasta):
@@ -189,10 +183,9 @@ def extract_context(fasta):
         # if record.id != "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_219069_438138":
         #     continue
         ## convert the sequence to string of number, 0 for A, 1 for C, 2 for G, 3 for T, 4 for N
-        seq = str(record.seq)
+        # seq = str(record.seq)
         ## convert to capital
-        raw_seq = seq.upper()
-        seq_dict[record.id] = raw_seq
+        seq_dict[record.id] = record.seq
         # seq = raw_seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
     return seq_dict
 
@@ -205,7 +198,7 @@ def load_IPD(each_ref, contig_bam, df_file):
         if my_ref.Name == each_ref:
             each_ref = my_ref
             break
-    print ("ref loaded", each_ref.Name, each_ref.Length, time.time()-t0)
+    print ("ref loaded", each_ref.Name, each_ref.Length, round(time.time()-t0))
     factor = 1.0 / alignments.readGroupTable[0].FrameRate
     # global alignments
     refGroupId = alignments.referenceInfo(each_ref.Name).Name
@@ -226,11 +219,11 @@ def load_IPD(each_ref, contig_bam, df_file):
         result += _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor, )
 
     # chunk_result = _loadRawIpds(alignments, refGroupId, each_ref, factor, )
-    # print ("rawIpds", rawIpds.shape, time.time()-t0)
+    # print ("rawIpds", rawIpds.shape, round(time.time()-t0))
     # combined_df = pd.concat(result, ignore_index=True)
-    combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'coverage', 'tMean', 'tErr'])
+    combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'base', 'coverage', 'tMean', 'tErr'])
     combined_df.to_csv(df_file, index=False)
-    print ("raw ipd df saved", df_file, time.time()-t0)
+    print ("raw ipd df saved", df_file, round(time.time()-t0))
 
 
 
@@ -264,6 +257,9 @@ if __name__ == "__main__":
     print ("fasta loaded, contig num:", len(seq_dict))
 
     for each_ref in seq_dict:
+        ref_seq = seq_dict[each_ref]
+        ## complement the sequence
+        complement_ref_seq = ref_seq.complement()
         load_IPD(each_ref, subread_bam, outputfile)
 
     print ("IPD loaded")
