@@ -44,46 +44,47 @@ rule all:
 rule split:
     input:
     output:
-        touch(os.path.join(work_dir, "split_done.txt"))
+        # touch(os.path.join(work_dir, "split_done.txt"))
+        os.path.join(work_dir, "split_done.txt")
     shell:
         """
-        cd split && snakemake  --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        cd split 
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
         cd ..
-        touch {output}
         """
 
 rule load:
     input:
         os.path.join(work_dir, "split_done.txt")
     output:
-        touch(os.path.join(work_dir, "load_done.txt"))
+        os.path.join(work_dir, "load_done.txt")
     shell:
         """
-        cd load && snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        cd load 
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
         cd ..
-        touch {output}
         """
 
 rule control:
     input:
         os.path.join(work_dir, "load_done.txt")
     output:
-        touch(os.path.join(work_dir, "control_done.txt"))
+        os.path.join(work_dir, "control_done.txt")
     shell:
         """
-        cd control && snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        cd control 
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
         cd ..
-        touch {output}
         """ 
 
 rule compare:
     input:
         os.path.join(work_dir, "control_done.txt")
     output:
-        touch(os.path.join(work_dir, "compare_done.txt"))
+        os.path.join(work_dir, "compare_done.txt")
     shell:
         """
-        cd compare && snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        cd compare 
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
         cd ..
-        touch {output}
         """
