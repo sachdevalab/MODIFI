@@ -47,6 +47,9 @@ def _subreadNormalizationFactor(rawIpds):
 
     capValue = min(10, np.percentile(rawIpds, 99))
     capIpds = np.minimum(rawIpds, capValue)
+    if capIpds.mean() < 0.0001:
+        print("small cap")
+        print("got small cap: %s" % str(capIpds))
     return capIpds.mean()
 
 def _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor=1.0):
@@ -89,6 +92,16 @@ def _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor=1.0):
                         matched, out=matched)
 
         normalization = _subreadNormalizationFactor(rawIpd[matched])
+        ## check normalization is a valid number or nan
+        ## print read name if normalization is nan
+
+        if np.isnan(normalization):
+            print (f"nan normalization in {aln.readName}", normalization)
+            continue
+        if normalization < 0.0001:
+            print (f"zero IPD values in {aln.readName}", normalization, rawIpd[matched])
+            continue
+
         rawIpd /= normalization
 
         # Trim down to just the position that cover our interval

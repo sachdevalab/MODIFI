@@ -25,9 +25,10 @@ rule control:
         # touch(f"{work_dir}/load_ipd_done.txt")
         # control_out=os.path.join(work_dir, "control", "{sample}.ipd2.csv")
         # log=touch(f"{work_dir}/load_ipd_done.txt")
+    threads: 100
     shell:
         """
         ls {work_dir}/contigs/*.fa > {work_dir}/contigs_list.txt
-        /home/shuaiw/Methy/src/test {input.ipd} {input.control_dir} {work_dir}/contigs_list.txt 100
+        /home/shuaiw/Methy/src/test {input.ipd} {input.control_dir} {work_dir}/contigs_list.txt {threads}
         # touch {output}
         """

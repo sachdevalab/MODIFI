@@ -189,7 +189,16 @@ IPD_Result load_ipd(string raw_ipd){
         // cout << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << endl;
 
         int tpl_int = stoi(tpl) - 1;
-        float tMean_float = stof(tMean);
+        // float tMean_float = stof(tMean);
+        float tMean_float;
+        try {
+            tMean_float = std::stof(tMean);
+            // std::cout << "Converted value: " << tMean_float << std::endl;
+        } catch (const std::invalid_argument& e) {
+            std::cerr << raw_ipd <<" " << tpl <<" Invalid argument: " << tMean << " cannot be converted to float" << std::endl;
+        } catch (const std::out_of_range& e) {
+            std::cerr << "Out of range: " << tMean << " is out of range for float" << std::endl;
+        }
         if (strand == "1"){
             for_ipd_map[tpl_int] = tMean_float;
         }
@@ -546,6 +555,7 @@ int main(int argc, char *argv[]){
 
     Genome_count genome_count = assign_parallele(fasta_list, thread_num);
 
+    cout << "start run each genome and count kmers..." << endl;
     int start_g = 0;
     int end_g = 0;
     std::vector<std::thread>threads;
@@ -555,7 +565,7 @@ int main(int argc, char *argv[]){
         if (i == thread_num - 1){
             end_g = genome_count.genome_num+1;
         }
-        // cout << i << "\t" << start_g <<"\t" << end_g << endl;
+        cout << "Thread " << i << "\t" << start_g <<"\t" << end_g << endl;
         threads.push_back(thread(parallele_each_genome, fasta_list, encoder, start_g, end_g, ipd_dir));
     }
 	for (auto&th : threads)
