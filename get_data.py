@@ -6,7 +6,7 @@ from subprocess import call
 input_file = '/home/shuaiw/Methy/benchmark.data.source.txt'
 output_dir = '/home/shuaiw/methylation/data/published_data/fanggang/bax'
 bam_dir = '/home/shuaiw/methylation/data/published_data/fanggang/bam'
-fasta_dir = "/home/shuaiw/methylation/data/published_data/fanggang/fasta/"
+fasta_dir = "/home/shuaiw/methylation/data/published_data/fanggang/bam/"
 align_dir = "/home/shuaiw/methylation/data/published_data/fanggang/align/"
 
 # Create the output directory if it doesn't exist
@@ -93,18 +93,19 @@ def command(bam, ref, outdir, align_bam, prefix):
 
     samtools index $align_bam
     /home/shuaiw//smrtlink/pbindex $align_bam
+    rm $prefix.raw.bam
 
     #### remove the reads aligned with NM > 3
 
-    /usr/bin/time -v -o $prefix.ipdSummary.time \
-    ~/smrtlink/ipdSummary $align_bam --reference $ref --debug --numWorkers $SLURM_CPUS_ON_NODE \
-    --gff $prefix.gff --csv $prefix.csv  --methylFraction --outfile $prefix
+    # /usr/bin/time -v -o $prefix.ipdSummary.time \
+    # ~/smrtlink/ipdSummary $align_bam --reference $ref --debug --numWorkers $SLURM_CPUS_ON_NODE \
+    # --gff $prefix.gff --csv $prefix.csv  --methylFraction --outfile $prefix
 
 
-    /usr/bin/time -v -o $prefix.motifmaker.time ~/smrtlink/motifMaker find -f $ref -g $prefix.gff -j $SLURM_CPUS_ON_NODE -o $prefix.motif.csv -m 30
+    # /usr/bin/time -v -o $prefix.motifmaker.time ~/smrtlink/motifMaker find -f $ref -g $prefix.gff -j $SLURM_CPUS_ON_NODE -o $prefix.motif.csv -m 30
 
-    /usr/bin/time -v -o $prefix.reprocess.time ~/smrtlink/motifMaker reprocess -m $prefix.motif.csv \
-    -f $ref -g $prefix.gff -c $prefix.csv -o $prefix.reprocess.gff -j $SLURM_CPUS_ON_NODE
+    # /usr/bin/time -v -o $prefix.reprocess.time ~/smrtlink/motifMaker reprocess -m $prefix.motif.csv \
+    # -f $ref -g $prefix.gff -c $prefix.csv -o $prefix.reprocess.gff -j $SLURM_CPUS_ON_NODE
     """
 
 def align_all():
@@ -132,8 +133,8 @@ def align_all():
                         cmd = command(bam, ref, outdir, align_bam, prefix)
                         with open(f'{prefix}.sh', 'w') as f:
                             f.write(cmd)
-                        break
-                break
+                        # break
+                # break
 
 
             i += 1

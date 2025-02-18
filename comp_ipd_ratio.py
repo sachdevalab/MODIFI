@@ -49,32 +49,17 @@ def calculate_x_from_pvalue(p_value, mu, sigma, tail="right"):
 
 def get_ipd_ratio(csv, output):
     df = pd.read_csv(csv, sep = ",")
-    ## get ratio which is the ratio between estimated and ipdsum
-    ## plot the distribution of ipd_ratio and save the plot in pdf
-    ## use log scale for y axis
-    # import matplotlib.pyplot as plt
-    # ## add x label and y label
-    # plt.hist(df['ipd_ratio'], bins=100)
-    # plt.xlabel("ipd_ratio")
-    # plt.ylabel("count")
-    # plt.savefig("tmp/ipd_ratio.pdf")
-    # Fit GMM model
-    # data = df['ipd_ratio'].values.reshape(-1, 1)
-    # gmm = GaussianMixture(n_components=1, covariance_type='full', random_state=42)
-    # gmm.fit(data)
-    # mean = gmm.means_[0][0]
-    # std = np.sqrt(gmm.covariances_[0][0])
     mean = df['ipd_ratio'].mean()
     std = df['ipd_ratio'].std()
-    ## ofr each value, calculate the probability belong to the model
-    # cutoff = calculate_x_from_pvalue(0.01, mean, std)
-    # print ("cutoff", cutoff)
-    ## add pvalue column to the dataframe
     df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
-    # print (df)
-    ## filter df with pvalue < 0.01
-    # df = df[df['pvalue'] < 0.01]
-    ## svae the df to tmp/ipd_ratio_methy.csv
+
+    ### round all the float values to 2 decimal places
+    df['tpl'] = df['tpl'].astype(int)
+    df['strand'] = df['strand'].astype(int)
+    df['coverage'] = df['coverage'].astype(int)
+    df['kmer_count'] = df['kmer_count'].astype(int)
+    df = df.round(4)
+
     df.to_csv(output, index=False)
 
 

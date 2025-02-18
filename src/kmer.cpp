@@ -266,7 +266,7 @@ void update_ipd(string raw_ipd, map<int, IPD_Control> for_control_map, map<int, 
                 control = rev_control_map[tpl_int].control;
                 kmer_count = rev_control_map[tpl_int].kmer_count;
                 ipd_ratio = tMean_float/control;
-                control_file << refName << "," << strand << "," << tpl << "," << coverage << "," << tMean << "," << tErr << "," << control << "," << ipd_ratio << "," << kmer_count << endl;
+                control_file << refName << "," << strand << "," << tpl << ","<< base << "," << coverage << "," << tMean << "," << tErr << "," << control << "," << ipd_ratio << "," << kmer_count << endl;
             }
         }
         ref = refName;
@@ -554,6 +554,10 @@ int main(int argc, char *argv[]){
     encoder.constructer(k);
 
     Genome_count genome_count = assign_parallele(fasta_list, thread_num);
+    if (genome_count.genome_num < thread_num){
+        thread_num = genome_count.genome_num;
+        cout << "no. of used threads "<< thread_num << endl;
+    }
 
     cout << "start run each genome and count kmers..." << endl;
     int start_g = 0;

@@ -344,14 +344,14 @@ if __name__ == "__main__":
     # infer = "/home/shuaiw/methylation/data/borg/b_contigs/ipds4/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595.ipd2.csv"
     # ipd_summary = "/home/shuaiw/methylation/data/borg/b_contigs/1.csv"
 
-    contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_882_L"
-    ipd_summary = "/home/shuaiw/methylation/data/borg/test_100/test_100.csv"
-    infer = f"/home/shuaiw/methylation/data/borg/new_test7/ipd_ratio/{contig}.ipd3.csv"
+    # contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_882_L"
+    # ipd_summary = "/home/shuaiw/methylation/data/borg/test_100/test_100.csv"
+    # infer = f"/home/shuaiw/methylation/data/borg/new_test7/ipd_ratio/{contig}.ipd3.csv"
 
-    bench = Benchmark(ipd_summary, infer)
-    bench.read_ipd_summary_all()
-    bench.read_our_all()
-    bench.compare_ctgs()
+    # bench = Benchmark(ipd_summary, infer)
+    # bench.read_ipd_summary_all()
+    # bench.read_our_all()
+    # bench.compare_ctgs()
 
 
     # bench.read_ipd_summary()
@@ -368,3 +368,8 @@ if __name__ == "__main__":
     # get_ipd_ratio(df)
     # get_raw_ipd(df)
 
+    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/chr_control/ipd_ratio/CP000285.1.ipd3.csv")
+    ## only keep the rows with pvalue < 0.01
+    for index, row in df.iterrows():
+        if row['pvalue'] < 0.05:
+            print (row)
