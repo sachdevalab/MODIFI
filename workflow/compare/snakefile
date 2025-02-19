@@ -32,11 +32,12 @@ rule all:
 rule ipd_ratio:
     input:
         control=os.path.join(work_dir, "control", "{sample}.ipd2.csv")
+        ref=os.path.join(work_dir, "contigs", "{sample}.fa")
     output:
         ipd = os.path.join(work_dir, "ipd_ratio", "{sample}.ipd3.csv")
         gff = os.path.join(work_dir, "gffs", "{sample}.gff")
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/comp_ipd_ratio.py {input.control} {output.ipd} {output.gff}
+        python /home/shuaiw/Methy/comp_ipd_ratio.py {input.control} {output.ipd} {output.gff} {input.ref}
         """

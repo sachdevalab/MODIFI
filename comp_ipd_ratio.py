@@ -73,19 +73,47 @@ def phred_qv(p, max_qv=60):
         return max_qv  # Cap at a defined maximum QV
     return min(round(-10 * np.log10(p)), max_qv)
 
+def get_ref(ref):
+    # print ("loading fasta")
+    seq_dict = {}
+    from Bio import SeqIO
+    for record in SeqIO.parse(ref, "fasta"):
+        seq_dict[record.id] = record.seq
+        # seq = raw_seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
+    return seq_dict
+
+
 def get_gff(df, gff, p_cut = 0.01):
     df = df[df['pvalue'] < p_cut]
     gff = "tmp/test.gff"
     f = open(gff, "w")
     print ("##gff-version 3", file = f)
     print ("##source-version our_method", file = f)
+    print ("##source-commandline xxx", file = f)
+    for seq in seq_dict:
+        print ("##sequence-region\t" + seq + "\t1\t" + str(len(seq_dict[seq])), file = f)
+    # print ("##sequence-region\tCP064388.1\t1\t75554", file = f )
     for index, row in df.iterrows():
         score = phred_qv(row['pvalue'])
+        one_based_tpl = row['tpl'] + 1
         if row['strand'] == 1:
             my_strand = '-'
         else:
             my_strand = '+'
-        print (f"{row['refName']}\t.\t.\t{row['tpl']}\t{row['tpl']}\t{score}\t{my_strand}\t.\t.", file = f)
+        # Handle context sequence with padding
+        start = max(0, row['tpl'] - 20)
+        end = min(len(seq_dict[row['refName']]), row['tpl'] + 21)
+        context = seq_dict[row['refName']][start:end]
+        if start == 0:
+            context = 'N' * (20 - row['tpl']) + context
+        if end == len(seq_dict[row['refName']]):
+            context = context + 'N' * (row['tpl'] + 21 - len(seq_dict[row['refName']]))
+        
+        if row['strand'] == 1:
+            context = context.reverse_complement()
+        
+        anno = f"coverage={row['coverage']};context={context};IPDRatio={row['ipd_ratio']}"
+        print (f"{row['refName']}\tkinModCall\tmodified_base\t{one_based_tpl}\t{one_based_tpl}\t{score}\t{my_strand}\t.\t{anno}", file = f)
     f.close()
 
 
@@ -93,6 +121,9 @@ if __name__ == "__main__":
     csv = sys.argv[1]
     output = sys.argv[2]
     gff = sys.argv[3]
+    # ref = "/home/shuaiw/borg/bench/ecoli_native/contigs/CP064388.1.fa"
+    ref = sys.argv[4]
+    seq_dict = get_ref(ref)
     get_ipd_ratio(csv, output, gff)
 
 
@@ -101,3 +132,5 @@ if __name__ == "__main__":
     # get_ipd_ratio(csv, output)
     # get_raw_ipd(df)
 
+    # python comp_ipd_ratio.py /home/shuaiw/borg/bench/ecoli_native/control/CP064388.1.ipd2.csv tmp/test.csv tmp/test.gff /home/shuaiw/borg/bench/ecoli_native/contigs/CP064388.1.fa
+    # ~/smrtlink/motifMaker find -f /home/shuaiw/borg/bench/ecoli_native/contigs/CP064388.1.fa -g tmp/test.gff -j 1 -o tmp/test.motif.csv -m 0
