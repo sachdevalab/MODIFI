@@ -7,6 +7,7 @@ from multiprocessing import Pool
 import sys
 import argparse
 from Bio import SeqIO
+import numpy as np
 
 pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
 
@@ -36,10 +37,42 @@ def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000):
         pool.starmap(handle_each_contig, args)
     print ("there are ", i, " contigs")
 
-def handle_each_contig(contig,ref,contig_bam,bam,whole_ref):
+def count_cigar(read, long_cutoff = 50):
+    gap_num = 0
+    map_len = 0
+    long_gap = 0
+    
+
+    for ci in read.cigar:
+        if ci[0] == 0:
+            map_len += ci[1]
+        elif ci[0] == 1 or ci[0] == 2:
+            gap_num += ci[1]
+            map_len += ci[1]
+            if ci[1] > long_cutoff:
+                long_gap += ci[1]
+    return gap_num, map_len, long_gap
+
+def calculate_identity(read):
+    if not read.has_tag('NM'):
+        raise ValueError(f"Read {read.query_name} has no NM tag")
+    
+    nm = read.get_tag('NM')
+    aligned_bases = sum(length for op, length in read.cigartuples if op in {0, 1, 2})
+    match_bases = aligned_bases - nm
+    identity = match_bases / aligned_bases if aligned_bases > 0 else 0
+    return identity
+
+def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, identity_cutoff = 0.8, len_cutoff=1000, q=20, max_depth=500):
     print (f"Processing {contig} {ref}")
     os.system(f"samtools faidx {whole_ref} {contig} > {ref}")
     os.system(f"samtools faidx {ref}")
+
+    ## get the length of the contig using biopython
+    for record in SeqIO.parse(ref, "fasta"):
+        contig_len = len(record.seq)
+    print (f"Contig {contig} has length {contig_len}")
+    max_read_num = max_depth * contig_len / 1000
 
 
     #  Create a new header that only includes the specific contig
@@ -48,15 +81,53 @@ def handle_each_contig(contig,ref,contig_bam,bam,whole_ref):
     
     new_header['SQ'] = [sq for sq in new_header['SQ'] if sq['SN'] == contig]
 
-    ### covert the too large read group id to fit int32, and convert it to hexadecimal
-    ### not working, need to fix it
-    # for i, rg in enumerate(new_header['RG']):
-    #     rg['ID'] = hex(i)
+    ## first count the number of reads that are valid
+    read_number = 0
+    for read in samfile.fetch(contig):
+        if read.is_unmapped:
+            continue
+        if read.mapping_quality < q:
+            continue
+        read_number += 1
+    print (f"Read number for {contig} is {read_number}")
+    downsample_rate = float(max_read_num) / read_number
+    print (f"Downsample rate is {downsample_rate*100}%.")
+
 
     contig_samfile = pysam.AlignmentFile(contig_bam, "wb", header=new_header)
+    valid_num = 0
     for read in samfile.fetch(contig):
         read.reference_id = 0
+        ### calculate the alignment identity
+        if read.is_unmapped:
+            continue
+        ## set mapping quality cutoff
+        if read.mapping_quality < q:
+            continue
+        ## downsample the reads
+        if np.random.rand() > downsample_rate:
+            continue
+        # map_num, map_len, long_gap = count_cigar(read)
+        # if map_len == 0:
+        #     # print ("exit as the read is unmapped", read.query_name, read.cigar)
+        #     # sys.exit(0)
+        #     raise ValueError("unmapped read")
+        ## get the tag of NM
+        ## skip if it has no NM tag
+        if not read.has_tag('NM'):
+            print (f"Read {read.query_name} has no NM tag")
+            continue
+        # nm = read.get_tag('NM')
+        # match_num = map_len - nm
+        # identity = match_num / (map_len - long_gap)
+        # # print (f"Read {read.query_name} has identity {identity} and length {map_len}")
+        # identity = calculate_identity(read)
+        # print (f"Read {read.query_name} has identity {identity}")
+        # if identity >= identity_cutoff and map_len >= len_cutoff:
         contig_samfile.write(read)
+        valid_num += 1
+    print (f"Finished {contig}, {valid_num} reads are written")
+
     contig_samfile.close()
     samfile.close()
     ## index the bam file

@@ -368,8 +368,14 @@ if __name__ == "__main__":
     # get_ipd_ratio(df)
     # get_raw_ipd(df)
 
-    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/chr_control/ipd_ratio/CP000285.1.ipd3.csv")
+    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/ecoli_control/ipd_ratio/CP064387.1.ipd3.csv")
     ## only keep the rows with pvalue < 0.01
-    for index, row in df.iterrows():
-        if row['pvalue'] < 0.05:
-            print (row)
+    df = df[df['pvalue'] < 0.01]
+    print (len(df))
+    # for index, row in df.iterrows():
+    #     if row['pvalue'] < 0.05:
+    #         print (row)
+    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/ecoli_native/ipd_ratio/CP064387.1.ipd3.csv")
+    ## only keep the rows with pvalue < 0.01
+    df = df[df['pvalue'] < 0.01]
+    print (len(df))
