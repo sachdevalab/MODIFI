@@ -115,6 +115,8 @@ def get_http_links_from_sra_page(sra_id):
 
         for element in elements:
             href = element.get_attribute("href")
+            # title = element.get_attribute("title")
+            # print (href, title)
             if href and href.startswith("http"):
                 http_links.add(href)
 
@@ -187,7 +189,7 @@ if __name__ == "__main__":
         # if len(data) > 10:
         #     break
     df = pd.DataFrame(data, columns=["BioProject", "Organism", "BioSample", "SRA", "BAM"])
-    df.to_csv("rebase_bam_data.csv", index=False)
+    df.to_csv("rebase_bam_data2.csv", index=False)
 
 
 

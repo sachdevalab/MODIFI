@@ -367,15 +367,57 @@ if __name__ == "__main__":
     # count_log_csv(csv)
     # get_ipd_ratio(df)
     # get_raw_ipd(df)
+    strand = 1
+    # df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/ecoli_native/ipd_ratio/CP064387.1.ipd3.csv", nrows=1000000)
+    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/merge/ipd_ratio/CP064387.1.ipd3.csv", nrows=2000000)
+    ## only keep the rows with pvalue < 0.01
+    # df = df[df['pvalue'] < 0.01]
+    df = df[df['strand'] == strand]
+    print (len(df))
+    our_controls = {}
+    true_controls = {}
+    for index, row in df.iterrows():
+        # if row['pvalue'] < 0.05:
+        #     print (row)
+        if row['coverage'] > 10:
+            our_controls[row['tpl']] = row['control']
 
-    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/ecoli_control/ipd_ratio/CP064387.1.ipd3.csv")
+
+
+    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/ecoli_control/ipd_ratio/CP064387.1.ipd3.csv", nrows=2000000)
     ## only keep the rows with pvalue < 0.01
-    df = df[df['pvalue'] < 0.01]
-    print (len(df))
-    # for index, row in df.iterrows():
-    #     if row['pvalue'] < 0.05:
-    #         print (row)
-    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/ecoli_native/ipd_ratio/CP064387.1.ipd3.csv")
-    ## only keep the rows with pvalue < 0.01
-    df = df[df['pvalue'] < 0.01]
-    print (len(df))
+    # df = df[df['pvalue'] < 0.01]
+    # print (len(df))
+    df = df[df['strand'] == strand]
+    for index, row in df.iterrows():
+        # if row['pvalue'] < 0.05:
+        #     print (row)
+        if row['coverage'] > 10:
+            true_controls[row['tpl']] = row['tMean']
+    print (len(our_controls), len(true_controls))
+
+
+    ## ipd summary result
+    ipd_result = "/home/shuaiw/borg/bench/ecoli_control/contigs/CP064387.1.csv"
+    df = pd.read_csv(ipd_result, sep = ";", nrows=4000000)
+    df = df[df['Strand'] == strand]
+    ipd_controls = {}
+    for index, row in df.iterrows():
+        ipd_controls[row['Position']-1] = row['Prediction']
+
+
+    ipd_control_list = []
+    our_control_list = []
+    true_control_list = []
+    for tpl in our_controls:
+        if tpl in true_controls:
+            our_control_list.append(our_controls[tpl])
+            true_control_list.append(true_controls[tpl])
+            ipd_control_list.append(ipd_controls[tpl])
+            # print (tpl, our_controls[tpl], true_controls[tpl])
+    print (len(our_controls), len(true_controls), len(ipd_controls), len(our_control_list), len(true_control_list), len(ipd_control_list))
+    print (len(our_control_list), pearsonr(our_control_list, true_control_list))
+    
+    print (len(ipd_control_list), pearsonr(ipd_control_list, true_control_list))
+    # print (len(ipd_control_list), pearsonr(ipd_control_list, our_control_list))
+

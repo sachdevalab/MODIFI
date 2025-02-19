@@ -4,9 +4,21 @@ snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/new_test7/bams/S
 snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam whole_ref=/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa work_dir=/home/shuaiw/methylation/data/borg/new_test10
 sbatch --partition standard --wrap "/usr/bin/time -v -o large.time snakemake --config whole_bam=/home/shuaiw/borg/seven_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam  whole_ref=/home/shuaiw/borg/contigs/seven_contigs.fasta  work_dir=/home/shuaiw/methylation/data/borg/new_test10" --job-name=7
 sbatch --partition standard --wrap "/usr/bin/time -v -o test_200.time snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/test_200/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam whole_ref=/home/shuaiw/borg/contigs/test_200.fa work_dir=/home/shuaiw/methylation/data/borg/test_200_our" --job-name=test_200 
-sbatch --partition standard --wrap "/usr/bin/time -v -o test_500.time snakemake --config whole_bam=/
-home/shuaiw/methylation/data/borg/test_500/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam whole_ref=/home/shuaiw/borg/contigs/test_500.fa w
-ork_dir=/home/shuaiw/methylation/data/borg/test_500_our_3" --job-name=test_500
+
+
+sbatch --partition standard --wrap "/usr/bin/time -v -o test_500.time snakemake \
+--config whole_bam=/home/shuaiw/methylation/data/borg/test_500/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
+whole_ref=/home/shuaiw/borg/contigs/test_500.fa\
+ work_dir=/home/shuaiw/methylation/data/borg/test_500_our_3"\
+  --job-name=test_500
+
 sbatch --partition standard --wrap "/usr/bin/time -v -o test_300.time snakemake --config whole_bam=/
 home/shuaiw/methylation/data/borg/test_300/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam whole_ref=/home/shuaiw/borg/contigs/test_300.fa w
 ork_dir=/home/shuaiw/methylation/data/borg/test_300_our" --job-name=test_300
+
+
+sbatch --partition standard --wrap "/usr/bin/time -v -o all.time snakemake \
+--config whole_bam=/home/shuaiw/methylation/data/borg/all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa\
+ work_dir=/home/shuaiw/methylation/data/borg/all_test"\
+  --job-name=all
