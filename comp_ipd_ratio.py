@@ -47,11 +47,15 @@ def calculate_x_from_pvalue(p_value, mu, sigma, tail="right"):
         x = mu + z * sigma
         return x
 
-def get_ipd_ratio(csv, output):
+def get_ipd_ratio(csv, output, gff):
     df = pd.read_csv(csv, sep = ",")
     mean = df['ipd_ratio'].mean()
     std = df['ipd_ratio'].std()
     df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
+
+    ## add score column, score i s -10logpvalue
+    ## a Phred-transformed QV, QV =−10 log10 p
+    # df['score'] = -10 * np.log10(df['pvalue'])
 
     ### round all the float values to 2 decimal places
     df['tpl'] = df['tpl'].astype(int)
@@ -61,12 +65,35 @@ def get_ipd_ratio(csv, output):
     df = df.round(4)
 
     df.to_csv(output, index=False)
+    get_gff(df, gff)
+
+def phred_qv(p, max_qv=60):
+    """Compute Phred-transformed Quality Value, handling p=0 cases."""
+    if p == 0:
+        return max_qv  # Cap at a defined maximum QV
+    return min(round(-10 * np.log10(p)), max_qv)
+
+def get_gff(df, gff, p_cut = 0.01):
+    df = df[df['pvalue'] < p_cut]
+    gff = "tmp/test.gff"
+    f = open(gff, "w")
+    print ("##gff-version 3", file = f)
+    print ("##source-version our_method", file = f)
+    for index, row in df.iterrows():
+        score = phred_qv(row['pvalue'])
+        if row['strand'] == 1:
+            my_strand = '-'
+        else:
+            my_strand = '+'
+        print (f"{row['refName']}\t.\t.\t{row['tpl']}\t{row['tpl']}\t{score}\t{my_strand}\t.\t.", file = f)
+    f.close()
 
 
 if __name__ == "__main__":
     csv = sys.argv[1]
     output = sys.argv[2]
-    get_ipd_ratio(csv, output)
+    gff = sys.argv[3]
+    get_ipd_ratio(csv, output, gff)
 
 
     # csv = "/home/shuaiw/methylation/data/borg/b_contigs/control/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_0_219069.ipd2.csv"
