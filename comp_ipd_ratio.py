@@ -83,7 +83,7 @@ def get_ref(ref):
     return seq_dict
 
 
-def get_gff(df, gff, p_cut = 0.01):
+def get_gff(df, gff, p_cut = 0.05):
     print ("start get gff...")
     df = df[df['pvalue'] < p_cut]
     # gff = "tmp/test.gff"

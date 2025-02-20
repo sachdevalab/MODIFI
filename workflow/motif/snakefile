@@ -1,0 +1,42 @@
+# Snakefile
+
+import glob
+import os
+
+
+configfile: "../config.yaml"
+
+whole_bam = config["whole_bam"]
+whole_ref = config["whole_ref"]
+work_dir = config["work_dir"]
+
+
+# Create required directories dynamically
+sub_dirs=[".", "motifs"]
+for sub in sub_dirs:
+    os.makedirs(os.path.join(work_dir, sub), exist_ok=True)
+
+
+# Function to get sample names after split_bam rule
+def get_samples():
+    bam_files = glob.glob(os.path.join(work_dir, "bams", "*.bam"))
+    samples = list(set(f.split("/")[-1].replace(".bam", "") for f in bam_files))
+    print (len(samples), "samples")
+    return samples
+
+rule all:
+    input:
+        expand(os.path.join(work_dir, "motifs", "{sample}.motifs.csv"), sample=get_samples())
+
+rule ipd_ratio:
+    input:
+        gff=os.path.join(work_dir, "gffs", "{sample}.gff"),
+        ref=os.path.join(work_dir, "contigs", "{sample}.fa")
+    output:
+        os.path.join(work_dir, "motifs", "{sample}.motifs.csv")
+    threads: 2
+    shell:
+        """
+        set -euo pipefail
+        /home/shuaiw/smrtlink/motifMaker find -f {input.ref} -g {input.gff} -o {output} -j {threads} -m 30
+        """
