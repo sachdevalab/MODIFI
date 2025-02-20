@@ -84,8 +84,9 @@ def get_ref(ref):
 
 
 def get_gff(df, gff, p_cut = 0.01):
+    print ("start get gff...")
     df = df[df['pvalue'] < p_cut]
-    gff = "tmp/test.gff"
+    # gff = "tmp/test.gff"
     f = open(gff, "w")
     print ("##gff-version 3", file = f)
     print ("##source-version our_method", file = f)
@@ -124,6 +125,7 @@ if __name__ == "__main__":
     # ref = "/home/shuaiw/borg/bench/ecoli_native/contigs/CP064388.1.fa"
     ref = sys.argv[4]
     seq_dict = get_ref(ref)
+    print ("loaded fasta")
     get_ipd_ratio(csv, output, gff)
 
 

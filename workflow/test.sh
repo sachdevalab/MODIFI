@@ -22,3 +22,10 @@ sbatch --partition standard --wrap "/usr/bin/time -v -o all.time snakemake \
 whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa\
  work_dir=/home/shuaiw/methylation/data/borg/all_test"\
   --job-name=all
+
+
+sbatch --partition standard --wrap "/usr/bin/time -v -o seven.time snakemake \
+--config whole_bam=/home/shuaiw/methylation/data/borg/seven_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/seven_contigs.fasta\
+ work_dir=/home/shuaiw/methylation/data/borg/seven_test"\
+  --job-name=seven
