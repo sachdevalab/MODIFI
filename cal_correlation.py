@@ -338,6 +338,54 @@ class Benchmark:
         print ("recall", recall / len(self.ipd_dict))
         print ("precision", recall / len(self.ratio_ana_dict))
 
+def truth_comp(our_tmeans, our_ipd_ratio, our_controls, true_controls):
+    ### get ipd ratio for true controls
+    true_ipd_ratio_dict = {}
+    our_ipd_ratio_dict = {}
+    for tpl in true_controls:
+        if tpl in our_tmeans and tpl in our_ipd_ratio:
+            if true_controls[tpl] == 0:
+                continue
+            true_ipd_ratio_dict[tpl] = our_tmeans[tpl] / true_controls[tpl]
+            our_ipd_ratio_dict[tpl] = our_ipd_ratio[tpl]
+    
+    truth_ipd_ratio = list(true_ipd_ratio_dict.values())
+    true_mean_ipd = np.mean(truth_ipd_ratio)
+    true_std_ipd = np.std(truth_ipd_ratio)
+    true_cutoff = calculate_x_from_pvalue(0.05, true_mean_ipd, true_std_ipd)
+    true_modified = [x for x in true_ipd_ratio_dict if true_ipd_ratio_dict[x] > true_cutoff]
+
+    our_ipd_ratio = list(our_ipd_ratio_dict.values())
+    our_mean_ipd = np.mean(our_ipd_ratio)
+    our_std_ipd = np.std(our_ipd_ratio)
+    our_cutoff = calculate_x_from_pvalue(0.05, our_mean_ipd, our_std_ipd)
+    our_modified = [x for x in our_ipd_ratio_dict if our_ipd_ratio_dict[x] > our_cutoff]
+
+    ## calulate the recall and precision for our method
+    recall = 0
+    for tpl in true_modified:
+        if tpl in our_modified:
+            recall += 1
+        else:
+            print (tpl, true_ipd_ratio_dict[tpl], true_cutoff, our_ipd_ratio_dict[tpl], our_cutoff)
+    print ("recall", recall/len(true_modified), len(true_modified), len(our_modified))
+    print ("precision", recall/len(our_modified))
+
+def corr_obs_cont(infer):
+    df = pd.read_csv(infer,)
+    df = df[df['kmer_count'] > 10]
+    df = df[df['strand'] == 1]
+    ## cal the correlation between tMean and control
+    corr = pearsonr(df['tMean'], df['control'])
+    print ("tMean and control", corr)
+
+def corr_ipd_sum(ipd_summary):
+    df = pd.read_csv(ipd_summary)
+    df = df[df['strand'] == 1]
+    ## cal the correlation between tMean and control
+    corr = pearsonr(df['tMean'], df['modelPrediction'])
+    print ("tMean and control", corr)
+
 
 if __name__ == "__main__":
 
@@ -348,10 +396,18 @@ if __name__ == "__main__":
     # ipd_summary = "/home/shuaiw/methylation/data/borg/test_100/test_100.csv"
     # infer = f"/home/shuaiw/methylation/data/borg/new_test7/ipd_ratio/{contig}.ipd3.csv"
 
+    contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C"
+    ipd_summary = "/home/shuaiw/borg/seven_contigs/seven_contigs.csv"
+    infer = f"/home/shuaiw/borg/seven_test/ipd_ratio/{contig}.ipd3.csv"
+
     # bench = Benchmark(ipd_summary, infer)
     # bench.read_ipd_summary_all()
     # bench.read_our_all()
     # bench.compare_ctgs()
+    infer = "/home/shuaiw/borg/new_test10/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_0_219069.ipd3.csv"
+    ipd_summary = "/home/shuaiw/methylation/data/borg/b_contigs/11.csv"
+    corr_obs_cont(infer)
+    corr_ipd_sum(ipd_summary)
 
 
     # bench.read_ipd_summary()
@@ -367,57 +423,59 @@ if __name__ == "__main__":
     # count_log_csv(csv)
     # get_ipd_ratio(df)
     # get_raw_ipd(df)
-    strand = 1
-    # df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/ecoli_native/ipd_ratio/CP064387.1.ipd3.csv", nrows=1000000)
-    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/merge/ipd_ratio/CP064387.1.ipd3.csv", nrows=2000000)
-    ## only keep the rows with pvalue < 0.01
-    # df = df[df['pvalue'] < 0.01]
-    df = df[df['strand'] == strand]
-    print (len(df))
-    our_controls = {}
-    true_controls = {}
-    for index, row in df.iterrows():
-        # if row['pvalue'] < 0.05:
-        #     print (row)
-        if row['coverage'] > 10:
-            our_controls[row['tpl']] = row['control']
 
-
-
-    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/ecoli_control/ipd_ratio/CP064387.1.ipd3.csv", nrows=2000000)
-    ## only keep the rows with pvalue < 0.01
-    # df = df[df['pvalue'] < 0.01]
-    # print (len(df))
-    df = df[df['strand'] == strand]
-    for index, row in df.iterrows():
-        # if row['pvalue'] < 0.05:
-        #     print (row)
-        if row['coverage'] > 10:
-            true_controls[row['tpl']] = row['tMean']
-    print (len(our_controls), len(true_controls))
-
-
-    ## ipd summary result
-    ipd_result = "/home/shuaiw/borg/bench/ecoli_control/contigs/CP064387.1.csv"
-    df = pd.read_csv(ipd_result, sep = ";", nrows=4000000)
-    df = df[df['Strand'] == strand]
-    ipd_controls = {}
-    for index, row in df.iterrows():
-        ipd_controls[row['Position']-1] = row['Prediction']
-
-
-    ipd_control_list = []
-    our_control_list = []
-    true_control_list = []
-    for tpl in our_controls:
-        if tpl in true_controls:
-            our_control_list.append(our_controls[tpl])
-            true_control_list.append(true_controls[tpl])
-            ipd_control_list.append(ipd_controls[tpl])
-            # print (tpl, our_controls[tpl], true_controls[tpl])
-    print (len(our_controls), len(true_controls), len(ipd_controls), len(our_control_list), len(true_control_list), len(ipd_control_list))
-    print (len(our_control_list), pearsonr(our_control_list, true_control_list))
+    # strand = 1
+    # # df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/ecoli_native/ipd_ratio/CP064387.1.ipd3.csv", nrows=200000)
+    # df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/merge/ipd_ratio/CP064387.1.ipd3.csv")
+    # ## only keep the rows with pvalue < 0.01
+    # # df = df[df['pvalue'] < 0.01]
     
-    print (len(ipd_control_list), pearsonr(ipd_control_list, true_control_list))
-    # print (len(ipd_control_list), pearsonr(ipd_control_list, our_control_list))
+    # print (len(df))
+    # our_controls = {}
+    # our_ipd_ratio = {}
+    # our_tmeans = {}
+    # true_controls = {}
+    # df = df[df['strand'] == strand]
+    # df = df[df['coverage'] > 5]
+    # for index, row in df.iterrows():
+    #     our_controls[row['tpl']] = row['control']
+    #     our_ipd_ratio[row['tpl']] = row['ipd_ratio']
+    #     our_tmeans[row['tpl']] = row['tMean']
+
+    # df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/ecoli_control/ipd_ratio/CP064387.1.ipd3.csv")
+    # ## only keep the rows with pvalue < 0.01
+    # # df = df[df['pvalue'] < 0.01]
+    # print (len(df))
+    # df = df[df['strand'] == strand]
+    # df = df[df['coverage'] > 5]
+    # for index, row in df.iterrows():
+    #     true_controls[row['tpl']] = row['tMean']
+    # print (len(our_controls), len(true_controls))
+
+    
+    # truth_comp(our_tmeans, our_ipd_ratio, our_controls, true_controls)
+
+    # ## ipd summary result
+    # ipd_result = "/home/shuaiw/borg/bench/ecoli_control/contigs/CP064387.1.csv"
+    # df = pd.read_csv(ipd_result, sep = ";", nrows=4000000)
+    # df = df[df['Strand'] == strand]
+    # ipd_controls = {}
+    # for index, row in df.iterrows():
+    #     ipd_controls[row['Position']-1] = row['Prediction']
+
+
+    # ipd_control_list = []
+    # our_control_list = []
+    # true_control_list = []
+    # for tpl in our_controls:
+    #     if tpl in true_controls:
+    #         our_control_list.append(our_controls[tpl])
+    #         true_control_list.append(true_controls[tpl])
+    #         ipd_control_list.append(ipd_controls[tpl])
+    #         # print (tpl, our_controls[tpl], true_controls[tpl])
+    # print (len(our_controls), len(true_controls), len(ipd_controls), len(our_control_list), len(true_control_list), len(ipd_control_list))
+    # print (len(our_control_list), pearsonr(our_control_list, true_control_list))
+    
+    # print (len(ipd_control_list), pearsonr(ipd_control_list, true_control_list))
+    # # print (len(ipd_control_list), pearsonr(ipd_control_list, our_control_list))
 

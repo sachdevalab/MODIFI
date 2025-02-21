@@ -29,3 +29,17 @@ sbatch --partition standard --wrap "/usr/bin/time -v -o seven.time snakemake \
 whole_ref=/home/shuaiw/methylation/data/borg/contigs/seven_contigs.fasta\
  work_dir=/home/shuaiw/methylation/data/borg/seven_test"\
   --job-name=seven
+
+sbatch --partition standard --wrap "/usr/bin/time -v -o SAMN07447446.time snakemake \
+--config whole_bam=/home/shuaiw/methylation/data/rebase/SAMN07447446/align2.bam \
+whole_ref=/home/shuaiw/methylation/data/rebase/SAMN07447446/meta.fa\
+ work_dir=/home/shuaiw/methylation/data/rebase/SAMN07447446/result2"\
+  --job-name=SAMN07447446
+
+
+
+sbatch --partition standard --wrap "/usr/bin/time -v -o human.time snakemake \
+--config whole_bam=/home/shuaiw/borg/human/human_000733.subreads.align.bam \
+whole_ref=/home/shuaiw/Methy/borg/hg38/GCF_000001405.40_GRCh38.p14_genomic.fasta\
+ work_dir=/home/shuaiw/borg/human_test"\
+  --job-name=human
