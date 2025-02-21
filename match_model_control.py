@@ -31,5 +31,7 @@ df_merged = df_raw.merge(df_control[["Strand", "Position", "Prediction"]],
 
 # Replace the control column with merged Prediction values
 df_raw["control"] = df_merged["Prediction"]
+df_raw["ipd_ratio"] = df_raw["tMean"] / df_raw["control"]
+df_raw["kmer_count"] = "0"
 # Save the result
 df_raw.to_csv(output, index=False)

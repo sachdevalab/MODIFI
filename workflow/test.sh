@@ -47,3 +47,8 @@ whole_ref=/home/shuaiw/borg/hg38/GCF_000001405.40_GRCh38.p14_genomic.fasta\
   snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam\
  whole_ref=/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa\
   work_dir=/home/shuaiw/methylation/data/borg/new_test10
+
+
+  snakemake -s pipeline2.smk --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam \
+  whole_ref=/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/new_test11

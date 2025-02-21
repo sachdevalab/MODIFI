@@ -39,7 +39,8 @@ rule all:
         os.path.join(work_dir, "split_done.txt"),
         os.path.join(work_dir, "load_done.txt"),
         os.path.join(work_dir, "control_done.txt"),
-        os.path.join(work_dir, "compare_done.txt")
+        os.path.join(work_dir, "compare_done.txt"),
+        os.path.join(work_dir, "motif_done.txt")
 
 rule split:
     input:
@@ -85,6 +86,18 @@ rule compare:
     shell:
         """
         cd compare 
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        cd ..
+        """
+
+rule motif:
+    input:
+        os.path.join(work_dir, "compare_done.txt")
+    output:
+        os.path.join(work_dir, "motif_done.txt")
+    shell:
+        """
+        cd motif 
         /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
         cd ..
         """
