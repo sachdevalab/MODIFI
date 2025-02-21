@@ -2,7 +2,7 @@ import pandas as pd
 from scipy.stats import pearsonr
 from collections import defaultdict
 import numpy as np
-from sklearn.mixture import GaussianMixture
+# from sklearn.mixture import GaussianMixture
 from scipy.stats import norm
 import sys
 
@@ -85,7 +85,7 @@ def get_ref(ref):
 
 def get_gff(df, gff, p_cut = 0.05):
     print ("start get gff...")
-    df = df[df['pvalue'] < p_cut]
+    df = df[df['pvalue'] <= p_cut]
     # gff = "tmp/test.gff"
     f = open(gff, "w")
     print ("##gff-version 3", file = f)

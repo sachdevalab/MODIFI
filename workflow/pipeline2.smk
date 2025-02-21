@@ -1,0 +1,90 @@
+# Snakefile
+
+import glob
+import os
+
+# Define directories
+# bam_dir = "/home/shuaiw/methylation/data/borg/b_contigs"
+# fa_dir = "/home/shuaiw/methylation/data/borg/b_contigs/contigs"
+# work_dir = "/home/shuaiw/methylation/data/borg/b_contigs/test1"
+
+# bam_dir = "/home/shuaiw/methylation/data/borg/large_contigs/bams"
+# fa_dir = "/home/shuaiw/methylation/data/borg/large_contigs/contigs"
+# work_dir = "/home/shuaiw/methylation/data/borg/large_contigs/ipd1"
+
+# whole_bam = "/home/shuaiw/borg/all_borg/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
+# whole_ref = "/home/shuaiw/borg/all_borg/all_borg.fasta"
+# work_dir = "/home/shuaiw/methylation/data/borg/new_test"
+
+# whole_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
+# whole_ref = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
+# work_dir = "/home/shuaiw/methylation/data/borg/new_test2"
+
+
+configfile: "config.yaml"
+
+whole_bam = config["whole_bam"]
+whole_ref = config["whole_ref"]
+work_dir = config["work_dir"]
+
+print (whole_bam)
+print (whole_ref)
+print (work_dir)
+
+## create work_dir
+os.makedirs(work_dir, exist_ok=True)
+
+rule all:
+    input:
+        os.path.join(work_dir, "split_done.txt"),
+        os.path.join(work_dir, "load_done.txt"),
+        os.path.join(work_dir, "control_done.txt"),
+        os.path.join(work_dir, "compare_done.txt")
+
+rule split:
+    input:
+    output:
+        # touch(os.path.join(work_dir, "split_done.txt"))
+        os.path.join(work_dir, "split_done.txt")
+    shell:
+        """
+        cd split 
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        cd ..
+        """
+
+rule load:
+    input:
+        os.path.join(work_dir, "split_done.txt")
+    output:
+        os.path.join(work_dir, "load_done.txt")
+    shell:
+        """
+        cd load 
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        cd ..
+        """
+
+rule control:
+    input:
+        os.path.join(work_dir, "load_done.txt")
+    output:
+        os.path.join(work_dir, "control_done.txt")
+    shell:
+        """
+        cd ipdtools 
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        cd ..
+        """ 
+
+rule compare:
+    input:
+        os.path.join(work_dir, "control_done.txt")
+    output:
+        os.path.join(work_dir, "compare_done.txt")
+    shell:
+        """
+        cd compare 
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        cd ..
+        """

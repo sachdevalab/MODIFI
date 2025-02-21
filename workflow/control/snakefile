@@ -19,7 +19,8 @@ for sub in sub_dirs:
 rule control:
     input:
         ipd=os.path.join(work_dir, "ipd"),
-        control_dir=os.path.join(work_dir, "control")
+        control_dir=os.path.join(work_dir, "control"),
+        ref_dir = os.path.join(work_dir, "contigs")
     output:
         ## touch a file to indicate the completion of the rule
         # touch(f"{work_dir}/load_ipd_done.txt")
@@ -28,7 +29,7 @@ rule control:
     threads: 100
     shell:
         """
-        ls {work_dir}/contigs/*.fa > {work_dir}/contigs_list.txt
+        ls {input.ref_dir}/*.fa > {work_dir}/contigs_list.txt
         /home/shuaiw/Methy/src/test {input.ipd} {input.control_dir} {work_dir}/contigs_list.txt {threads}
         # touch {output}
         """

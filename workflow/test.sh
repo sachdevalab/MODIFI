@@ -1,7 +1,7 @@
 sbatch --partition standard --wrap "/usr/bin/time -v -o large.time snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/large_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam whole_ref=/home/shuaiw/methylation/data/borg/contigs/large.contigs.fa work_dir=/home/shuaiw/methylation/data/borg/new_test6"
 sbatch --partition standard --wrap "/usr/bin/time -v -o test_100.time snakemake --config whole_bam=/home/shuaiw/borg/test_100/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam whole_ref=/home/shuaiw/borg/contigs/test_100.fa work_dir=/home/shuaiw/methylation/data/borg/new_test7"
 snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/new_test7/bams/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_91_L.bam whole_ref=/home/shuaiw/methylation/data/borg/new_test7/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_91_L.fa work_dir=/home/shuaiw/methylation/data/borg/new_test8
-snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam whole_ref=/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa work_dir=/home/shuaiw/methylation/data/borg/new_test10
+
 sbatch --partition standard --wrap "/usr/bin/time -v -o large.time snakemake --config whole_bam=/home/shuaiw/borg/seven_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam  whole_ref=/home/shuaiw/borg/contigs/seven_contigs.fasta  work_dir=/home/shuaiw/methylation/data/borg/new_test10" --job-name=7
 sbatch --partition standard --wrap "/usr/bin/time -v -o test_200.time snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/test_200/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam whole_ref=/home/shuaiw/borg/contigs/test_200.fa work_dir=/home/shuaiw/methylation/data/borg/test_200_our" --job-name=test_200 
 
@@ -40,6 +40,10 @@ whole_ref=/home/shuaiw/methylation/data/rebase/SAMN07447446/meta.fa\
 
 sbatch --partition standard --wrap "/usr/bin/time -v -o human.time snakemake \
 --config whole_bam=/home/shuaiw/borg/human/human_000733.subreads.align.bam \
-whole_ref=/home/shuaiw/Methy/borg/hg38/GCF_000001405.40_GRCh38.p14_genomic.fasta\
+whole_ref=/home/shuaiw/borg/hg38/GCF_000001405.40_GRCh38.p14_genomic.fasta\
  work_dir=/home/shuaiw/borg/human_test"\
   --job-name=human
+
+  snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam\
+ whole_ref=/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa\
+  work_dir=/home/shuaiw/methylation/data/borg/new_test10
