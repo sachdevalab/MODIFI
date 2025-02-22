@@ -373,7 +373,7 @@ def truth_comp(our_tmeans, our_ipd_ratio, our_controls, true_controls):
 
 def corr_obs_cont(infer):
     df = pd.read_csv(infer,)
-    df = df[df['kmer_count'] > 10]
+    # df = df[df['kmer_count'] > 10]
     df = df[df['strand'] == 1]
     ## cal the correlation between tMean and control
     corr = pearsonr(df['tMean'], df['control'])
@@ -381,9 +381,24 @@ def corr_obs_cont(infer):
 
 def corr_ipd_sum(ipd_summary):
     df = pd.read_csv(ipd_summary)
-    df = df[df['strand'] == 1]
+
+    # df1 = df[df['strand'] == 1]
+    # df2 = df[df['strand'] == 0]
+    # ## align df1 and df2 with same tpl, remove the elements with tpl not in df2
+    # df1 = df1[df1['tpl'].isin(df2['tpl'])]
+    # df2 = df2[df2['tpl'].isin(df1['tpl'])]
+
+    # print (pearsonr(df1['tMean'], df2['modelPrediction']))
+    # print (pearsonr(df1['modelPrediction'], df2['tMean']))
+    # print (pearsonr(df1['modelPrediction'], df1['tMean']))
+
+
+
+    df = df[df['strand'] == 0]
     ## cal the correlation between tMean and control
     corr = pearsonr(df['tMean'], df['modelPrediction'])
+
+
     print ("tMean and control", corr)
 
 
@@ -406,6 +421,7 @@ if __name__ == "__main__":
     # bench.compare_ctgs()
     infer = "/home/shuaiw/borg/new_test10/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_0_219069.ipd3.csv"
     ipd_summary = "/home/shuaiw/methylation/data/borg/b_contigs/11.csv"
+    infer = "/home/shuaiw/borg/bench/ecoli_native2/ipd_ratio/CP064387.1.ipd3.csv"
     corr_obs_cont(infer)
     corr_ipd_sum(ipd_summary)
 
