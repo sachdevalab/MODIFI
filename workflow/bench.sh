@@ -11,7 +11,7 @@ sbatch --partition standard --wrap "snakemake  \
 sbatch --partition standard --wrap "snakemake --config whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/align/merge.align.bam whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/bam/merge.fa work_dir=/home/shuaiw/methylation/data/borg/bench/merge" --job-name=merge
 
 
-sbatch  --partition standard --wrap "snakemake -s pipeline2.smk \ 
---config whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/align/Escherichia_coli_O104:H4_str._C227-11__250_bp_library__native_DNA_.align.bam \
+sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/align/Escherichia_coli_O104:H4_str._C227-11__250_bp_library__native_DNA_.align.bam \
  whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/bam/GCA_022869985.1_ASM2286998v1_genomic.fa \
   work_dir=/home/shuaiw/methylation/data/borg/bench/ecoli_native2" --job-name=ecoli_native

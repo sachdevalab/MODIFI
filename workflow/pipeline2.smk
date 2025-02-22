@@ -59,10 +59,12 @@ rule load:
         os.path.join(work_dir, "split_done.txt")
     output:
         os.path.join(work_dir, "load_done.txt")
+    params:
+        maxAlignments=config.get("maxAlignments", 10000)
     shell:
         """
         cd load 
-        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} maxAlignments={params.maxAlignments}
         cd ..
         """
 

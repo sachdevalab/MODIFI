@@ -61,7 +61,7 @@ def _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor=1.0):
                 (hit.identity >= MIN_IDENTITY) and
                 (hit.readLength >= MIN_READLENGTH))]
     # logging.info("Retrieved %d hits" % len(hits), round(time.time()-t0))
-    print ("Retrieved %d hits" % len(hits), "time", round(time.time()-t0), "downsample ratio", round(maxAlignments/len(hits), 2))
+    print ("Retrieved %d hits" % len(hits), "time", round(time.time()-t0), "downsample ratio", round(100*maxAlignments/len(hits), 4), "%")
     if len(hits) > maxAlignments:
         # XXX a bit of a hack - to ensure deterministic behavior when
         # running in parallel, re-seed the RNG before each call
@@ -248,6 +248,11 @@ if __name__ == "__main__":
     subread_bam = sys.argv[1]
     fasta = sys.argv[2]
     outputfile = sys.argv[3]
+
+    ## set default value for maxAlignments if not set
+    if len(sys.argv) > 4:
+        maxAlignments = int(sys.argv[4])
+        print ("para maxAlignments", maxAlignments)
 
     # subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
     # fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
