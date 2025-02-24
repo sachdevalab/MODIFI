@@ -67,6 +67,7 @@ def corr_obs_cont1(infer):
 def corr_obs_cont2(infer):
     df = pd.read_csv(infer)
     # df = df[df['coverage'] > 10]
+    modified_raw_list = []
     modified_ipd_ratio_list = []
     for index, row in df.iterrows():
         if row['strand'] == 1:
@@ -75,11 +76,35 @@ def corr_obs_cont2(infer):
             tag = row['refName'] + ":" + str(row['tpl']) + "+"
         if tag in motif_sites:
             modified_ipd_ratio_list.append(row['ipd_ratio'])
+            modified_raw_list.append(row['tMean'])
     ## plot the distribution of ipd_ratio
     print (len(modified_ipd_ratio_list))
     plt.hist(modified_ipd_ratio_list, bins=100)
     ## svae the plot
     plt.savefig("tmp/modified_ipd_ratio.png")
+    ## clean the plt
+    plt.clf()
+    ## plot the distribution of tMean
+    plt.hist(modified_raw_list, bins=100)
+    ## svae the plot
+    plt.savefig("tmp/modified_raw.png")
+
+def corr_obs_cont3(infer):
+    df = pd.read_csv(infer, nrows=100000)
+    ## use seaborn to make the plot
+    ## plot eight subplots with 2 column, the first columns is 0-strand, the second column is 1-strand
+    import seaborn as sns
+    sns.set(style="whitegrid")
+    fig, axs = plt.subplots(2, 2, figsize=(20, 10))
+    ## first row is covergae, second is tMean, third is control, fourth is ipd_ratio
+    ## plot for each strand separately
+    sns.histplot(df, x="coverage", hue="strand", multiple="stack", ax=axs[0, 0])
+    sns.histplot(df, x="tMean", hue="strand", multiple="stack", ax=axs[0, 1])
+    sns.histplot(df, x="control", hue="strand", multiple="stack", ax=axs[1, 0])
+    sns.histplot(df, x="ipd_ratio", hue="strand", multiple="stack", ax=axs[1, 1])
+    ## save the plot
+    plt.savefig("tmp/plot.png")
+
 
             
 
@@ -96,4 +121,4 @@ motif_sites = get_motif_sites(REF, motif_new, exact_pos)
 #     print(site, motif_sites[site])
 
 # print (len(motif_sites))
-corr_obs_cont2(infer)
+corr_obs_cont3(infer)

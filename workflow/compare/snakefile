@@ -12,7 +12,7 @@ work_dir = config["work_dir"]
 
 
 # Create required directories dynamically
-sub_dirs=[".", "ipd", "control", "ipd_ratio", "bams", "contigs", "gffs"]
+sub_dirs=[".", "ipd", "control", "ipd_ratio", "bams", "contigs", "gffs", "figs"]
 for sub in sub_dirs:
     os.makedirs(os.path.join(work_dir, sub), exist_ok=True)
 
@@ -35,9 +35,10 @@ rule ipd_ratio:
         ref=os.path.join(work_dir, "contigs", "{sample}.fa")
     output:
         ipd = os.path.join(work_dir, "ipd_ratio", "{sample}.ipd3.csv"),
-        gff = os.path.join(work_dir, "gffs", "{sample}.gff")
+        gff = os.path.join(work_dir, "gffs", "{sample}.gff"),
+        fig = os.path.join(work_dir, "figs", "{sample}.png")
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/comp_ipd_ratio.py {input.control} {output.ipd} {output.gff} {input.ref}
+        python /home/shuaiw/Methy/comp_ipd_ratio.py {input.control} {output.ipd} {output.gff} {input.ref} {output.fig}
         """

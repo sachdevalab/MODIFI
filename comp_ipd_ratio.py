@@ -5,6 +5,8 @@ import numpy as np
 # from sklearn.mixture import GaussianMixture
 from scipy.stats import norm
 import sys
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 
@@ -47,7 +49,7 @@ def calculate_x_from_pvalue(p_value, mu, sigma, tail="right"):
         x = mu + z * sigma
         return x
 
-def get_ipd_ratio(csv, output, gff):
+def get_ipd_ratio(csv, output, gff, fig):
     df = pd.read_csv(csv, sep = ",")
     mean = df['ipd_ratio'].mean()
     std = df['ipd_ratio'].std()
@@ -65,7 +67,20 @@ def get_ipd_ratio(csv, output, gff):
     df = df.round(4)
 
     df.to_csv(output, index=False)
+    visu(df, fig)
     get_gff(df, gff)
+
+def visu(df, fig):
+    sns.set(style="whitegrid")
+    fig, axs = plt.subplots(2, 2, figsize=(20, 10))
+    ## first row is covergae, second is tMean, third is control, fourth is ipd_ratio
+    ## plot for each strand separately
+    sns.histplot(df, x="coverage", hue="strand", multiple="stack", ax=axs[0, 0])
+    sns.histplot(df, x="tMean", hue="strand", multiple="stack", ax=axs[0, 1])
+    sns.histplot(df, x="control", hue="strand", multiple="stack", ax=axs[1, 0])
+    sns.histplot(df, x="ipd_ratio", hue="strand", multiple="stack", ax=axs[1, 1])
+    ## save the plot
+    plt.savefig(fig)
 
 def phred_qv(p, max_qv=60):
     """Compute Phred-transformed Quality Value, handling p=0 cases."""
@@ -124,9 +139,10 @@ if __name__ == "__main__":
     gff = sys.argv[3]
     # ref = "/home/shuaiw/borg/bench/ecoli_native/contigs/CP064388.1.fa"
     ref = sys.argv[4]
+    fig = sys.argv[5]
     seq_dict = get_ref(ref)
     print ("loaded fasta")
-    get_ipd_ratio(csv, output, gff)
+    get_ipd_ratio(csv, output, gff, fig)
 
 
     # csv = "/home/shuaiw/methylation/data/borg/b_contigs/control/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_0_219069.ipd2.csv"
