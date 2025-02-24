@@ -67,7 +67,8 @@ def get_ipd_ratio(csv, output, gff, fig):
     df = df.round(4)
 
     df.to_csv(output, index=False)
-    visu(df, fig)
+    # visu(df, fig)
+    ## ImportError: Matplotlib requires numpy>=1.23; you have 1.22.4
     get_gff(df, gff)
 
 def visu(df, fig):
