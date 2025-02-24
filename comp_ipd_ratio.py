@@ -5,8 +5,8 @@ import numpy as np
 # from sklearn.mixture import GaussianMixture
 from scipy.stats import norm
 import sys
-import seaborn as sns
-import matplotlib.pyplot as plt
+# import seaborn as sns
+# import matplotlib.pyplot as plt
 
 
 
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     gff = sys.argv[3]
     # ref = "/home/shuaiw/borg/bench/ecoli_native/contigs/CP064388.1.fa"
     ref = sys.argv[4]
-    fig = sys.argv[5]
+    fig = None #sys.argv[5]
     seq_dict = get_ref(ref)
     print ("loaded fasta")
     get_ipd_ratio(csv, output, gff, fig)

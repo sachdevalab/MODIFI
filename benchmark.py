@@ -19,7 +19,7 @@ def read_ref(ref):
 
 def get_motif_sites(REF, motif_new, exact_pos):
     motif_len = len(motif_new)
-    rev_exact_pos = motif_len - exact_pos
+    rev_exact_pos = motif_len - exact_pos + 1
     motif_sites = {}
 
     for r, contig in REF.items():
@@ -121,4 +121,4 @@ motif_sites = get_motif_sites(REF, motif_new, exact_pos)
 #     print(site, motif_sites[site])
 
 # print (len(motif_sites))
-corr_obs_cont3(infer)
+corr_obs_cont2(infer)

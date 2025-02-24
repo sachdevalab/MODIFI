@@ -36,3 +36,9 @@ sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
  whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/ref/J99_WGA.align.bam \
  whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/J99.fa \
   work_dir=/home/shuaiw/methylation/data/borg/bench/J99_WGA" --job-name=J99_WGA
+
+
+      sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
+ whole_ref=/home/shuaiw/borg/contigs/break_contigs.fasta \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/break" --job-name=break
