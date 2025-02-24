@@ -15,3 +15,24 @@ sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
  whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/align/Escherichia_coli_O104:H4_str._C227-11__250_bp_library__native_DNA_.align.bam \
  whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/bam/GCA_022869985.1_ASM2286998v1_genomic.fa \
   work_dir=/home/shuaiw/methylation/data/borg/bench/ecoli_native2" --job-name=ecoli_native
+
+
+sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227_native.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/C227_native" --job-name=ecoli_native
+
+  sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227_WGA.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/C227_WGA" --job-name=ecoli_WGA
+
+  sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/ref/J99_native.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/J99.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/J99_native" --job-name=J99_native
+
+    sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/ref/J99_WGA.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/J99.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/J99_WGA" --job-name=J99_WGA

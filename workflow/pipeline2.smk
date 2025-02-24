@@ -3,24 +3,6 @@
 import glob
 import os
 
-# Define directories
-# bam_dir = "/home/shuaiw/methylation/data/borg/b_contigs"
-# fa_dir = "/home/shuaiw/methylation/data/borg/b_contigs/contigs"
-# work_dir = "/home/shuaiw/methylation/data/borg/b_contigs/test1"
-
-# bam_dir = "/home/shuaiw/methylation/data/borg/large_contigs/bams"
-# fa_dir = "/home/shuaiw/methylation/data/borg/large_contigs/contigs"
-# work_dir = "/home/shuaiw/methylation/data/borg/large_contigs/ipd1"
-
-# whole_bam = "/home/shuaiw/borg/all_borg/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
-# whole_ref = "/home/shuaiw/borg/all_borg/all_borg.fasta"
-# work_dir = "/home/shuaiw/methylation/data/borg/new_test"
-
-# whole_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
-# whole_ref = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
-# work_dir = "/home/shuaiw/methylation/data/borg/new_test2"
-
-
 configfile: "config.yaml"
 
 whole_bam = config["whole_bam"]
