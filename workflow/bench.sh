@@ -41,4 +41,4 @@ sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
       sbatch  --partition standard --wrap "snakemake --config \
  whole_bam=/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
  whole_ref=/home/shuaiw/borg/contigs/break_contigs.fasta \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/break" --job-name=break
+  work_dir=/home/shuaiw/methylation/data/borg/bench/break2" --job-name=break2

@@ -4,6 +4,7 @@ from collections import defaultdict
 import numpy as np
 from sklearn.mixture import GaussianMixture
 from scipy.stats import norm
+import matplotlib.pyplot as plt
 
 
 
@@ -375,6 +376,17 @@ def corr_obs_cont(infer):
     df = pd.read_csv(infer)
     # df = df[df['kmer_count'] > 10]
     df = df[df['strand'] == 1]
+    ## plot the distribution of ipd_ratio
+    df['ipd_ratio'].plot.hist(bins=100)
+    ## svae the plot
+    plt.savefig("tmp/ipd_ratio.png")
+    ## clean the plt
+    plt.clf()
+    ## plot the tMean
+    df['tMean'].plot.hist(bins=100)
+    ## svae the plot
+    plt.savefig("tmp/tMean.png")
+    plt.clf()
     ## cal the correlation between tMean and control
     corr = pearsonr(df['tMean'], df['control'])
     print ("tMean and control", corr)
