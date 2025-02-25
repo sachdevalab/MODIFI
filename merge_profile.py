@@ -6,6 +6,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import re
 import seaborn as sns
+from sklearn.manifold import TSNE
+from sklearn.cluster import DBSCAN
 
 def load_contigs():
     host_file = '/home/shuaiw/Methy/borg_test/borg.csv'
@@ -46,6 +48,10 @@ def merge_profile(profile_dir):
                 print ("cannot extract sample name from", file)
                 continue
             sample_name = match.group(1)
+            # if sample_name not in borg_contigs:
+            #     continue
+            # else:
+            #     sample_name = sample_name + "_" + borg_contigs[sample_name]
             # print (sample_name)
             samples.append(sample_name)
             # print (sample_name, profile.head())
@@ -68,19 +74,40 @@ def merge_profile(profile_dir):
     
     return profiles
 
-def heatmap(df):
+def heatmap(df, heat_map):
     df = df.T
     # Plot the heatmap with hierarchical clustering
     sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(30, 60))
-
-    
-    plt.savefig("tmp/test_2.pdf")
+    plt.savefig(heat_map)
     plt.clf()
+
+def TSE(df):
+    matrix = df.to_numpy()
+    print (matrix.shape)
+    ## reduce dimention using t-SNE
+    
+    X_embedded = TSNE(n_components=2).fit_transform(matrix)
+    
+    clustering = DBSCAN(eps=0.5, min_samples=2).fit(X_embedded)
+    # print (clustering.labels_)
+    ## define fig size
+    plt.figure(figsize=(10, 10))
+    ## plot the cluster result using seaborn
+    sns.scatterplot(x=X_embedded[:, 0], y=X_embedded[:, 1], hue=clustering.labels_)
+    # plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c = clustering.labels_)
+    ## save the figure in pdf
+    plt.savefig("tmp/tse.pdf")
 
 if __name__ == "__main__":
     profile_dir = "/home/shuaiw/borg/bench/break/profiles"
     profile_dir = "/home/shuaiw/borg/all_test/profiles"
+    heat_map = f"{profile_dir}/motif_heatmap.pdf"
+    total_profile = f"{profile_dir}/motif_profile.csv"
+    # borg_contigs = load_contigs()
     profiles = merge_profile(profile_dir)
     ## save the profiles
-    profiles.to_csv("tmp/profiles.csv")
-    heatmap(profiles)
+    profiles.to_csv(total_profile, index=False)
+    # load the profile from the saved file
+    # profiles = pd.read_csv("tmp/profiles.csv", index_col=0)
+    heatmap(profiles, heat_map)
+    # TSE(profiles)
