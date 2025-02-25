@@ -27,6 +27,8 @@ float *kmer_mean_table;
 long array_size;
 
 int MAX_KMER_COUNT = 100000;
+int up = 8;
+int down = 4;
 
 int thread_num;
 std::mutex kmer_mutex;
@@ -188,7 +190,7 @@ IPD_Result load_ipd(string raw_ipd){
         getline(ss, tErr, ',');
         // cout << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << endl;
 
-        int tpl_int = stoi(tpl) - 1;
+        int tpl_int = stoi(tpl);
         // float tMean_float = stof(tMean);
         float tMean_float;
         try {
@@ -248,7 +250,7 @@ void update_ipd(string raw_ipd, map<int, IPD_Control> for_control_map, map<int, 
         string tErr;
         getline(ss, tErr, ',');
         // cout << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << endl;
-        int tpl_int = stoi(tpl) -1;
+        int tpl_int = stoi(tpl);
         float tMean_float = stof(tMean);
         if (strand == "1"){
             if (for_control_map.find(tpl_int) != for_control_map.end()){
@@ -312,10 +314,10 @@ int slide_kmer(string fasta_file, Encode encoder, string raw_ipd){
                 break;
             }
             kmer_index += m*encoder.base[z]; 
-            comple_kmer_index += encoder.coder[ref_comple_int[j+z]]*encoder.base[(encoder.k-1-z)];  
+            comple_kmer_index += encoder.coder[ref_comple_int[j+encoder.k-1-z]]*encoder.base[z];  
         }
         if (all_valid != false){
-            int for_real_pos = j + 7;
+            int for_real_pos = j + up;
             if (ipd_result.for_ipd_map.find(for_real_pos) != ipd_result.for_ipd_map.end()) {
                 // lock_guard<mutex> guard(kmer_mutex); // Lock the mutex
                 if (kmer_num_table[kmer_index] < MAX_KMER_COUNT){
@@ -328,7 +330,7 @@ int slide_kmer(string fasta_file, Encode encoder, string raw_ipd){
                 }
             }
             // to do, for reverse ref
-            int rev_real_pos = j + 2;
+            int rev_real_pos = j + down - 1;
             if (ipd_result.rev_ipd_map.find(rev_real_pos) != ipd_result.rev_ipd_map.end()) {
                 // lock_guard<mutex> guard(kmer_mutex); // Lock the mutex
                 if (kmer_num_table[comple_kmer_index] < MAX_KMER_COUNT){
@@ -388,7 +390,7 @@ int map_control(string fasta_file, Encode encoder, string raw_ipd, string contro
             comple_kmer_index += encoder.coder[ref_comple_int[j+z]]*encoder.base[(encoder.k-1-z)];  
         }
         if (all_valid != false){
-            int for_real_pos = j + 7;
+            int for_real_pos = j + up;
             if (ipd_result.for_ipd_map.find(for_real_pos) != ipd_result.for_ipd_map.end()) {
                 // lock_guard<mutex> guard(kmer_mutex); // Lock the mutex
                     if (kmer_num_table[kmer_index] > 0){
@@ -405,7 +407,7 @@ int map_control(string fasta_file, Encode encoder, string raw_ipd, string contro
                     // ipd_ratio = ipd_result.rev_ipd_map[for_real_pos]/control;
             }
             // to do, for reverse ref
-            int rev_real_pos = j + 2;
+            int rev_real_pos = j + down - 1;
             if (ipd_result.rev_ipd_map.find(rev_real_pos) != ipd_result.rev_ipd_map.end()) {
                 // lock_guard<mutex> guard(kmer_mutex); // Lock the mutex
                     if (kmer_num_table[comple_kmer_index] > 0){
@@ -527,20 +529,16 @@ void calculate_mean(){
 
 
 int main(int argc, char *argv[]){
-    // string fasta_file = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/12.fa";
-    // string raw_ipd = "/home/shuaiw/methylation/data/borg/b_contigs/test/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_219069_438138.ipd1.csv";
-    
-    // string ipd_dir = "/home/shuaiw/methylation/data/borg/b_contigs/test/";
-    // string control_dir = "/home/shuaiw/methylation/data/borg/b_contigs/control/";
-    // string fasta_list = "test.fasta.list";
-
     string ipd_dir = argv[1];
     string control_dir = argv[2];
     string fasta_list = argv[3];
     int thread_num = stod(argv[4]);
 
-    int up = 7;
-    int down = 3;
+    // string ipd_dir = "/home/shuaiw/borg/bench/break/ipd";
+    // string control_dir = "/home/shuaiw/borg/bench/break/test/";
+    // string fasta_list = "/home/shuaiw/borg/bench/break/contigs_list.txt";
+    // int thread_num = 10;  
+
     int k = up + down;
     
     array_size = pow(4, k);

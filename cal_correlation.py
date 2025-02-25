@@ -372,7 +372,7 @@ def truth_comp(our_tmeans, our_ipd_ratio, our_controls, true_controls):
     print ("precision", recall/len(our_modified))
 
 def corr_obs_cont(infer):
-    df = pd.read_csv(infer, nrows=1000)
+    df = pd.read_csv(infer)
     # df = df[df['kmer_count'] > 10]
     df = df[df['strand'] == 1]
     ## cal the correlation between tMean and control
@@ -380,7 +380,7 @@ def corr_obs_cont(infer):
     print ("tMean and control", corr)
 
 def corr_ipd_sum(ipd_summary):
-    df = pd.read_csv(ipd_summary, nrows=1000)
+    df = pd.read_csv(ipd_summary, nrows=1705173*2)
 
     # df1 = df[df['strand'] == 1]
     # df2 = df[df['strand'] == 0]
@@ -394,7 +394,7 @@ def corr_ipd_sum(ipd_summary):
 
 
 
-    df = df[df['strand'] == 0]
+    df = df[df['strand'] == 1]
     ## cal the correlation between tMean and control
     corr = pearsonr(df['tMean'], df['modelPrediction'])
 
@@ -425,7 +425,7 @@ if __name__ == "__main__":
     # corr_obs_cont(infer)
     # corr_ipd_sum(ipd_summary)
 
-    infer = "/home/shuaiw/borg/bench/break/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595.ipd3.csv"
+    infer = "/home/shuaiw/borg/bench/break/test/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595.ipd2.csv"
     corr_obs_cont(infer)
     ipd_summary = "/home/shuaiw/borg/break_contigs/break_contigs.csv"
     corr_ipd_sum(ipd_summary)
