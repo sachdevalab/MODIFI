@@ -10,3 +10,13 @@ https://github.com/PacificBiosciences/pbcore/issues/127
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ```
 OverflowError: Python integer 3367457666 out of bounds for int32
+
+```
+pbcore
+pip install git+https://github.com/PacificBiosciences/pbcore.git
+numpy version
+
+seaborn
+scipy 
+samtools
+```

@@ -26,7 +26,9 @@ def get_samples():
 
 rule all:
     input:
-        expand(os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"), sample=get_samples())
+        expand(os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"), sample=get_samples()),
+        os.path.join(work_dir, "motif_profile.csv"),
+        os.path.join(work_dir, "motif_heatmap.pdf")
 
 rule collect:
     input:
@@ -43,11 +45,23 @@ rule profiling:
     input:
         ref=os.path.join(work_dir, "contigs", "{sample}.fa"),
         gff=os.path.join(work_dir, "gffs", "{sample}.gff"),
-        all_motifs=os.path.join(work_dir, "all.motifs.csv")
+        all_motifs=os.path.join(work_dir, "all.motifs.csv"),
     output:
-        os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv")
+        prof=os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/motif_profile.py {input.ref} {input.gff} {input.all_motifs} {output}
+        python /home/shuaiw/Methy/motif_profile.py {input.ref} {input.gff} {input.all_motifs} {output.prof}
+        """
+
+rule merge_profiles:
+    input:
+        os.path.join(work_dir, "profiles")
+    output:
+        heatmap=os.path.join(work_dir, "motif_heatmap.pdf"),
+        merged=os.path.join(work_dir, "motif_profile.csv")
+    shell:
+        """
+        set -euo pipefail
+        python /home/shuaiw/Methy/merge_profile.py {input} {output.heatmap} {output.merged}
         """

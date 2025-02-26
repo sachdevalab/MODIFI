@@ -8,6 +8,7 @@ import re
 import seaborn as sns
 from sklearn.manifold import TSNE
 from sklearn.cluster import DBSCAN
+import sys
 
 def load_contigs():
     host_file = '/home/shuaiw/Methy/borg_test/borg.csv'
@@ -99,10 +100,13 @@ def TSE(df):
     plt.savefig("tmp/tse.pdf")
 
 if __name__ == "__main__":
-    profile_dir = "/home/shuaiw/borg/bench/break/profiles"
-    profile_dir = "/home/shuaiw/borg/all_test/profiles"
-    heat_map = f"{profile_dir}/motif_heatmap.pdf"
-    total_profile = f"{profile_dir}/motif_profile.csv"
+    # profile_dir = "/home/shuaiw/borg/bench/break2/profiles"
+    profile_dir = sys.argv[1]
+    # profile_dir = "/home/shuaiw/borg/all_test/profiles"
+    # heat_map = f"{profile_dir}/../motif_heatmap.pdf"
+    # total_profile = f"{profile_dir}/../motif_profile.csv"
+    heat_map = sys.argv[2]
+    total_profile = sys.argv[3]
     # borg_contigs = load_contigs()
     profiles = merge_profile(profile_dir)
     ## save the profiles

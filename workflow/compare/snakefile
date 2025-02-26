@@ -27,7 +27,8 @@ def get_samples():
 rule all:
     input:
         # expand(f"{work_dir}/ipd_ratio/{{sample}}.ipd3.csv", sample=get_samples())
-        expand(os.path.join(work_dir, "ipd_ratio", "{sample}.ipd3.csv"), sample=get_samples())
+        expand(os.path.join(work_dir, "ipd_ratio", "{sample}.ipd3.csv"), sample=get_samples()),
+        expand(os.path.join(work_dir, "figs", "{sample}.png"), sample=get_samples())
 
 rule ipd_ratio:
     input:
@@ -35,10 +36,10 @@ rule ipd_ratio:
         ref=os.path.join(work_dir, "contigs", "{sample}.fa")
     output:
         ipd = os.path.join(work_dir, "ipd_ratio", "{sample}.ipd3.csv"),
-        gff = os.path.join(work_dir, "gffs", "{sample}.gff")
-        # fig = os.path.join(work_dir, "figs", "{sample}.png")
+        gff = os.path.join(work_dir, "gffs", "{sample}.gff"),
+        fig = os.path.join(work_dir, "figs", "{sample}.png")
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/comp_ipd_ratio.py {input.control} {output.ipd} {output.gff} {input.ref} 
+        python /home/shuaiw/Methy/comp_ipd_ratio.py {input.control} {output.ipd} {output.gff} {input.ref} {output.fig}
         """
