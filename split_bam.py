@@ -90,7 +90,10 @@ def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, identity_cutoff = 0.
             continue
         read_number += 1
     print (f"Read number for {contig} is {read_number}")
-    downsample_rate = float(max_read_num) / read_number
+    if read_number == 0:
+        downsample_rate = 1
+    else:
+        downsample_rate = float(max_read_num) / read_number
     print (f"Downsample rate is {downsample_rate*100}%.")
 
 
