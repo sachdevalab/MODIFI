@@ -78,7 +78,8 @@ def merge_profile(profile_dir):
 def heatmap(df, heat_map):
     df = df.T
     # Plot the heatmap with hierarchical clustering
-    sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(30, 60))
+    # sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(30, 60))
+    sns.clustermap(df, method='average', metric='euclidean', cmap='viridis')
     plt.savefig(heat_map)
     plt.clf()
 

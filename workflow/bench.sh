@@ -52,3 +52,8 @@ sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
  whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/align/merge.align.bam \
  whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/three_species.fa \
   work_dir=/home/shuaiw/methylation/data/borg/bench/three" --job-name=three
+
+          sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/methylation/data/borg/all_borg2/all_borg2.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/borg/all_borg2/all_borgs2.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/borg" --job-name=borg
