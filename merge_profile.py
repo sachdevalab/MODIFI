@@ -79,9 +79,16 @@ def heatmap(df, heat_map):
     df = df.T
     # Plot the heatmap with hierarchical clustering
     # sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(30, 60))
-    sns.clustermap(df, method='average', metric='euclidean', cmap='viridis')
-    plt.savefig(heat_map)
-    plt.clf()
+    ## check if df is not empty
+    if df.empty:
+        print ("empty dataframe")
+        ## construct an  empty figure
+        plt.figure()
+        plt.savefig(heat_map)
+    else:
+        sns.clustermap(df, method='average', metric='euclidean', cmap='viridis')
+        plt.savefig(heat_map)
+        plt.clf()
 
 def TSE(df):
     matrix = df.to_numpy()

@@ -29,7 +29,7 @@ rule control:
     threads: 100
     shell:
         """
-        ls {input.ref_dir}/*.fa > {work_dir}/contigs_list.txt
+        find {input.ref_dir} -name "*.fa" > {work_dir}/contigs_list.txt
         /home/shuaiw/Methy/src/test {input.ipd} {input.control_dir} {work_dir}/contigs_list.txt {threads}
         # touch {output}
         """

@@ -20,7 +20,7 @@ ork_dir=/home/shuaiw/methylation/data/borg/test_300_our" --job-name=test_300
 sbatch --partition standard --wrap "/usr/bin/time -v -o all.time snakemake \
 --config whole_bam=/home/shuaiw/methylation/data/borg/all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
 whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa\
- work_dir=/home/shuaiw/methylation/data/borg/all_test"\
+ work_dir=/home/shuaiw/methylation/data/borg/all_test2"\
   --job-name=all
 
 
@@ -49,6 +49,6 @@ whole_ref=/home/shuaiw/borg/hg38/GCF_000001405.40_GRCh38.p14_genomic.fasta\
   work_dir=/home/shuaiw/methylation/data/borg/new_test10
 
 
-  snakemake -s pipeline2.smk --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam \
+  snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam \
   whole_ref=/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa \
   work_dir=/home/shuaiw/methylation/data/borg/new_test11

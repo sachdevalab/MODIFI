@@ -27,8 +27,8 @@ def get_samples():
 rule all:
     input:
         expand(os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"), sample=get_samples()),
-        os.path.join(work_dir, "motif_profile.csv"),
-        os.path.join(work_dir, "motif_heatmap.pdf")
+        os.path.join(work_dir, "motif_profile.csv")
+        # os.path.join(work_dir, "motif_heatmap.pdf")
 
 rule collect:
     input:
