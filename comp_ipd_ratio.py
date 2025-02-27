@@ -72,6 +72,13 @@ def get_ipd_ratio(csv, output, gff, figure_file):
     get_gff(df, gff)
 
 def visu(df, figure_path):
+    if df.empty:
+        print("DataFrame is empty. Cannot generate visualization.")
+        ## construct an  empty figure
+        plt.figure()
+        plt.savefig(figure_path)
+        return
+    
     sns.set(style="whitegrid")
     fig, axs = plt.subplots(2, 2, figsize=(20, 10))
     ## first row is covergae, second is tMean, third is control, fourth is ipd_ratio
