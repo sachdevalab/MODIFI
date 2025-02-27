@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # borg_contigs = load_contigs()
     profiles = merge_profile(profile_dir)
     ## save the profiles
-    profiles.to_csv(total_profile, index=False)
+    profiles.to_csv(total_profile, index=True)
     # load the profile from the saved file
     # profiles = pd.read_csv("tmp/profiles.csv", index_col=0)
     heatmap(profiles, heat_map)

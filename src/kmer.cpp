@@ -27,8 +27,8 @@ float *kmer_mean_table;
 long array_size;
 
 int MAX_KMER_COUNT = 100000;
-int up = 8;
-int down = 4;
+int up = 7;
+int down = 3;
 
 int thread_num;
 std::mutex kmer_mutex;
