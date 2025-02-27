@@ -48,20 +48,24 @@ rule profiling:
         all_motifs=os.path.join(work_dir, "all.motifs.csv"),
     output:
         prof=os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
+        ## touch file to indicate completion
+        done=os.path.join(work_dir, "profiles", "profile.done")
     shell:
         """
         set -euo pipefail
         python /home/shuaiw/Methy/motif_profile.py {input.ref} {input.gff} {input.all_motifs} {output.prof}
+        touch {output.done}
         """
 
 rule merge_profiles:
     input:
-        os.path.join(work_dir, "profiles")
+        done=os.path.join(work_dir, "profiles", "profile.done")
+        prof=os.path.join(work_dir, "profiles")
     output:
         heatmap=os.path.join(work_dir, "motif_heatmap.pdf"),
         merged=os.path.join(work_dir, "motif_profile.csv")
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/merge_profile.py {input} {output.heatmap} {output.merged}
+        python /home/shuaiw/Methy/merge_profile.py {input.prof} {output.heatmap} {output.merged}
         """
