@@ -147,22 +147,12 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, 
 
     # for aln in alignments.readsInRange(refGroupId, start, end):
     for aln in hits:
-        # Pull out error-free position
-        # matched = np.logical_and(np.array(
-        #     [x != '-' for x in aln.read()]), np.array([x != '-' for x in aln.reference()]))
-        # np.logical_and(np.logical_not(np.isnan(rawIpd)),
-        #                 matched, out=matched)
-        # normalization = _subreadNormalizationFactor(rawIpd[matched])
-        ## check normalization is a valid number or nan
-        ## print read name if normalization is nan
-
         if aln.get_tag("NM") > 3:
             continue
         forward_IPD_info = np.array(aln.get_tag("fi")[::-1]) * factor  ## weired, why need to reverse
         reverse_IPD_info = np.array(aln.get_tag("ri")) * factor
 
-        # Get aligned positions on the reference for each read base
-        aligned_pairs = aln.get_aligned_pairs(matches_only=True, with_seq=False)
+        # Initialize arrays
         rawIpd = np.zeros(len(aln.query_sequence))
         matched = np.zeros(len(aln.query_sequence), dtype=bool)
         referencePositions = np.zeros(len(aln.query_sequence), dtype=int)
@@ -170,6 +160,10 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, 
         rev_rawIpd = np.zeros(len(aln.query_sequence))
         rev_matched = np.zeros(len(aln.query_sequence), dtype=bool)
         rev_referencePositions = np.zeros(len(aln.query_sequence), dtype=int)
+
+        """
+        # Get aligned positions on the reference for each read base
+        aligned_pairs = aln.get_aligned_pairs(matches_only=True, with_seq=False)
 
         for query_pos, ref_pos in aligned_pairs:
             if ref_pos is not None:
@@ -183,6 +177,32 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, 
                         rev_rawIpd[query_pos] = reverse_IPD_info[query_pos]
                         rev_matched[query_pos] = True
                         rev_referencePositions[query_pos] = ref_pos
+        """
+
+        # Get aligned positions on the reference for each read base
+        aligned_pairs = np.array(aln.get_aligned_pairs(matches_only=True, with_seq=False))
+
+        # Extract query and reference positions as NumPy arrays
+        query_positions = aligned_pairs[:, 0]
+        reference_positions = aligned_pairs[:, 1]
+
+        # Mask for valid reference positions within the start-end range
+        valid_mask = (reference_positions >= start) & (reference_positions < end)
+
+        # Apply vectorized filtering
+        forward_mask = valid_mask & (forward_IPD_info[query_positions] != 0)
+        reverse_mask = valid_mask & (reverse_IPD_info[query_positions] != 0)
+
+        # Assign values efficiently
+        rawIpd[query_positions[forward_mask]] = forward_IPD_info[query_positions[forward_mask]]
+        matched[query_positions[forward_mask]] = True
+        referencePositions[query_positions[forward_mask]] = reference_positions[forward_mask]
+
+        rev_rawIpd[query_positions[reverse_mask]] = reverse_IPD_info[query_positions[reverse_mask]]
+        rev_matched[query_positions[reverse_mask]] = True
+        rev_referencePositions[query_positions[reverse_mask]] = reference_positions[reverse_mask]
+
+
 
         ipd, tpl = norm(rawIpd, referencePositions, matched, aln)
         rev_ipd, rev_tpl = norm(rev_rawIpd, rev_referencePositions, rev_matched, aln)
@@ -236,6 +256,8 @@ def norm(rawIpd, referencePositions, matched, aln):
 
 
 def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file):
+    print (f"handle contig {each_ref}, with length {len(ref_seq)}...")
+    t0 = time.time()
     alignments = pysam.AlignmentFile(contig_bam, "rb", check_sq=False)
     read_groups = alignments.header.get("RG", [])
     if read_groups:
@@ -248,8 +270,8 @@ def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file):
         factor = 1.0
 
     # # max_length = each_ref.Length
-    max_length = 100000
-    # max_length = len(ref_seq)
+    # max_length = 100000
+    max_length = len(ref_seq)
     refGroupId = each_ref
 
     chunks_num = int(max_length/max_region)
@@ -269,7 +291,7 @@ def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file):
         # break
     combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'base', 'coverage', 'tMean', 'tErr'])
     combined_df.to_csv(df_file, index=False)
-    print ("raw ipd df saved", df_file, round(time.time()))
+    print ("raw ipd df saved", df_file, round(time.time()-t0))
 
 
 
