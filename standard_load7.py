@@ -13,6 +13,8 @@ from collections import defaultdict
 import time
 import sys
 import logging
+import pysam
+import argparse
 
 # alignments = None
 
@@ -132,10 +134,11 @@ def _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor=1.0):
         capValue = np.percentile(ipdVect, 99)
     print ("capValue", capValue)
     print ("pos num", len(s0dict), len(s1dict))
-    return cal_mean(s0dict, s1dict, each_ref, capValue, start, end, t0)
+    return cal_mean(s0dict, s1dict, each_ref.Name, capValue, start, end, t0)
 
-def cal_mean(s0dict, s1dict, each_ref, capValue, start, end, t0):
-    ref_Name = each_ref.Name
+def cal_mean(s0dict, s1dict, ref_Name, capValue, start, end, t0):
+    # ref_Name = each_ref.Name
+    ref_Name = ref_Name
 
     # s0Ipds, s1Ipds = [], []
     result = []
@@ -235,24 +238,215 @@ def load_IPD(each_ref, contig_bam, df_file):
     print ("raw ipd df saved", df_file, round(time.time()-t0))
 
 
+def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, factor=1.0):
+    t0 = time.time()
+    # (start, end) = (0, each_ref.Length)
+
+    MIN_IDENTITY = 0.0  
+    MIN_READLENGTH = 50
+    # samfile = pysam.AlignmentFile(contig_bam, "rb", check_sq=False)
+    # hits = [hit for hit in samfile.fetch("SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C",
+    #                                                     max(start, 0), end)]
+
+    hits = [hit for hit in alignments.fetch(each_ref,
+                                                        max(start, 0), end)]
+    # logging.info("Retrieved %d hits" % len(hits), round(time.time()-t0))
+    print ("Retrieved %d hits" % len(hits), "time", round(time.time()-t0))
+    if len(hits) > maxAlignments:
+        # XXX a bit of a hack - to ensure deterministic behavior when
+        # running in parallel, re-seed the RNG before each call
+        if randomSeed is None:
+            np.random.seed(len(hits))
+        hits = np.random.choice(
+            hits, size=maxAlignments, replace=False)
+    if len(hits) > 0:
+        print ("downsample ratio", round(100*maxAlignments/len(hits), 4), "%")
+            
+    # Maintain separate lists for each strand to speed up sorting
+    s0dict = defaultdict(list)
+    s1dict = defaultdict(list)
+    ipdVect = []
+
+    # for aln in alignments.readsInRange(refGroupId, start, end):
+    for aln in hits:
+        if aln.get_tag("NM") > 3:
+            continue
+        forward_IPD_info = np.array(aln.get_tag("fi")[::-1]) * factor  ## weired, why need to reverse
+        reverse_IPD_info = np.array(aln.get_tag("ri")) * factor
+
+        # Initialize arrays
+        rawIpd = np.zeros(len(aln.query_sequence))
+        matched = np.zeros(len(aln.query_sequence), dtype=bool)
+        referencePositions = np.zeros(len(aln.query_sequence), dtype=int)
+
+        rev_rawIpd = np.zeros(len(aln.query_sequence))
+        rev_matched = np.zeros(len(aln.query_sequence), dtype=bool)
+        rev_referencePositions = np.zeros(len(aln.query_sequence), dtype=int)
+
+        """
+        # Get aligned positions on the reference for each read base
+        aligned_pairs = aln.get_aligned_pairs(matches_only=True, with_seq=False)
+
+        for query_pos, ref_pos in aligned_pairs:
+            if ref_pos is not None:
+                if forward_IPD_info[query_pos] != 0:
+                    if ref_pos >= start and ref_pos < end:
+                        rawIpd[query_pos] = forward_IPD_info[query_pos]
+                        matched[query_pos] = True
+                        referencePositions[query_pos] = ref_pos 
+                if reverse_IPD_info[query_pos] != 0:
+                    if ref_pos >= start and ref_pos < end:
+                        rev_rawIpd[query_pos] = reverse_IPD_info[query_pos]
+                        rev_matched[query_pos] = True
+                        rev_referencePositions[query_pos] = ref_pos
+        """
+
+        # Get aligned positions on the reference for each read base
+        aligned_pairs = np.array(aln.get_aligned_pairs(matches_only=True, with_seq=False))
+
+        # Extract query and reference positions as NumPy arrays
+        query_positions = aligned_pairs[:, 0]
+        reference_positions = aligned_pairs[:, 1]
+
+        # Mask for valid reference positions within the start-end range
+        valid_mask = (reference_positions >= start) & (reference_positions < end)
+
+        # Apply vectorized filtering
+        forward_mask = valid_mask & (forward_IPD_info[query_positions] != 0)
+        reverse_mask = valid_mask & (reverse_IPD_info[query_positions] != 0)
+
+        # Assign values efficiently
+        rawIpd[query_positions[forward_mask]] = forward_IPD_info[query_positions[forward_mask]]
+        matched[query_positions[forward_mask]] = True
+        referencePositions[query_positions[forward_mask]] = reference_positions[forward_mask]
+
+        rev_rawIpd[query_positions[reverse_mask]] = reverse_IPD_info[query_positions[reverse_mask]]
+        rev_matched[query_positions[reverse_mask]] = True
+        rev_referencePositions[query_positions[reverse_mask]] = reference_positions[reverse_mask]
+
+
+
+        ipd, tpl = norm(rawIpd, referencePositions, matched, aln)
+        rev_ipd, rev_tpl = norm(rev_rawIpd, rev_referencePositions, rev_matched, aln)
+        if len(ipd) == 0 or len(rev_ipd) == 0:
+            continue
+
+        ipdVect += list(ipd)
+        ipdVect += list(rev_ipd)
+
+        for tpl_val, ipd_val in zip(tpl, ipd):
+            s1dict[tpl_val].append(ipd_val)
+
+        for tpl_val, ipd_val in zip(rev_tpl, rev_ipd):
+            s0dict[tpl_val].append(ipd_val)
+
+    print ("load takes", round(time.time()-t0))
+    if len(ipdVect) < 10:
+        # Default is there is no coverage
+        capValue = 5.0
+    else:
+        # Compute IPD quantiles on the current block -- will be used for
+        # trimming extreme IPDs
+        capValue = np.percentile(ipdVect, 99)
+    print ("capValue", capValue)
+    print ("pos num", len(s0dict), len(s1dict))
+    return cal_mean(s0dict, s1dict, each_ref, capValue, start, end, t0)
+
+def norm(rawIpd, referencePositions, matched, aln):
+    np.logical_and(np.logical_not(np.isnan(rawIpd)),
+                    matched, out=matched)
+    normalization = _subreadNormalizationFactor(rawIpd[matched])
+
+    if np.isnan(normalization):
+        print (f"nan normalization in {aln.query_name}", normalization)
+        return [], []
+    if normalization < 0.0001:
+        print (f"zero IPD values in {aln.query_name}", normalization, rawIpd[matched])
+        return [], []
+
+    rawIpd /= normalization
+
+    nm = matched.sum()
+
+    # Bail out if we don't have any samples
+    if nm == 0:
+        return [], []
+
+    ipd = rawIpd[matched]
+    tpl = referencePositions[matched]
+    return ipd, tpl
+
+
+def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file):
+    print (f"handle contig {each_ref}, with length {len(ref_seq)}...")
+    t0 = time.time()
+    alignments = pysam.AlignmentFile(contig_bam, "rb", check_sq=False)
+    read_groups = alignments.header.get("RG", [])
+    if read_groups:
+        # Get Frame Rate from the first Read Group (if present)
+        frame_rate = float(read_groups[0].get("FR", 1.0))  # Default to 1.0 if not found
+        factor = 1.0 / frame_rate  # Calculate normalization factor
+        print(f"Frame Rate: {frame_rate}")
+        print(f"Factor: {factor}")
+    else:
+        factor = 1.0
+
+    # # max_length = each_ref.Length
+    # max_length = 100000
+    max_length = len(ref_seq)
+    refGroupId = each_ref
+
+    chunks_num = int(max_length/max_region)
+    chunks_num = 1 if chunks_num < 1 else chunks_num
+    
+    print ("chunks_num", chunks_num)
+    result = []
+    for i in range(chunks_num):
+        start = i*max_region
+        end = (i+1)*max_region
+        if end > max_length:
+            end = max_length
+        if i == chunks_num-1:
+            end = max_length
+        print ("chunk", i, start, end)
+        result += _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, factor, )
+        # break
+    combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'base', 'coverage', 'tMean', 'tErr'])
+    combined_df.to_csv(df_file, index=False)
+    print ("raw ipd df saved", df_file, round(time.time()-t0))
+
 
 
 if __name__ == "__main__":
 
-    # subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
-    # fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
-    # subread_bam = "/home/shuaiw/methylation/data/borg/new_test4/bams/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_267_C.bam"
-    # fasta = "/home/shuaiw/methylation/data/borg/new_test4/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_267_C.fa"
-    # outputfile = "/home/shuaiw/methylation/data/borg/b_contigs/test/test.csv"
+    parser = argparse.ArgumentParser(description="Get accurate hgt breakpoints", add_help=False, \
+    usage="%(prog)s -h", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    required = parser.add_argument_group("required arguments")
+    optional = parser.add_argument_group("optional arguments")
+    required.add_argument("--bam", type=str, help="<str> aligned bam file", metavar="\b")
+    required.add_argument("--ref", type=str, help="<str> reference.", metavar="\b")
+    required.add_argument("-o", type=str, help="<str> output file of raw IPD values.", metavar="\b")
+    required.add_argument("--maxAlignments", type=int, help="<str> maxAlignments.", default=10000, metavar="\b")
+    required.add_argument("--read_type", type=str, help="<str> ccs or subreads.",default='subreads', metavar="\b")
+    optional.add_argument("-h", "--help", action="help")
+    args = vars(parser.parse_args())
 
-    subread_bam = sys.argv[1]
-    fasta = sys.argv[2]
-    outputfile = sys.argv[3]
+    subread_bam = args["bam"]
+    fasta = args["ref"]
+    outputfile = args["o"]
+    maxAlignments = args["maxAlignments"]
+    read_type = args["read_type"].lower()
 
-    ## set default value for maxAlignments if not set
-    if len(sys.argv) > 4:
-        maxAlignments = int(sys.argv[4])
-        print ("para maxAlignments", maxAlignments)
+    # subread_bam = sys.argv[1]
+    # fasta = sys.argv[2]
+    # outputfile = sys.argv[3]
+
+    # ## set default value for maxAlignments if not set
+    # if len(sys.argv) > 4:
+    #     maxAlignments = int(sys.argv[4])
+    #     print ("para maxAlignments", maxAlignments)
+
+    # read_type = sys.argv[5]
 
     # subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
     # fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
@@ -274,7 +468,15 @@ if __name__ == "__main__":
         ref_seq = seq_dict[each_ref]
         ## complement the sequence
         complement_ref_seq = ref_seq.complement()
-        load_IPD(each_ref, subread_bam, outputfile)
+        if read_type == "subreads":
+            load_IPD(each_ref, subread_bam, outputfile)
+        elif read_type == "ccs":
+
+            load_IPD_hifi(each_ref, ref_seq, subread_bam, outputfile)
+        else:
+            ## raise error
+            print ("read type not supported")
+            break
 
     print ("IPD loaded")
 

@@ -3,29 +3,13 @@
 import glob
 import os
 
-# Define directories
-# bam_dir = "/home/shuaiw/methylation/data/borg/b_contigs"
-# fa_dir = "/home/shuaiw/methylation/data/borg/b_contigs/contigs"
-# work_dir = "/home/shuaiw/methylation/data/borg/b_contigs/test1"
-
-# bam_dir = "/home/shuaiw/methylation/data/borg/large_contigs/bams"
-# fa_dir = "/home/shuaiw/methylation/data/borg/large_contigs/contigs"
-# work_dir = "/home/shuaiw/methylation/data/borg/large_contigs/ipd1"
-
-# whole_bam = "/home/shuaiw/borg/all_borg/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
-# whole_ref = "/home/shuaiw/borg/all_borg/all_borg.fasta"
-# work_dir = "/home/shuaiw/methylation/data/borg/new_test"
-
-# whole_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
-# whole_ref = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
-# work_dir = "/home/shuaiw/methylation/data/borg/new_test2"
-
-
 configfile: "config.yaml"
 
 whole_bam = config["whole_bam"]
 whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
+maxAlignments = config.get("maxAlignments", 10000)  # Default value if not set in config
+read_type = config.get("read_type", "subreads")  # Default value if not set in config
 
 print (whole_bam)
 print (whole_ref)
@@ -60,10 +44,14 @@ rule load:
         os.path.join(work_dir, "split_done.txt")
     output:
         os.path.join(work_dir, "load_done.txt")
+    params:
+        maxAlignments=maxAlignments,
+        read_type=read_type
     shell:
         """
         cd load 
-        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}\
+        maxAlignments={params.maxAlignments} read_type={params.read_type}
         cd ..
         """
 

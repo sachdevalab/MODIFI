@@ -9,6 +9,7 @@ whole_bam = config["whole_bam"]
 whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
 maxAlignments = config.get("maxAlignments", 10000)  # Default value if not set in config
+read_type = config.get("read_type", "subreads")  # Default value if not set in config
 
 
 
@@ -36,8 +37,10 @@ rule load_ipd:
     output:
         os.path.join(work_dir, "ipd", "{sample}.ipd1.csv")
     params:
-        maxAlignments=maxAlignments
+        maxAlignments=maxAlignments,
+        read_type=read_type
     shell:
         """
-        python /home/shuaiw/Methy/standard_load7.py {input.bam} {input.ref} {output} {params.maxAlignments}
+        python /home/shuaiw/Methy/standard_load7.py --bam {input.bam} \
+        --ref {input.ref} -o {output} --maxAlignments {params.maxAlignments} --read_type {read_type}
         """
