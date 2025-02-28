@@ -9,6 +9,7 @@ import seaborn as sns
 from sklearn.manifold import TSNE
 from sklearn.cluster import DBSCAN
 import sys
+import argparse
 
 def load_contigs():
     host_file = '/home/shuaiw/Methy/borg_test/borg.csv'
@@ -35,20 +36,22 @@ def load_contigs():
 
     return contig_dict
 
-def merge_profile(profile_dir):
+def merge_profile(profile_list):
     
     ## initialize the profiles as df
     profiles = []
     samples = []
-    for file in os.listdir(profile_dir):
+    # for file in os.listdir(profile_dir):
+    for file in profile_list:
         if file.endswith(".csv"):
-            profile = pd.read_csv(os.path.join(profile_dir, file), sep = ",")
+            # profile = pd.read_csv(os.path.join(profile_dir, file), sep = ",")
+            profile = pd.read_csv(os.path.join(file), sep = ",")
             ## extract the sample name
             match = re.search(r'(.*?).motifs.profile.csv', file)
             if not match:
                 print ("cannot extract sample name from", file)
                 continue
-            sample_name = match.group(1)
+            sample_name = match.group(1).split("/")[-1]
             # if sample_name not in borg_contigs:
             #     continue
             # else:
@@ -108,15 +111,32 @@ def TSE(df):
     plt.savefig("tmp/tse.pdf")
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Get accurate hgt breakpoints", add_help=False, \
+    usage="%(prog)s -h", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    required = parser.add_argument_group("required arguments")
+    optional = parser.add_argument_group("optional arguments")
+    required.add_argument("--all_profiles", type=str, help="<str> separate by space", nargs="+", metavar="\b")
+    required.add_argument("--heatmap", type=str, help="<str> heatmap file.", metavar="\b")
+    required.add_argument("--summary", type=str, help="<str> output motif summary.", metavar="\b")
+    optional.add_argument("-h", "--help", action="help")
+    args = vars(parser.parse_args())
+
     # profile_dir = "/home/shuaiw/borg/bench/break2/profiles"
-    profile_dir = sys.argv[1]
+    # profile_dir = sys.argv[1]
+    # heat_map = sys.argv[2]
+    # total_profile = sys.argv[3]
+
+    profile_list = args['all_profiles']
+    heat_map = args['heatmap']
+    total_profile = args['summary']
+    # print (profile_dir)
     # profile_dir = "/home/shuaiw/borg/all_test/profiles"
     # heat_map = f"{profile_dir}/../motif_heatmap.pdf"
     # total_profile = f"{profile_dir}/../motif_profile.csv"
-    heat_map = sys.argv[2]
-    total_profile = sys.argv[3]
+
     # borg_contigs = load_contigs()
-    profiles = merge_profile(profile_dir)
+    profiles = merge_profile(profile_list)
     ## save the profiles
     profiles.to_csv(total_profile, index=True)
     # load the profile from the saved file

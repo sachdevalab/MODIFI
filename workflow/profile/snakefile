@@ -19,8 +19,8 @@ for sub in sub_dirs:
 
 # Function to get sample names after split_bam rule
 def get_samples():
-    bam_files = glob.glob(os.path.join(work_dir, "bams", "*.bam"))
-    samples = list(set(f.split("/")[-1].replace(".bam", "") for f in bam_files))
+    bam_files = glob.glob(os.path.join(work_dir, "gffs", "*.gff"))
+    samples = list(set(f.split("/")[-1].replace(".gff", "") for f in bam_files))
     print (len(samples), "samples")
     return samples
 
@@ -48,24 +48,24 @@ rule profiling:
         all_motifs=os.path.join(work_dir, "all.motifs.csv"),
     output:
         prof=os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
-        ## touch file to indicate completion
-        done=os.path.join(work_dir, "profiles", "profile.done")
     shell:
         """
         set -euo pipefail
         python /home/shuaiw/Methy/motif_profile.py {input.ref} {input.gff} {input.all_motifs} {output.prof}
-        touch {output.done}
         """
 
 rule merge_profiles:
     input:
-        done=os.path.join(work_dir, "profiles", "profile.done"),
-        prof=os.path.join(work_dir, "profiles")
+        # prof=os.path.join(work_dir, "profiles")
+        prof=expand(os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
+               sample=get_samples())
     output:
         heatmap=os.path.join(work_dir, "motif_heatmap.pdf"),
         merged=os.path.join(work_dir, "motif_profile.csv")
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/merge_profile.py {input.prof} {output.heatmap} {output.merged}
+        python /home/shuaiw/Methy/merge_profile.py --all_profiles {input.prof} \
+        --heatmap  {output.heatmap} \
+        --summary {output.merged}
         """

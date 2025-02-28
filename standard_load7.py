@@ -273,6 +273,10 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, 
             continue
         forward_IPD_info = np.array(aln.get_tag("fi")[::-1]) * factor  ## weired, why need to reverse
         reverse_IPD_info = np.array(aln.get_tag("ri")) * factor
+        ## check if the IPD info is empty
+        if len(forward_IPD_info) == 0 or len(reverse_IPD_info) == 0:
+            print ("empty IPD info", aln.query_name, len(forward_IPD_info), len(reverse_IPD_info))
+            continue
 
         # Initialize arrays
         rawIpd = np.zeros(len(aln.query_sequence))

@@ -58,9 +58,9 @@ sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
  whole_ref=/home/shuaiw/methylation/data/borg/all_borg2/all_borgs2.fa \
   work_dir=/home/shuaiw/methylation/data/borg/bench/borg" --job-name=borg
 
-        sbatch  --partition standard --wrap "snakemake --config \
+        sbatch  --partition standard --wrap "snakemake -j 4 --config \
  whole_bam=/home/shuaiw/methylation/data/borg/break_contigs2/XRSBK_20221007_S64018_PL100268287-1_C01.align.ccs.bam \
  whole_ref=/home/shuaiw/borg/contigs/break_contigs.fasta \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/break4\ 
+  work_dir=/home/shuaiw/methylation/data/borg/bench/break4 \
   read_type=ccs"\
    --job-name=break4
