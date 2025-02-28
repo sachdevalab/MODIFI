@@ -24,7 +24,7 @@ mapQvThreshold = 0
 maxAlignments = 10000 ##1500
 randomSeed = None
 max_region = 100000
-
+MAX_NM = 3
 
 def _subreadNormalizationFactor(rawIpds):
     """
@@ -269,7 +269,7 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, 
 
     # for aln in alignments.readsInRange(refGroupId, start, end):
     for aln in hits:
-        if aln.get_tag("NM") > 3:
+        if aln.get_tag("NM") > MAX_NM:
             continue
         forward_IPD_info = np.array(aln.get_tag("fi")[::-1]) * factor  ## weired, why need to reverse
         reverse_IPD_info = np.array(aln.get_tag("ri")) * factor

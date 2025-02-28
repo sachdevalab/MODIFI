@@ -14,15 +14,15 @@ def load_contigs():
         for line in f:
             contig = line.strip()
             contig_dict[contig] = 'host'
-    control_dict = {}
-    control_file = '/home/shuaiw/Methy/borg_test/control.csv'
-    with open(control_file) as f:
-        for line in f:
-            contig = line.strip()
-            if contig not in contig_dict:
-                control_dict[contig] = 'control'
+    # control_dict = {}
+    # control_file = '/home/shuaiw/Methy/borg_test/control.csv'
+    # with open(control_file) as f:
+    #     for line in f:
+    #         contig = line.strip()
+    #         if contig not in contig_dict:
+    #             control_dict[contig] = 'control'
 
-    contig_dict.update(control_dict)
+    # contig_dict.update(control_dict)
 
     return contig_dict
 
@@ -30,19 +30,33 @@ def load_contigs():
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import numpy as np
+
 
 def extract_contigs(whole_ref, contig_dict, extracted_ref):
+    control_file = '/home/shuaiw/Methy/borg_test/control.csv'
+    control_num = 0
+    f = open(control_file, "w")
     with open(extracted_ref, "w") as output_handle:
         for seq_record in SeqIO.parse(whole_ref, "fasta"):
             if seq_record.id in contig_dict:
                 SeqIO.write(seq_record, output_handle, "fasta")
-    ## index the fasta file
+            else:
+                if len(seq_record.seq) > 1000000 and control_num < 20:
+                    if np.random.rand() < 0.1 :
+                        control_num += 1
+                        SeqIO.write(seq_record, output_handle, "fasta")
+                        print (seq_record.id, file = f)
     os.system(f"samtools faidx {extracted_ref}")
+    f.close()
+
+    ## index the fasta file
+    
 
 
 contig_dict = load_contigs()
 whole_ref = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
-extracted_ref = "/home/shuaiw/borg/all_borgs2/all_borgs2.fa"
+extracted_ref = "/home/shuaiw/borg/all_borg3/all_borg3.fa"
 extract_contigs(whole_ref, contig_dict, extracted_ref)
 
 
