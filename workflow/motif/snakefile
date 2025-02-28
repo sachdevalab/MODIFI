@@ -21,7 +21,7 @@ for sub in sub_dirs:
 def get_samples():
     bam_files = glob.glob(os.path.join(work_dir, "gffs", "*.gff"))
     samples = list(set(f.split("/")[-1].replace(".gff", "") for f in bam_files))
-    print (len(samples), "samples")
+    print (f"there are {len(samples)} samples to idnetify motif...")
     return samples
 
 rule all:

@@ -21,7 +21,7 @@ for sub in sub_dirs:
 def get_samples():
     bam_files = glob.glob(os.path.join(work_dir, "bams", "*.bam"))
     samples = list(set(f.split("/")[-1].replace(".bam", "") for f in bam_files))
-    print (len(samples), "samples")
+    print (f"there are {len(samples)} samples to compare IPD ratio...")
     return samples
 
 rule all:
