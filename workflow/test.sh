@@ -53,3 +53,15 @@ whole_ref=/home/shuaiw/borg/hg38/GCF_000001405.40_GRCh38.p14_genomic.fasta\
  whole_ref=/home/shuaiw/methylation/data/borg/all_borg/all_borg.fasta\
   work_dir=/home/shuaiw/methylation/data/borg/bench/ccs_borg\
   read_type=ccs
+
+    snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/all_borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam\
+ whole_ref=/home/shuaiw/methylation/data/borg/all_borg/all_borg.fasta\
+  work_dir=/home/shuaiw/methylation/data/borg/bench/ccs_borg\
+  read_type=ccs
+
+  sbatch --partition standard --wrap "/usr/bin/time -v -o all.time snakemake \
+--config whole_bam=/home/shuaiw/methylation/data/borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa\
+ work_dir=/home/shuaiw/methylation/data/borg/all_test_ccs\ 
+   read_type=ccs"\
+  --job-name=all_ccs

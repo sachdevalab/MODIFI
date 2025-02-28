@@ -59,7 +59,7 @@ rule profiling:
 
 rule merge_profiles:
     input:
-        done=os.path.join(work_dir, "profiles", "profile.done")
+        done=os.path.join(work_dir, "profiles", "profile.done"),
         prof=os.path.join(work_dir, "profiles")
     output:
         heatmap=os.path.join(work_dir, "motif_heatmap.pdf"),
