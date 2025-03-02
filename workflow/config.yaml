@@ -13,3 +13,4 @@ whole_ref : "/home/shuaiw/methylation/data/borg/contigs/large.contigs.fa"
 work_dir : "/home/shuaiw/methylation/data/borg/new_test5"
 maxAlignments : 100000 
 read_type: "subreads"
+max_NM: 3

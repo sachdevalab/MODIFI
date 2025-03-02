@@ -10,6 +10,7 @@ whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
 maxAlignments = config.get("maxAlignments", 10000)  # Default value if not set in config
 read_type = config.get("read_type", "subreads")  # Default value if not set in config
+max_NM = config.get("max_NM", 3)  # Default value if not set in config
 
 
 
@@ -42,5 +43,5 @@ rule load_ipd:
     shell:
         """
         python /home/shuaiw/Methy/standard_load7.py --bam {input.bam} \
-        --ref {input.ref} -o {output} --maxAlignments {params.maxAlignments} --read_type {read_type}
+        --ref {input.ref} -o {output} --maxAlignments {params.maxAlignments} --read_type {read_type} --max_NM {max_NM}
         """

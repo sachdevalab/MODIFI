@@ -430,7 +430,8 @@ if __name__ == "__main__":
     required.add_argument("--bam", type=str, help="<str> aligned bam file", metavar="\b")
     required.add_argument("--ref", type=str, help="<str> reference.", metavar="\b")
     required.add_argument("-o", type=str, help="<str> output file of raw IPD values.", metavar="\b")
-    required.add_argument("--maxAlignments", type=int, help="<str> maxAlignments.", default=10000, metavar="\b")
+    required.add_argument("--maxAlignments", type=int, help="<int> maxAlignments.", default=10000, metavar="\b")
+    required.add_argument("--max_NM", type=int, help="<int> Max mismatch number in CCS reads.", default=3, metavar="\b")
     required.add_argument("--read_type", type=str, help="<str> ccs or subreads.",default='subreads', metavar="\b")
     optional.add_argument("-h", "--help", action="help")
     args = vars(parser.parse_args())
@@ -440,6 +441,14 @@ if __name__ == "__main__":
     outputfile = args["o"]
     maxAlignments = args["maxAlignments"]
     read_type = args["read_type"].lower()
+    MAX_NM = args["max_NM"]
+
+    print ("subread_bam", subread_bam)
+    print ("fasta", fasta)
+    print ("outputfile", outputfile)
+    print ("maxAlignments", maxAlignments)
+    print ("read_type", read_type)
+    print ("MAX_NM", MAX_NM)
 
     # subread_bam = sys.argv[1]
     # fasta = sys.argv[2]

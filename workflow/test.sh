@@ -49,10 +49,10 @@ whole_ref=/home/shuaiw/borg/hg38/GCF_000001405.40_GRCh38.p14_genomic.fasta\
   work_dir=/home/shuaiw/methylation/data/borg/new_test10
 
 
-  snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/all_borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam\
+   sbatch --partition standard --wrap "/usr/bin/time -v -o borg.time snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/all_borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam\
  whole_ref=/home/shuaiw/methylation/data/borg/all_borg/all_borg.fasta\
-  work_dir=/home/shuaiw/methylation/data/borg/bench/ccs_borg \
-  read_type=ccs
+  work_dir=/home/shuaiw/methylation/data/borg/bench/ccs_borg2 \
+  read_type=ccs max_NM=100" --job-name=borg
 
 
   sbatch --partition standard --wrap "/usr/bin/time -v -o all_ccs.time snakemake --rerun-incomplete \

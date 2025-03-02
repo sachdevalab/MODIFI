@@ -10,6 +10,7 @@ whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
 maxAlignments = config.get("maxAlignments", 10000)  # Default value if not set in config
 read_type = config.get("read_type", "subreads")  # Default value if not set in config
+max_NM = config.get("max_NM", 3)  # Default value if not set in config
 
 print (whole_bam)
 print (whole_ref)
@@ -46,12 +47,13 @@ rule load:
         os.path.join(work_dir, "load_done.txt")
     params:
         maxAlignments=maxAlignments,
-        read_type=read_type
+        read_type=read_type,
+        max_NM=max_NM
     shell:
         """
         cd load 
         /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}\
-        maxAlignments={params.maxAlignments} read_type={params.read_type}
+        maxAlignments={params.maxAlignments} read_type={params.read_type} max_NM={params.max_NM}
         cd ..
         """
 
