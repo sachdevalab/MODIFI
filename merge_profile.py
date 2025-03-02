@@ -37,15 +37,14 @@ def load_contigs():
     return contig_dict
 
 def merge_profile(profile_list):
-    
     ## initialize the profiles as df
     profiles = []
     samples = []
-    # for file in os.listdir(profile_dir):
-    for file in profile_list:
+    for file in os.listdir(profile_list):
+    # for file in profile_list:
         if file.endswith(".csv"):
-            # profile = pd.read_csv(os.path.join(profile_dir, file), sep = ",")
-            profile = pd.read_csv(os.path.join(file), sep = ",")
+            profile = pd.read_csv(os.path.join(profile_list, file), sep = ",")
+            # profile = pd.read_csv(os.path.join(file), sep = ",")
             ## extract the sample name
             match = re.search(r'(.*?).motifs.profile.csv', file)
             if not match:
@@ -116,7 +115,8 @@ if __name__ == "__main__":
     usage="%(prog)s -h", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     required = parser.add_argument_group("required arguments")
     optional = parser.add_argument_group("optional arguments")
-    required.add_argument("--all_profiles", type=str, help="<str> separate by space", nargs="+", metavar="\b")
+    required.add_argument("--all_profiles", type=str, help="<str> separate by space", metavar="\b")
+    # required.add_argument("--all_profiles", type=str, help="<str> separate by space", nargs="+", metavar="\b")
     required.add_argument("--heatmap", type=str, help="<str> heatmap file.", metavar="\b")
     required.add_argument("--summary", type=str, help="<str> output motif summary.", metavar="\b")
     optional.add_argument("-h", "--help", action="help")
