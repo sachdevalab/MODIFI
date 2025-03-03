@@ -69,6 +69,6 @@ sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
   sbatch  --partition standard --wrap "snakemake --config \
  whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.align.bam \
  whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged.fa \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo \
-  read_type=ccs"\
-   --job-name=zymo
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo2 \
+  read_type=ccs min_len=5000"\
+   --job-name=zymo2

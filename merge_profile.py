@@ -11,6 +11,13 @@ from sklearn.cluster import DBSCAN
 import sys
 import argparse
 
+# sys.setrecursionlimit(20000)
+
+try:
+    import fastcluster
+except ImportError:
+    print("fastcluster not installed. Using scipy for clustering.")
+
 def load_contigs():
     host_file = '/home/shuaiw/Methy/borg_test/borg.csv'
     ## read the contig name in a dict
@@ -88,7 +95,9 @@ def heatmap(df, heat_map):
         plt.figure()
         plt.savefig(heat_map)
     else:
-        sns.clustermap(df, method='average', metric='euclidean', cmap='viridis')
+        ## randomly select 1000 elements from df
+        # df =  df.sample(frac=0.0001)
+        sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(20, 15))
         plt.savefig(heat_map)
         plt.clf()
 
@@ -143,3 +152,6 @@ if __name__ == "__main__":
     # profiles = pd.read_csv("tmp/profiles.csv", index_col=0)
     heatmap(profiles, heat_map)
     # TSE(profiles)
+
+
+# python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/all_test_ccs/profiles         --heatmap  /home/shuaiw/methylation/data/borg/all_test_ccs/motif_heatmap.pdf         --summary /home/shuaiw/methylation/data/borg/all_test_ccs/motif_profile.csv

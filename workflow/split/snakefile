@@ -8,6 +8,7 @@ configfile: "../config.yaml"
 whole_bam = config["whole_bam"]
 whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
+min_contig_len = config["min_len"]
 
 # Create required directories dynamically
 sub_dirs=[".", "ipd", "control", "bams", "contigs"]
@@ -21,10 +22,15 @@ rule split_bam:
         work_dir = f"{work_dir}"
     output:
         # touch(os.path.join(work_dir, "split_bam_done.txt"))
+    threads: 100
+    params:
+        min_len=min_contig_len
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/split_bam.py --bam {input.whole_bam} --whole_ref {input.whole_ref} --work_dir {input.work_dir} --threads 100
+        python /home/shuaiw/Methy/split_bam.py --bam {input.whole_bam} \
+        --whole_ref {input.whole_ref} --work_dir {input.work_dir} --threads {threads} \
+        --min_len {params.min_len}
         # touch {output}
         """
 

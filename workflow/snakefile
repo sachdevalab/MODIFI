@@ -11,6 +11,7 @@ work_dir = config["work_dir"]
 maxAlignments = config.get("maxAlignments", 10000)  # Default value if not set in config
 read_type = config.get("read_type", "subreads")  # Default value if not set in config
 max_NM = config.get("max_NM", 3)  # Default value if not set in config
+min_contig_len = config["min_len"]
 
 print (whole_bam)
 print (whole_ref)
@@ -33,10 +34,13 @@ rule split:
     output:
         # touch(os.path.join(work_dir, "split_done.txt"))
         os.path.join(work_dir, "split_done.txt")
+    params:
+        min_len=min_contig_len
     shell:
         """
         cd split 
-        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} \ 
+        whole_ref={whole_ref} work_dir={work_dir} min_len={params.min_len}
         cd ..
         """
 
