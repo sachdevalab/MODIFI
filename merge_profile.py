@@ -116,16 +116,29 @@ def TSE(df, cluster_fig):
     ## zero values are set to small random pseudovalues in the (−0.2, +0.2)
     mask = matrix == 0
     matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
+    print (matrix)
 
 
     ## reduce dimention using t-SNE
     X_embedded = TSNE(n_components=2).fit_transform(matrix)
     
-    clustering = DBSCAN(eps=0.5, min_samples=2).fit(X_embedded)
+    clustering = DBSCAN(eps=0.3, min_samples=2).fit(X_embedded)
     # print (clustering.labels_)
     # calculate how many clusters
     n_clusters = len(set(clustering.labels_))
     print (n_clusters, "clusters detected.")
+
+    ## output the cluster result, the elements with same cluster label are output together
+    data = []
+    for i in range(n_clusters):
+        # print ("cluster", i)
+        for j in range(len(clustering.labels_)):
+            if clustering.labels_[j] == i:
+                # print (df.columns[j])
+                data.append([df.columns[j], i])
+    ## save the cluster result
+    cluster_result = pd.DataFrame(data, columns = ['motif', 'cluster'])
+    cluster_result.to_csv(cluster_fig.replace(".pdf", ".csv"), index=False)
     ## define fig size
     plt.figure(figsize=(10, 10))
     ## plot the cluster result using seaborn
