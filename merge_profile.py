@@ -10,6 +10,8 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import DBSCAN
 import sys
 import argparse
+from adjustText import adjust_text
+import numpy as np
 
 # sys.setrecursionlimit(20000)
 
@@ -95,28 +97,53 @@ def heatmap(df, heat_map):
         plt.figure()
         plt.savefig(heat_map)
     else:
-        ## randomly select 1000 elements from df
-        # df =  df.sample(frac=0.0001)
-        sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(20, 15))
-        plt.savefig(heat_map)
-        plt.clf()
+        try:
+            sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(20, 15))
+            plt.savefig(heat_map)
+            plt.clf()
+        except Exception as e:
+            print(f"Failed to create heatmap: {e}")
+            plt.figure()
+            plt.text(0.5, 0.5, 'Failed to create heatmap', horizontalalignment='center', verticalalignment='center')
+            plt.savefig(heat_map)
+            plt.clf()
 
-def TSE(df):
+def TSE(df, cluster_fig):
     matrix = df.to_numpy()
-    print (matrix.shape)
+    ## Trabspose the matrix
+    matrix = matrix.T
+
+    ## zero values are set to small random pseudovalues in the (−0.2, +0.2)
+    mask = matrix == 0
+    matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
+
+
     ## reduce dimention using t-SNE
-    
     X_embedded = TSNE(n_components=2).fit_transform(matrix)
     
     clustering = DBSCAN(eps=0.5, min_samples=2).fit(X_embedded)
     # print (clustering.labels_)
+    # calculate how many clusters
+    n_clusters = len(set(clustering.labels_))
+    print (n_clusters, "clusters detected.")
     ## define fig size
     plt.figure(figsize=(10, 10))
     ## plot the cluster result using seaborn
-    sns.scatterplot(x=X_embedded[:, 0], y=X_embedded[:, 1], hue=clustering.labels_)
-    # plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c = clustering.labels_)
-    ## save the figure in pdf
-    plt.savefig("tmp/tse.pdf")
+    scatter_plot = sns.scatterplot(x=X_embedded[:, 0], y=X_embedded[:, 1], hue=clustering.labels_, palette="viridis")
+
+    # ## add labels to each point
+    # for i, label in enumerate(df.columns):
+    #     scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=9)
+    ## add labels to each point
+    texts = []
+    for i, label in enumerate(df.columns):
+        texts.append(scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=7))
+    
+
+    
+    ## adjust text to avoid overlap
+    adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
+    plt.savefig(cluster_fig)
 
 if __name__ == "__main__":
 
@@ -139,6 +166,7 @@ if __name__ == "__main__":
     profile_list = args['all_profiles']
     heat_map = args['heatmap']
     total_profile = args['summary']
+    cluster_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_cluster.pdf"
     # print (profile_dir)
     # profile_dir = "/home/shuaiw/borg/all_test/profiles"
     # heat_map = f"{profile_dir}/../motif_heatmap.pdf"
@@ -151,7 +179,10 @@ if __name__ == "__main__":
     # load the profile from the saved file
     # profiles = pd.read_csv("tmp/profiles.csv", index_col=0)
     heatmap(profiles, heat_map)
-    # TSE(profiles)
+    TSE(profiles, cluster_fig)
 
 
 # python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/all_test_ccs/profiles         --heatmap  /home/shuaiw/methylation/data/borg/all_test_ccs/motif_heatmap.pdf         --summary /home/shuaiw/methylation/data/borg/all_test_ccs/motif_profile.csv
+
+# python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/bench/zymo2/profiles --heatmap  /home/shuaiw/methylation/data/borg/bench/zymo2/motif_heatmap2.pdf  --summary /home/shuaiw/methylation/data/borg/bench/zymo2/motif_profile2.csv
+#                                     
