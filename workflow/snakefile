@@ -35,11 +35,12 @@ rule split:
         # touch(os.path.join(work_dir, "split_done.txt"))
         os.path.join(work_dir, "split_done.txt")
     params:
-        min_len=min_contig_len
+        min_len=min_contig_len,
+        max_NM=max_NM
     shell:
         """
         cd split 
-        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_len={params.min_len}
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_len={params.min_len} max_NM={params.max_NM}
         cd ..
         """
 

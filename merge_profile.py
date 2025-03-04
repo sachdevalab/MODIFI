@@ -114,10 +114,9 @@ def TSE(df, cluster_fig):
     matrix = matrix.T
 
     ## zero values are set to small random pseudovalues in the (−0.2, +0.2)
-    mask = matrix == 0
-    matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
-    print (matrix)
-
+    # mask = matrix == 0
+    # matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
+    # print (matrix)
 
     ## reduce dimention using t-SNE
     X_embedded = TSNE(n_components=2).fit_transform(matrix)
@@ -143,19 +142,16 @@ def TSE(df, cluster_fig):
     plt.figure(figsize=(10, 10))
     ## plot the cluster result using seaborn
     scatter_plot = sns.scatterplot(x=X_embedded[:, 0], y=X_embedded[:, 1], hue=clustering.labels_, palette="viridis")
-
-    # ## add labels to each point
-    # for i, label in enumerate(df.columns):
-    #     scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=9)
-    ## add labels to each point
-    texts = []
-    for i, label in enumerate(df.columns):
-        texts.append(scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=7))
-    
-
     
     ## adjust text to avoid overlap
-    adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
+    ## if df column number is too large, the adjust_text function may not work well, skip it
+    if len(df.columns) < 100:
+        texts = []
+        for i, label in enumerate(df.columns):
+            texts.append(scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=7))
+        adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
+
+
     plt.savefig(cluster_fig)
 
 if __name__ == "__main__":
@@ -192,7 +188,10 @@ if __name__ == "__main__":
     # load the profile from the saved file
     # profiles = pd.read_csv("tmp/profiles.csv", index_col=0)
     heatmap(profiles, heat_map)
-    TSE(profiles, cluster_fig)
+    if len(profiles) > 0:
+        TSE(profiles, cluster_fig)
+    else:
+        print ("no motif identified")
 
 
 # python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/all_test_ccs/profiles         --heatmap  /home/shuaiw/methylation/data/borg/all_test_ccs/motif_heatmap.pdf         --summary /home/shuaiw/methylation/data/borg/all_test_ccs/motif_profile.csv

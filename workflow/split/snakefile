@@ -9,6 +9,7 @@ whole_bam = config["whole_bam"]
 whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
 min_contig_len = config["min_len"]
+max_NM=config["max_NM"]
 
 # Create required directories dynamically
 sub_dirs=[".", "ipd", "control", "bams", "contigs"]
@@ -24,13 +25,14 @@ rule split_bam:
         # touch(os.path.join(work_dir, "split_bam_done.txt"))
     threads: 100
     params:
-        min_len=min_contig_len
+        min_len=min_contig_len,
+        max_NM=max_NM
     shell:
         """
         set -euo pipefail
         python /home/shuaiw/Methy/split_bam.py --bam {input.whole_bam} \
         --whole_ref {input.whole_ref} --work_dir {input.work_dir} --threads {threads} \
-        --min_len {params.min_len}
+        --min_len {params.min_len} --max_NM {params.max_NM}
         # touch {output}
         """
 

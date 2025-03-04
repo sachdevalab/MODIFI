@@ -11,7 +11,7 @@ import numpy as np
 
 pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
 
-def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000):
+def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3):
     # Ensure the output directory exists
     os.makedirs(split_bam_dir, exist_ok=True)
     bam_dir = split_bam_dir + "/bams/"
@@ -28,7 +28,7 @@ def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000):
             continue
         contig_bam = bam_dir + contig + ".bam"
         ref = contig_dir + contig + ".fa"
-        args.append((contig, ref, contig_bam, bam, whole_ref))
+        args.append((contig, ref, contig_bam, bam, whole_ref, max_NM))
         i += 1
     # samfile.close()
 
@@ -63,7 +63,7 @@ def calculate_identity(read):
     identity = match_bases / aligned_bases if aligned_bases > 0 else 0
     return identity
 
-def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, identity_cutoff = 0.8, len_cutoff=1000, q=20, max_depth=500):
+def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, max_NM, identity_cutoff = 0.8, len_cutoff=1000, q=20, max_depth=500):
     print (f"Processing {contig} {ref}")
     os.system(f"samtools faidx {whole_ref} {contig} > {ref}")
     os.system(f"samtools faidx {ref}")
@@ -120,6 +120,8 @@ def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, identity_cutoff = 0.
         if not read.has_tag('NM'):
             print (f"Read {read.query_name} has no NM tag")
             continue
+        if read.get_tag("NM") > max_NM:
+            continue
         # nm = read.get_tag('NM')
         # match_num = map_len - nm
         # identity = match_num / (map_len - long_gap)
@@ -144,10 +146,11 @@ def main():
     parser.add_argument("--work_dir", help="Directory to save split BAM files")
     parser.add_argument("--threads", type=int, default=1, help="Number of threads to use (default: 1)")
     parser.add_argument("--min_len", type=int, default=50000, help="Minimum length of reads to include (default: 1000)")
+    parser.add_argument("--max_NM", type=int, help="<int> Max mismatch number in CCS reads.", default=3, metavar="\b")
 
     args = parser.parse_args()
 
-    split_bam(args.bam, args.work_dir, args.whole_ref, args.threads, args.min_len)
+    split_bam(args.bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
 
 
 if __name__ == "__main__":
