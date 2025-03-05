@@ -14,7 +14,7 @@ read_type = config.get("read_type", "subreads")  # Default value if not set in c
 min_contig_len = config.get("min_len", 50000)  # Default value if not set in config
 
 if not config.get("max_NM"):
-    if config["read_type"] == "hifi":
+    if config["read_type"] == "hifi" or config["read_type"] == "ccs":
         config["max_NM"] = 3
     elif config["read_type"] == "subreads":
         config["max_NM"] = 1000
@@ -22,7 +22,7 @@ if not config.get("max_NM"):
         # Either provide a default or raise an error
         # if config["x"] is something unexpected.
         ## report errot
-        raise ValueError("Unknown value for x: {}".format(config["read_type"]))
+        raise ValueError("Unknown value for read_type: {}".format(config["read_type"]))
 
 max_NM = config.get("max_NM")
 
