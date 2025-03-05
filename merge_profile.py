@@ -118,8 +118,12 @@ def TSE(df, cluster_fig):
     # matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
     # print (matrix)
 
-    ## reduce dimention using t-SNE
-    X_embedded = TSNE(n_components=2).fit_transform(matrix)
+    try:
+        ## reduce dimention using t-SNE
+        X_embedded = TSNE(n_components=2).fit_transform(matrix)
+    except Exception as e:
+        print(f"Failed to create t-SNE: {e}")
+        return
     
     clustering = DBSCAN(eps=0.3, min_samples=2).fit(X_embedded)
     # print (clustering.labels_)
