@@ -60,3 +60,10 @@ whole_ref=/home/shuaiw/borg/hg38/GCF_000001405.40_GRCh38.p14_genomic.fasta\
 whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
  work_dir=/home/shuaiw/methylation/data/borg/all_test_ccs read_type=ccs "\
   --job-name=all_ccs
+
+
+  sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --enable-score-calibration \
+  --threads 64 --sensitivity 7.0 --force-auto \
+  /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+  /home/shuaiw/methylation/data/borg/bench/genomad/ \
+  /groups/diamond/databases/genomad/v1.7/" --job-name=genomad
