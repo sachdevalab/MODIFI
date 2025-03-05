@@ -72,3 +72,8 @@ sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
   work_dir=/home/shuaiw/methylation/data/borg/bench/zymo3 \
   read_type=ccs min_len=5000 max_NM=3"\
    --job-name=zymo2
+
+
+   sbatch  --partition standard --wrap " /home/shuaiw/bin/bin/jasmine -j 64 /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.align.bam \
+   /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.align.jasmine.bam"\
+   --job-name=jasmine

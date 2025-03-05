@@ -19,18 +19,18 @@ output_bam = "/home/shuaiw/methylation/data/borg/all_borg/XRSBK_20221007_S64018_
 input_bam = "/home/shuaiw/methylation/data/borg/break_contigs2/XRSBK_20221007_S64018_PL100268287-1_C01.align.ccs.bam"
 aln = AlignmentSet(input_bam)
 # Define the int32 maximum value
-INT32_MAX = np.iinfo(np.int32).max  # 2147483647
+# INT32_MAX = np.iinfo(np.int32).max  # 2147483647
 
-# # Open BAM file for reading and writing
-i = 0
-with pysam.AlignmentFile(input_bam, "rb") as bam_in:
-    header = bam_in.header.to_dict()
-    # Remove RG entries with the specified IDs
-    ## replace the RG with the specified ID
+# # # Open BAM file for reading and writing
+# i = 0
+# with pysam.AlignmentFile(input_bam, "rb") as bam_in:
+#     header = bam_in.header.to_dict()
+#     # Remove RG entries with the specified IDs
+#     ## replace the RG with the specified ID
 
-    for rg in header['RG']:
-        print (rg.get('ID'))
-    print (header['RG'])
+#     for rg in header['RG']:
+#         print (rg.get('ID'))
+#     print (header['RG'])
 
 # with pysam.AlignmentFile(input_bam, "rb") as bam_in, \
 #      pysam.AlignmentFile(output_bam, "wb", header=header) as bam_out:
