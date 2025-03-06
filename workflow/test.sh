@@ -69,6 +69,12 @@ whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_
   /groups/diamond/databases/genomad/v1.7/" --job-name=genomad
 
 
+   sbatch --partition standard --wrap "MicrobeMod annotate_rm \
+   -f /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+    -o /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_RM -t 64" \
+   --job-name=MicrobeMod
+
+
 
     sbatch --partition standard --wrap "/usr/bin/time -v -o all_break.time snakemake \
 --config whole_bam=/home/shuaiw/borg/all_break/all_break.align.ccs.bam \
