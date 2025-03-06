@@ -35,6 +35,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
             # for i in range(site, site + motif_len):
             #     motif_sites[r + ":" + str(i) + "+"] = motif_new
             tag = r + ":" + str(site+exact_pos) + "+"
+            print (tag)
             motif_loci_num += 1
             for_loci_num += 1
             if tag in modified_loci:
@@ -115,7 +116,7 @@ def get_modified_ratio(gff):
 
 def read_ipd_ratio():
     ipd_ratio_dict = {}
-    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/zymo2/ipd_ratio/E_coli_K12-MG1655_1.ipd3.csv", nrows = 1000000)
+    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/zymo2/ipd_ratio/E_coli_K12-MG1655_1.ipd3.csv", nrows = 1000)
     for index, row in df.iterrows():
         # print (row['refName'], row['tpl'], row['strand'], row['coverage'], row['ipd_ratio'])
         if row['strand'] == 1:
@@ -160,10 +161,10 @@ if __name__ == "__main__":
     # for index, motif in motifs.iterrows():
         # motif_new = motif["motifString"]
         # exact_pos = motif["centerPos"]
-    motif_new = "AACNNNNNNGTGC"
-    exact_pos = 2
-    # motif_new = "CCWGG"
+    # motif_new = "AACNNNNNNGTGC"
     # exact_pos = 2
+    motif_new = "CCWGG"
+    exact_pos = 2
     # motif_new = "GATC"
     # exact_pos = 2
     motif_profile = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
