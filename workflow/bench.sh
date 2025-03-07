@@ -8,7 +8,6 @@ sbatch --partition standard --wrap "snakemake  \
 --config whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/align/Chromohalobacter_salexigens_DSM-3043__250_bp_library__native_DNA_.align.bam \
  whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/bam/GCA_000055785.1_ASM5578v1_genomic.fa \
   work_dir=/home/shuaiw/methylation/data/borg/bench/chr_native" --job-name=chr_native
-sbatch --partition standard --wrap "snakemake --config whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/align/merge.align.bam whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/bam/merge.fa work_dir=/home/shuaiw/methylation/data/borg/bench/merge" --job-name=merge
 
 
 sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
@@ -82,3 +81,9 @@ sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
     --bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.align.jasmine.bam \
      --output-prefix /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746_cpgtools --threads 64"\
    --job-name=cpgtools
+
+
+   sbatch --partition standard --wrap "snakemake \
+--config whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/align/merge.align.bam \
+whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/three_species.fa \
+work_dir=/home/shuaiw/methylation/data/borg/bench/merge2" --job-name=merge
