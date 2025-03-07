@@ -17,6 +17,7 @@
 #include <queue>
 #include <algorithm>
 #include <list>
+#include <getopt.h>
 
 using namespace std;
 
@@ -527,26 +528,108 @@ void calculate_mean(){
     }
 }
 
+void store_kmer_mean(string kmer_mean_file, string kmer_num_file){
+    ofstream index_file;
+    index_file.open(kmer_mean_file, ios::out | ios::binary);
+    index_file.write((char*)&array_size, sizeof(long));
+    index_file.write((char*)kmer_mean_table, sizeof(float)*array_size);
+    index_file.close();
+    // also store kmer_num_table
+    ofstream num_file;
+    num_file.open(kmer_num_file, ios::out | ios::binary);
+    num_file.write((char*)&array_size, sizeof(long));
+    num_file.write((char*)kmer_num_table, sizeof(unsigned int)*array_size);
+    num_file.close();
+
+}
+
+void load_kmer_mean(string kmer_mean_file, string kmer_num_file){
+    // first check if the file exists
+    struct stat buffer;
+    if (stat (kmer_mean_file.c_str(), &buffer) != 0){
+        cout << "kmer_mean_file does not exist." << endl;
+        return;
+    }
+
+    ifstream index_file;
+    index_file.open(kmer_mean_file, ios::in | ios::binary);
+    if (index_file.is_open()){
+        index_file.read((char*)&array_size, sizeof(long));
+        index_file.read((char*)kmer_mean_table, sizeof(float)*array_size);
+        index_file.close();
+    }
+    ifstream num_file;
+    num_file.open(kmer_num_file, ios::in | ios::binary);
+    if (num_file.is_open()){
+        num_file.read((char*)&array_size, sizeof(long));
+        num_file.read((char*)kmer_num_table, sizeof(unsigned int)*array_size);
+        num_file.close();
+    }
+    cout << "kmer_mean_table and kmer_num_table are loaded." << endl;
+}
 
 int main(int argc, char *argv[]){
-    string ipd_dir = argv[1];
-    string control_dir = argv[2];
-    string fasta_list = argv[3];
-    int thread_num = stod(argv[4]);
+    // string ipd_dir = argv[1];
+    // string control_dir = argv[2];
+    // string fasta_list = argv[3];
+    // int thread_num = stod(argv[4]);
 
     // string ipd_dir = "/home/shuaiw/borg/bench/break/ipd";
     // string control_dir = "/home/shuaiw/borg/bench/break/test/";
     // string fasta_list = "/home/shuaiw/borg/bench/break/contigs_list.txt";
     // int thread_num = 10;  
 
+    // Default values
+    string ipd_dir;
+    string control_dir;
+    string fasta_list;
+    int thread_num = 4;
+    string given_kmer_mean_file;
+    string given_kmer_num_file;
+
+    // Parse command-line arguments
+    for (int i = 1; i < argc; i++) {
+        string arg = argv[i];
+        if (arg == "--ipd_dir" && i + 1 < argc) {
+            ipd_dir = argv[++i];
+        } else if (arg == "--control_dir" && i + 1 < argc) {
+            control_dir = argv[++i];
+        } else if (arg == "--fasta_list" && i + 1 < argc) {
+            fasta_list = argv[++i];
+        } else if (arg == "--thread_num" && i + 1 < argc) {
+            thread_num = stoi(argv[++i]);
+        } else if (arg == "--up" && i + 1 < argc) {
+            up = stoi(argv[++i]);
+        } else if (arg == "--down" && i + 1 < argc) {
+            down = stoi(argv[++i]);
+        } else if (arg == "--kmer_mean_file" && i + 1 < argc) {
+            given_kmer_mean_file = argv[++i];
+        } else if (arg == "--kmer_num_file" && i + 1 < argc) {
+            given_kmer_num_file = argv[++i];
+        }else {
+            cerr << "Unknown or incomplete argument: " << arg << endl;
+            return 1;
+        }
+    }
+
+    if (ipd_dir.empty() || control_dir.empty() || fasta_list.empty() || thread_num <= 0) {
+        cerr << "Usage: " << argv[0] << " --ipd_dir <dir> --control_dir <dir> --fasta_list <file> --thread_num <num>" << endl;
+        return 1;
+    }
+
+
     int k = up + down;
-    
+    int start_g = 0;
+    int end_g = 0;
+    std::vector<std::thread>threads;
+
     array_size = pow(4, k);
 
     kmer_ipd_sum = new long double[array_size];
     kmer_num_table = new unsigned int[array_size];
     memset(kmer_ipd_sum, 0, sizeof(long double)*array_size);
     memset(kmer_num_table, 0, sizeof(unsigned int)*array_size);
+    kmer_mean_table = new float[array_size];
 
     Encode encoder;
     encoder.constructer(k);
@@ -557,27 +640,35 @@ int main(int argc, char *argv[]){
         cout << "no. of used threads "<< thread_num << endl;
     }
 
-    cout << "start run each genome and count kmers..." << endl;
-    int start_g = 0;
-    int end_g = 0;
-    std::vector<std::thread>threads;
-    for (int i=0; i<thread_num; i++){
-        start_g = i*genome_count.each_thread_g_num;
-        end_g = (i+1)*genome_count.each_thread_g_num;
-        if (i == thread_num - 1){
-            end_g = genome_count.genome_num+1;
-        }
-        cout << "Thread " << i << "\t" << start_g <<"\t" << end_g << endl;
-        threads.push_back(thread(parallele_each_genome, fasta_list, encoder, start_g, end_g, ipd_dir));
+    // if given_kmer_mean_file and given_kmer_num_file are not empty, load them
+    if (!given_kmer_mean_file.empty() && !given_kmer_num_file.empty()){
+        cout << "Find control IPD db, load them..." << endl;
+        cout << "Please ensure kmer (dp, down) are the same for --up --down and db." << endl;
+        load_kmer_mean(given_kmer_mean_file, given_kmer_num_file);
     }
-	for (auto&th : threads)
-		th.join();
-    threads.clear();
-    
-    // slide_kmer(fasta_file, encoder, raw_ipd);
+    else{
 
-    kmer_mean_table = new float[array_size];
-    calculate_mean();
+        // load kmer_mean_table and kmer_num_table
+        string kmer_mean_file = control_dir + "/control_db.up" + to_string(up) + ".down" + to_string(down) + ".mean.dat";
+        string kmer_num_file = control_dir + "/control_db.up" + to_string(up) + ".down" + to_string(down) + ".num.dat";
+        // load_kmer_mean(kmer_mean_file, kmer_num_file);
+        cout << "start run each genome and count kmers..." << endl;
+        for (int i=0; i<thread_num; i++){
+            start_g = i*genome_count.each_thread_g_num;
+            end_g = (i+1)*genome_count.each_thread_g_num;
+            if (i == thread_num - 1){
+                end_g = genome_count.genome_num+1;
+            }
+            cout << "Thread " << i << "\t" << start_g <<"\t" << end_g << endl;
+            threads.push_back(thread(parallele_each_genome, fasta_list, encoder, start_g, end_g, ipd_dir));
+        }
+        for (auto&th : threads)
+            th.join();
+        threads.clear();
+        calculate_mean();
+        // store_kmer_mean("/home/shuaiw/borg/test/mean.dat", "/home/shuaiw/borg/test/num.dat");
+        store_kmer_mean(kmer_mean_file, kmer_num_file);
+    }
 
     start_g = 0;
     end_g = 0;
@@ -593,6 +684,11 @@ int main(int argc, char *argv[]){
 	for (auto&th : threads)
 		th.join();
     threads.clear();
-
+    cout << "All done for control IPD inference." << endl;
     return 0;
 }
+
+
+// ./test /home/shuaiw/borg/new_test11/ipd /home/shuaiw/borg/new_test11/control/ /home/shuaiw/borg/new_test11/contigs_list.txt 2
+// ./test --ipd_dir /home/shuaiw/borg/new_test11/ipd --control_dir /home
+// /shuaiw/borg/new_test11/control/ --fasta_list /home/shuaiw/borg/new_test11/contigs_list.txt --thread_num 2

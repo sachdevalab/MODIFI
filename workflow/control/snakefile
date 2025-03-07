@@ -30,6 +30,6 @@ rule control:
     shell:
         """
         find {input.ref_dir} -name "*.fa" > {work_dir}/contigs_list.txt
-        /home/shuaiw/Methy/src/test {input.ipd} {input.control_dir} {work_dir}/contigs_list.txt {threads}
-        # touch {output}
+        /home/shuaiw/Methy/src/test --ipd_dir {input.ipd} --control_dir {input.control_dir}\
+         --fasta_list {work_dir}/contigs_list.txt --thread_num {threads}
         """
