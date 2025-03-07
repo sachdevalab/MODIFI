@@ -12,6 +12,8 @@ maxAlignments = config.get("maxAlignments", 10000)  # Default value if not set i
 read_type = config.get("read_type", "subreads")  # Default value if not set in config
 # max_NM = config.get("max_NM", 3)  # Default value if not set in config
 min_contig_len = config.get("min_len", 50000)  # Default value if not set in config
+kmer_mean_db = config["kmer_mean_db"]
+kmer_num_db = config["kmer_num_db"]
 
 if not config.get("max_NM"):
     if config["read_type"] == "hifi" or config["read_type"] == "ccs":
@@ -82,7 +84,8 @@ rule control:
     shell:
         """
         cd control 
-        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam}\
+         whole_ref={whole_ref} work_dir={work_dir} kmer_mean_db={kmer_mean_db} kmer_num_db={kmer_num_db}
         cd ..
         """ 
 

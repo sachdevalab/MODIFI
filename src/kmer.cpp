@@ -639,15 +639,29 @@ int main(int argc, char *argv[]){
         thread_num = genome_count.genome_num;
         cout << "no. of used threads "<< thread_num << endl;
     }
-
-    // if given_kmer_mean_file and given_kmer_num_file are not empty, load them
-    if (!given_kmer_mean_file.empty() && !given_kmer_num_file.empty()){
-        cout << "Find control IPD db, load them..." << endl;
-        cout << "Please ensure kmer (dp, down) are the same for --up --down and db." << endl;
-        load_kmer_mean(given_kmer_mean_file, given_kmer_num_file);
+    bool accept_db = false;
+    // if given_kmer_mean_file and given_kmer_num_file are not empty and not none, load them
+    if (!given_kmer_mean_file.empty() && !given_kmer_num_file.empty() && given_kmer_mean_file != "None" && given_kmer_num_file != "None"){
+        // check if the file exists
+        struct stat buffer;
+        if (stat (given_kmer_mean_file.c_str(), &buffer) != 0){
+            cout << "kmer_mean_file does not exist." << endl;
+        }
+        else if (stat (given_kmer_num_file.c_str(), &buffer) != 0){
+            cout << "kmer_num_file does not exist." << endl;
+        }
+        else{
+            accept_db = true;
+        }
+        if (accept_db == true){
+            cout << "Find control IPD db, load them..." << endl;
+            cout << given_kmer_mean_file << endl;
+            cout << given_kmer_num_file << endl;
+            cout << "Please ensure kmer (dp, down) are the same for --up --down and db." << endl;
+            load_kmer_mean(given_kmer_mean_file, given_kmer_num_file);
+        }
     }
-    else{
-
+    if (accept_db == false){
         // load kmer_mean_table and kmer_num_table
         string kmer_mean_file = control_dir + "/control_db.up" + to_string(up) + ".down" + to_string(down) + ".mean.dat";
         string kmer_num_file = control_dir + "/control_db.up" + to_string(up) + ".down" + to_string(down) + ".num.dat";

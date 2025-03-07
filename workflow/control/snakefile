@@ -8,13 +8,13 @@ configfile: "../config.yaml"
 whole_bam = config["whole_bam"]
 whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
+kmer_mean_db = config["kmer_mean_db"]
+kmer_num_db = config["kmer_num_db"]
 
 # Create required directories dynamically
 sub_dirs=[".", "ipd", "control", "ipd_ratio", "bams", "contigs"]
 for sub in sub_dirs:
     os.makedirs(os.path.join(work_dir, sub), exist_ok=True)
-
-
 
 rule control:
     input:
@@ -31,5 +31,6 @@ rule control:
         """
         find {input.ref_dir} -name "*.fa" > {work_dir}/contigs_list.txt
         /home/shuaiw/Methy/src/test --ipd_dir {input.ipd} --control_dir {input.control_dir}\
-         --fasta_list {work_dir}/contigs_list.txt --thread_num {threads}
+         --fasta_list {work_dir}/contigs_list.txt --thread_num {threads} --kmer_mean_file {kmer_mean_db}\
+          --kmer_num_file {kmer_num_db}
         """
