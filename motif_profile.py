@@ -6,6 +6,7 @@ import pandas as pd
 from scipy.stats import pearsonr
 # import matplotlib.pyplot as plt
 import sys
+from collections import defaultdict
 
 
 def read_ref(ref):
@@ -38,6 +39,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
             if tag in modified_loci:
                 motif_modify_num += 1
                 for_modified_num += 1
+                modified_loci[tag].add(motif_new)
 
         for site in nt_search(str(contig), Seq(motif_new).reverse_complement())[
             1:
@@ -48,6 +50,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
             if tag in modified_loci:
                 motif_modify_num += 1
                 rev_modified_num += 1
+                modified_loci[tag].add(motif_new)
     # print ("for_loci_num", for_loci_num, for_modified_num, "forward modified ratio", for_modified_num/for_loci_num)
     # print ("rev_loci_num", rev_loci_num, rev_modified_num, "reverse modified ratio", rev_modified_num/rev_loci_num)
 
@@ -75,14 +78,13 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
 
     return [for_loci_num, for_modified_num,for_ratio,\
             rev_loci_num, rev_modified_num, rev_ratio,\
-            motif_loci_num, motif_modify_num, ratio, proportion_all_modified]
-
-
+            motif_loci_num, motif_modify_num, ratio, proportion_all_modified], modified_loci
 
 def get_modified_ratio(gff):
     ## read the gff file
     f = open(gff, "r")
     modified_loci = {}
+    all_modified_loci = {}
     for line in f:
         if line[0] == "#":
             continue
@@ -92,11 +94,72 @@ def get_modified_ratio(gff):
         pos = int(line[3]) 
         strand = line[6]
         score = int(line[5])
+        all_modified_loci[ref + ":" + str(pos) + strand] = set()
         if score <= score_cutoff:
             continue
         modified_loci[ref + ":" + str(pos) + strand] = score
     print ("no. of modified loci", len(modified_loci))
-    return modified_loci
+    return modified_loci, all_modified_loci
+
+def get_reprocess_gff(gff, all_modified_loci, anno):
+    reprocess_gff = gff[:-4] + ".reprocess.gff"
+    ## read the gff file
+    out = open(reprocess_gff, "w")
+    f = open(gff, "r")
+    i = 0
+    for line in f:
+        line= line.strip()
+        if line[0] == "#":
+            print (line, file=out)
+            continue
+        else:
+            if i == 0:
+                print (anno, file=out, end = "")
+        
+        field = line.split("\t")
+
+        ref = field[0]
+        pos = int(field[3]) 
+        strand = field[6]
+        score = int(field[5])
+        # if score <= score_cutoff:
+        #     continue
+        tag = ref + ":" + str(pos) + strand
+        
+        if tag in all_modified_loci and len(all_modified_loci[tag]) > 0:
+            motifs = ",".join(list(all_modified_loci[tag]))
+            print (line + ";motif=" + motifs, file=out)
+        else:
+            print (line, file=out)
+        i += 1
+    out.close()
+
+def count_motifs(modified_loci, all_modified_loci):
+    non_motif_loci = 0
+    motig_modified_loci = defaultdict(int)
+    for tag in modified_loci:
+        motifs = all_modified_loci[tag]
+        if len(motifs) == 0:
+            non_motif_loci += 1
+        else:
+            for motif in motifs:
+                motig_modified_loci[motif] += 1
+    if len(modified_loci) > 0:
+        non_motif_loci_ratio = non_motif_loci/len(modified_loci)
+    else:
+        non_motif_loci_ratio = 0
+    anno = ''
+    anno += f"##no. of modified loci: {len(all_modified_loci)}\n"
+    anno += f"##no. of filtered modified loci with score >{score_cutoff}: {len(modified_loci)} \n"
+    anno += f"##no. of filtered modified loci without motifs: {non_motif_loci} \n"
+    anno += f"##ratio of filtered modified loci without motifs: {non_motif_loci_ratio} \n"
+    for motif, num in motig_modified_loci.items():
+        if num > 50:
+            anno += f"##no. of modified loci with motif {motif}: {num} \n"
+    return anno
+
+
+
 
          
 if __name__ == "__main__":
@@ -118,18 +181,21 @@ if __name__ == "__main__":
 
     REF = read_ref(my_ref)
     # print (REF)
-    modified_loci = get_modified_ratio(gff)
+    modified_loci, all_modified_loci = get_modified_ratio(gff)
     motifs = pd.read_csv(all_motifs)
     data = []
     for index, motif in motifs.iterrows():
         motif_new = motif["motifString"]
         exact_pos = motif["centerPos"]
-        motif_profile = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
+        motif_profile, all_modified_loci = get_motif_sites(REF, motif_new, exact_pos, all_modified_loci)
         data.append([motif_new, exact_pos] + motif_profile)
 
     df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
                                         "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
                                         "motif_loci_num", "motif_modified_num", "motif_modified_ratio", "proportion"])
     df.to_csv(profile, index=False)
+    anno = count_motifs(modified_loci, all_modified_loci)
+    get_reprocess_gff(gff, all_modified_loci, anno)
+
 
 
