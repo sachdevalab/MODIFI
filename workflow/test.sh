@@ -81,3 +81,9 @@ whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_
 whole_ref=/home/shuaiw/methylation/data/borg/contigs/all_break.contigs.fa \
  work_dir=/home/shuaiw/methylation/data/borg/bench/all_break read_type=ccs "\
   --job-name=all_break
+
+  sbatch --partition standard --wrap "/usr/bin/time -v -o all_subreads.time snakemake \
+--config whole_bam=/home/shuaiw/methylation/data/borg/all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa\
+ work_dir=/home/shuaiw/methylation/data/borg/bench/all_subreads"\
+  --job-name=all

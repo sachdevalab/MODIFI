@@ -29,6 +29,7 @@ def heatmap(df, heat_map):
         plt.savefig(heat_map)
         plt.clf()
 datafile = "/home/shuaiw/borg/bench/all_break/motif_profile.csv"
+datafile = "/home/shuaiw/borg/all_test_ccs/motif_profile.csv"
 
 
 # print (name_dict)
@@ -48,7 +49,7 @@ fai = "/home/shuaiw/methylation/data/borg/contigs/all_break.contigs.fa.fai"
 with open(fai) as f:
     for line in f:
         first_column.append(line.split()[0])
-first_column = first_column[:500]
+# first_column = first_column[:500]
 
 # Filter the DataFrame to keep only the rows with row names in the contig names list
 df = df[df.index.isin(first_column)]
@@ -63,4 +64,4 @@ print (df.shape)
 df = df.loc[:, (df > 0.5).any(axis=0)]
 print (df.shape)
 
-heatmap(df, "tmp/heat_map_all_break.pdf")
+heatmap(df, "tmp/heat_map_all.pdf")
