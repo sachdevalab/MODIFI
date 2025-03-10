@@ -87,3 +87,36 @@ sbatch  --partition standard --wrap "snakemake -s pipeline2.smk --config \
 --config whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/align/merge.align.bam \
 whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/three_species.fa \
 work_dir=/home/shuaiw/methylation/data/borg/bench/merge2" --job-name=merge
+
+   sbatch --partition standard --wrap "snakemake \
+--config whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/align/merge_WGA.align.bam \
+whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/three_species.fa \
+work_dir=/home/shuaiw/methylation/data/borg/bench/merge_WGA" --job-name=merge
+
+
+      sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/borg/break_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
+ whole_ref=/home/shuaiw/borg/contigs/break_contigs.fasta \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/breakdb" --job-name=breakdb
+
+
+        sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/C227/native\
+  kmer_mean_db=/home/shuaiw/borg/bench/breakdb/control/control_db.up7.down3.mean.dat\
+  kmer_num_db=/home/shuaiw/borg/bench/breakdb/control/control_db.up7.down3.num.dat" --job-name=native
+
+
+          sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/C227/WGA.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/C227/WGA2" --job-name=WGA
+
+
+          sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/C227/native2\
+  kmer_mean_db=/home/shuaiw/borg/bench/C227/WGA2/control/control_db.up7.down3.mean.dat\
+  kmer_num_db=/home/shuaiw/borg/bench/C227/WGA2/control/control_db.up7.down3.num.dat" --job-name=native
