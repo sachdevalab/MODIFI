@@ -9,6 +9,7 @@ configfile: "../config.yaml"
 whole_bam = config["whole_bam"]
 whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
+min_cov = config["min_cov"]
 
 
 # Create required directories dynamically
@@ -37,9 +38,11 @@ rule ipd_ratio:
     output:
         ipd = os.path.join(work_dir, "ipd_ratio", "{sample}.ipd3.csv"),
         gff = os.path.join(work_dir, "gffs", "{sample}.gff"),
-        fig = os.path.join(work_dir, "figs", "{sample}.png")
+        fig = os.path.join(work_dir, "figs", "{sample}.png"),
+    params:
+        min_cov = min_cov
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/comp_ipd_ratio.py {input.control} {output.ipd} {output.gff} {input.ref} {output.fig}
+        python /home/shuaiw/Methy/comp_ipd_ratio.py {input.control} {output.ipd} {output.gff} {input.ref} {output.fig} {params.min_cov}
         """

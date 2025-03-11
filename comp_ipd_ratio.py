@@ -49,8 +49,18 @@ def calculate_x_from_pvalue(p_value, mu, sigma, tail="right"):
         x = mu + z * sigma
         return x
 
-def get_ipd_ratio(csv, output, gff, figure_file):
+def get_ipd_ratio(csv, output, gff, figure_file, min_cov=5):
     df = pd.read_csv(csv, sep = ",")
+    df['tpl'] = df['tpl'].astype(int)
+    df['strand'] = df['strand'].astype(int)
+    df['coverage'] = df['coverage'].astype(int)
+    df['kmer_count'] = df['kmer_count'].astype(int)
+
+    ## remove the elements with ipd_ratio == 0
+    df = df[df['ipd_ratio'] != 0]
+    ## remove the elements with coverage < min_cov
+    df = df[df['coverage'] >= int(min_cov)]
+
     mean = df['ipd_ratio'].mean()
     std = df['ipd_ratio'].std()
     df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
@@ -60,10 +70,7 @@ def get_ipd_ratio(csv, output, gff, figure_file):
     # df['score'] = -10 * np.log10(df['pvalue'])
 
     ### round all the float values to 2 decimal places
-    df['tpl'] = df['tpl'].astype(int)
-    df['strand'] = df['strand'].astype(int)
-    df['coverage'] = df['coverage'].astype(int)
-    df['kmer_count'] = df['kmer_count'].astype(int)
+
     df = df.round(4)
 
     df.to_csv(output, index=False)
@@ -153,9 +160,10 @@ if __name__ == "__main__":
     ref = sys.argv[4]
     # fig = None #sys.argv[5]
     figure_file = sys.argv[5]
+    min_cov = sys.argv[6]
     seq_dict = get_ref(ref)
     print ("loaded fasta")
-    get_ipd_ratio(csv, output, gff, figure_file)
+    get_ipd_ratio(csv, output, gff, figure_file, min_cov)
 
 
     # csv = "/home/shuaiw/methylation/data/borg/b_contigs/control/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_0_219069.ipd2.csv"

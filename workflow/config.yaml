@@ -5,5 +5,6 @@ maxAlignments : 100000
 read_type: "subreads"
 max_NM: 
 min_len: 50000
+min_cov: 5
 kmer_mean_db: 
 kmer_num_db:

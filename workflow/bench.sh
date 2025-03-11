@@ -120,3 +120,11 @@ work_dir=/home/shuaiw/methylation/data/borg/bench/merge_WGA" --job-name=merge
   work_dir=/home/shuaiw/methylation/data/borg/bench/C227/native2\
   kmer_mean_db=/home/shuaiw/borg/bench/C227/WGA2/control/control_db.up7.down3.mean.dat\
   kmer_num_db=/home/shuaiw/borg/bench/C227/WGA2/control/control_db.up7.down3.num.dat" --job-name=native
+
+
+   sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo5_NM3 \
+  read_type=ccs min_len=5000 max_NM=3"\
+   --job-name=zymo2
