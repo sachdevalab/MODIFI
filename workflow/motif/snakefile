@@ -19,9 +19,9 @@ for sub in sub_dirs:
 
 # Function to get sample names after split_bam rule
 def get_samples():
-    bam_files = glob.glob(os.path.join(work_dir, "gffs", "*.gff"))
-    samples = list(set(f.split("/")[-1].replace(".gff", "") for f in bam_files))
-    print (f"there are {len(samples)} samples to idnetify motif...")
+    bam_files = glob.glob(os.path.join(work_dir, "ipd_ratio", "*.ipd3.csv"))
+    samples = list(set(f.split("/")[-1].replace(".ipd3.csv", "") for f in bam_files))
+    print (f"there are {len(samples)} samples to identify motif...")
     return samples
 
 rule all:
