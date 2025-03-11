@@ -417,6 +417,8 @@ def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file):
         result += _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, factor, )
         # break
     combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'base', 'coverage', 'tMean', 'tErr'])
+    ## remove the rows with tMean = 0
+    combined_df = combined_df[combined_df['tMean'] != 0]
     combined_df.to_csv(df_file, index=False)
     print ("raw ipd df saved", df_file, round(time.time()-t0))
 

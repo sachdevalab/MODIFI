@@ -58,12 +58,32 @@ def get_ipd_ratio(csv, output, gff, figure_file, min_cov=5):
 
     ## remove the elements with ipd_ratio == 0
     df = df[df['ipd_ratio'] != 0]
+    ## remove elements with NAN values in ipd_ratio
+    df = df.dropna(subset=['ipd_ratio'])
     ## remove the elements with coverage < min_cov
     df = df[df['coverage'] >= int(min_cov)]
 
+    ### remove the elements with ipd_ratio is inifinite
+    df = df[~df['ipd_ratio'].isin([np.inf, -np.inf])]
+
+
+    ## check if ipd_ratio contain infinite values
+    if np.isinf(df['ipd_ratio']).values.any():
+        ## report error and stop
+        raise ValueError("ipd_ratio contains infinite values")
+
+
+    ## subsample df , just for testing
+    # df = df.sample(frac=0.001, random_state=1)
+    # print (df)
     mean = df['ipd_ratio'].mean()
     std = df['ipd_ratio'].std()
-    df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
+    print (f"mean: {mean}, std: {std}, cal pvalue...")
+    ## try this otherwise exception will be raised
+    try:
+        df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
+    except:
+        raise ValueError("Error in calculating pvalue")
 
     ## add score column, score i s -10logpvalue
     ## a Phred-transformed QV, QV =−10 log10 p
@@ -95,6 +115,9 @@ def visu(df, figure_path):
     sns.histplot(df, x="control", hue="strand", multiple="stack", ax=axs[1, 0])
     sns.histplot(df, x="ipd_ratio", hue="strand", multiple="stack", ax=axs[1, 1])
     ## save the plot
+
+    ## add a dashed line at x=1
+    axs[1, 1].axvline(x=1, color='red', linestyle='--')
 
     ### cal the number with strand 1 and 0
     # print (df[df['strand'] == 1].shape[0])
