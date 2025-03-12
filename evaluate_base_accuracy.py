@@ -23,12 +23,6 @@ def get_motif_sites(REF, motif_new, exact_pos, ipd_ratio_dict):
     motif_sites = {}
     motif_loci_num = 0
     motif_modify_num = 0
-    for_loci_num = 0
-    rev_loci_num = 0
-    for_modified_num = 0
-    rev_modified_num = 0
-
-    motif_ipd_ratio = []
 
     for r, contig in REF.items():
         for site in nt_search(str(contig), motif_new)[1:]:
@@ -36,9 +30,9 @@ def get_motif_sites(REF, motif_new, exact_pos, ipd_ratio_dict):
             #     motif_sites[r + ":" + str(i) + "+"] = motif_new
             tag = r + ":" + str(site+exact_pos) + "+"
             # print (tag)
-            motif_loci_num += 1
-            for_loci_num += 1
+            
             if tag in ipd_ratio_dict:
+                motif_loci_num += 1
                 if ipd_ratio_dict[tag] == 1:
                     motif_modify_num += 1
 
@@ -46,9 +40,8 @@ def get_motif_sites(REF, motif_new, exact_pos, ipd_ratio_dict):
             1:
         ]:
             tag = r + ":" + str(site+rev_exact_pos) + "-"
-            motif_loci_num += 1
-            rev_loci_num += 1
             if tag in ipd_ratio_dict:
+                motif_loci_num += 1
                 if ipd_ratio_dict[tag] == 1:
                     motif_modify_num += 1
     modify_ratio = motif_modify_num / motif_loci_num
@@ -133,9 +126,9 @@ if __name__ == "__main__":
     ## plot the line plot using seaborn, and hue is the coverage
     import seaborn as sns
     sns.set_theme(style="whitegrid")
-    # sns.lineplot(data=df, x="FDR", y="recall", hue="coverage")
+    sns.lineplot(data=df, x="FDR", y="recall", hue="coverage")
     # plot scatter plot
-    plt.scatter(df['FDR'], df['recall'], c = df['coverage'])
+    # plt.scatter(df['FDR'], df['recall'], c = df['coverage'])
     plt.xlabel("FDR")
     plt.ylabel("Recall")
 
