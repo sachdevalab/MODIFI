@@ -66,6 +66,15 @@ def get_ipd_ratio(csv, output, gff, figure_file, min_cov=5):
     ### remove the elements with ipd_ratio is inifinite
     df = df[~df['ipd_ratio'].isin([np.inf, -np.inf])]
 
+    if len(df) == 0:
+        print ("No data left after filtering")
+        ## generate emplty figure_file, output
+        open(figure_file, 'a').close()
+        open(output, 'a').close()
+        open(gff, 'a').close()
+        ## stop the program with no error
+        return
+
 
     ## check if ipd_ratio contain infinite values
     if np.isinf(df['ipd_ratio']).values.any():

@@ -78,10 +78,11 @@ def get_modified_ratio(gff):
     print ("no. of modified loci", len(modified_loci))
     return modified_loci
 
-def read_ipd_ratio(csv_file, cutoff = 0.05):
+def read_ipd_ratio(csv_file, cutoff = 0.05, coverage = 10):
     ipd_ratio_dict = {}
     # df = pd.read_csv(csv_file, nrows = 100000)
     df = pd.read_csv(csv_file)
+    df = df[df['coverage'] >= coverage]
     for index, row in df.iterrows():
         # print (row['refName'], row['tpl'], row['strand'], row['coverage'], row['ipd_ratio'])
         if row['strand'] == 1:
@@ -110,22 +111,35 @@ if __name__ == "__main__":
     # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
     # profile = "/home/shuaiw/borg/test.csv"
 
-    # my_ref = sys.argv[1]
-    # gff = sys.argv[2]
-    # all_motifs = sys.argv[3]
-    # profile = sys.argv[4]
 
     REF = read_ref(my_ref)
-    # print (REF)
-    # modified_loci = get_modified_ratio(gff)
-    # motifs = pd.read_csv(all_motifs)
-    native_ipd_ratio_dict = read_ipd_ratio(native_csv)
+    data = []
+    for coverage in [10, 15, 20]:
+        for cutoff in [0.001, 0.01, 0.05, 0.1]:
+            native_ipd_ratio_dict = read_ipd_ratio(native_csv, cutoff, coverage)
 
-    recall = get_motif_sites(REF, motif_new, exact_pos, native_ipd_ratio_dict)
-    control_ipd_ratio_dict = read_ipd_ratio(control_csv)
-    FDR = get_motif_sites(REF, motif_new, exact_pos, control_ipd_ratio_dict)
-    print ("recall", recall)
-    print ("FDR", FDR)
+            recall = get_motif_sites(REF, motif_new, exact_pos, native_ipd_ratio_dict)
+            control_ipd_ratio_dict = read_ipd_ratio(control_csv, cutoff, coverage)
+            FDR = get_motif_sites(REF, motif_new, exact_pos, control_ipd_ratio_dict)
+            print ("recall", recall)
+            print ("FDR", FDR)
+            data.append([coverage, cutoff, recall, FDR])
+    df = pd.DataFrame(data, columns=['coverage', 'cutoff', 'recall', 'FDR'])
+    ## save df
+    df.to_csv("tmp/ecoli_base.csv", index = False)
+
+    ## load the df
+    df = pd.read_csv("tmp/ecoli_base.csv")
+    ## plot the line plot using seaborn, and hue is the coverage
+    import seaborn as sns
+    sns.set_theme(style="whitegrid")
+    # sns.lineplot(data=df, x="FDR", y="recall", hue="coverage")
+    # plot scatter plot
+    plt.scatter(df['FDR'], df['recall'], c = df['coverage'])
+    plt.xlabel("FDR")
+    plt.ylabel("Recall")
+
+    plt.savefig("tmp/ecoli_recall.png")
 
 
 
