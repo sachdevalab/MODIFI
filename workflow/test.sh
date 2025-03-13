@@ -99,3 +99,17 @@ whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_
 whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
  work_dir=/home/shuaiw/methylation/data/borg/all_test_ccs3 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
   --job-name=all_ccs3
+
+
+
+    sbatch --partition standard --wrap "/usr/bin/time -v -o all_s3.time snakemake --rerun-incomplete \
+--config whole_bam=/home/shuaiw/borg/all_bams/m84039_230624_013044_s3.hifi_reads.bc2021.align.ccs.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+ work_dir=/home/shuaiw/methylation/data/borg/bench/s3 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
+  --job-name=s3
+
+    sbatch --partition standard --wrap "/usr/bin/time -v -o all_s4.time snakemake --rerun-incomplete \
+--config whole_bam=/home/shuaiw/borg/all_bams/m84039_230626_214113_s4.hifi_reads.bc2022.align.ccs.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+ work_dir=/home/shuaiw/methylation/data/borg/bench/s4 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
+  --job-name=s4

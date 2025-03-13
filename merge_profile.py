@@ -71,10 +71,7 @@ def merge_profile(profile_list):
             # print (motifs_names)
             ## we only want the motif_modified_ratio column
             profile = profile[['motif_modified_ratio']]
-            if len(profile['motif_modified_ratio']) == len(motifs_names):
-                profiles.append(profile['motif_modified_ratio'])
-            else:
-                print(f"Skipping {file} due to length mismatch")
+            profiles.append(profile['motif_modified_ratio'])
             # if len(samples) > 10:
             #     break
     ## name the columns
@@ -117,8 +114,8 @@ def TSE(df, cluster_fig):
     matrix = matrix.T
 
     ## zero values are set to small random pseudovalues in the (−0.2, +0.2)
-    # mask = matrix == 0
-    # matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
+    mask = matrix == 0
+    matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
     # print (matrix)
 
     try:
@@ -128,7 +125,7 @@ def TSE(df, cluster_fig):
         print(f"Failed to create t-SNE: {e}")
         return
     
-    clustering = DBSCAN(eps=0.3, min_samples=2).fit(X_embedded)
+    clustering = DBSCAN(eps=0.2, min_samples=1).fit(X_embedded)
     # print (clustering.labels_)
     # calculate how many clusters
     n_clusters = len(set(clustering.labels_))
@@ -167,7 +164,7 @@ def PCA_plot(profiles, pca_fig):
     profiles = profiles.T
 
     X_embedded = pca.fit_transform(profiles)
-    print (profiles)
+    # print (profiles)
 
     ## cluster the pca result
     clustering = DBSCAN(eps=0.3, min_samples=2).fit(X_embedded)
