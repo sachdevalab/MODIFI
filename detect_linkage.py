@@ -4,15 +4,18 @@ import re
 import seaborn as sns
 
 def find_linkage():
-    col1 = 'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_4395_L'
-    datafile = "/home/shuaiw/methylation/data/borg/all_test_ccs/motif_profile.csv"
+    col1 = 'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_33175_L'
+    datafile = "/home/shuaiw/methylation/data/borg/all_test_ccs2/motif_profile.csv"
 
     df = pd.read_csv(datafile, index_col=0)
-    df = df.loc[:, (df > 0.5).any(axis=0)]
+    df = df.loc[:, (df > 0.1).any(axis=0)]
+    print (df.shape)
 
     ## get all_column names
     euclidean_distance_dict = {}
     all_columns = df.columns
+    if col1 not in all_columns:
+        raise ValueError("column not in the dataframe")
     print (all_columns)
     for col in all_columns:
         if col == col1:

@@ -22,14 +22,14 @@ def heatmap(df, heat_map):
     else:
         ## define the figure size
         plt.figure(figsize=(30, 60))
-        g= sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(15, 8), cbar_kws={'label': 'Intensity'}, yticklabels=1)
+        g= sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(20, 20), cbar_kws={'label': 'Intensity'}, yticklabels=1)
         g.ax_heatmap.set_yticklabels(g.ax_heatmap.get_yticklabels(), fontsize=5)  # Y-axis labels
         ## x-axis labels
         g.ax_heatmap.set_xticklabels(g.ax_heatmap.get_xticklabels(), fontsize=5, rotation=90)
         plt.savefig(heat_map)
         plt.clf()
-datafile = "/home/shuaiw/borg/bench/all_break/motif_profile.csv"
-datafile = "/home/shuaiw/borg/all_test_ccs/motif_profile.csv"
+# datafile = "/home/shuaiw/borg/bench/all_break/motif_profile.csv"
+datafile = "/home/shuaiw/borg/all_test_ccs2/motif_profile.csv"
 
 
 # print (name_dict)
@@ -45,7 +45,8 @@ print (df.head())
 
 
 first_column = ['SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_14889_L', 'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_33175_L']
-fai = "/home/shuaiw/methylation/data/borg/contigs/all_break.contigs.fa.fai"
+# fai = "/home/shuaiw/methylation/data/borg/contigs/all_break.contigs.fa.fai"
+fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
 with open(fai) as f:
     for line in f:
         first_column.append(line.split()[0])
@@ -64,4 +65,4 @@ print (df.shape)
 df = df.loc[:, (df > 0.5).any(axis=0)]
 print (df.shape)
 
-heatmap(df, "tmp/heat_map_all.pdf")
+heatmap(df, "tmp/heat_map_all_ccs.pdf")

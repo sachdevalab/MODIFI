@@ -48,7 +48,7 @@ def get_motif_sites(REF, motif_new, exact_pos, ipd_ratio_dict):
     print ("motif loci num", motif_loci_num)
     print ("motif modify num", motif_modify_num)
     print ("modify ratio", modify_ratio)
-    return modify_ratio
+    return modify_ratio, motif_loci_num, motif_modify_num
 
 
 
@@ -111,13 +111,13 @@ if __name__ == "__main__":
         for cutoff in [0.001, 0.01, 0.05, 0.1]:
             native_ipd_ratio_dict = read_ipd_ratio(native_csv, cutoff, coverage)
 
-            recall = get_motif_sites(REF, motif_new, exact_pos, native_ipd_ratio_dict)
+            recall, native_motif_loci_num, native_motif_modify_num = get_motif_sites(REF, motif_new, exact_pos, native_ipd_ratio_dict)
             control_ipd_ratio_dict = read_ipd_ratio(control_csv, cutoff, coverage)
-            FDR = get_motif_sites(REF, motif_new, exact_pos, control_ipd_ratio_dict)
+            FDR, motif_loci_num, motif_modify_num = get_motif_sites(REF, motif_new, exact_pos, control_ipd_ratio_dict)
             print ("recall", recall)
             print ("FDR", FDR)
-            data.append([coverage, cutoff, recall, FDR])
-    df = pd.DataFrame(data, columns=['coverage', 'cutoff', 'recall', 'FDR'])
+            data.append([coverage, cutoff, recall, FDR, native_motif_loci_num, native_motif_modify_num , motif_loci_num, motif_modify_num])
+    df = pd.DataFrame(data, columns=['coverage', 'cutoff', 'recall', 'FDR', 'native_motif_loci_num', 'native_motif_modify_num', 'motif_loci_num', 'motif_modify_num'])
     ## save df
     df.to_csv("tmp/ecoli_base.csv", index = False)
 
