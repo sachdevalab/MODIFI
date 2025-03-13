@@ -71,7 +71,10 @@ def merge_profile(profile_list):
             # print (motifs_names)
             ## we only want the motif_modified_ratio column
             profile = profile[['motif_modified_ratio']]
-            profiles.append(profile['motif_modified_ratio'])
+            if len(profile['motif_modified_ratio']) == len(motifs_names):
+                profiles.append(profile['motif_modified_ratio'])
+            else:
+                print(f"Skipping {file} due to length mismatch")
             # if len(samples) > 10:
             #     break
     ## name the columns
@@ -140,7 +143,7 @@ def TSE(df, cluster_fig):
                 # print (df.columns[j])
                 data.append([df.columns[j], i])
     ## save the cluster result
-    cluster_result = pd.DataFrame(data, columns = ['motif', 'cluster'])
+    cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
     cluster_result.to_csv(cluster_fig.replace(".pdf", ".csv"), index=False)
     ## define fig size
     plt.figure(figsize=(10, 10))
@@ -154,9 +157,36 @@ def TSE(df, cluster_fig):
         for i, label in enumerate(df.columns):
             texts.append(scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=7))
         adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
-
-
     plt.savefig(cluster_fig)
+
+def PCA_plot(profiles, pca_fig):
+    print ("start PCA...")
+    from sklearn.decomposition import PCA
+    pca = PCA(n_components=2)
+    ## transpose the profiles
+    profiles = profiles.T
+
+    X_embedded = pca.fit_transform(profiles)
+    print (profiles)
+
+    ## cluster the pca result
+    clustering = DBSCAN(eps=0.3, min_samples=2).fit(X_embedded)
+    # print (clustering.labels_)
+    ## save the cluster result in a dataframe, and plot it like in tse function
+    n_clusters = len(set(clustering.labels_))
+    print (n_clusters, "clusters detected after PCA.")
+    scatter_plot = sns.scatterplot(x=X_embedded[:, 0], y=X_embedded[:, 1], hue=clustering.labels_, palette="viridis")
+    
+    ## if df column number is too large, the adjust_text function may not work well, skip it
+    if len(profiles) < 100:
+        texts = []
+        for i, label in enumerate(profiles.index):
+            # print (i, label)
+            if i < len(X_embedded):
+                texts.append(scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=7))
+        adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
+    plt.savefig(pca_fig)
+
 
 if __name__ == "__main__":
 
@@ -180,6 +210,7 @@ if __name__ == "__main__":
     heat_map = args['heatmap']
     total_profile = args['summary']
     cluster_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_cluster.pdf"
+    pca_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_pca.pdf"
     # print (profile_dir)
     # profile_dir = "/home/shuaiw/borg/all_test/profiles"
     # heat_map = f"{profile_dir}/../motif_heatmap.pdf"
@@ -191,9 +222,17 @@ if __name__ == "__main__":
     profiles.to_csv(total_profile, index=True)
     # load the profile from the saved file
     # profiles = pd.read_csv("tmp/profiles.csv", index_col=0)
+    # Filter rows where any value is greater than 0.5
+    profiles = profiles.loc[(profiles > 0.5).any(axis=1)]
+    # Filter columns where any value is greater than 0.5
+    profiles = profiles.loc[:, (profiles > 0.5).any(axis=0)]
+
+    print (profiles.shape)
+
     heatmap(profiles, heat_map)
     if len(profiles) > 0:
         TSE(profiles, cluster_fig)
+        PCA_plot(profiles, pca_fig)
     else:
         print ("no motif identified")
 

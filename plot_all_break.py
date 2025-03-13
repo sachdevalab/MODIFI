@@ -22,8 +22,8 @@ def heatmap(df, heat_map):
     else:
         ## define the figure size
         plt.figure(figsize=(30, 60))
-        g= sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(20, 20), cbar_kws={'label': 'Intensity'}, yticklabels=1)
-        g.ax_heatmap.set_yticklabels(g.ax_heatmap.get_yticklabels(), fontsize=5)  # Y-axis labels
+        g= sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(10, 12), cbar_kws={'label': 'Intensity'}, yticklabels=1)
+        g.ax_heatmap.set_yticklabels(g.ax_heatmap.get_yticklabels(), fontsize=4)  # Y-axis labels
         ## x-axis labels
         g.ax_heatmap.set_xticklabels(g.ax_heatmap.get_xticklabels(), fontsize=5, rotation=90)
         plt.savefig(heat_map)
