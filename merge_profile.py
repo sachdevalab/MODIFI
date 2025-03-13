@@ -8,6 +8,9 @@ import re
 import seaborn as sns
 from sklearn.manifold import TSNE
 from sklearn.cluster import DBSCAN
+from sklearn.decomposition import PCA
+from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
+
 import sys
 import argparse
 from adjustText import adjust_text
@@ -108,6 +111,41 @@ def heatmap(df, heat_map):
             plt.savefig(heat_map)
             plt.clf()
 
+def hierarchical_clustering(df, tree_fig, cutoff=1.6):
+    matrix = df.to_numpy()
+    ## Trabspose the matrix
+    matrix = matrix.T
+
+    ## zero values are set to small random pseudovalues in the (−0.2, +0.2)
+    mask = matrix == 0
+    matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
+
+    my_linkage = linkage(matrix, method='average', metric='euclidean')
+    cluster_labels = fcluster(my_linkage, t=cutoff, criterion='distance')
+
+    ## calculate how many clusters
+    n_clusters = len(set(cluster_labels))
+    print (n_clusters, "clusters detected.")
+    data = []
+    for i in range(n_clusters):
+        # print ("cluster", i)
+        for j in range(len(cluster_labels)):
+            if cluster_labels[j] == i:
+                # print (df.columns[j])
+                data.append([df.columns[j], i])
+    cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
+    cluster_result.to_csv(cluster_fig.replace(".pdf", ".h.csv"), index=False)
+    # Plot dendrogram
+    plt.figure(figsize=(10, 15))
+    dendrogram(my_linkage, labels=df.columns, leaf_rotation=90, leaf_font_size=5)
+    plt.axhline(y=cutoff, color='r', linestyle='--')  # Show the cutoff threshold
+    plt.title(f"Dendrogram with Distance Threshold = {cutoff}")
+    plt.xlabel("Sample Index")
+    plt.ylabel("Cluster Distance")
+    plt.savefig(tree_fig)
+    print ("hierarchical clustering done.")
+
+
 def TSE(df, cluster_fig):
     matrix = df.to_numpy()
     ## Trabspose the matrix
@@ -161,13 +199,22 @@ def PCA_plot(profiles, pca_fig):
     from sklearn.decomposition import PCA
     pca = PCA(n_components=2)
     ## transpose the profiles
-    profiles = profiles.T
+    # profiles = profiles.T
+    ## add pseudo values to zero values
+    matrix = profiles.to_numpy()
+    ## Trabspose the matrix
+    matrix = matrix.T
 
-    X_embedded = pca.fit_transform(profiles)
+    ## zero values are set to small random pseudovalues in the (−0.2, +0.2)
+    # mask = matrix == 0
+    # matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
+
+
+    X_embedded = pca.fit_transform(matrix)
     # print (profiles)
 
     ## cluster the pca result
-    clustering = DBSCAN(eps=0.3, min_samples=2).fit(X_embedded)
+    clustering = DBSCAN(eps=0.1, min_samples=2).fit(X_embedded)
     # print (clustering.labels_)
     ## save the cluster result in a dataframe, and plot it like in tse function
     n_clusters = len(set(clustering.labels_))
@@ -177,7 +224,7 @@ def PCA_plot(profiles, pca_fig):
     ## if df column number is too large, the adjust_text function may not work well, skip it
     if len(profiles) < 100:
         texts = []
-        for i, label in enumerate(profiles.index):
+        for i, label in enumerate(profiles.columns):
             # print (i, label)
             if i < len(X_embedded):
                 texts.append(scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=7))
@@ -208,6 +255,7 @@ if __name__ == "__main__":
     total_profile = args['summary']
     cluster_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_cluster.pdf"
     pca_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_pca.pdf"
+    tree_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_tree.pdf"
     # print (profile_dir)
     # profile_dir = "/home/shuaiw/borg/all_test/profiles"
     # heat_map = f"{profile_dir}/../motif_heatmap.pdf"
@@ -230,6 +278,7 @@ if __name__ == "__main__":
     if len(profiles) > 0:
         TSE(profiles, cluster_fig)
         PCA_plot(profiles, pca_fig)
+        hierarchical_clustering(profiles, tree_fig)
     else:
         print ("no motif identified")
 
