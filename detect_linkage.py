@@ -5,18 +5,19 @@ import seaborn as sns
 
 def find_linkage():
     col1 = 'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_33175_L'
-    datafile = "/home/shuaiw/methylation/data/borg/all_test_ccs2/motif_profile.csv"
+    datafile = "/home/shuaiw/methylation/data/borg/bench/all_subreads/motif_profile2.csv"
+    # datafile = "/home/shuaiw/methylation/data/borg/all_test_ccs2/motif_profile.csv"
 
     df = pd.read_csv(datafile, index_col=0)
     df = df.loc[:, (df > 0.1).any(axis=0)]
-    print (df.shape)
+    # print (df.shape)
 
     ## get all_column names
     euclidean_distance_dict = {}
     all_columns = df.columns
     if col1 not in all_columns:
         raise ValueError("column not in the dataframe")
-    print (all_columns)
+    # print (all_columns)
     for col in all_columns:
         if col == col1:
             continue
@@ -30,7 +31,7 @@ def find_linkage():
     ## filter the df with the top ten columns
     top_ten_columns = [item[0] for item in euclidean_distance_tuple[:10]] + [col1]
     df_top_ten = df[top_ten_columns]
-    df = df_top_ten.loc[(df_top_ten > 0.5).any(axis=1)]
+    df = df_top_ten.loc[(df_top_ten > 0.2).any(axis=1)]
     print (df)
     df = df.T
     ## plot the heatmap using seaborn

@@ -52,7 +52,7 @@ def read_predicted_result(clster_out):
 
 
 def for_zymo():
-    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.csv"
+    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_zymo_truth()
 
@@ -69,26 +69,28 @@ def for_zymo():
     nmi_score = normalized_mutual_info_score(true_labels, predicted_clusters)
     print(f"Normalized Mutual Information: {nmi_score:.4f}")
 
-clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.h.csv"
-answer_label = read_predicted_result(clster_out)
-contig_index_dict = read_all_break_truth()
-print (len(contig_index_dict), "truth contig number")
-print (len(answer_label), "predicted contig number")
+def all_break():
+    clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.h.csv"
+    answer_label = read_predicted_result(clster_out)
+    contig_index_dict = read_all_break_truth()
+    print (len(contig_index_dict), "truth contig number")
+    print (len(answer_label), "predicted contig number")
 
-true_labels = []
-predicted_clusters = []
-for contig in answer_label:
-    if contig not in contig_index_dict:
-        continue
-    true_labels.append(contig_index_dict[contig])
-    predicted_clusters.append(answer_label[contig])
+    true_labels = []
+    predicted_clusters = []
+    for contig in answer_label:
+        if contig not in contig_index_dict:
+            continue
+        true_labels.append(contig_index_dict[contig])
+        predicted_clusters.append(answer_label[contig])
 
-print (len(true_labels))
-print (len(predicted_clusters))
-# print (contig_index_dict)
-# print (answer_label)
+    print (len(true_labels))
+    print (len(predicted_clusters))
+    # print (contig_index_dict)
+    # print (answer_label)
 
+    nmi_score = normalized_mutual_info_score(true_labels, predicted_clusters)
+    print(f"Normalized Mutual Information: {nmi_score:.4f}")
 
-
-nmi_score = normalized_mutual_info_score(true_labels, predicted_clusters)
-print(f"Normalized Mutual Information: {nmi_score:.4f}")
+# for_zymo()
+all_break()

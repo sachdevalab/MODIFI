@@ -136,14 +136,14 @@ def hierarchical_clustering(df, tree_fig, cutoff=1.6):
     cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
     cluster_result.to_csv(cluster_fig.replace(".pdf", ".h.csv"), index=False)
     # Plot dendrogram
-    plt.figure(figsize=(10, 15))
-    dendrogram(my_linkage, labels=df.columns, leaf_rotation=90, leaf_font_size=5)
-    plt.axhline(y=cutoff, color='r', linestyle='--')  # Show the cutoff threshold
-    plt.title(f"Dendrogram with Distance Threshold = {cutoff}")
-    plt.xlabel("Sample Index")
-    plt.ylabel("Cluster Distance")
-    plt.savefig(tree_fig)
-    print ("hierarchical clustering done.")
+    # plt.figure(figsize=(10, 15))
+    # dendrogram(my_linkage, labels=df.columns, leaf_rotation=90, leaf_font_size=5)
+    # plt.axhline(y=cutoff, color='r', linestyle='--')  # Show the cutoff threshold
+    # plt.title(f"Dendrogram with Distance Threshold = {cutoff}")
+    # plt.xlabel("Sample Index")
+    # plt.ylabel("Cluster Distance")
+    # plt.savefig(tree_fig)
+    # print ("hierarchical clustering done.")
 
 
 def TSE(df, cluster_fig):
@@ -268,14 +268,15 @@ if __name__ == "__main__":
     # load the profile from the saved file
     # profiles = pd.read_csv("tmp/profiles.csv", index_col=0)
     # Filter rows where any value is greater than 0.5
-    profiles = profiles.loc[(profiles > 0.5).any(axis=1)]
+    min_frac = 0.4
+    profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
     # Filter columns where any value is greater than 0.5
-    profiles = profiles.loc[:, (profiles > 0.5).any(axis=0)]
+    profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
 
     print (profiles.shape)
 
-    heatmap(profiles, heat_map)
     if len(profiles) > 0:
+        heatmap(profiles, heat_map)
         TSE(profiles, cluster_fig)
         PCA_plot(profiles, pca_fig)
         hierarchical_clustering(profiles, tree_fig)
