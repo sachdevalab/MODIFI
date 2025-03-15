@@ -158,7 +158,72 @@ def count_motifs(modified_loci, all_modified_loci):
             anno += f"##no. of modified loci with motif {motif}: {num} \n"
     return anno
 
+def reload_motif_sites(REF, df):
+    motif_sites = {}
+    for index, motif in df.iterrows():
+        motif_new = motif["motifString"]
+        exact_pos = motif["centerPos"]
 
+        motif_len = len(motif_new)
+        rev_exact_pos = motif_len - exact_pos + 1
+        
+
+        for r, contig in REF.items():
+            for site in nt_search(str(contig), motif_new)[1:]:
+                # for i in range(site, site + motif_len):
+                #     motif_sites[r + ":" + str(i) + "+"] = motif_new
+                tag = r + ":" + str(site+exact_pos) + "+"
+                motif_sites[tag] = motif_new
+
+            for site in nt_search(str(contig), Seq(motif_new).reverse_complement())[
+                1:
+            ]:
+                tag = r + ":" + str(site+rev_exact_pos) + "-"
+                motif_sites[tag] = motif_new
+    return motif_sites
+
+def count_ipd_ratio(ipd_ratio_file, motif_sites):
+    data = []
+    df_ipd = pd.read_csv(ipd_ratio_file)
+    for index, row in df_ipd.iterrows():
+        if row['strand'] == 1:
+            strand_string = "-"
+        else:
+            strand_string = "+"
+        tag = row['refName'] + ":" + str(row['tpl']+1) + strand_string
+        if tag in motif_sites:
+            data.append([row['refName'], str(row['tpl']+1) , strand_string, motif_sites[tag], row['ipd_ratio']])
+    site_df = pd.DataFrame(data, columns = ["refName", "tpl", "strand", "motif", "ipd_ratio"])
+    print (site_df)
+    ### plot the site df using subplot using seaborn
+    if len(site_df) > 0:
+        # Apply rolling mean smoothing, smooth it for each strand and each motif separately
+        site_df['ipd_ratio'] = site_df.groupby(['refName', 'strand', 'motif'])['ipd_ratio'].transform(lambda x: x.rolling(window=100, min_periods=1).mean())
+
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(2, 1, figsize=(15, 5))
+        ## use grid
+        sns.set(style="whitegrid")
+        sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[0])
+        sns.lineplot(data=site_df[site_df['strand'] == "-"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[1])
+        ## define the x-axis label
+
+        ax[0].set_xticks([])        # Removes ticks
+        ax[0].set_xticklabels([])   # Removes tick labels
+        ax[0].set_xlabel("")        # Removes x-axis label
+        ## also remove the these for ax1
+        ax[1].set_xticks([])        # Removes ticks
+        ax[1].set_xticklabels([])   # Removes tick labels
+        ax[1].set_xlabel("") 
+        ax[0].grid(True)
+        ax[1].grid(True)
+        fig = ipd_ratio_file[:-9] + ".pdf"
+        plt.savefig(fig)
+    else:
+        print ("no motif sites in the ipd file")
+
+    
 
 
          
@@ -166,8 +231,6 @@ if __name__ == "__main__":
     # motif_new = "CTGCAG"
     # exact_pos = 5
     score_cutoff = 30
-    # my_ref = "/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa"
-    # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
 
     # my_ref = "/home/shuaiw/borg/all_test//contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.fa"
     # gff = "/home/shuaiw/borg/all_test//gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.gff"
@@ -178,6 +241,7 @@ if __name__ == "__main__":
     gff = sys.argv[2]
     all_motifs = sys.argv[3]
     profile = sys.argv[4]
+    ipd_ratio_file = sys.argv[5]
 
     REF = read_ref(my_ref)
     # print (REF)
@@ -197,5 +261,17 @@ if __name__ == "__main__":
     anno = count_motifs(modified_loci, all_modified_loci)
     get_reprocess_gff(gff, all_modified_loci, anno)
 
+
+    ## filter df, keep the motifs with motif_modified_num > 1000
+    df = df[df["motif_modified_num"] > 200]
+    df = df[df["motif_modified_ratio"] > 0.1]
+    print (len(df), "motifs left after filtering")
+    if len(df) > 0:
+        motif_sites = reload_motif_sites(REF, df)
+        # ipd_ratio_file = "/home/shuaiw/borg/all_test/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.ipd3.csv"
+
+        count_ipd_ratio(ipd_ratio_file, motif_sites)
+    else:
+        print ("no motif sites left after filtering")
 
 

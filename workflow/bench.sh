@@ -128,3 +128,10 @@ work_dir=/home/shuaiw/methylation/data/borg/bench/merge_WGA" --job-name=merge
   work_dir=/home/shuaiw/methylation/data/borg/bench/zymo5_NM3_cov10 \
   read_type=ccs min_len=5000 max_NM=10 min_cov=20"\
    --job-name=zymo2
+
+     sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.time snakemake --config \
+ whole_bam=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.align.ccs.bam \
+ whole_ref=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_200ppm_r1_LR_scaffold.fa \
+  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20 \
+  read_type=ccs min_len=5000 max_NM=20 min_cov=20"\
+   --job-name=pf

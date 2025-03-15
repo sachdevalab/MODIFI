@@ -46,12 +46,13 @@ rule profiling:
         ref=os.path.join(work_dir, "contigs", "{sample}.fa"),
         gff=os.path.join(work_dir, "gffs", "{sample}.gff"),
         all_motifs=os.path.join(work_dir, "all.motifs.csv"),
+        ipd_ratio=os.path.join(work_dir, "ipd_ratio", "{sample}.ipd3.csv"),
     output:
         prof=os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/motif_profile.py {input.ref} {input.gff} {input.all_motifs} {output.prof}
+        python /home/shuaiw/Methy/motif_profile.py {input.ref} {input.gff} {input.all_motifs} {output.prof} {input.ipd_ratio}
         """
 
 rule merge_profiles:

@@ -1,5 +1,7 @@
 from sklearn.metrics import normalized_mutual_info_score
 import pandas as pd
+import numpy as np  
+from collections import defaultdict
 
 # Example: True labels vs. Predicted clusters
 true_labels = [0, 0, 1, 1, 2, 2]
@@ -24,6 +26,7 @@ def read_zymo_truth():
 def read_all_break_truth():
     fai = "/home/shuaiw/methylation/data/borg/contigs/all_break.contigs.fa.fai"
     spcies_index = {}
+    cluster_num_dict = defaultdict(int)
     index = 1
 
     contig_index_dict = {}
@@ -36,6 +39,8 @@ def read_all_break_truth():
             spcies_index[species_name] = index
             index += 1
         contig_index_dict[contig] = spcies_index[species_name]
+        cluster_num_dict[spcies_index[species_name]] += 1
+    print (cluster_num_dict)
     return contig_index_dict
     
 
@@ -69,6 +74,20 @@ def for_zymo():
     nmi_score = normalized_mutual_info_score(true_labels, predicted_clusters)
     print(f"Normalized Mutual Information: {nmi_score:.4f}")
 
+def compute_random_nmi(true_labels, num_iterations=1000, num_clusters=5):
+    random_nmi_scores = []
+    
+    for _ in range(num_iterations):
+        # Generate random cluster assignments
+        random_clusters = np.random.randint(0, num_clusters, size=len(true_labels))
+        # print (random_clusters)
+        # Compute NMI between true labels and random clusters
+        nmi_score = normalized_mutual_info_score(true_labels, random_clusters)
+        random_nmi_scores.append(nmi_score)
+    
+    # Compute average NMI for random guessing
+    return np.mean(random_nmi_scores), np.std(random_nmi_scores)
+
 def all_break():
     clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.h.csv"
     answer_label = read_predicted_result(clster_out)
@@ -78,6 +97,7 @@ def all_break():
 
     true_labels = []
     predicted_clusters = []
+    true_label_dict = defaultdict(int)
     for contig in answer_label:
         if contig not in contig_index_dict:
             continue
@@ -91,6 +111,11 @@ def all_break():
 
     nmi_score = normalized_mutual_info_score(true_labels, predicted_clusters)
     print(f"Normalized Mutual Information: {nmi_score:.4f}")
+    ## calculate random cluster nmi_score by shuffling the predicted_clusters
+    random_nmi_score, random_nmi_std = compute_random_nmi(true_labels, num_iterations=1000, num_clusters=max(true_labels))
+    print(f"Random Cluster NMI: {random_nmi_score:.4f}")
+
+    
 
 # for_zymo()
 all_break()
