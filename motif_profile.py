@@ -7,6 +7,7 @@ from scipy.stats import pearsonr
 # import matplotlib.pyplot as plt
 import sys
 from collections import defaultdict
+from matplotlib.ticker import MaxNLocator
 
 
 def read_ref(ref):
@@ -197,12 +198,14 @@ def count_ipd_ratio(ipd_ratio_file, motif_sites):
     # print (site_df)
     ### plot the site df using subplot using seaborn
     if len(site_df) > 0:
+        ## tpl is numeric, convert it to int
+        site_df['tpl'] = site_df['tpl'].astype(int)
         # Apply rolling mean smoothing, smooth it for each strand and each motif separately
         site_df['ipd_ratio'] = site_df.groupby(['refName', 'strand', 'motif'])['ipd_ratio'].transform(lambda x: x.rolling(window=100, min_periods=1).mean())
 
         import seaborn as sns
         import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(2, 1, figsize=(15, 5))
+        fig, ax = plt.subplots(2, 1, figsize=(15, 6))
         ## use grid
         sns.set(style="whitegrid")
         # sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[0])
@@ -211,32 +214,36 @@ def count_ipd_ratio(ipd_ratio_file, motif_sites):
 
         # Plot for strand "+"
         sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[0])
-        ax[0].set_title("Strand +")
+        ax[0].set_title("+")
+        ## remove x label
+        ax[0].set_xlabel("")
+        ax[0].set_ylabel("IPD Ratio")
 
         # Plot for strand "-"
         sns.lineplot(data=site_df[site_df['strand'] == "-"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[1])
-        ax[1].set_title("Strand -")
-
-        # Move the legend outside the plot (to the right)
-        handles, labels = ax[0].get_legend_handles_labels()  # Extract legend handles and labels
-        fig.legend(handles, labels, loc="center left", bbox_to_anchor=(1, 0.5))  # Move outside
+        ax[1].set_title("-")
+        ax[1].set_xlabel("")
+        ax[1].set_ylabel("IPD Ratio")
 
         # Remove individual legends from subplots
         ax[0].legend_.remove()
-        ax[1].legend_.remove()
 
-        # Adjust layout to make space for the legend
-        plt.tight_layout(rect=[0, 0, 0.85, 1])  # Leave space for the legend on the right
+        ## move legend of ax[1] to the below
+        ax[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5)
+
+        # Set fixed number of X-Ticks to 5 while still hiding them
+        ax[0].xaxis.set_major_locator(MaxNLocator(nbins=5)) 
+        ax[1].xaxis.set_major_locator(MaxNLocator(nbins=5))
 
 
 
-        ax[0].set_xticks([])        # Removes ticks
-        ax[0].set_xticklabels([])   # Removes tick labels
-        ax[0].set_xlabel("")        # Removes x-axis label
-        ## also remove the these for ax1
-        ax[1].set_xticks([])        # Removes ticks
-        ax[1].set_xticklabels([])   # Removes tick labels
-        ax[1].set_xlabel("") 
+        # ax[0].set_xticks([])        # Removes ticks
+        # ax[0].set_xticklabels([])   # Removes tick labels
+        # ax[0].set_xlabel("")        # Removes x-axis label
+        # ## also remove the these for ax1
+        # ax[1].set_xticks([])        # Removes ticks
+        # ax[1].set_xticklabels([])   # Removes tick labels
+        # ax[1].set_xlabel("") 
         ax[0].grid(True)
         ax[1].grid(True)
         fig = ipd_ratio_file[:-9] + ".pdf"
@@ -296,9 +303,7 @@ if __name__ == "__main__":
         print ("no motif sites left after filtering")
 
 
-# python motif_profile.py /home/shuaiw/borg/all_test_ccs3/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.fa\
-#  /home/shuaiw/borg/all_test_ccs3/gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.gff\
-#   /home/shuaiw/borg/all_test_ccs3/all.motifs.csv\
+# python motif_profile.py /home/shuaiw/borg/all_test_ccs3/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.fa /home/shuaiw/borg/all_test_ccs3/gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.gff /home/shuaiw/borg/all_test_ccs3/all.motifs.csv\
 #      /home/shuaiw/borg/all_test_ccs3/motif_profile.csv\
 #          /home/shuaiw/borg/all_test_ccs3/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.ipd3.csv
 
