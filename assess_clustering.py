@@ -57,7 +57,7 @@ def read_predicted_result(clster_out):
 
 
 def for_zymo():
-    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
+    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_zymo_truth()
 
@@ -66,6 +66,7 @@ def for_zymo():
     for contig in answer_label:
         true_labels.append(contig_index_dict[contig])
         predicted_clusters.append(answer_label[contig])
+    print (len(true_labels))
 
 
 
@@ -89,7 +90,7 @@ def compute_random_nmi(true_labels, num_iterations=1000, num_clusters=5):
     return np.mean(random_nmi_scores), np.std(random_nmi_scores)
 
 def all_break():
-    clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.h.csv"
+    clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_all_break_truth()
     print (len(contig_index_dict), "truth contig number")
@@ -115,7 +116,24 @@ def all_break():
     random_nmi_score, random_nmi_std = compute_random_nmi(true_labels, num_iterations=1000, num_clusters=max(true_labels))
     print(f"Random Cluster NMI: {random_nmi_score:.4f}")
 
+def read_all_binning():
+    contigs = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
+    bin_anno =  "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.csv"
+    f = open(bin_anno, 'w')
+    ## use biopython to read the fasta
+    from Bio import SeqIO
+    import re
+    for record in SeqIO.parse(contigs, "fasta"):
+        contig_name = record.id
+        # print (contig_name, record.description)
+        field = str(record.description).split("bin=")
+        bin_name = field[1][1:-1]
+        # print (field[1], bin_name)
+        print (contig_name, bin_name, sep = ",", file = f)
+    f.close()
+
     
 
 # for_zymo()
-all_break()
+# all_break()
+read_all_binning()

@@ -205,9 +205,30 @@ def count_ipd_ratio(ipd_ratio_file, motif_sites):
         fig, ax = plt.subplots(2, 1, figsize=(15, 5))
         ## use grid
         sns.set(style="whitegrid")
-        sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[0])
-        sns.lineplot(data=site_df[site_df['strand'] == "-"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[1])
+        # sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[0])
+        # sns.lineplot(data=site_df[site_df['strand'] == "-"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[1])
         ## define the x-axis label
+
+        # Plot for strand "+"
+        sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[0])
+        ax[0].set_title("Strand +")
+
+        # Plot for strand "-"
+        sns.lineplot(data=site_df[site_df['strand'] == "-"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[1])
+        ax[1].set_title("Strand -")
+
+        # Move the legend outside the plot (to the right)
+        handles, labels = ax[0].get_legend_handles_labels()  # Extract legend handles and labels
+        fig.legend(handles, labels, loc="center left", bbox_to_anchor=(1, 0.5))  # Move outside
+
+        # Remove individual legends from subplots
+        ax[0].legend_.remove()
+        ax[1].legend_.remove()
+
+        # Adjust layout to make space for the legend
+        plt.tight_layout(rect=[0, 0, 0.85, 1])  # Leave space for the legend on the right
+
+
 
         ax[0].set_xticks([])        # Removes ticks
         ax[0].set_xticklabels([])   # Removes tick labels
@@ -273,5 +294,12 @@ if __name__ == "__main__":
         count_ipd_ratio(ipd_ratio_file, motif_sites)
     else:
         print ("no motif sites left after filtering")
+
+
+# python motif_profile.py /home/shuaiw/borg/all_test_ccs3/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.fa\
+#  /home/shuaiw/borg/all_test_ccs3/gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.gff\
+#   /home/shuaiw/borg/all_test_ccs3/all.motifs.csv\
+#      /home/shuaiw/borg/all_test_ccs3/motif_profile.csv\
+#          /home/shuaiw/borg/all_test_ccs3/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.ipd3.csv
 
 
