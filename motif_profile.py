@@ -194,7 +194,7 @@ def count_ipd_ratio(ipd_ratio_file, motif_sites):
         if tag in motif_sites:
             data.append([row['refName'], str(row['tpl']+1) , strand_string, motif_sites[tag], row['ipd_ratio']])
     site_df = pd.DataFrame(data, columns = ["refName", "tpl", "strand", "motif", "ipd_ratio"])
-    print (site_df)
+    # print (site_df)
     ### plot the site df using subplot using seaborn
     if len(site_df) > 0:
         # Apply rolling mean smoothing, smooth it for each strand and each motif separately
@@ -263,8 +263,8 @@ if __name__ == "__main__":
 
 
     ## filter df, keep the motifs with motif_modified_num > 1000
-    df = df[df["motif_modified_num"] > 200]
-    df = df[df["motif_modified_ratio"] > 0.1]
+    df = df[df["motif_modified_num"] > 100]
+    df = df[df["motif_modified_ratio"] > 0.2]
     print (len(df), "motifs left after filtering")
     if len(df) > 0:
         motif_sites = reload_motif_sites(REF, df)

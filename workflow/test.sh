@@ -113,3 +113,28 @@ whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_
 whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
  work_dir=/home/shuaiw/methylation/data/borg/bench/s4 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
   --job-name=s4
+
+    sbatch --partition standard --wrap "/usr/bin/time -v -o all_s5.time snakemake \
+--config whole_bam=/home/shuaiw/borg/all_bams/m84039_230624_013044_s3.hifi_reads.bc2023.align.ccs.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+ work_dir=/home/shuaiw/methylation/data/borg/bench/luis/m84039_230624_013044_s3.hifi_reads.bc2023 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
+  --job-name=s5
+
+    sbatch --partition standard --wrap "/usr/bin/time -v -o all_s6.time snakemake \
+--config whole_bam=/home/shuaiw/borg/all_bams/m84039_230626_214113_s4.hifi_reads.bc2024.align.ccs.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+ work_dir=/home/shuaiw/methylation/data/borg/bench/luis/m84039_230626_214113_s4.hifi_reads.bc2024 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
+  --job-name=s6
+
+    sbatch --partition standard --wrap "/usr/bin/time -v -o all_s7.time snakemake \
+--config whole_bam=/home/shuaiw/borg/all_bams/m84039_230626_221130_s1.hifi_reads.bc2025.align.ccs.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+ work_dir=/home/shuaiw/methylation/data/borg/bench/luis/m84039_230626_221130_s1.hifi_reads.bc2025 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
+  --job-name=s7
+
+    sbatch --partition standard --wrap "/usr/bin/time -v -o all_s8.time snakemake \
+--config whole_bam=/home/shuaiw/borg/all_bams/m84039_230626_221130_s1.hifi_reads.bc2026.align.ccs.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+ work_dir=/home/shuaiw/methylation/data/borg/bench/luis/m84039_230626_221130_s1.hifi_reads.bc2026 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
+  --job-name=s8
+

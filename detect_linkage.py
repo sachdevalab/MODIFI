@@ -4,9 +4,10 @@ import re
 import seaborn as sns
 
 def find_linkage():
-    col1 = 'SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_33175_L'
-    datafile = "/home/shuaiw/methylation/data/borg/bench/all_subreads/motif_profile2.csv"
+    col1 = 'RuReacBro_20230708_11_72h_200ppm_r1_LR_238_C'
+    # datafile = "/home/shuaiw/methylation/data/borg/bench/all_subreads/motif_profile2.csv"
     # datafile = "/home/shuaiw/methylation/data/borg/all_test_ccs2/motif_profile.csv"
+    datafile="/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20/motif_profile.csv"
 
     df = pd.read_csv(datafile, index_col=0)
     df = df.loc[:, (df > 0.1).any(axis=0)]
