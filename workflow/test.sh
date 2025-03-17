@@ -138,3 +138,10 @@ whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_
  work_dir=/home/shuaiw/methylation/data/borg/bench/luis/m84039_230626_221130_s1.hifi_reads.bc2026 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
   --job-name=s8
 
+
+    sbatch --partition standard --wrap "snakemake \
+--config whole_bam=/home/shuaiw/borg/mis_assembly/align.ccs.bam \
+whole_ref=/home/shuaiw/borg/contigs/mis_contigs.fasta \
+ work_dir=/home/shuaiw/borg/mis_assembly read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
+  --job-name=mis
+

@@ -205,7 +205,7 @@ def count_ipd_ratio(ipd_ratio_file, motif_sites):
 
         import seaborn as sns
         import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(2, 1, figsize=(15, 6))
+        fig, ax = plt.subplots(2, 1, figsize=(15, 7))
         ## use grid
         sns.set(style="whitegrid")
         # sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[0])
@@ -303,8 +303,7 @@ if __name__ == "__main__":
         print ("no motif sites left after filtering")
 
 
-# python motif_profile.py /home/shuaiw/borg/all_test_ccs3/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.fa /home/shuaiw/borg/all_test_ccs3/gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.gff /home/shuaiw/borg/all_test_ccs3/all.motifs.csv\
-#      /home/shuaiw/borg/all_test_ccs3/motif_profile.csv\
-#          /home/shuaiw/borg/all_test_ccs3/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.ipd3.csv
 
+# python motif_profile.py /home/shuaiw/borg/all_test//contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.fa /home/shuaiw/borg/all_test//gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.gff /home/shuaiw/borg/all_test/test_motifs.csv /home/shuaiw/borg/all_test/profiles/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.csv /home/shuaiw/borg/all_test/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.ipd3.csv
 
+# python motif_profile.py /home/shuaiw/borg/all_test_ccs3/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.fa  /home/shuaiw/borg/all_test_ccs3/gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.gff  /home/shuaiw/borg/all_test_ccs3/all.motifs.csv     /home/shuaiw/borg/all_test_ccs3/motif_profile.csv         /home/shuaiw/borg/all_test_ccs3/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.ipd3.csv
