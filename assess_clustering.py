@@ -1,4 +1,5 @@
 from sklearn.metrics import normalized_mutual_info_score
+from sklearn.metrics import adjusted_rand_score
 import pandas as pd
 import numpy as np  
 from collections import defaultdict
@@ -57,7 +58,7 @@ def read_predicted_result(clster_out):
 
 
 def for_zymo():
-    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.csv"
+    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_zymo_truth()
 
@@ -68,15 +69,11 @@ def for_zymo():
         predicted_clusters.append(answer_label[contig])
     print (len(true_labels))
 
-
-
-
-
-    nmi_score = normalized_mutual_info_score(true_labels, predicted_clusters)
-    print(f"Normalized Mutual Information: {nmi_score:.4f}")
+    eva(true_labels, predicted_clusters)
 
 def compute_random_nmi(true_labels, num_iterations=1000, num_clusters=5):
     random_nmi_scores = []
+    random_ari = []
     
     for _ in range(num_iterations):
         # Generate random cluster assignments
@@ -84,13 +81,15 @@ def compute_random_nmi(true_labels, num_iterations=1000, num_clusters=5):
         # print (random_clusters)
         # Compute NMI between true labels and random clusters
         nmi_score = normalized_mutual_info_score(true_labels, random_clusters)
+        ari = adjusted_rand_score(true_labels, random_clusters)
         random_nmi_scores.append(nmi_score)
+        random_ari.append(ari)
     
     # Compute average NMI for random guessing
-    return np.mean(random_nmi_scores), np.std(random_nmi_scores)
+    return np.mean(random_nmi_scores), np.mean(random_ari)
 
 def all_break():
-    clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.csv"
+    clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.h.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_all_break_truth()
     print (len(contig_index_dict), "truth contig number")
@@ -105,16 +104,7 @@ def all_break():
         true_labels.append(contig_index_dict[contig])
         predicted_clusters.append(answer_label[contig])
 
-    print (len(true_labels))
-    print (len(predicted_clusters))
-    # print (contig_index_dict)
-    # print (answer_label)
-
-    nmi_score = normalized_mutual_info_score(true_labels, predicted_clusters)
-    print(f"Normalized Mutual Information: {nmi_score:.4f}")
-    ## calculate random cluster nmi_score by shuffling the predicted_clusters
-    random_nmi_score, random_nmi_std = compute_random_nmi(true_labels, num_iterations=1000, num_clusters=max(true_labels))
-    print(f"Random Cluster NMI: {random_nmi_score:.4f}")
+    eva(true_labels, predicted_clusters)
 
 def read_all_binning():
     contigs = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
@@ -167,7 +157,9 @@ def remove_single_cluster(true_labels, predicted_clusters):
     
 
 def all_break2():
-    clster_out = "/home/shuaiw/borg/all_test_ccs3/motif_cluster.csv"
+    # clster_out = "/home/shuaiw/borg/all_test_ccs3/motif_cluster.h.csv"
+    # clster_out = "/home/shuaiw/borg/bench/all_subreads/motif_cluster.csv"
+    clster_out = "/home/shuaiw/borg/bench/s4/motif_cluster.h.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = get_binning_truth()
     print (len(contig_index_dict), "truth contig number")
@@ -182,8 +174,14 @@ def all_break2():
         true_labels.append(contig_index_dict[contig])
         predicted_clusters.append(answer_label[contig])
     
-    # true_labels, predicted_clusters  = remove_single_cluster(true_labels, predicted_clusters)
 
+    eva(true_labels, predicted_clusters)
+
+
+    
+
+def eva(true_labels, predicted_clusters):
+    # true_labels, predicted_clusters  = remove_single_cluster(true_labels, predicted_clusters)
     # print (true_labels)
     print ("no of considered contigs:", len(true_labels))
     print (len(predicted_clusters))
@@ -191,17 +189,14 @@ def all_break2():
     # print (answer_label)
 
     nmi_score = normalized_mutual_info_score(true_labels, predicted_clusters)
-    print(f"Normalized Mutual Information: {nmi_score:.4f}")
+    ARI = adjusted_rand_score(true_labels, predicted_clusters)
+    print(f"Normalized Mutual Information: {nmi_score:.4f}", f"ARI: {ARI:.4f}")
     ## calculate random cluster nmi_score by shuffling the predicted_clusters
-    random_nmi_score, random_nmi_std = compute_random_nmi(true_labels, num_iterations=1000, num_clusters=max(true_labels))
-    print(f"Random Cluster NMI: {random_nmi_score:.4f}")
-    
-
-
+    random_nmi_score, random_air = compute_random_nmi(true_labels, num_iterations=1000, num_clusters=max(true_labels))
+    print(f"Random Cluster NMI: {random_nmi_score:.4f}", f"random ARI: {random_air:.4f}")
     
 
 # for_zymo()
 # all_break()
-# read_all_binning()
-# get_binning_truth()
+
 all_break2()
