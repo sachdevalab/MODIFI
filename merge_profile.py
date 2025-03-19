@@ -125,7 +125,7 @@ def hierarchical_clustering(df, tree_fig, cutoff=1.6):
 
     ## calculate how many clusters
     n_clusters = len(set(cluster_labels))
-    print (n_clusters, "clusters detected.")
+    print (n_clusters, "clusters detected hierarchical_clustering.")
     data = []
     for i in range(n_clusters):
         # print ("cluster", i)
@@ -167,7 +167,7 @@ def TSE(df, cluster_fig):
     # print (clustering.labels_)
     # calculate how many clusters
     n_clusters = len(set(clustering.labels_))
-    print (n_clusters, "clusters detected.")
+    print (n_clusters, "clusters detected in TSNE.")
 
     ## output the cluster result, the elements with same cluster label are output together
     data = []
@@ -194,37 +194,45 @@ def TSE(df, cluster_fig):
         adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
     plt.savefig(cluster_fig)
 
-def PCA_plot(profiles, pca_fig):
+def PCA_plot(df, pca_fig):
     print ("start PCA...")
     from sklearn.decomposition import PCA
     pca = PCA(n_components=2)
     ## transpose the profiles
     # profiles = profiles.T
     ## add pseudo values to zero values
-    matrix = profiles.to_numpy()
+    matrix = df.to_numpy()
     ## Trabspose the matrix
     matrix = matrix.T
 
     ## zero values are set to small random pseudovalues in the (−0.2, +0.2)
-    # mask = matrix == 0
-    # matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
-
-
+    mask = matrix == 0
+    matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
     X_embedded = pca.fit_transform(matrix)
-    # print (profiles)
 
     ## cluster the pca result
-    clustering = DBSCAN(eps=0.1, min_samples=2).fit(X_embedded)
+    clustering = DBSCAN(eps=0.1, min_samples=1).fit(X_embedded)
     # print (clustering.labels_)
     ## save the cluster result in a dataframe, and plot it like in tse function
     n_clusters = len(set(clustering.labels_))
     print (n_clusters, "clusters detected after PCA.")
+    data = []
+    for i in range(n_clusters):
+        # print ("cluster", i)
+        for j in range(len(clustering.labels_)):
+            if clustering.labels_[j] == i:
+                # print (df.columns[j])
+                data.append([df.columns[j], i])
+    ## save the cluster result
+    cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
+    cluster_result.to_csv(cluster_fig.replace(".pdf", ".p.csv"), index=False)
+
     scatter_plot = sns.scatterplot(x=X_embedded[:, 0], y=X_embedded[:, 1], hue=clustering.labels_, palette="viridis")
     
     ## if df column number is too large, the adjust_text function may not work well, skip it
-    if len(profiles) < 100:
+    if len(df) < 100:
         texts = []
-        for i, label in enumerate(profiles.columns):
+        for i, label in enumerate(df.columns):
             # print (i, label)
             if i < len(X_embedded):
                 texts.append(scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=7))
@@ -268,7 +276,7 @@ if __name__ == "__main__":
     # load the profile from the saved file
     # profiles = pd.read_csv("tmp/profiles.csv", index_col=0)
     # Filter rows where any value is greater than 0.5
-    min_frac = 0.4
+    min_frac = 0.5
     profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
     # Filter columns where any value is greater than 0.5
     profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]

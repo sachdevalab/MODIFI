@@ -41,7 +41,7 @@ def read_all_break_truth():
             index += 1
         contig_index_dict[contig] = spcies_index[species_name]
         cluster_num_dict[spcies_index[species_name]] += 1
-    print (cluster_num_dict)
+    # print (cluster_num_dict)
     return contig_index_dict
     
 
@@ -58,7 +58,7 @@ def read_predicted_result(clster_out):
 
 
 def for_zymo():
-    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
+    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_zymo_truth()
 
@@ -89,7 +89,7 @@ def compute_random_nmi(true_labels, num_iterations=1000, num_clusters=5):
     return np.mean(random_nmi_scores), np.mean(random_ari)
 
 def all_break():
-    clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.h.csv"
+    clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_all_break_truth()
     print (len(contig_index_dict), "truth contig number")
@@ -154,8 +154,6 @@ def remove_single_cluster(true_labels, predicted_clusters):
             new_predict.append(predicted_clusters[i])
     return new_true, new_predict 
 
-    
-
 def all_break2():
     # clster_out = "/home/shuaiw/borg/all_test_ccs3/motif_cluster.h.csv"
     # clster_out = "/home/shuaiw/borg/bench/all_subreads/motif_cluster.csv"
@@ -173,13 +171,8 @@ def all_break2():
             continue
         true_labels.append(contig_index_dict[contig])
         predicted_clusters.append(answer_label[contig])
-    
-
     eva(true_labels, predicted_clusters)
-
-
-    
-
+   
 def eva(true_labels, predicted_clusters):
     # true_labels, predicted_clusters  = remove_single_cluster(true_labels, predicted_clusters)
     # print (true_labels)
@@ -197,6 +190,6 @@ def eva(true_labels, predicted_clusters):
     
 
 # for_zymo()
-# all_break()
+all_break()
 
-all_break2()
+# all_break2()

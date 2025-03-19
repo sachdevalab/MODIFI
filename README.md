@@ -20,3 +20,21 @@ seaborn
 scipy 
 samtools
 ```
+
+## Output interpretation
+
+`profiles/*.motifs.profile.csv`
+| Column | Description |
+| --- | --- |
+|motifString| motif string|
+|centerPos|Methylated locus on the string|
+|for_loci_num|No. of motif sites on forward strand|
+|for_modified_num|No. of methylated motif sites on forward strand|
+|for_modified_ratio|Fraction of methylation in all motif sites on the forward strand|
+|rev_loci_num|No. of motif sites on reverse strand|
+|rev_modified_num|No. of methylated motif sites on reverse strand|
+|rev_modified_ratio|Fraction of methylation in all motif sites on the reverse strand|
+|motif_loci_num|No. of motif sites on both strand|
+|motif_modified_num|No. of methylated motif sites on both strand|
+|motif_modified_ratio|Fraction of methylation in all motif sites on the both strand|
+|proportion|Fraction of methylation of this motif and all methylation sites|

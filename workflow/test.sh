@@ -145,3 +145,16 @@ whole_ref=/home/shuaiw/borg/contigs/mis_contigs.fasta \
  work_dir=/home/shuaiw/borg/mis_assembly read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
   --job-name=mis
 
+    sbatch --partition standard --wrap "snakemake \
+--config whole_bam=/home/shuaiw/borg/allison/NANO_2_INF1330004_4G1.align.ccs.bam \
+whole_ref=/home/shuaiw/borg/allison/NANO_2_INF1330004_4PB_HR_HIFIASM_META_scaffold_min1000.fa \
+ work_dir=/home/shuaiw/borg/allison/NANO_2_INF1330004_4G1 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
+  --job-name=a1
+
+      sbatch --partition standard --wrap "snakemake \
+--config whole_bam=/home/shuaiw/borg/allison/NANO_2_INF1340011_4G1.align.ccs.bam \
+whole_ref=/home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffold_min1000.fa \
+ work_dir=/home/shuaiw/borg/allison/NANO_2_INF1340011_4G1 read_type=ccs min_len=5000 max_NM=30 min_cov=5"\
+  --job-name=a2
+
+
