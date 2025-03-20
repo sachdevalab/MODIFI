@@ -136,14 +136,14 @@ def hierarchical_clustering(df, tree_fig, cutoff=1.6):
     cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
     cluster_result.to_csv(cluster_fig.replace(".pdf", ".h.csv"), index=False)
     # Plot dendrogram
-    # plt.figure(figsize=(10, 15))
-    # dendrogram(my_linkage, labels=df.columns, leaf_rotation=90, leaf_font_size=5)
-    # plt.axhline(y=cutoff, color='r', linestyle='--')  # Show the cutoff threshold
-    # plt.title(f"Dendrogram with Distance Threshold = {cutoff}")
-    # plt.xlabel("Sample Index")
-    # plt.ylabel("Cluster Distance")
-    # plt.savefig(tree_fig)
-    # print ("hierarchical clustering done.")
+    plt.figure(figsize=(20, 15))
+    dendrogram(my_linkage, labels=df.columns, orientation='left', leaf_rotation=0)
+    plt.axhline(y=cutoff, color='r', linestyle='--')  # Show the cutoff threshold
+    plt.title(f"Dendrogram with Distance Threshold = {cutoff}")
+    plt.xlabel("Sample Index")
+    plt.ylabel("Cluster Distance")
+    plt.savefig(tree_fig)
+    print ("hierarchical clustering done.")
 
 def UMAP(df, cluster_fig):
     matrix = df.to_numpy()

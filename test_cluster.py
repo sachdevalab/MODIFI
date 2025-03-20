@@ -103,26 +103,26 @@ def Hierachy(df):
     mask = matrix == 0
     matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
 
-    # my_linkage = linkage(matrix, method='average', metric='euclidean')
-    # cluster_labels = fcluster(my_linkage, t=1.5, criterion='distance')
+    my_linkage = linkage(matrix, method='average', metric='euclidean')
+    cluster_labels = fcluster(my_linkage, t=1.5, criterion='distance')
 
-    from sklearn.mixture import GaussianMixture
+    # from sklearn.mixture import GaussianMixture
 
     ## use bic to determine the number of clusters
-    bic = []
-    max_cluster = 150
-    # if len(matrix) < max_cluster:
-    max_cluster = len(matrix)
-    for i in range(1, max_cluster+1):
-        gmm = GaussianMixture(n_components=i)
-        gmm.fit(matrix)
-        bic.append(gmm.bic(matrix))
-    n_clusters = np.argmin(bic) + 1
-    print (n_clusters, "clusters detected in hierarchical_clustering.")
-    # n_clusters = 100
-    gmm = GaussianMixture(n_components=n_clusters)
-    gmm.fit(matrix)
-    cluster_labels = gmm.predict(matrix)
+    # bic = []
+    # max_cluster = 30
+    # # if len(matrix) < max_cluster:
+    # max_cluster = len(matrix)
+    # for i in range(1, max_cluster+1):
+    #     gmm = GaussianMixture(n_components=i)
+    #     gmm.fit(matrix)
+    #     bic.append(gmm.bic(matrix))
+    # n_clusters = np.argmin(bic) + 1
+    # print (n_clusters, "clusters detected in hierarchical_clustering.")
+    # # n_clusters = 100
+    # gmm = GaussianMixture(n_components=n_clusters)
+    # gmm.fit(matrix)
+    # cluster_labels = gmm.predict(matrix)
 
 
     ## calculate how many clusters
@@ -137,14 +137,24 @@ def Hierachy(df):
                 data.append([df.columns[j], i])
     cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
     cluster_result.to_csv(result_file, index=False)
+    # Plot dendrogram
+    plt.figure(figsize=(20, 10))
+    dendrogram(my_linkage, labels=df.columns, orientation='left', leaf_rotation=0)#, leaf_font_size=8
+    ## show cut line
+    plt.axvline(x=1.5, color='r', linestyle='--')
+    plt.title(f"Dendrogram with Distance Threshold = {1.5}")
+    plt.xlabel("Sample Index")
+    plt.ylabel("Cluster Distance")
+    plt.savefig("tmp/tree.pdf")
+    print ("hierarchical clustering done.")
 
    
 
 
-# profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo2/motif_profile2.csv"
-# result_file = "tmp/zymo.u.csv"
-profile_file = "/home/shuaiw/methylation/data/borg/bench/all_break/motif_profile.csv"
-result_file = "tmp/all.u.csv"
+profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo2/motif_profile2.csv"
+result_file = "tmp/zymo.u.csv"
+# profile_file = "/home/shuaiw/methylation/data/borg/bench/all_break/motif_profile.csv"
+# result_file = "tmp/all.u.csv"
 # profile_file = "/home/shuaiw/methylation/data/borg/all_test_ccs3/motif_profile.csv"
 # result_file = "tmp/real.u.csv"
 
