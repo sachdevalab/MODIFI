@@ -58,7 +58,8 @@ def read_predicted_result(clster_out):
 
 
 def for_zymo():
-    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.csv"
+    # clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.u.csv"
+    clster_out = "tmp/zymo.u.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_zymo_truth()
 
@@ -89,7 +90,8 @@ def compute_random_nmi(true_labels, num_iterations=1000, num_clusters=5):
     return np.mean(random_nmi_scores), np.mean(random_ari)
 
 def all_break():
-    clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.csv"
+    clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.u.csv"
+    clster_out = "tmp/all.u.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_all_break_truth()
     print (len(contig_index_dict), "truth contig number")
@@ -157,7 +159,8 @@ def remove_single_cluster(true_labels, predicted_clusters):
 def all_break2():
     # clster_out = "/home/shuaiw/borg/all_test_ccs3/motif_cluster.h.csv"
     # clster_out = "/home/shuaiw/borg/bench/all_subreads/motif_cluster.csv"
-    clster_out = "/home/shuaiw/borg/bench/s4/motif_cluster.h.csv"
+    # clster_out = "/home/shuaiw/borg/bench/s4/motif_cluster.h.csv"
+    clster_out = "tmp/real.u.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = get_binning_truth()
     print (len(contig_index_dict), "truth contig number")
@@ -185,11 +188,11 @@ def eva(true_labels, predicted_clusters):
     ARI = adjusted_rand_score(true_labels, predicted_clusters)
     print(f"Normalized Mutual Information: {nmi_score:.4f}", f"ARI: {ARI:.4f}")
     ## calculate random cluster nmi_score by shuffling the predicted_clusters
-    random_nmi_score, random_air = compute_random_nmi(true_labels, num_iterations=1000, num_clusters=max(true_labels))
-    print(f"Random Cluster NMI: {random_nmi_score:.4f}", f"random ARI: {random_air:.4f}")
+    # random_nmi_score, random_air = compute_random_nmi(true_labels, num_iterations=1000, num_clusters=max(true_labels))
+    # print(f"Random Cluster NMI: {random_nmi_score:.4f}", f"random ARI: {random_air:.4f}")
     
 
-# for_zymo()
+for_zymo()
 all_break()
 
-# all_break2()
+all_break2()

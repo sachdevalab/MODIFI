@@ -145,6 +145,47 @@ def hierarchical_clustering(df, tree_fig, cutoff=1.6):
     # plt.savefig(tree_fig)
     # print ("hierarchical clustering done.")
 
+def UMAP(df, cluster_fig):
+    matrix = df.to_numpy()
+    ## Trabspose the matrix
+    matrix = matrix.T
+
+    ## zero values are set to small random pseudovalues in the (−0.2, +0.2)
+    mask = matrix == 0
+    matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
+    # print (matrix)
+
+    try:
+        import umap
+        X_embedded = umap.UMAP().fit_transform(matrix, 
+                                               n_neighbors=1,
+                                               min_dist=0.1,
+                                               metric='euclidean')
+        # import umap.plot
+        # umap.plot.points(X_embedded)
+        # ## save the umap result
+        # plt.savefig("/tmp/umap.pdf")
+    except Exception as e:
+        print(f"Failed to create UMAP: {e}")
+        return
+    
+    clustering = DBSCAN(eps=0.4, min_samples=1).fit(X_embedded)
+    # print (clustering.labels_)
+    # calculate how many clusters
+    n_clusters = len(set(clustering.labels_))
+    print (n_clusters, "clusters detected in UMAP.")
+
+    ## output the cluster result, the elements with same cluster label are output together
+    data = []
+    for i in range(n_clusters):
+        # print ("cluster", i)
+        for j in range(len(clustering.labels_)):
+            if clustering.labels_[j] == i:
+                # print (df.columns[j])
+                data.append([df.columns[j], i])
+    ## save the cluster result
+    cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
+    cluster_result.to_csv(cluster_fig.replace(".pdf", ".u.csv"), index=False)
 
 def TSE(df, cluster_fig):
     matrix = df.to_numpy()
@@ -285,6 +326,7 @@ if __name__ == "__main__":
 
     if len(profiles) > 0:
         heatmap(profiles, heat_map)
+        UMAP(profiles, cluster_fig)
         TSE(profiles, cluster_fig)
         PCA_plot(profiles, pca_fig)
         hierarchical_clustering(profiles, tree_fig)

@@ -63,8 +63,9 @@ def heatmap(df, heat_map):
         plt.clf()
 # datafile = "/home/shuaiw/borg/bench/all_break/motif_profile.csv"
 # datafile = "/home/shuaiw/borg/all_test_ccs3/motif_profile.csv"
-datafile = "/home/shuaiw/borg/bench/all_subreads/motif_profile2.csv"
+datafile = "/home/shuaiw/borg/bench/s3/motif_profile.csv"
 # datafile = "/home/shuaiw/borg/bench/luis/m84039_230626_221130_s1.hifi_reads.bc2026/motif_profile.csv"
+# datafile = "/home/shuaiw/borg/bench/all_subreads/motif_profile2.csv"
 
 
 # print (name_dict)
@@ -85,14 +86,14 @@ df.index = [row + "_" + contig_dict[row] for row in df.index]
 
 
 ## remove the rows with all values smaller than 0.1
-df = df.loc[(df > 0.3).any(axis=1)]
+df = df.loc[(df > 0.1).any(axis=1)]
 
 ## downsample the data
 # df = df.sample(n=200, axis=0)  ## contig number
 print (df.shape)
 
 ## remove the columns with all values smaller than 0.1
-df = df.loc[:, (df > 0.3).any(axis=0)]
+df = df.loc[:, (df > 0.1).any(axis=0)]
 print (df.shape)
 
 heatmap(df, "tmp/heat_map_borg.pdf")
