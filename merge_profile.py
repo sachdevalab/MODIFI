@@ -52,6 +52,7 @@ def merge_profile(profile_list):
     ## initialize the profiles as df
     profiles = []
     samples = []
+
     for file in os.listdir(profile_list):
     # for file in profile_list:
         if file.endswith(".csv"):
@@ -63,11 +64,6 @@ def merge_profile(profile_list):
                 print ("cannot extract sample name from", file)
                 continue
             sample_name = match.group(1).split("/")[-1]
-            # if sample_name not in borg_contigs:
-            #     continue
-            # else:
-            #     sample_name = sample_name + "_" + borg_contigs[sample_name]
-            # print (sample_name)
             samples.append(sample_name)
             # print (sample_name, profile.head())
             motifs_names = profile['motifString']
@@ -75,8 +71,7 @@ def merge_profile(profile_list):
             ## we only want the motif_modified_ratio column
             profile = profile[['motif_modified_ratio']]
             profiles.append(profile['motif_modified_ratio'])
-            # if len(samples) > 10:
-            #     break
+
     ## name the columns
     profiles = pd.concat(profiles, axis=1)
     profiles.columns = samples
@@ -86,8 +81,54 @@ def merge_profile(profile_list):
     print (profiles.head())
     ## print the shape of the profiles
     print (profiles.shape)
-    
     return profiles
+
+def summary( min_frac, summary_file, profiles):
+    
+    work_dir = "/".join(summary_file.split("/")[:-1])
+    ## count number of bams
+    bam_dir = os.path.join(work_dir, "bams")
+    ## count the number of bams
+    bams = [f for f in os.listdir(bam_dir) if f.endswith(".bam")]
+    bam_num = len(bams)
+    ## count the number of contigs
+    contig_file = os.path.join(work_dir, "contigs")
+    contigs = [f for f in os.listdir(contig_file) if f.endswith(".fa")]
+    contig_num = len(contigs)
+    ## count the number of ipds
+    ipd_file = os.path.join(work_dir, "ipd")
+    ipds = [f for f in os.listdir(ipd_file) if f.endswith(".ipd1.csv")]
+    ipd_num = len(ipds)
+    ## count the number of profiles
+    profile_file = os.path.join(work_dir, "profiles")
+    profiles_list = [f for f in os.listdir(profile_file) if f.endswith(".motifs.profile.csv")]
+    profile_num = len(profiles_list)
+    ## count the number of motif files
+    motif_file = os.path.join(work_dir, "motifs")
+    motifs = [f for f in os.listdir(motif_file) if f.endswith(".motifs.csv")]
+    motif_num = len(motifs)
+    ## count the number of gff files
+    gff_file = os.path.join(work_dir, "gffs")
+    gffs = [f for f in os.listdir(gff_file) if f.endswith(".gff") and not f.endswith(".reprocess.gff")]
+    gff_num = len(gffs)
+
+    f = open(summary_file, "w")
+    print (f"No. of contigs with motifs: {profiles.shape[1]}", file=f)
+    print (f"Minimum motif fraction: {min_frac}", file=f)
+    print (f"Ratio of contigs profiles with motifs: {round(profiles.shape[1]/profile_num,2)}", file=f)
+    print (f"No. of motifs with motifs > {min_frac}: {profiles.shape[0]}", file=f)
+    print (f"Number of contigs: {contig_num}", file=f)
+    print (f"Number of bams: {bam_num}", file=f)
+    print (f"Number of ipds: {ipd_num}", file=f)
+    print (f"Number of gffs: {gff_num}", file=f)
+    print (f"Number of motif files: {motif_num}", file=f)
+    print (f"Number of profiles: {profile_num}", file=f)
+
+    f.close()
+
+    
+    
+
 
 def heatmap(df, heat_map):
     df = df.T
@@ -294,10 +335,7 @@ if __name__ == "__main__":
     optional.add_argument("-h", "--help", action="help")
     args = vars(parser.parse_args())
 
-    # profile_dir = "/home/shuaiw/borg/bench/break2/profiles"
-    # profile_dir = sys.argv[1]
-    # heat_map = sys.argv[2]
-    # total_profile = sys.argv[3]
+    min_frac = 0.5
 
     profile_list = args['all_profiles']
     heat_map = args['heatmap']
@@ -305,19 +343,12 @@ if __name__ == "__main__":
     cluster_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_cluster.pdf"
     pca_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_pca.pdf"
     tree_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_tree.pdf"
-    # print (profile_dir)
-    # profile_dir = "/home/shuaiw/borg/all_test/profiles"
-    # heat_map = f"{profile_dir}/../motif_heatmap.pdf"
-    # total_profile = f"{profile_dir}/../motif_profile.csv"
+    summary_file = "/".join(heat_map.split("/")[:-1]) + "/summary.csv"
 
-    # borg_contigs = load_contigs()
     profiles = merge_profile(profile_list)
     ## save the profiles
     profiles.to_csv(total_profile, index=True)
-    # load the profile from the saved file
-    # profiles = pd.read_csv("tmp/profiles.csv", index_col=0)
-    # Filter rows where any value is greater than 0.5
-    min_frac = 0.5
+    
     profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
     # Filter columns where any value is greater than 0.5
     profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
@@ -332,6 +363,8 @@ if __name__ == "__main__":
         hierarchical_clustering(profiles, tree_fig)
     else:
         print ("no motif identified")
+
+    summary( min_frac, summary_file, profiles)
 
 
 # python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/all_test_ccs/profiles         --heatmap  /home/shuaiw/methylation/data/borg/all_test_ccs/motif_heatmap.pdf         --summary /home/shuaiw/methylation/data/borg/all_test_ccs/motif_profile.csv
