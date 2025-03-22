@@ -87,7 +87,7 @@ def methy_cmd():
     f.readline()
 
 
-    cmd_file = "/home/shuaiw/Methy/workflow/methy_batch.sh"
+    cmd_file = "/home/shuaiw/Methy/workflow/methy_batch2.sh"
     h = open(cmd_file, "w")
 
     header = """
@@ -116,7 +116,7 @@ def methy_cmd():
     --job-name={field[0]}
         """
         
-        print (cmd, file=h)
+        print (cmd2, file=h)
 
     f.close()
     h.close()

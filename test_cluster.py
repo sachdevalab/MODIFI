@@ -104,7 +104,7 @@ def Hierachy(df):
     matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
 
     my_linkage = linkage(matrix, method='average', metric='euclidean')
-    cluster_labels = fcluster(my_linkage, t=1.5, criterion='distance')
+    cluster_labels = fcluster(my_linkage, t=1.3, criterion='distance')
 
     # from sklearn.mixture import GaussianMixture
 
@@ -138,15 +138,15 @@ def Hierachy(df):
     cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
     cluster_result.to_csv(result_file, index=False)
     # Plot dendrogram
-    plt.figure(figsize=(20, 10))
-    dendrogram(my_linkage, labels=df.columns, orientation='left', leaf_rotation=0)#, leaf_font_size=8
-    ## show cut line
-    plt.axvline(x=1.5, color='r', linestyle='--')
-    plt.title(f"Dendrogram with Distance Threshold = {1.5}")
-    plt.xlabel("Sample Index")
-    plt.ylabel("Cluster Distance")
-    plt.savefig("tmp/tree.pdf")
-    print ("hierarchical clustering done.")
+    # plt.figure(figsize=(20, 10))
+    # dendrogram(my_linkage, labels=df.columns, orientation='left', leaf_rotation=0)#, leaf_font_size=8
+    # ## show cut line
+    # plt.axvline(x=1.5, color='r', linestyle='--')
+    # plt.title(f"Dendrogram with Distance Threshold = {1.5}")
+    # plt.xlabel("Sample Index")
+    # plt.ylabel("Cluster Distance")
+    # plt.savefig("tmp/tree.pdf")
+    # print ("hierarchical clustering done.")
 
    
 

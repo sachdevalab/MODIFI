@@ -46,8 +46,6 @@ def read_all_break_truth():
     
 
 def read_predicted_result(clster_out):
-
-
     df = pd.read_csv(clster_out)
     answer_label = {}
     for index, row in df.iterrows():
@@ -56,11 +54,36 @@ def read_predicted_result(clster_out):
         answer_label[contig] = row['cluster']
     return answer_label
 
+def read_metabat_result():
+
+
+    df = pd.read_csv("/home/shuaiw/borg/maxbat/zymo_bin.txt", header = None, sep = "\t")
+    # print (df)
+    answer_label = {}
+    for index, row in df.iterrows():
+        # contig = row["motif"]
+        contig = row[0]
+        answer_label[contig] = row[1]
+    return answer_label
 
 def for_zymo():
-    # clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.u.csv"
-    clster_out = "tmp/zymo.u.csv"
+    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
+    # clster_out = "tmp/zymo.u.csv"
     answer_label = read_predicted_result(clster_out)
+    contig_index_dict = read_zymo_truth()
+
+    true_labels = []
+    predicted_clusters = []
+    for contig in answer_label:
+        true_labels.append(contig_index_dict[contig])
+        predicted_clusters.append(answer_label[contig])
+    print (len(true_labels))
+
+    eva(true_labels, predicted_clusters)
+
+def for_zymo_maxbat():
+
+    answer_label = read_metabat_result()
     contig_index_dict = read_zymo_truth()
 
     true_labels = []
@@ -190,9 +213,116 @@ def eva(true_labels, predicted_clusters):
     ## calculate random cluster nmi_score by shuffling the predicted_clusters
     # random_nmi_score, random_air = compute_random_nmi(true_labels, num_iterations=1000, num_clusters=max(true_labels))
     # print(f"Random Cluster NMI: {random_nmi_score:.4f}", f"random ARI: {random_air:.4f}")
+
+def host_linkage_eva(): 
+    fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged.fa.fai"
+    spcies_index = {}
+    index = 1
+    plasmid_host_dict = {}
+    host_contig_dict = defaultdict(list)
+
+    contig_index_dict = {}
+    for line in open(fai):
+        contig = line.split("\t")[0]
+        if contig == "B_cepacia_UCB-717_4":
+            continue
+        species_name = "_".join(contig.split("_")[:-1])
+        length = int(line.split("\t")[1])
+        index = int(contig.split("_")[-1])
+        if species_name in ["B_cepacia_UCB-717", 'B_multivorans_249']:
+            print (species_name)
+            if index > 3:
+                plasmid_host_dict[contig] = [species_name, length, []]
+            else:
+                host_contig_dict[species_name].append(contig)
+        elif species_name in ['S_aureus_Seattle-1945', 'V_parahaemolyticus_EB101']:
+            print (species_name)
+            if index > 2:
+                plasmid_host_dict[contig] = [species_name, length, []]
+            else:
+                host_contig_dict[species_name].append(contig)
+        else:
+            if index > 1:
+                plasmid_host_dict[contig] = [species_name, length, []]
+            else:
+                host_contig_dict[species_name].append(contig)
+    ## update host
+    for contig in plasmid_host_dict:
+        host = plasmid_host_dict[contig][0]
+        plasmid_host_dict[contig][2] = host_contig_dict[host]
+    # print (len(plasmid_host_dict), plasmid_host_dict)
+
+    # clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
+    clster_out = "tmp/zymo.u.csv"
+    answer_label = read_predicted_result(clster_out)
+    # answer_label = read_metabat_result()
+    plasmid_cluster_id = {}
+    for contig in plasmid_host_dict:
+        if contig in answer_label:
+            plasmid_cluster_id[contig] = answer_label[contig]
+        else:
+            plasmid_cluster_id[contig] = -1
+    cluster_dict = defaultdict(list)
+    for contig in answer_label:
+        cluster_dict[answer_label[contig]].append(contig)
+    plasmid_cluster_dict = {}
+    for plasmid in plasmid_cluster_id:
+        plasmid_cluster_dict[plasmid] = cluster_dict[plasmid_cluster_id[plasmid]]
+
+    recall = 0
+    FP = 0
+    report_num = 0
+    total = 0
+    for plasmid in plasmid_host_dict:
+        host = plasmid_host_dict[plasmid]
+        cluster = plasmid_cluster_dict[plasmid]
+        valid_host = check_host(host[2], cluster, plasmid)
+        if len(cluster) > 0:
+            report_num += 1
+        print (plasmid, host[2], cluster, valid_host)
+        # print (valid_host)
+        if valid_host == "link host" or valid_host == "FP":
+            recall += 1
+        if valid_host == "FP":
+            FP += 1
+        total += 1
+    print (recall, total, "recall", recall/total, report_num, "FP", FP/report_num)
+
+def check_host(host_list, cluster, plasmid):
+    has_host_contig = False
+    has_other_host = False
+    host_species = "_".join(plasmid.split("_")[:-1])
+    for contig in cluster:
+        if contig in host_list:
+            has_host_contig = True
+        species_name = "_".join(contig.split("_")[:-1])
+        if species_name != host_species:
+            has_other_host = True
+    flag = "no host"
+    if has_host_contig:
+        flag = "link host"
+        if has_other_host:
+            flag = "FP"
+    return flag
+        
     
+    
+    # if has_host_contig and not has_other_host:
+    #     return "correct linkage"
+    # elif has_host_contig and has_other_host:
+    #     return "wrong linkage"
+    # elif not has_host_contig and not has_other_host:
+    #     return "no linkage"
+    # elif not has_host_contig and has_other_host:
+    #     print ("###########other")
+    #     return "wrong linkage"
 
-for_zymo()
-all_break()
 
-all_break2()
+
+
+host_linkage_eva()
+# for_zymo()
+# for_zymo_maxbat()
+# all_break()
+
+# all_break2()
