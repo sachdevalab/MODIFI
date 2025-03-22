@@ -114,9 +114,9 @@ def summary( min_frac, summary_file, profiles):
 
     f = open(summary_file, "w")
     print (f"No. of contigs with motifs: {profiles.shape[1]}", file=f)
-    print (f"Minimum motif fraction: {min_frac}", file=f)
+    print (f"Minimum motif methylation fraction: {min_frac}", file=f)
     print (f"Ratio of contigs profiles with motifs: {round(profiles.shape[1]/profile_num,2)}", file=f)
-    print (f"No. of motifs with motifs > {min_frac}: {profiles.shape[0]}", file=f)
+    print (f"No. of motifs: {profiles.shape[0]}", file=f)
     print (f"Number of contigs: {contig_num}", file=f)
     print (f"Number of bams: {bam_num}", file=f)
     print (f"Number of ipds: {ipd_num}", file=f)
