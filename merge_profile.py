@@ -312,7 +312,7 @@ def PCA_plot(df, pca_fig):
     scatter_plot = sns.scatterplot(x=X_embedded[:, 0], y=X_embedded[:, 1], hue=clustering.labels_, palette="viridis")
     
     ## if df column number is too large, the adjust_text function may not work well, skip it
-    if len(df) < 100:
+    if len(df.columns) < 100:
         texts = []
         for i, label in enumerate(df.columns):
             # print (i, label)
