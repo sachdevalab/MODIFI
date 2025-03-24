@@ -18,7 +18,7 @@ min_cov = config["min_cov"]
 
 if not config.get("max_NM"):
     if config["read_type"] == "hifi" or config["read_type"] == "ccs":
-        config["max_NM"] = 3
+        config["max_NM"] = 200
     elif config["read_type"] == "subreads":
         config["max_NM"] = 1000
     else:
