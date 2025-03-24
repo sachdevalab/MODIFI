@@ -68,8 +68,7 @@ def read_metabat_result():
 
 def for_zymo():
     # clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
-    # clster_out = "tmp/zymo.u.csv"
-    clster_out = "tmp/zymo.j.csv"
+    clster_out = "tmp/zymo.u.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_zymo_truth()
 
@@ -235,13 +234,13 @@ def get_plasmid_dict(fai):
         if contig in["S_aureus_USA300-TCH1516_3", "T_denticola_A_2"]:
             continue
 
-        if species_name in ["B_cepacia_UCB-717", 'B_multivorans_249']:
+        if species_name in ['V_parahaemolyticus_EB101', "B_cepacia_UCB-717", 'B_multivorans_249']:
             print (species_name)
             if index > 3:
                 plasmid_host_dict[contig] = [species_name, length, []]
             else:
                 host_contig_dict[species_name].append(contig)
-        elif species_name in ['V_parahaemolyticus_EB101', 'A_baumannii_AYE']:
+        elif species_name in ['A_baumannii_AYE']:
             print (species_name)
             if index > 2:
                 plasmid_host_dict[contig] = [species_name, length, []]
@@ -268,7 +267,7 @@ def host_linkage_eva():
 
     # clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
     # clster_out = "/home/shuaiw/borg/bench/zymo6_NM200/motif_cluster.h.csv"
-    clster_out = "tmp/zymo.j.csv"
+    clster_out = "tmp/zymo.u.csv"
     answer_label = read_predicted_result(clster_out)
     # answer_label = read_metabat_result()
     plasmid_cluster_id = {}

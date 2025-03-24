@@ -91,7 +91,7 @@ def UMAP(df):
     cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
     cluster_result.to_csv(result_file, index=False)
 
-def Hierachy(df):
+def Hierachy(df, result_file):
     matrix = df.to_numpy()
     ## Trabspose the matrix
     matrix = matrix.T
@@ -148,7 +148,7 @@ def Hierachy(df):
     # plt.savefig("tmp/tree.pdf")
     # print ("hierarchical clustering done.")
 
-def JC(df):
+def JC(df, result_file):
     matrix = df.to_numpy()
     ## Trabspose the matrix
     matrix = matrix.T
@@ -168,7 +168,7 @@ def JC(df):
     cluster_labels = fcluster(my_linkage, t=cutoff, criterion='distance')
     n_clusters = len(set(cluster_labels))
     print (n_clusters, "clusters detected in JC.")
-    print (cluster_labels)
+    # print (cluster_labels)
     data = []
     for i in range(n_clusters+1):
         # print ("cluster", i)
@@ -177,7 +177,7 @@ def JC(df):
                 # print (df.columns[j])
                 data.append([df.columns[j], i])
     cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
-    cluster_result.to_csv("tmp/zymo.j.csv", index=False)
+    cluster_result.to_csv(result_file, index=False)
     # Plot dendrogram
     plt.figure(figsize=(20, 10))
     dendrogram(my_linkage, labels=df.columns, orientation='left', leaf_rotation=0)#, leaf_font_size=8
@@ -195,7 +195,8 @@ profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo2/motif_profile2.cs
 result_file = "tmp/zymo.u.csv"
 # profile_file = "/home/shuaiw/methylation/data/borg/bench/all_break/motif_profile.csv"
 # result_file = "tmp/all.u.csv"
-# profile_file = "/home/shuaiw/methylation/data/borg/all_test_ccs3/motif_profile.csv"
+# profile_file = "/home/shuaiw/methylation/data/borg/all_test_ccs2/motif_profile.csv"
+# profile_file = "/home/shuaiw/methylation/data/borg/bench/all_subreads/motif_profile2.csv"
 # result_file = "tmp/real.u.csv"
 
 profiles = pd.read_csv(profile_file, index_col=0)
@@ -204,7 +205,7 @@ profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
 # Filter columns where any value is greater than 0.5
 profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
 print (profiles)
-# Hierachy(profiles)
-JC(profiles)
+# Hierachy(profiles, result_file)
+JC(profiles, result_file)
 
 
