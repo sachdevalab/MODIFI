@@ -8,6 +8,8 @@ from scipy.stats import pearsonr
 import sys
 from collections import defaultdict
 from matplotlib.ticker import MaxNLocator
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def read_ref(ref):
@@ -203,51 +205,57 @@ def count_ipd_ratio(ipd_ratio_file, motif_sites):
         # Apply rolling mean smoothing, smooth it for each strand and each motif separately
         site_df['ipd_ratio'] = site_df.groupby(['refName', 'strand', 'motif'])['ipd_ratio'].transform(lambda x: x.rolling(window=100, min_periods=1).mean())
 
-        import seaborn as sns
-        import matplotlib.pyplot as plt
+
         fig, ax = plt.subplots(2, 1, figsize=(15, 7))
         ## use grid
         sns.set(style="whitegrid")
-        # sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[0])
-        # sns.lineplot(data=site_df[site_df['strand'] == "-"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[1])
-        ## define the x-axis label
+
+        # Get all unique motifs
+        motifs = site_df['motif'].unique()
+        palette = sns.color_palette("tab10", n_colors=len(motifs))  # or any other palette
+        motif_palette = dict(zip(motifs, palette))
+
 
         # Plot for strand "+"
-        sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[0])
+        sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", palette=motif_palette, ax=ax[0])
         ax[0].set_title("+")
         ## remove x label
         ax[0].set_xlabel("")
         ax[0].set_ylabel("IPD Ratio")
 
         # Plot for strand "-"
-        sns.lineplot(data=site_df[site_df['strand'] == "-"], x="tpl", y="ipd_ratio", hue="motif", ax=ax[1])
+        sns.lineplot(data=site_df[site_df['strand'] == "-"], x="tpl", y="ipd_ratio", hue="motif", palette=motif_palette, ax=ax[1])
         ax[1].set_title("-")
         ax[1].set_xlabel("")
         ax[1].set_ylabel("IPD Ratio")
 
         # Remove individual legends from subplots
         ax[0].legend_.remove()
+        ax[1].legend_.remove()
 
         ## move legend of ax[1] to the below
-        ax[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5)
+        # ax[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5)
+
+        # Get handles and labels from one of the plots (e.g., ax[0])
+        handles, labels = ax[0].get_legend_handles_labels()
+
+        # Create shared legend below the plots
+        fig.legend(
+            handles, labels,
+            loc='lower center',
+            bbox_to_anchor=(0.5, -0.05),
+            ncol=5,
+            frameon=False
+        )
 
         # Set fixed number of X-Ticks to 5 while still hiding them
         ax[0].xaxis.set_major_locator(MaxNLocator(nbins=5)) 
         ax[1].xaxis.set_major_locator(MaxNLocator(nbins=5))
 
-
-
-        # ax[0].set_xticks([])        # Removes ticks
-        # ax[0].set_xticklabels([])   # Removes tick labels
-        # ax[0].set_xlabel("")        # Removes x-axis label
-        # ## also remove the these for ax1
-        # ax[1].set_xticks([])        # Removes ticks
-        # ax[1].set_xticklabels([])   # Removes tick labels
-        # ax[1].set_xlabel("") 
         ax[0].grid(True)
         ax[1].grid(True)
         fig = ipd_ratio_file[:-9] + ".pdf"
-        plt.savefig(fig)
+        plt.savefig(fig, bbox_inches='tight')
     else:
         print ("no motif sites in the ipd file")
 
