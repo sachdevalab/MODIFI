@@ -126,7 +126,26 @@ def summary( min_frac, summary_file, profiles):
 
     f.close()
 
-    
+def JC_hierarchical_clustering(df, tree_fig, cutoff=0.45):
+    matrix = df.to_numpy()
+    ## Trabspose the matrix
+    matrix = matrix.T
+
+    matrix = (matrix > 0.5).astype(int) 
+    my_linkage = linkage(matrix, method='average', metric='jaccard')
+    cluster_labels = fcluster(my_linkage, t=cutoff, criterion='distance')
+    n_clusters = len(set(cluster_labels))
+    print (n_clusters, "clusters detected in JC.")
+
+    data = []
+    for i in range(n_clusters):
+        # print ("cluster", i)
+        for j in range(len(cluster_labels)):
+            if cluster_labels[j] == i:
+                # print (df.columns[j])
+                data.append([df.columns[j], i])
+    cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
+    cluster_result.to_csv(cluster_fig.replace(".pdf", ".j.csv"), index=False)    
     
 
 
@@ -361,6 +380,7 @@ if __name__ == "__main__":
         TSE(profiles, cluster_fig)
         PCA_plot(profiles, pca_fig)
         hierarchical_clustering(profiles, tree_fig)
+        JC_hierarchical_clustering(profiles, tree_fig)
     else:
         print ("no motif identified")
         ## construct an  empty figure

@@ -7,6 +7,9 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
+from sklearn.metrics import jaccard_score
+from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
 
 import sys
 import argparse
@@ -152,18 +155,10 @@ def JC(df, result_file):
     matrix = df.to_numpy()
     ## Trabspose the matrix
     matrix = matrix.T
+    cutoff = 0.45
 
     ## binarize the matrix
-    matrix = (matrix > 0.5).astype(int)
-    ## calculate the Jaccard distance
-    from sklearn.metrics import jaccard_score
-    from scipy.spatial.distance import pdist
-    from scipy.spatial.distance import squareform
-    jaccard_dist = pdist(matrix, metric='jaccard')
-    jaccard_dist = squareform(jaccard_dist)
-    print (jaccard_dist)
-    ## cluster the contigs based on the Jaccard distance
-    cutoff = 0.45
+    matrix = (matrix > 0.5).astype(int) 
     my_linkage = linkage(matrix, method='average', metric='jaccard')
     cluster_labels = fcluster(my_linkage, t=cutoff, criterion='distance')
     n_clusters = len(set(cluster_labels))
