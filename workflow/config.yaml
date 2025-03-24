@@ -8,3 +8,4 @@ min_len: 50000
 min_cov: 3
 kmer_mean_db: 
 kmer_num_db:
+clean: True

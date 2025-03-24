@@ -15,6 +15,7 @@ min_contig_len = config.get("min_len", 50000)  # Default value if not set in con
 kmer_mean_db = config["kmer_mean_db"]
 kmer_num_db = config["kmer_num_db"]
 min_cov = config["min_cov"]
+clean_flag = config.get("clean", True)
 
 if not config.get("max_NM"):
     if config["read_type"] == "hifi" or config["read_type"] == "ccs":
@@ -32,6 +33,7 @@ max_NM = config.get("max_NM")
 print (whole_bam)
 print (whole_ref)
 print (work_dir)
+print ("clean_flag: ", clean_flag)
 
 ## create work_dir
 os.makedirs(work_dir, exist_ok=True)
@@ -43,7 +45,8 @@ rule all:
         os.path.join(work_dir, "control_done.txt"),
         os.path.join(work_dir, "compare_done.txt"),
         os.path.join(work_dir, "motif_done.txt"),
-        os.path.join(work_dir, "profile_done.txt")
+        os.path.join(work_dir, "profile_done.txt"),
+        os.path.join(work_dir, "clean_done.txt")
 
 rule split:
     input:
@@ -126,4 +129,21 @@ rule profile:
         cd profile 
         /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
         cd ..
+        """
+
+rule clean_tmp:
+    input:
+        os.path.join(work_dir, "profile_done.txt")
+    output:
+        os.path.join(work_dir, "clean_done.txt")
+    params:
+        clean_flag = clean_flag
+    shell:
+        """
+        if [ "{params.clean_flag}" = "True" ]; then
+            rm -rf {work_dir}/bams
+            rm -rf {work_dir}/contigs
+            rm -rf {work_dir}/ipds
+        fi
+        touch {output}
         """

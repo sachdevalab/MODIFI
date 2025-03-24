@@ -363,6 +363,11 @@ if __name__ == "__main__":
         hierarchical_clustering(profiles, tree_fig)
     else:
         print ("no motif identified")
+        ## construct an  empty figure
+        plt.figure()
+        plt.text(0.5, 0.5, 'No motif identified', horizontalalignment='center', verticalalignment='center')
+        plt.savefig(heat_map)
+        plt.clf()
 
     summary( min_frac, summary_file, profiles)
 
