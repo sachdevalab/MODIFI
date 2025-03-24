@@ -148,7 +148,47 @@ def Hierachy(df):
     # plt.savefig("tmp/tree.pdf")
     # print ("hierarchical clustering done.")
 
-   
+def JC(df):
+    matrix = df.to_numpy()
+    ## Trabspose the matrix
+    matrix = matrix.T
+
+    ## binarize the matrix
+    matrix = (matrix > 0.5).astype(int)
+    ## calculate the Jaccard distance
+    from sklearn.metrics import jaccard_score
+    from scipy.spatial.distance import pdist
+    from scipy.spatial.distance import squareform
+    jaccard_dist = pdist(matrix, metric='jaccard')
+    jaccard_dist = squareform(jaccard_dist)
+    print (jaccard_dist)
+    ## cluster the contigs based on the Jaccard distance
+    cutoff = 0.45
+    my_linkage = linkage(matrix, method='average', metric='jaccard')
+    cluster_labels = fcluster(my_linkage, t=cutoff, criterion='distance')
+    n_clusters = len(set(cluster_labels))
+    print (n_clusters, "clusters detected in JC.")
+    print (cluster_labels)
+    data = []
+    for i in range(n_clusters+1):
+        # print ("cluster", i)
+        for j in range(len(cluster_labels)):
+            if cluster_labels[j] == i:
+                # print (df.columns[j])
+                data.append([df.columns[j], i])
+    cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
+    cluster_result.to_csv("tmp/zymo.j.csv", index=False)
+    # Plot dendrogram
+    plt.figure(figsize=(20, 10))
+    dendrogram(my_linkage, labels=df.columns, orientation='left', leaf_rotation=0)#, leaf_font_size=8
+    ## show cut line
+    plt.axvline(x=cutoff, color='r', linestyle='--')
+    plt.title(f"Dendrogram with Distance Threshold = {cutoff}")
+    plt.xlabel("Sample Index")
+    ## save 
+    plt.savefig("tmp/tree.j.pdf")
+    print ("JC clustering done.")
+
 
 
 profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo2/motif_profile2.csv"
@@ -164,6 +204,7 @@ profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
 # Filter columns where any value is greater than 0.5
 profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
 print (profiles)
-Hierachy(profiles)
+# Hierachy(profiles)
+JC(profiles)
 
 

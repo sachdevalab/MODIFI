@@ -67,8 +67,9 @@ def read_metabat_result():
     return answer_label
 
 def for_zymo():
-    clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
+    # clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
     # clster_out = "tmp/zymo.u.csv"
+    clster_out = "tmp/zymo.j.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_zymo_truth()
 
@@ -214,28 +215,33 @@ def eva(true_labels, predicted_clusters):
     # random_nmi_score, random_air = compute_random_nmi(true_labels, num_iterations=1000, num_clusters=max(true_labels))
     # print(f"Random Cluster NMI: {random_nmi_score:.4f}", f"random ARI: {random_air:.4f}")
 
-def host_linkage_eva(): 
-    fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged.fa.fai"
-    spcies_index = {}
+
+def get_plasmid_dict(fai):
     index = 1
     plasmid_host_dict = {}
     host_contig_dict = defaultdict(list)
 
-    contig_index_dict = {}
+    contig_length_dict = {}
     for line in open(fai):
         contig = line.split("\t")[0]
-        if contig == "B_cepacia_UCB-717_4":
-            continue
         species_name = "_".join(contig.split("_")[:-1])
         length = int(line.split("\t")[1])
         index = int(contig.split("_")[-1])
+        contig_length_dict[contig] = length
+        if contig == "B_cepacia_UCB-717_4":
+            continue
+        if contig =="K_pneumoniae_BAA-2146_3":
+            continue
+        if contig in["S_aureus_USA300-TCH1516_3", "T_denticola_A_2"]:
+            continue
+
         if species_name in ["B_cepacia_UCB-717", 'B_multivorans_249']:
             print (species_name)
             if index > 3:
                 plasmid_host_dict[contig] = [species_name, length, []]
             else:
                 host_contig_dict[species_name].append(contig)
-        elif species_name in ['S_aureus_Seattle-1945', 'V_parahaemolyticus_EB101']:
+        elif species_name in ['V_parahaemolyticus_EB101', 'A_baumannii_AYE']:
             print (species_name)
             if index > 2:
                 plasmid_host_dict[contig] = [species_name, length, []]
@@ -251,9 +257,18 @@ def host_linkage_eva():
         host = plasmid_host_dict[contig][0]
         plasmid_host_dict[contig][2] = host_contig_dict[host]
     # print (len(plasmid_host_dict), plasmid_host_dict)
+    return plasmid_host_dict, contig_length_dict
+
+def host_linkage_eva(): 
+    fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged.fa.fai"
+    plasmid_anno_file = fai + ".plasmid"
+    plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
+    output_host_linkage(plasmid_host_dict, contig_length_dict, plasmid_anno_file)
+
 
     # clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
-    clster_out = "tmp/zymo.u.csv"
+    # clster_out = "/home/shuaiw/borg/bench/zymo6_NM200/motif_cluster.h.csv"
+    clster_out = "tmp/zymo.j.csv"
     answer_label = read_predicted_result(clster_out)
     # answer_label = read_metabat_result()
     plasmid_cluster_id = {}
@@ -287,6 +302,14 @@ def host_linkage_eva():
             FP += 1
         total += 1
     print (recall, total, "recall", recall/total, report_num, "FP", FP/report_num)
+
+def output_host_linkage(plasmid_host_dict, contig_length_dict, plasmid_anno_file):
+    f = open(plasmid_anno_file, 'w')
+    for plasmid in plasmid_host_dict:
+        plasmid_length = contig_length_dict[plasmid]
+        print (plasmid, plasmid_length, ",".join(plasmid_host_dict[plasmid][2]), sep="\t", file = f)
+    f.close()
+
 
 def check_host(host_list, cluster, plasmid):
     has_host_contig = False
