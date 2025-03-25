@@ -68,6 +68,9 @@ def merge_profile(profile_list):
             # print (sample_name, profile.head())
             motifs_names = profile['motifString']
             # print (motifs_names)
+            ## if motif_modified_num < min_motif_sites, we set the motif_modified_ratio to 0
+            ### minimium number of motif sites cutoff, it too less motif sites, no meaning to calculate the ratio
+            profile.loc[profile['motif_modified_num'] < min_motif_sites, 'motif_modified_ratio'] = 0
             ## we only want the motif_modified_ratio column
             profile = profile[['motif_modified_ratio']]
             profiles.append(profile['motif_modified_ratio'])
@@ -355,6 +358,7 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
 
     min_frac = 0.5
+    min_motif_sites = 1
 
     profile_list = args['all_profiles']
     heat_map = args['heatmap']
@@ -395,4 +399,5 @@ if __name__ == "__main__":
 # python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/all_test_ccs/profiles         --heatmap  /home/shuaiw/methylation/data/borg/all_test_ccs/motif_heatmap.pdf         --summary /home/shuaiw/methylation/data/borg/all_test_ccs/motif_profile.csv
 
 # python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/bench/zymo2/profiles --heatmap  /home/shuaiw/methylation/data/borg/bench/zymo2/motif_heatmap2.pdf  --summary /home/shuaiw/methylation/data/borg/bench/zymo2/motif_profile2.csv
-# python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/bench/all_break/profiles --heatmap /home/shuaiw/methylation/data/borg/bench/all_break/test.pdf  --summary /home/shuaiw/methylation/data/borg/bench/all_break/motif_profile.csv                                    
+# python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/bench/all_break/profiles --heatmap /home/shuaiw/methylation/data/borg/bench/all_break/test.pdf  --summary /home/shuaiw/methylation/data/borg/bench/all_break/motif_profile.csv    
+# python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/bench/zymo6_NM200/profiles --heatmap  /home/shuaiw/methylation/data/borg/bench/zymo6_NM200/motif_heatmap2.pdf  --summary /home/shuaiw/methylation/data/borg/bench/zymo6_NM200/motif_profile2.csv                                
