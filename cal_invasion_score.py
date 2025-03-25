@@ -1,13 +1,14 @@
 import numpy as np
 from math import log
 
-def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=500):
+def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=100000):
     """
     Adds confidence weighting based on motif site counts.
     """
     scores = []
     weights = []
     total_sites = 0
+    total_host_sites = 0
 
     for m in motif_data:
         h_total = m['host_total']
@@ -20,6 +21,7 @@ def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=500):
 
         weight = h_total
         total_sites += h_total + p_total
+        total_host_sites += h_total
 
         f_host = h_meth / h_total
         if p_total == 0:
