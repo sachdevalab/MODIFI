@@ -24,7 +24,7 @@ def collect_motifs(folder, all_motif, MIN_FRAC, MIN_detect):
 
 
 if __name__ == "__main__":
-    MIN_FRAC = 0.6
+    MIN_FRAC = 0.5
     MIN_detect = 100
     # folder = "/home/shuaiw/borg/all_test/motifs"
     # all_motif = "/home/shuaiw/borg/all_test/test_motifs.csv"
