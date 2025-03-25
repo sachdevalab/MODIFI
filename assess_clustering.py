@@ -293,7 +293,7 @@ def host_linkage_eva():
         valid_host = check_host(host[2], cluster, plasmid)
         if len(cluster) > 0:
             report_num += 1
-        print (plasmid, host[2], cluster, valid_host)
+        print (plasmid, host[2], cluster, valid_host, report_num)
         # print (valid_host)
         if valid_host == "link host" or valid_host == "FP":
             recall += 1

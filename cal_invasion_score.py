@@ -1,7 +1,10 @@
 import numpy as np
 from math import log
+import pandas as pd
+import os
+import argparse
 
-def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=100000):
+def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=50000):
     """
     Adds confidence weighting based on motif site counts.
     """
@@ -28,8 +31,13 @@ def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=100000):
             motif_score = neutral_score
         else:
             f_plasmid = p_meth / p_total
-            motif_score = 1 - abs(f_host - f_plasmid)
-
+            # motif_score = 1 - abs(f_host - f_plasmid)
+            ## whether f_host and f_plasmid both are larger than 0.5
+            if f_plasmid > min_frac:
+                motif_score = 1
+            else:
+                motif_score = 1 - abs(f_host - f_plasmid)
+        # print (m['motif'], motif_score, weight)
         scores.append(motif_score * weight)
         weights.append(weight)
 
@@ -40,6 +48,8 @@ def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=100000):
 
     # Confidence scaling (logarithmic)
     confidence = log(1 + total_sites) / log(1 + max_sites)
+    if confidence > 1:
+        confidence = 1
     final_score = invasion_score * confidence
 
     return {
@@ -50,21 +60,107 @@ def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=100000):
     }
 
 
+def extract_motif_data(host_profile, plasmid_profile, min_frac = 0.5, min_detect = 100):
+    host_df = pd.read_csv(host_profile)
+    plasmid_df = pd.read_csv(plasmid_profile)
+    ## make a new df, by extract the motifString, centerPos, motif_loci_num, motif_modified_num, motif_modified_ratio from the original two dfs
+    motif_data = pd.merge(host_df, plasmid_df, on = ['motifString', 'centerPos'], suffixes=('_host', '_plasmid'))
+    motif_data = motif_data[(motif_data['motif_modified_ratio_host'] > min_frac) & (motif_data['motif_modified_num_host'] > min_detect)]
+    motif_data = motif_data[['motifString', 'centerPos', 'motif_loci_num_host', 'motif_modified_num_host', 'motif_loci_num_plasmid', 'motif_modified_num_plasmid']]
+    motif_data.columns = ['motif', 'centerPos', 'host_total', 'host_meth', 'plasmid_total', 'plasmid_meth']
+    # print (motif_data)
+    motif_data = motif_data.to_dict('records')
+    return motif_data
+
+def for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_dict={}):
+    plasmid_profile = f"{profile_dir}/{plasmid_name}.motifs.profile.csv"
+    ## check if the plasmid profile exists
+    if not os.path.exists(plasmid_profile):
+        print (f"{plasmid_profile} does not exist.")
+        return
+    data = []
+    ## enumerage the files in the profile_dir
+    for file in os.listdir(profile_dir):
+        if file.endswith(".motifs.profile.csv"):
+            ## extract the host name
+            host_name = file.split(".")[0]
+            if host_name in MGE_dict: ## skip other MGEs, only focus on chromosomal host
+                continue
+            if host_name == plasmid_name: ## skip the plasmid itself
+                continue
+            host_profile = os.path.join(profile_dir, file)
+            motif_data = extract_motif_data(host_profile, plasmid_profile, min_frac)
+            result = invasion_score_from_counts(motif_data, min_frac)
+            result['host'] = host_name
+            data.append(result)
+    ## convert the data to a df, and sort by final_score
+    data = pd.DataFrame(data)
+    data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
+    ## host column the first, final_score the second, invasion_score the third, confidence the forth, total_sites the fifth
+    data = data[['host', 'final_score', 'invasion_score', 'confidence', 'total_sites']]
+    ## print top ten
+    print (data.head(10))
+    ## output the data to a csv file
+    host_prediction = os.path.join(host_dir, f"{plasmid_name}.host_prediction.csv")
+    data.to_csv(host_prediction, index = False)
+
+def read_genomad(genomad_file):
+    MGE_dict = {}
+    genomad = pd.read_csv(genomad_file, sep = "\t")
+    for i, row in genomad.iterrows():
+            MGE_dict[row['seq_name']] = row
+    return MGE_dict
 
 
-motif_data = [
-    {'motif': 'GATC', 'host_total': 100, 'host_meth': 90, 'plasmid_total': 80, 'plasmid_meth': 70},
-    {'motif': 'TTAA', 'host_total': 50, 'host_meth': 45, 'plasmid_total': 0, 'plasmid_meth': 0},
-    {'motif': 'CCWGG', 'host_total': 20, 'host_meth': 18, 'plasmid_total': 20, 'plasmid_meth': 5},
-]
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Get accurate hgt breakpoints", add_help=False, \
+    usage="%(prog)s -h", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    required = parser.add_argument_group("required arguments")
+    optional = parser.add_argument_group("optional arguments")
+    required.add_argument("--work_dir", type=str, help="<str> work_dir", metavar="\b")
+    # required.add_argument("--all_profiles", type=str, help="<str> separate by space", nargs="+", metavar="\b")
+    optional.add_argument("--plasmid_file", type=str, help="<str> *_plasmid_summary.tsv by genomad.", metavar="\b")
+    optional.add_argument("--plasmid", type=str, help="<str> plasmid contig name.", metavar="\b")
+    optional.add_argument("--min_frac", type=float, help="<str> output motif summary.", default=0.5, metavar="\b")
 
-result = invasion_score_from_counts(motif_data)
-print(result)
+    optional.add_argument("-h", "--help", action="help")
+    args = vars(parser.parse_args())
 
-# Output:
-# {
-#   'invasion_score': 0.8738,
-#   'confidence': 0.6845,
-#   'final_score': 0.5985,
-#   'total_sites': 270
-# }
+
+
+    min_frac = 0.5
+    # plasmid_contig = "E_coli_H10407_4"
+    # work_dir = "/home/shuaiw/borg/bench/zymo6_NM3/"
+    # genomad_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_genomad/merged2_summary/merged2_plasmid_summary.tsv"
+    work_dir = args["work_dir"]
+    profile_dir = os.path.join(work_dir, "profiles")
+    host_dir = os.path.join(work_dir, "hosts")
+    os.makedirs(host_dir, exist_ok = True)
+    
+    if args["plasmid_file"]:
+        MGE_dict = read_genomad(args["plasmid_file"])
+        for plasmid_name in MGE_dict:
+            for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
+    elif args["plasmid"]:
+        for_each_plasmid(args["plasmid"], profile_dir, host_dir, min_frac, {})
+    else:
+        print ("Please provide either --plasmid_file or --plasmid.")
+    # for_each_plasmid("E_coli_H10407_5", profile_dir, host_dir, min_frac)
+
+    # host_profile = "/home/shuaiw/borg/bench/zymo6_NM3/profiles/E_coli_H10407_1.motifs.profile.csv"
+    # host_profile = "/home/shuaiw/borg/bench/zymo6_NM3/profiles/A_baumannii_AYE_1.motifs.profile.csv"
+    # plasmid_profile = "/home/shuaiw/borg/bench/zymo6_NM3/profiles/E_coli_H10407_2.motifs.profile.csv"
+
+    # motif_data = extract_motif_data(host_profile, plasmid_profile, min_frac)
+
+    # motif_data = [
+    #     {'motif': 'GATC', 'host_total': 100, 'host_meth': 90, 'plasmid_total': 80, 'plasmid_meth': 70},
+    #     {'motif': 'TTAA', 'host_total': 50, 'host_meth': 45, 'plasmid_total': 0, 'plasmid_meth': 0},
+    #     {'motif': 'CCWGG', 'host_total': 20, 'host_meth': 18, 'plasmid_total': 20, 'plasmid_meth': 5},
+    # ]
+
+    # result = invasion_score_from_counts(motif_data, min_frac)
+    # print(result)
+
+
+

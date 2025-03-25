@@ -156,3 +156,9 @@ work_dir=/home/shuaiw/methylation/data/borg/bench/merge_WGA" --job-name=merge
   work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref \
   read_type=ccs min_len=2000 max_NM=5 min_cov=5"\
    --job-name=zymo2
+
+    sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --enable-score-calibration \
+  --threads 64 --sensitivity 7.0 --force-auto \
+  /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_genomad/ \
+  /groups/diamond/databases/genomad/v1.7/" --job-name=genomad

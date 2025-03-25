@@ -188,7 +188,8 @@ def JC(df, result_file):
 
 
 # profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo2/motif_profile2.csv"
-profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo6_NM200/motif_profile.csv"
+# profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo6_NM200/motif_profile.csv"
+profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo6_NM3/motif_profile.csv"
 result_file = "tmp/zymo.u.csv"
 # profile_file = "/home/shuaiw/methylation/data/borg/bench/all_break/motif_profile.csv"
 # result_file = "tmp/all.u.csv"
@@ -204,5 +205,6 @@ profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
 print (profiles)
 # Hierachy(profiles, result_file)
 JC(profiles, result_file)
+os.system("python assess_clustering.py")
 
 
