@@ -259,7 +259,7 @@ def get_plasmid_dict(fai):
     return plasmid_host_dict, contig_length_dict
 
 def host_linkage_eva(): 
-    fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged.fa.fai"
+    fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
     plasmid_anno_file = fai + ".plasmid"
     plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
     output_host_linkage(plasmid_host_dict, contig_length_dict, plasmid_anno_file)

@@ -132,8 +132,8 @@ work_dir=/home/shuaiw/methylation/data/borg/bench/merge_WGA" --job-name=merge
      sbatch  --partition standard --wrap "snakemake --config \
  whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.align.bam \
  whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged.fa \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo6_NM200 \
-  read_type=ccs min_len=1000"\
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo6_NM3 \
+  read_type=ccs min_len=1000 max_NM=3"
    --job-name=zymo2
 
      sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.time snakemake --config \
