@@ -189,7 +189,8 @@ def JC(df, result_file):
 
 # profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo2/motif_profile2.csv"
 # profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo6_NM200/motif_profile.csv"
-profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo6_NM3/motif_profile.csv"
+# profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo6_NM3/motif_profile.csv"
+profile_file = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref/motif_profile.csv"
 result_file = "tmp/zymo.u.csv"
 # profile_file = "/home/shuaiw/methylation/data/borg/bench/all_break/motif_profile.csv"
 # result_file = "tmp/all.u.csv"

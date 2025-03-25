@@ -38,8 +38,8 @@ def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=50000):
             else:
                 motif_score = 1 - abs(f_host - f_plasmid)
         # print (m['motif'], motif_score, weight)
-        scores.append(motif_score * weight)
-        weights.append(weight)
+        scores.append(motif_score * log(weight))
+        weights.append(log(weight))
 
     if not scores:
         return {'invasion_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
@@ -50,13 +50,19 @@ def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=50000):
     confidence = log(1 + total_sites) / log(1 + max_sites)
     if confidence > 1:
         confidence = 1
-    final_score = invasion_score * confidence
+
+    # motif confidence
+    motif_confidence = log(1+len(motif_data))/log(1+3)   
+    if motif_confidence > 1:
+        motif_confidence = 1
+    final_score = invasion_score * confidence * motif_confidence
 
     return {
         'invasion_score': round(invasion_score, 4),
         'confidence': round(confidence, 4),
         'final_score': round(final_score, 4),
-        'total_sites': total_sites
+        'total_sites': total_sites,
+        'motif_confidence': round(motif_confidence, 4)
     }
 
 
@@ -89,7 +95,16 @@ def for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_di
             if host_name == plasmid_name: ## skip the plasmid itself
                 continue
             host_profile = os.path.join(profile_dir, file)
+            host_motif = os.path.join(profile_dir,"../motifs", f"{host_name}.motifs.csv")
+            ## check if the host profile and host_motif exists
+            if not os.path.exists(host_profile):
+                print (f"{host_profile} does not exist.")
+                continue
+            if not os.path.exists(host_motif):
+                print (f"{host_motif} does not exist.")
+                continue
             motif_data = extract_motif_data(host_profile, plasmid_profile, min_frac)
+            motif_data = filter_motifs(host_motif, motif_data)
             result = invasion_score_from_counts(motif_data, min_frac)
             result['host'] = host_name
             data.append(result)
@@ -97,7 +112,7 @@ def for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_di
     data = pd.DataFrame(data)
     data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
     ## host column the first, final_score the second, invasion_score the third, confidence the forth, total_sites the fifth
-    data = data[['host', 'final_score', 'invasion_score', 'confidence', 'total_sites']]
+    data = data[['host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites']]
     ## print top ten
     print (data.head(10))
     ## output the data to a csv file
@@ -111,8 +126,22 @@ def read_genomad(genomad_file):
             MGE_dict[row['seq_name']] = row
     return MGE_dict
 
+def filter_motifs(host_motif, motif_data):
+    host_motifs = pd.read_csv(host_motif)
+    ## filter motifs in motif data, only keep the motifs in host_motifs by examing the motifString and centerPos
+    motif_tag_dict = {}
+    for index, row in host_motifs.iterrows():
+        motif_tga = row['motifString'] + "_tga_" + str(row['centerPos'])
+        motif_tag_dict[motif_tga] = 1
+    new_motif_data = []
+    for m in motif_data:
+        tag = m['motif'] + "_tga_" + str(m['centerPos'])
+        if tag in motif_tag_dict:
+            new_motif_data.append(m)
+    return new_motif_data
 
 if __name__ == "__main__":
+    
     parser = argparse.ArgumentParser(description="Get accurate hgt breakpoints", add_help=False, \
     usage="%(prog)s -h", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     required = parser.add_argument_group("required arguments")
@@ -145,22 +174,24 @@ if __name__ == "__main__":
         for_each_plasmid(args["plasmid"], profile_dir, host_dir, min_frac, {})
     else:
         print ("Please provide either --plasmid_file or --plasmid.")
-    # for_each_plasmid("E_coli_H10407_5", profile_dir, host_dir, min_frac)
 
+
+    """
+
+    min_frac = 0.5
     # host_profile = "/home/shuaiw/borg/bench/zymo6_NM3/profiles/E_coli_H10407_1.motifs.profile.csv"
-    # host_profile = "/home/shuaiw/borg/bench/zymo6_NM3/profiles/A_baumannii_AYE_1.motifs.profile.csv"
-    # plasmid_profile = "/home/shuaiw/borg/bench/zymo6_NM3/profiles/E_coli_H10407_2.motifs.profile.csv"
+    host_profile = "/home/shuaiw/borg/all_test_ccs3/profiles/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_4094_L.motifs.profile.csv"
+    host_motif = "/home/shuaiw/borg/all_test_ccs3/motifs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_4094_L.motifs.csv"
+    plasmid_profile = "/home/shuaiw/borg/all_test_ccs3/profiles/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L.motifs.profile.csv"
 
-    # motif_data = extract_motif_data(host_profile, plasmid_profile, min_frac)
+    motif_data = extract_motif_data(host_profile, plasmid_profile, min_frac)
+    print (motif_data)
+    motif_data = filter_motifs(host_motif, motif_data)
+    print (motif_data)
 
-    # motif_data = [
-    #     {'motif': 'GATC', 'host_total': 100, 'host_meth': 90, 'plasmid_total': 80, 'plasmid_meth': 70},
-    #     {'motif': 'TTAA', 'host_total': 50, 'host_meth': 45, 'plasmid_total': 0, 'plasmid_meth': 0},
-    #     {'motif': 'CCWGG', 'host_total': 20, 'host_meth': 18, 'plasmid_total': 20, 'plasmid_meth': 5},
-    # ]
-
-    # result = invasion_score_from_counts(motif_data, min_frac)
-    # print(result)
+    result = invasion_score_from_counts(motif_data, min_frac)
+    print(result)"
+    """
 
 
 
