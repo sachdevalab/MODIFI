@@ -193,5 +193,7 @@ if __name__ == "__main__":
     print(result)"
     """
 
+#  python cal_invasion_score.py --work_dir /home/shuaiw/borg/bench/zymo_new_ref --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_genomad/merged2_summary/merged2_plasmid_summary.tsv
+# python cal_invasion_score.py  --work_dir /home/shuaiw/borg/all_test_ccs3 --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt
 
 

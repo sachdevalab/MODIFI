@@ -153,8 +153,8 @@ work_dir=/home/shuaiw/methylation/data/borg/bench/merge_WGA" --job-name=merge
    sbatch  --partition standard --wrap "snakemake --config \
  whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.align.ccs.bam \
  whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref \
-  read_type=ccs min_len=2000 max_NM=5 min_cov=5"\
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_NM3 \
+  read_type=ccs min_len=1000 max_NM=3"\
    --job-name=zymo2
 
     sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --enable-score-calibration \
