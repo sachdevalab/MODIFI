@@ -153,7 +153,26 @@ def count_MGE_with_motif(plasmid_name, profile_dir):
     plasmid_motif = pd.read_csv(plasmid_motif_file)
     return len(plasmid_motif)
 
-    
+def summary_host(host_dir):
+    data = []
+    for file in os.listdir(host_dir):
+        if file.endswith(".host_prediction.csv"):
+            plasmid_name = file.split(".")[0]
+            host_prediction = os.path.join(host_dir, file)
+            df = pd.read_csv(host_prediction)
+            ## extract the first row
+            ## add new column for plasmid_name at the start
+            if len(df) > 0:
+                df.insert(0, 'plasmid', plasmid_name)
+                data.append(df.iloc[0])
+    data = pd.DataFrame(data)
+    ## sort by final_score
+    data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
+    ## output the data to a csv file
+    host_summary = os.path.join(host_dir, "../", "host_summary.csv")
+    data.to_csv(host_summary, index = False)
+
+
 
 
 if __name__ == "__main__":
@@ -184,12 +203,12 @@ if __name__ == "__main__":
     
     if args["plasmid_file"]:
         MGE_dict = read_genomad(args["plasmid_file"])
-        for plasmid_name in MGE_dict:
-            MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-            if MGE_motif_num == 0:
-                continue
-            print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
-            for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
+        # for plasmid_name in MGE_dict:
+        #     MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
+        #     if MGE_motif_num == 0:
+        #         continue
+        #     print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
+        #     for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
     elif args["plasmid"]:
         plasmid_name = args["plasmid"]
         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
@@ -197,6 +216,10 @@ if __name__ == "__main__":
         for_each_plasmid(args["plasmid"], profile_dir, host_dir, min_frac, {})
     else:
         print ("Please provide either --plasmid_file or --plasmid.")
+
+    ## extract the info saved in the host_dir
+    summary_host(host_dir)
+
 
 
     """
