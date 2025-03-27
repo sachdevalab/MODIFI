@@ -17,7 +17,7 @@ def get_cov_dist(dp_file):
     sns.histplot(covs, bins=200, kde=True)
     plt.xlabel("Coverage")
     plt.ylabel("Frequency")
-    plt.title("Coverage Distribution")
+    plt.title("SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META")
     
     ## set xlim to 100, it did not work
     plt.xlim(0, 100)
