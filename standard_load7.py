@@ -149,8 +149,10 @@ def cal_mean(s0dict, s1dict, ref_Name, capValue, start, end, t0, min_dp=3):
             if len(d) < min_dp:
                 continue
             coverage = len(d)
-
-            percentile = min(90, (1.0 - 1.0 / (len(d) - 1)) * 100)
+            if len(d) > 1:
+                percentile = min(90, (1.0 - 1.0 / (len(d) - 1)) * 100)
+            else:
+                percentile = 0
             localPercentile = np.percentile(d, percentile)
             local_capValue = max(capValue, localPercentile)
 
