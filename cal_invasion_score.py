@@ -203,12 +203,12 @@ if __name__ == "__main__":
     
     if args["plasmid_file"]:
         MGE_dict = read_genomad(args["plasmid_file"])
-        # for plasmid_name in MGE_dict:
-        #     MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-        #     if MGE_motif_num == 0:
-        #         continue
-        #     print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
-        #     for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
+        for plasmid_name in MGE_dict:
+            MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
+            if MGE_motif_num == 0:
+                continue
+            print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
+            for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
     elif args["plasmid"]:
         plasmid_name = args["plasmid"]
         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
