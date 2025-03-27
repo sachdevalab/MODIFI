@@ -135,9 +135,9 @@ def _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor=1.0):
         capValue = np.percentile(ipdVect, 99)
     print ("capValue", capValue)
     print ("pos num", len(s0dict), len(s1dict))
-    return cal_mean(s0dict, s1dict, each_ref.Name, capValue, start, end, t0)
+    return cal_mean(s0dict, s1dict, each_ref.Name, capValue, start, end, t0, 3)
 
-def cal_mean(s0dict, s1dict, ref_Name, capValue, start, end, t0):
+def cal_mean(s0dict, s1dict, ref_Name, capValue, start, end, t0, min_dp=3):
     # ref_Name = each_ref.Name
     ref_Name = ref_Name
 
@@ -146,7 +146,7 @@ def cal_mean(s0dict, s1dict, ref_Name, capValue, start, end, t0):
     for pos in range(start, end):
         if pos in s0dict:
             d = np.array(s0dict[pos])
-            if len(d) <= 2:
+            if len(d) < min_dp:
                 continue
             coverage = len(d)
 
@@ -356,7 +356,7 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, 
         capValue = np.percentile(ipdVect, 99)
     print ("capValue", capValue)
     print ("pos num", len(s0dict), len(s1dict))
-    return cal_mean(s0dict, s1dict, each_ref, capValue, start, end, t0)
+    return cal_mean(s0dict, s1dict, each_ref, capValue, start, end, t0, 1)
 
 def norm(rawIpd, referencePositions, matched, aln):
     np.logical_and(np.logical_not(np.isnan(rawIpd)),
