@@ -42,7 +42,7 @@ rule all:
     input:
         os.path.join(work_dir, "split_done.txt"),
         os.path.join(work_dir, "load_done.txt"),
-        os.path.join(work_dir, "remove_empty_done.txt"),
+        # os.path.join(work_dir, "remove_empty_done.txt"),
         os.path.join(work_dir, "control_done.txt"),
         os.path.join(work_dir, "compare_done.txt"),
         os.path.join(work_dir, "motif_done.txt"),
@@ -81,20 +81,20 @@ rule load:
         cd ..
         """
 
-rule remove_empty:
-    input:
-        one=os.path.join(work_dir, "load_done.txt"),
-    output:
-        os.path.join(work_dir, "remove_empty_done.txt")
-    shell:
-        """
-        /usr/bin/time -v -o {output} python /home/shuaiw/Methy/remove_empty_ipd.py {work_dir}
-        """
+# rule remove_empty:
+#     input:
+#         one=os.path.join(work_dir, "load_done.txt"),
+#     output:
+#         os.path.join(work_dir, "remove_empty_done.txt")
+#     shell:
+#         """
+#         /usr/bin/time -v -o {output} python /home/shuaiw/Methy/remove_empty_ipd.py {work_dir}
+#         """
 
 rule control:
     input:
-        # os.path.join(work_dir, "load_done.txt")
-        os.path.join(work_dir, "remove_empty_done.txt")
+        os.path.join(work_dir, "load_done.txt")
+        # os.path.join(work_dir, "remove_empty_done.txt")
     output:
         os.path.join(work_dir, "control_done.txt")
     shell:
