@@ -235,8 +235,9 @@ def load_IPD(each_ref, contig_bam, df_file):
     # print ("rawIpds", rawIpds.shape, round(time.time()-t0))
     # combined_df = pd.concat(result, ignore_index=True)
     combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'base', 'coverage', 'tMean', 'tErr'])
-    combined_df.to_csv(df_file, index=False)
-    print ("raw ipd df saved", df_file, round(time.time()-t0))
+    # combined_df.to_csv(df_file, index=False)
+    # print ("raw ipd df saved", df_file, round(time.time()-t0))
+    get_output(combined_df, df_file)
 
 
 def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, factor=1.0):
@@ -418,9 +419,18 @@ def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file):
         # break
     combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'base', 'coverage', 'tMean', 'tErr'])
     ## remove the rows with tMean = 0
+    get_output(combined_df, df_file)
+
+
+def get_output(combined_df, count_file):
     combined_df = combined_df[combined_df['tMean'] != 0]
-    combined_df.to_csv(df_file, index=False)
-    print ("raw ipd df saved", df_file, round(time.time()-t0))
+    ipd_file = count_file.replace(".count", ".ipd1.csv")
+    if len(combined_df) > MIN_POS:
+        combined_df.to_csv(ipd_file, index=False)
+        print ("raw ipd df saved", ipd_file)
+    f = open(count_file, "w")
+    print (f"no. of ipds is {len(combined_df)} for {ipd_file}", file=f)
+    f.close()
 
 
 
@@ -445,6 +455,7 @@ if __name__ == "__main__":
     maxAlignments = args["maxAlignments"]
     read_type = args["read_type"].lower()
     MAX_NM = args["max_NM"]
+    MIN_POS = 10
 
     print ("subread_bam", subread_bam)
     print ("fasta", fasta)

@@ -28,7 +28,7 @@ def get_samples():
 
 rule all:
     input:
-        expand(os.path.join(work_dir, "ipd", "{sample}.ipd1.csv"), sample=get_samples())
+        expand(os.path.join(work_dir, "ipd", "{sample}.count"), sample=get_samples())
 
 rule load_ipd:
     input:
@@ -36,7 +36,7 @@ rule load_ipd:
         bam=os.path.join(work_dir, "bams", "{sample}.bam"),
         ref=os.path.join(work_dir, "contigs", "{sample}.fa"),
     output:
-        os.path.join(work_dir, "ipd", "{sample}.ipd1.csv")
+        os.path.join(work_dir, "ipd", "{sample}.count")
     params:
         maxAlignments=maxAlignments,
         read_type=read_type

@@ -29,7 +29,8 @@ rule control:
     threads: 100
     shell:
         """
-        find {input.ref_dir} -name "*.fa" > {work_dir}/contigs_list.txt
+        # find {input.ref_dir} -name "*.fa" > {work_dir}/contigs_list.txt
+        python /home/shuaiw/Methy/generate_contig_list.py {work_dir}
         /home/shuaiw/Methy/src/test --ipd_dir {input.ipd} --control_dir {input.control_dir}\
          --fasta_list {work_dir}/contigs_list.txt --thread_num {threads} --kmer_mean_file {kmer_mean_db}\
           --kmer_num_file {kmer_num_db}

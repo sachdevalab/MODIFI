@@ -210,9 +210,9 @@ if __name__ == "__main__":
         MGE_dict = read_genomad(args["plasmid_file"])
         for plasmid_name in MGE_dict:
             MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-            if MGE_motif_num == 0:
-                print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
-                continue
+            # if MGE_motif_num == 0:
+            #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
+            #     continue
             print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
             for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
     elif args["plasmid"]:
