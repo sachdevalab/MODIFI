@@ -25,6 +25,6 @@ def get_cov_dist(dp_file):
     plt.savefig("tmp/cov_dist.pdf")
 
 
-dp_file = "/home/shuaiw/borg/contigs/all_break.contigs.fa.depth.txt"
+dp_file = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.depth.txt"
 
 get_cov_dist(dp_file)
