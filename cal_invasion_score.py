@@ -3,6 +3,7 @@ from math import log
 import pandas as pd
 import os
 import argparse
+import re
 
 def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=50000):
     """
@@ -128,7 +129,11 @@ def read_genomad(genomad_file):
     MGE_dict = {}
     genomad = pd.read_csv(genomad_file, sep = "\t")
     for i, row in genomad.iterrows():
-            MGE_dict[row['seq_name']] = row
+        
+        if re.search('\|provirus', row['seq_name']):
+            continue
+        # print (row['seq_name'])
+        MGE_dict[row['seq_name']] = row
     return MGE_dict
 
 def filter_motifs(host_motif, motif_data):
@@ -206,6 +211,7 @@ if __name__ == "__main__":
         for plasmid_name in MGE_dict:
             MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
             if MGE_motif_num == 0:
+                print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
                 continue
             print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
             for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
@@ -241,5 +247,7 @@ if __name__ == "__main__":
 
 #  python cal_invasion_score.py --work_dir /home/shuaiw/borg/bench/zymo_new_ref --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_genomad/merged2_summary/merged2_plasmid_summary.tsv
 # python cal_invasion_score.py  --work_dir /home/shuaiw/borg/all_test_ccs3 --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt
+# python cal_invasion_score.py  --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt
+# python cal_invasion_score.py  --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_plasmid_summary.tsv
 
 
