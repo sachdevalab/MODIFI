@@ -94,8 +94,13 @@ def for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_di
                 continue
             if host_name == plasmid_name: ## skip the plasmid itself
                 continue
-            host_profile = os.path.join(profile_dir, file)
+            
             host_motif = os.path.join(profile_dir,"../motifs", f"{host_name}.motifs.csv")
+            motif_df = pd.read_csv(host_motif)
+            if len(motif_df) == 0:
+                # print ("skip host", host_name)
+                continue
+            host_profile = os.path.join(profile_dir, file)
             ## check if the host profile and host_motif exists
             if not os.path.exists(host_profile):
                 print (f"{host_profile} does not exist.")
@@ -140,6 +145,17 @@ def filter_motifs(host_motif, motif_data):
             new_motif_data.append(m)
     return new_motif_data
 
+def count_MGE_with_motif(plasmid_name, profile_dir):
+    plasmid_motif_file = os.path.join(profile_dir,"../motifs", f"{plasmid_name}.motifs.csv")
+    if not os.path.exists(plasmid_motif_file):
+        print (f"{plasmid_motif} does not exist.")
+        return 0
+    plasmid_motif = pd.read_csv(plasmid_motif_file)
+    return len(plasmid_motif)
+
+    
+
+
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Get accurate hgt breakpoints", add_help=False, \
@@ -169,8 +185,15 @@ if __name__ == "__main__":
     if args["plasmid_file"]:
         MGE_dict = read_genomad(args["plasmid_file"])
         for plasmid_name in MGE_dict:
+            MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
+            if MGE_motif_num == 0:
+                continue
+            print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
             for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
     elif args["plasmid"]:
+        plasmid_name = args["plasmid"]
+        MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
+        print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
         for_each_plasmid(args["plasmid"], profile_dir, host_dir, min_frac, {})
     else:
         print ("Please provide either --plasmid_file or --plasmid.")

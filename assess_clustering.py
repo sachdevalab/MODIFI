@@ -57,7 +57,21 @@ def read_predicted_result(clster_out):
 def read_metabat_result():
 
 
-    df = pd.read_csv("/home/shuaiw/borg/maxbat/zymo_bin.txt", header = None, sep = "\t")
+    # df = pd.read_csv("/home/shuaiw/borg/maxbat/zymo_bin.txt", header = None, sep = "\t")
+    df = pd.read_csv("/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.metabat-bins--saveCls/bin", header = None, sep = "\t")
+    # print (df)
+    answer_label = {}
+    for index, row in df.iterrows():
+        # contig = row["motif"]
+        contig = row[0]
+        answer_label[contig] = row[1]
+    return answer_label
+
+def read_metabat_all_break():
+
+
+    # df = pd.read_csv("/home/shuaiw/borg/maxbat/zymo_bin.txt", header = None, sep = "\t")
+    df = pd.read_csv("/home/shuaiw/borg/contigs/all_break.contigs.fa.metabat-bins--saveCls/bin", header = None, sep = "\t")
     # print (df)
     answer_label = {}
     for index, row in df.iterrows():
@@ -116,6 +130,23 @@ def all_break():
     clster_out = "/home/shuaiw/borg/bench/all_break/motif_cluster.u.csv"
     clster_out = "tmp/all.u.csv"
     answer_label = read_predicted_result(clster_out)
+    contig_index_dict = read_all_break_truth()
+    print (len(contig_index_dict), "truth contig number")
+    print (len(answer_label), "predicted contig number")
+
+    true_labels = []
+    predicted_clusters = []
+    true_label_dict = defaultdict(int)
+    for contig in answer_label:
+        if contig not in contig_index_dict:
+            continue
+        true_labels.append(contig_index_dict[contig])
+        predicted_clusters.append(answer_label[contig])
+
+    eva(true_labels, predicted_clusters)
+
+def all_break_metabat():
+    answer_label = read_metabat_all_break()
     contig_index_dict = read_all_break_truth()
     print (len(contig_index_dict), "truth contig number")
     print (len(answer_label), "predicted contig number")
@@ -267,9 +298,9 @@ def host_linkage_eva():
 
     # clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
     # clster_out = "/home/shuaiw/borg/bench/zymo6_NM200/motif_cluster.h.csv"
-    clster_out = "tmp/zymo.u.csv"
-    answer_label = read_predicted_result(clster_out)
-    # answer_label = read_metabat_result()
+    # clster_out = "tmp/zymo.u.csv"
+    # answer_label = read_predicted_result(clster_out)
+    answer_label = read_metabat_result()
     plasmid_cluster_id = {}
     for contig in plasmid_host_dict:
         if contig in answer_label:
@@ -342,9 +373,10 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-host_linkage_eva()
+# host_linkage_eva()
 # for_zymo()
 # for_zymo_maxbat()
 # all_break()
+all_break_metabat()
 
 # all_break2()

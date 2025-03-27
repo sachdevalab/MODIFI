@@ -178,3 +178,6 @@ whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_
  work_dir=/home/shuaiw/methylation/data/borg/bench/all_ccs_1k read_type=ccs min_len=1000 max_NM=10 min_cov=5"\
   --job-name=all_ccs_1k
 
+
+  runMetaBat.sh --noBinOut --saveCls all_break.contigs.fa /home/shuaiw/borg/all_break/all_break.align.ccs.bam
+
