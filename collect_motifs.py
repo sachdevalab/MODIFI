@@ -31,4 +31,6 @@ if __name__ == "__main__":
 
     folder = sys.argv[1]
     all_motif = sys.argv[2]
+    MIN_FRAC = float(sys.argv[3])
+    MIN_detect = int(sys.argv[4])
     collect_motifs(folder, all_motif, MIN_FRAC, MIN_detect)

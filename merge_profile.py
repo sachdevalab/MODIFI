@@ -354,10 +354,11 @@ if __name__ == "__main__":
     # required.add_argument("--all_profiles", type=str, help="<str> separate by space", nargs="+", metavar="\b")
     required.add_argument("--heatmap", type=str, help="<str> heatmap file.", metavar="\b")
     required.add_argument("--summary", type=str, help="<str> output motif summary.", metavar="\b")
+    optional.add_argument("--min_frac", type=float, default=0.5, help="<float> minimum fraction of methylation to keep the motif.")
     optional.add_argument("-h", "--help", action="help")
     args = vars(parser.parse_args())
 
-    min_frac = 0.5
+    min_frac = args['min_frac']
     min_motif_sites = 1
 
     profile_list = args['all_profiles']

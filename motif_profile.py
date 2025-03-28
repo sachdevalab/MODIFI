@@ -278,6 +278,8 @@ if __name__ == "__main__":
     all_motifs = sys.argv[3]
     profile = sys.argv[4]
     ipd_ratio_file = sys.argv[5]
+    min_frac = float(sys.argv[6])
+    min_sites = int(sys.argv[7])
 
     REF = read_ref(my_ref)
     # print (REF)
@@ -299,8 +301,8 @@ if __name__ == "__main__":
 
 
     ## filter df, keep the motifs with motif_modified_num > 1000
-    df = df[df["motif_modified_num"] > 100]
-    df = df[df["motif_modified_ratio"] > 0.2]
+    df = df[df["motif_modified_num"] >= min_sites]
+    df = df[df["motif_modified_ratio"] >= min_frac]
     print (len(df), "motifs left after filtering")
     if len(df) > 0:
         motif_sites = reload_motif_sites(REF, df)

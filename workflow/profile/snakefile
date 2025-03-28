@@ -9,6 +9,8 @@ configfile: "../config.yaml"
 whole_bam = config["whole_bam"]
 whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
+min_frac = config["min_frac"]
+min_sites = config["min_sites"]
 
 
 # Create required directories dynamically
@@ -35,10 +37,13 @@ rule collect:
         os.path.join(work_dir, "motifs")
     output:
         os.path.join(work_dir, "all.motifs.csv")
+    params:
+        min_frac=min_frac,
+        min_sites=min_sites
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/collect_motifs.py {input} {output} 
+        python /home/shuaiw/Methy/collect_motifs.py {input} {output} {params.min_frac} {params.min_sites}
         """
 
 rule profiling:
@@ -49,10 +54,13 @@ rule profiling:
         ipd_ratio=os.path.join(work_dir, "ipd_ratio", "{sample}.ipd3.csv"),
     output:
         prof=os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
+    params:
+        min_frac=min_frac,
+        min_sites=min_sites
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/motif_profile.py {input.ref} {input.gff} {input.all_motifs} {output.prof} {input.ipd_ratio}
+        python /home/shuaiw/Methy/motif_profile.py {input.ref} {input.gff} {input.all_motifs} {output.prof} {input.ipd_ratio}  {params.min_frac} {params.min_sites}
         """
 
 rule merge_profiles:
@@ -63,10 +71,13 @@ rule merge_profiles:
     output:
         heatmap=os.path.join(work_dir, "motif_heatmap.pdf"),
         merged=os.path.join(work_dir, "motif_profile.csv")
+    params:
+        min_frac=min_frac,
     shell:
         """
         set -euo pipefail
         python /home/shuaiw/Methy/merge_profile.py --all_profiles {input.prof} \
         --heatmap  {output.heatmap} \
-        --summary {output.merged}
+        --summary {output.merged} \
+        --min_frac {params.min_frac}
         """
