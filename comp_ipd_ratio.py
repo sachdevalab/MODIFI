@@ -91,6 +91,7 @@ def get_ipd_ratio(csv, output, gff, figure_file, min_cov=5):
     ## try this otherwise exception will be raised
     try:
         df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
+        df['score'] = df['pvalue'].apply(phred_qv) 
     except:
         raise ValueError("Error in calculating pvalue")
 
@@ -149,9 +150,9 @@ def get_ref(ref):
     return seq_dict
 
 
-def get_gff(df, gff, p_cut = 0.05):
+def get_gff(df, gff):
     print ("start get gff...")
-    df = df[df['pvalue'] <= p_cut]
+    df = df[df['pvalue'] <= P_CUTOFF]
     # gff = "tmp/test.gff"
     f = open(gff, "w")
     print ("##gff-version 3", file = f)
@@ -161,7 +162,8 @@ def get_gff(df, gff, p_cut = 0.05):
         print ("##sequence-region\t" + seq + "\t1\t" + str(len(seq_dict[seq])), file = f)
     # print ("##sequence-region\tCP064388.1\t1\t75554", file = f )
     for index, row in df.iterrows():
-        score = phred_qv(row['pvalue'])
+        # score = phred_qv(row['pvalue'])
+        score = row['score']
         one_based_tpl = row['tpl'] + 1
         if row['strand'] == 1:
             my_strand = '-'
@@ -193,6 +195,7 @@ if __name__ == "__main__":
     # fig = None #sys.argv[5]
     figure_file = sys.argv[5]
     min_cov = sys.argv[6]
+    P_CUTOFF = 0.05
     seq_dict = get_ref(ref)
     print ("loaded fasta")
     get_ipd_ratio(csv, output, gff, figure_file, min_cov)
