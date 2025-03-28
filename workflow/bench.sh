@@ -177,3 +177,11 @@ work_dir=/home/shuaiw/methylation/data/borg/bench/merge_WGA" --job-name=merge
   /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
   /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_genomad/ \
   /groups/diamond/databases/genomad/v1.7/" --job-name=genomad
+
+
+  sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo \
+  read_type=ccs clean=False"\
+   --job-name=zymo2

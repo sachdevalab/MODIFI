@@ -196,7 +196,7 @@ whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_
 
   snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam\
  whole_ref=/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa\
-  work_dir=/home/shuaiw/methylation/data/borg/new_test11
+  work_dir=/home/shuaiw/methylation/data/borg/new_test11 clean=False
 
 
   runMetaBat.sh --noBinOut --saveCls all_break.contigs.fa /home/shuaiw/borg/all_break/all_break.align.ccs.bam

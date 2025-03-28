@@ -144,11 +144,12 @@ rule profile:
     params:
         min_frac=min_frac,
         min_sites=min_sites,
-        min_score = min_score
+        min_score = min_score, 
+        min_cov = min_cov
     shell:
         """
         cd profile 
-        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_frac={params.min_frac} min_sites={params.min_sites} min_score={params.min_score}
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_frac={params.min_frac} min_sites={params.min_sites} min_score={params.min_score} min_cov={params.min_cov}
         cd ..
         """
 

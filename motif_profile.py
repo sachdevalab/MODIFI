@@ -25,6 +25,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
     motif_len = len(motif_new)
     rev_exact_pos = motif_len - exact_pos + 1
     motif_sites = {}
+    valid_loci_num = 0   ## number of motif sites with >=min_cov 
     motif_loci_num = 0
     motif_modify_num = 0
     for_loci_num = 0
@@ -37,6 +38,9 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
             # for i in range(site, site + motif_len):
             #     motif_sites[r + ":" + str(i) + "+"] = motif_new
             tag = r + ":" + str(site+exact_pos) + "+"
+            if tag in ipd_info_dict:
+                if ipd_info_dict[tag]['coverage'] >= min_cov:
+                    valid_loci_num += 1
             motif_loci_num += 1
             for_loci_num += 1
             if tag in modified_loci:
@@ -48,6 +52,9 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
             1:
         ]:
             tag = r + ":" + str(site+rev_exact_pos) + "-"
+            if tag in ipd_info_dict:
+                if ipd_info_dict[tag]['coverage'] >= min_cov:
+                    valid_loci_num += 1
             motif_loci_num += 1
             rev_loci_num += 1
             if tag in modified_loci:
@@ -63,6 +70,10 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
         ratio = 0
     else:
         ratio = motif_modify_num/motif_loci_num
+    if valid_loci_num == 0:
+        valid_ratio = 0
+    else:
+        valid_ratio = motif_modify_num/valid_loci_num
     if for_loci_num == 0:
         for_ratio = 0
     else:
@@ -81,7 +92,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
 
     return [for_loci_num, for_modified_num,for_ratio,\
             rev_loci_num, rev_modified_num, rev_ratio,\
-            motif_loci_num, motif_modify_num, ratio, proportion_all_modified], modified_loci
+            motif_loci_num, motif_modify_num, ratio, proportion_all_modified, valid_loci_num, valid_ratio], modified_loci
 
 def get_modified_ratio(gff):
     ## read the gff file
@@ -185,17 +196,30 @@ def reload_motif_sites(REF, df):
                 motif_sites[tag] = motif_new
     return motif_sites
 
-def count_ipd_ratio(ipd_ratio_file, motif_sites):
-    data = []
+def read_ipd_ratio(ipd_ratio_file):
+    ipd_info_dict = {}
     df_ipd = pd.read_csv(ipd_ratio_file)
+    ## convert strand to - and +
+    df_ipd['strand'] = df_ipd['strand'].replace({1: '-', 0: '+'})
     for index, row in df_ipd.iterrows():
-        if row['strand'] == 1:
-            strand_string = "-"
-        else:
-            strand_string = "+"
-        tag = row['refName'] + ":" + str(row['tpl']+1) + strand_string
+        tag = row['refName'] + ":" + str(row['tpl']+1) + row['strand']
+        ipd_info_dict [tag] = row
+    return ipd_info_dict
+
+
+def count_ipd_ratio(ipd_info_dict, motif_sites):
+    data = []
+    # df_ipd = pd.read_csv(ipd_ratio_file)
+    # for index, row in df_ipd.iterrows():
+    #     if row['strand'] == 1:
+    #         strand_string = "-"
+    #     else:
+    #         strand_string = "+"
+    #     tag = row['refName'] + ":" + str(row['tpl']+1) + strand_string
+    for tag in ipd_info_dict:
         if tag in motif_sites:
-            data.append([row['refName'], str(row['tpl']+1) , strand_string, motif_sites[tag], row['ipd_ratio']])
+            row = ipd_info_dict[tag]
+            data.append([row['refName'], str(row['tpl']+1) , row['strand'], motif_sites[tag], row['ipd_ratio']])
     site_df = pd.DataFrame(data, columns = ["refName", "tpl", "strand", "motif", "ipd_ratio"])
     # print (site_df)
     ### plot the site df using subplot using seaborn
@@ -267,6 +291,7 @@ if __name__ == "__main__":
     # motif_new = "CTGCAG"
     # exact_pos = 5
     score_cutoff = 30
+    min_cov = 10
 
     # my_ref = "/home/shuaiw/borg/all_test//contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.fa"
     # gff = "/home/shuaiw/borg/all_test//gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.gff"
@@ -281,10 +306,12 @@ if __name__ == "__main__":
     min_frac = float(sys.argv[6])
     min_sites = int(sys.argv[7])
     score_cutoff = int(sys.argv[8])
+    min_cov = int(sys.argv[9])
 
     REF = read_ref(my_ref)
     # print (REF)
     modified_loci, all_modified_loci = get_modified_ratio(gff)
+    ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
     motifs = pd.read_csv(all_motifs)
     data = []
     for index, motif in motifs.iterrows():
@@ -295,7 +322,8 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
                                         "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
-                                        "motif_loci_num", "motif_modified_num", "motif_modified_ratio", "proportion"])
+                                        "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
+    df = df.round(4)
     df.to_csv(profile, index=False)
     anno = count_motifs(modified_loci, all_modified_loci)
     get_reprocess_gff(gff, all_modified_loci, anno)
@@ -309,7 +337,7 @@ if __name__ == "__main__":
         motif_sites = reload_motif_sites(REF, df)
         # ipd_ratio_file = "/home/shuaiw/borg/all_test/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.ipd3.csv"
 
-        count_ipd_ratio(ipd_ratio_file, motif_sites)
+        count_ipd_ratio(ipd_info_dict, motif_sites)
     else:
         print ("no motif sites left after filtering")
 
