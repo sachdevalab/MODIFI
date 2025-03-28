@@ -146,11 +146,12 @@ def cal_mean(s0dict, s1dict, ref_Name, capValue, start, end, t0, min_dp=3):
     for pos in range(start, end):
         if pos in s0dict:
             d = np.array(s0dict[pos])
-            if len(d) < min_dp:
-                continue
             coverage = len(d)
+            if coverage < min_dp:
+                continue
+            
             if len(d) > 1:
-                percentile = min(90, (1.0 - 1.0 / (len(d) - 1)) * 100)
+                percentile = min(90, (1.0 - 1.0 / (coverage - 1)) * 100)
             else:
                 percentile = 0
             localPercentile = np.percentile(d, percentile)
@@ -160,7 +161,7 @@ def cal_mean(s0dict, s1dict, ref_Name, capValue, start, end, t0, min_dp=3):
 
             # Trimmed stats
             tMean = np.mean(d).item()
-            tErr = np.std(d).item() / np.sqrt(len(d))
+            tErr = np.std(d).item() / np.sqrt(coverage)
             # print (ref_seq[pos])
             result.append([ref_Name, 1, pos, complement_ref_seq[pos], coverage, tMean, tErr])
     
