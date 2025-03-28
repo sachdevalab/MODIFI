@@ -413,6 +413,16 @@ def corr_ipd_sum(ipd_summary):
 
     print ("tMean and control", corr)
 
+def corr_depth(normal, p5):
+    df = pd.read_csv(normal, nrows=1000)
+    df2 = pd.read_csv(p5, nrows=1000)
+    print (pearsonr(df['tMean'], df2['tMean']))
+    print  (pearsonr(df['control'], df2['control']))
+    print  (pearsonr(df['ipd_ratio'], df2['ipd_ratio']))
+
+    ## print first 10 tMean 
+    for i in range(100):
+        print (df['tMean'][i],  df2['tMean'][i], df['ipd_ratio'][i], df2['ipd_ratio'][i])
 
 if __name__ == "__main__":
 
@@ -423,9 +433,9 @@ if __name__ == "__main__":
     # ipd_summary = "/home/shuaiw/methylation/data/borg/test_100/test_100.csv"
     # infer = f"/home/shuaiw/methylation/data/borg/new_test7/ipd_ratio/{contig}.ipd3.csv"
 
-    contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C"
-    ipd_summary = "/home/shuaiw/borg/seven_contigs/seven_contigs.csv"
-    infer = f"/home/shuaiw/borg/seven_test/ipd_ratio/{contig}.ipd3.csv"
+    # contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C"
+    # ipd_summary = "/home/shuaiw/borg/seven_contigs/seven_contigs.csv"
+    # infer = f"/home/shuaiw/borg/seven_test/ipd_ratio/{contig}.ipd3.csv"
 
     # bench = Benchmark(ipd_summary, infer)
     # bench.read_ipd_summary_all()
@@ -437,10 +447,14 @@ if __name__ == "__main__":
     # corr_obs_cont(infer)
     # corr_ipd_sum(ipd_summary)
 
-    infer = "/home/shuaiw/borg/bench/break/test/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595.ipd2.csv"
-    corr_obs_cont(infer)
-    ipd_summary = "/home/shuaiw/borg/break_contigs/break_contigs.csv"
-    corr_ipd_sum(ipd_summary)
+    # infer = "/home/shuaiw/borg/bench/break/test/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_317_C_0_852595.ipd2.csv"
+    # corr_obs_cont(infer)
+    # ipd_summary = "/home/shuaiw/borg/break_contigs/break_contigs.csv"
+    # corr_ipd_sum(ipd_summary)
+
+    p5 = "/home/shuaiw/borg/bench/zymo_new_ref_p0.1/ipd_ratio/E_coli_H10407_1.ipd3.csv"
+    normal = "/home/shuaiw/borg/bench/zymo_new_ref/ipd_ratio/E_coli_H10407_1.ipd3.csv"
+    corr_depth(normal, p5)
 
 
     # bench.read_ipd_summary()
