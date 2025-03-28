@@ -280,6 +280,7 @@ if __name__ == "__main__":
     ipd_ratio_file = sys.argv[5]
     min_frac = float(sys.argv[6])
     min_sites = int(sys.argv[7])
+    score_cutoff = int(sys.argv[8])
 
     REF = read_ref(my_ref)
     # print (REF)

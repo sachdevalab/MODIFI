@@ -11,6 +11,7 @@ whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
 min_frac = config["min_frac"]
 min_sites = config["min_sites"]
+min_score = config["min_score"]
 
 
 # Create required directories dynamically
@@ -56,11 +57,12 @@ rule profiling:
         prof=os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
     params:
         min_frac=min_frac,
-        min_sites=min_sites
+        min_sites=min_sites,
+        min_score=min_score
     shell:
         """
         set -euo pipefail
-        python /home/shuaiw/Methy/motif_profile.py {input.ref} {input.gff} {input.all_motifs} {output.prof} {input.ipd_ratio}  {params.min_frac} {params.min_sites}
+        python /home/shuaiw/Methy/motif_profile.py {input.ref} {input.gff} {input.all_motifs} {output.prof} {input.ipd_ratio}  {params.min_frac} {params.min_sites} {params.min_score}
         """
 
 rule merge_profiles:

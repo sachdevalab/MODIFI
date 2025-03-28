@@ -18,6 +18,7 @@ min_cov = config["min_cov"]
 clean_flag = config.get("clean", True)
 min_frac = config["min_frac"]
 min_sites = config["min_sites"]
+min_score = config["min_score"]
 
 if not config.get("max_NM"):
     if config["read_type"] == "hifi" or config["read_type"] == "ccs":
@@ -126,10 +127,12 @@ rule motif:
         os.path.join(work_dir, "compare_done.txt")
     output:
         os.path.join(work_dir, "motif_done.txt")
+    params:
+        min_score = min_score
     shell:
         """
         cd motif 
-        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir}
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_score={params.min_score}
         cd ..
         """
 
@@ -140,11 +143,12 @@ rule profile:
         os.path.join(work_dir, "profile_done.txt")
     params:
         min_frac=min_frac,
-        min_sites=min_sites
+        min_sites=min_sites,
+        min_score = min_score
     shell:
         """
         cd profile 
-        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_frac={params.min_frac} min_sites={params.min_sites}
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_frac={params.min_frac} min_sites={params.min_sites} min_score={params.min_score}
         cd ..
         """
 

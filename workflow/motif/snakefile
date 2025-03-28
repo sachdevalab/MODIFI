@@ -9,6 +9,7 @@ configfile: "../config.yaml"
 whole_bam = config["whole_bam"]
 whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
+min_score = config["min_score"]
 
 
 # Create required directories dynamically
@@ -36,8 +37,10 @@ rule ipd_ratio:
     output:
         os.path.join(work_dir, "motifs", "{sample}.motifs.csv")
     threads: 2
+    params:
+        min_score=min_score
     shell:
         """
         set -euo pipefail
-        /home/shuaiw/smrtlink/motifMaker find -f {input.ref} -g {input.gff} -o {output} -j {threads} -m 30
+        /home/shuaiw/smrtlink/motifMaker find -f {input.ref} -g {input.gff} -o {output} -j {threads} -m {params.min_score}
         """
