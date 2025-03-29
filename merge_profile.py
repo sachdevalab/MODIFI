@@ -201,7 +201,8 @@ def hierarchical_clustering(df, tree_fig, cutoff=1.6):
     # Plot dendrogram
     plt.figure(figsize=(20, 15))
     dendrogram(my_linkage, labels=df.columns, orientation='left', leaf_rotation=0)
-    plt.axhline(y=cutoff, color='r', linestyle='--')  # Show the cutoff threshold
+    # plt.axhline(y=cutoff, color='r', linestyle='--')  # Show the cutoff threshold
+    plt.axvline(x=cutoff, color='r', linestyle='--')
     plt.title(f"Dendrogram with Distance Threshold = {cutoff}")
     plt.xlabel("Sample Index")
     plt.ylabel("Cluster Distance")
