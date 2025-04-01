@@ -206,3 +206,17 @@ sbatch  --partition standard --wrap "snakemake --config \
   work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s20 \
   read_type=ccs min_len=1000 max_NM=3 min_cov=1 clean=False min_frac=0.1 min_score=20" \
   --job-name=zymo4
+
+sbatch  --partition standard --wrap "snakemake --config \
+  whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
+  whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s10 \
+  read_type=ccs min_len=1000 max_NM=3 min_cov=1 clean=False min_frac=0.1 min_score=30 min_sites=10" \
+  --job-name=zymo4
+
+sbatch  --partition standard --wrap "snakemake --config \
+  whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
+  whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30 \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 clean=False min_frac=0.1 min_score=30 min_sites=10" \
+  --job-name=zymo4
