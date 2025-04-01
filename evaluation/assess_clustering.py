@@ -82,7 +82,8 @@ def read_metabat_all_break():
 
 def for_zymo():
     # clster_out = "/home/shuaiw/borg/bench/zymo2/motif_cluster.h.csv"
-    clster_out = "tmp/zymo.u.csv"
+    clster_out = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/motif_cluster.csv"
+    # clster_out = "tmp/zymo.u.csv"
     answer_label = read_predicted_result(clster_out)
     contig_index_dict = read_zymo_truth()
 
@@ -374,9 +375,9 @@ def check_host(host_list, cluster, plasmid):
 
 
 # host_linkage_eva()
-# for_zymo()
+for_zymo()
 # for_zymo_maxbat()
 # all_break()
-all_break_metabat()
+# all_break_metabat()
 
 # all_break2()

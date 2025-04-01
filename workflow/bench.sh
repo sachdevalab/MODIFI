@@ -220,3 +220,11 @@ sbatch  --partition standard --wrap "snakemake --config \
   work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30 \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 clean=False min_frac=0.1 min_score=30 min_sites=10" \
   --job-name=zymo4
+
+
+sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.time snakemake --config \
+  whole_bam=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_200ppm_r1_LR_scaffold.fa \
+  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_new \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10"\
+  --job-name=pf

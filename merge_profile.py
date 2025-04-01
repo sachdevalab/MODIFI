@@ -150,8 +150,6 @@ def JC_hierarchical_clustering(df, tree_fig, cutoff=0.45):
     cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
     cluster_result.to_csv(cluster_fig.replace(".pdf", ".j.csv"), index=False)    
     
-
-
 def heatmap(df, heat_map):
     df = df.T
     # Plot the heatmap with hierarchical clustering
