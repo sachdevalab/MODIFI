@@ -343,6 +343,4 @@ if __name__ == "__main__":
 
 
 
-# python motif_profile.py /home/shuaiw/borg/all_test//contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.fa /home/shuaiw/borg/all_test//gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.gff /home/shuaiw/borg/all_test/test_motifs.csv /home/shuaiw/borg/all_test/profiles/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.csv /home/shuaiw/borg/all_test/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.ipd3.csv
-
-# python motif_profile.py /home/shuaiw/borg/all_test_ccs3/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.fa  /home/shuaiw/borg/all_test_ccs3/gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.gff  /home/shuaiw/borg/all_test_ccs3/all.motifs.csv     /home/shuaiw/borg/all_test_ccs3/motif_profile.csv         /home/shuaiw/borg/all_test_ccs3/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_96_L.ipd3.csv
+# python motif_profile.py /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/contigs/E_coli_H10407_1.fa /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/gffs/E_coli_H10407_1.gff /home/shuaiw/borg/bench/zymo_new_ref_NM3/all.motifs.csv /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/test.csv /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/ipd_ratio/E_coli_H10407_1.ipd3.csv 0.1 10 10 1

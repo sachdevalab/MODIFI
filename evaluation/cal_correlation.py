@@ -423,6 +423,12 @@ def corr_depth(normal, p5):
     ## print first 10 tMean 
     for i in range(100):
         print (df['tMean'][i],  df2['tMean'][i], df['ipd_ratio'][i], df2['ipd_ratio'][i])
+    
+    ## plot the line plot for  df2['tMean'] and  df['tMean']
+    plt.plot(df['ipd_ratio'][:100], label='normal')
+    plt.plot(df2['ipd_ratio'][:100], label='p5')
+    plt.legend()
+    plt.savefig("../tmp/tMean.png")
 
 if __name__ == "__main__":
 
@@ -452,7 +458,7 @@ if __name__ == "__main__":
     # ipd_summary = "/home/shuaiw/borg/break_contigs/break_contigs.csv"
     # corr_ipd_sum(ipd_summary)
 
-    p5 = "/home/shuaiw/borg/bench/zymo_new_ref_p0.1/ipd_ratio/E_coli_H10407_1.ipd3.csv"
+    p5 = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05/ipd_ratio/E_coli_H10407_1.ipd3.csv"
     normal = "/home/shuaiw/borg/bench/zymo_new_ref/ipd_ratio/E_coli_H10407_1.ipd3.csv"
     corr_depth(normal, p5)
 
