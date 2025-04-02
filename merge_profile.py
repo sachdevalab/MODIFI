@@ -197,14 +197,17 @@ def hierarchical_clustering(df, tree_fig, cutoff=1.6):
     cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
     cluster_result.to_csv(cluster_fig.replace(".pdf", ".h.csv"), index=False)
     # Plot dendrogram
-    plt.figure(figsize=(20, 15))
-    dendrogram(my_linkage, labels=df.columns, orientation='left', leaf_rotation=0)
-    # plt.axhline(y=cutoff, color='r', linestyle='--')  # Show the cutoff threshold
-    plt.axvline(x=cutoff, color='r', linestyle='--')
-    plt.title(f"Dendrogram with Distance Threshold = {cutoff}")
-    plt.xlabel("Sample Index")
-    plt.ylabel("Cluster Distance")
-    plt.savefig(tree_fig)
+    try:
+        plt.figure(figsize=(20, 15))
+        dendrogram(my_linkage, labels=df.columns, orientation='left', leaf_rotation=0)
+        # plt.axhline(y=cutoff, color='r', linestyle='--')  # Show the cutoff threshold
+        plt.axvline(x=cutoff, color='r', linestyle='--')
+        plt.title(f"Dendrogram with Distance Threshold = {cutoff}")
+        plt.xlabel("Sample Index")
+        plt.ylabel("Cluster Distance")
+        plt.savefig(tree_fig)
+    except Exception as e:
+        print(f"Failed to create dendrogram: {e}")
     print ("hierarchical clustering done.")
 
 def UMAP(df, cluster_fig):
@@ -380,9 +383,9 @@ if __name__ == "__main__":
 
     if len(profiles) > 0:
         heatmap(profiles, heat_map)
-        UMAP(profiles, cluster_fig)
+        # UMAP(profiles, cluster_fig)
         TSE(profiles, cluster_fig)
-        PCA_plot(profiles, pca_fig)
+        # PCA_plot(profiles, pca_fig)
         hierarchical_clustering(profiles, tree_fig)
         JC_hierarchical_clustering(profiles, tree_fig)
     else:

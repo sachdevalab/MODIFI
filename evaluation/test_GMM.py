@@ -126,53 +126,65 @@ def calculate_x_from_pvalue(p_value, mu, sigma, tail="right"):
         x = mu + z * sigma
         return x
 
+def get_abun(file):
+    df = pd.read_csv(file, sep = ",")
+    df['tpl'] = df['tpl'].astype(int)
+    df['strand'] = df['strand'].astype(int)
+    df['coverage'] = df['coverage'].astype(int)
+    df['kmer_count'] = df['kmer_count'].astype(int)
+
+    ## remove the elements with ipd_ratio == 0
+    df = df[df['ipd_ratio'] != 0]
+    ## remove elements with NAN values in ipd_ratio
+    df = df.dropna(subset=['ipd_ratio'])
+    ## remove the elements with coverage < min_cov
+    df = df[df['coverage'] >= int(1)]
+
+    ### remove the elements with ipd_ratio is inifinite
+    df = df[~df['ipd_ratio'].isin([np.inf, -np.inf])]
+
+
+    # mean = df['ipd_ratio'].mean()
+    # std = df['ipd_ratio'].std()
+    # df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
+
+    X2 = df['ipd_ratio'].values.reshape(-1,1)
+    gmm2 = GaussianMixture(2, weights_init=np.array([.99, .01]), means_init=np.array([1, 2]).reshape((2,1)))
+    gmm2.fit(X2)
+    print (gmm2.means_, gmm2.aic(X2), gmm2.weights_.flatten())
+    ## add a pvalue column to the dataframe, indicating the p value of a ipd_ratio belong to the lower distribution
+    df['pvalue'] = gmm2.predict_proba(X2)[:,0]
+
+    # X2 = df['ipd_ratio'].values.reshape(-1,1)
+    # gmm1 = GaussianMixture(1)
+    # gmm1.fit(X2)
+    # mu = gmm1.means_[0, 0]
+    # sigma = np.sqrt(gmm1.covariances_[0, 0])
+    # df['pvalue'] = norm.sf(X2, loc=mu, scale=sigma)
+
+    ## count how much with pvalue < 0.05
+    print (len(df[df['pvalue'] <= 0.05]))
+
+    my_loci = {}
+    for index, row in df.iterrows():
+        if row['pvalue'] <= 0.05:
+            if row['strand'] == 1:
+                row['strand'] = '-'
+            else:
+                row['strand'] = '+'
+            one_based_tpl = row['tpl'] + 1
+            tag = row['refName'] + "_" + str(one_based_tpl) + "_" + row['strand']
+            # print (index, row['ipd_ratio'], row['pvalue'])
+            my_loci[tag] = row['pvalue']
+    return my_loci
+
 # ## test the function
 # file = "/home/shuaiw/borg/bench/C227/WGA2/ipd_ratio/CP011331.1.ipd3.csv"
 file = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_2.ipd3.csv" 
-# file = "/home/shuaiw/borg/bench/breakdb/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_494_C_0_547023.ipd3.csv"
-## read the ipd file using pd
-
-df = pd.read_csv(file)
-df = df[df['ipd_ratio'] != 0]
-
-# X2 = df['ipd_ratio'].values.reshape(-1,1)
-# gmm2 = GaussianMixture(2, weights_init=np.array([.99, .01]), means_init=np.array([1.1, 3]).reshape((2,1)))
-# gmm2.fit(X2)
-# print (gmm2.means_, gmm2.aic(X2), gmm2.weights_.flatten())
-# ## add a pvalue column to the dataframe, indicating the p value of a ipd_ratio belong to the lower distribution
-# df['pvalue'] = gmm2.predict_proba(X2)[:,0]
-# print (df)
-
-
-mean = df['ipd_ratio'].mean()
-std = df['ipd_ratio'].std()
-print (f"mean: {mean}, std: {std}, cal pvalue...")
-
-df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
-
-## count how much with pvalue < 0.05
-print (len(df[df['pvalue'] < 0.05]))
-
-my_loci = {}
-for index, row in df.iterrows():
-    if row['pvalue'] < 0.05:
-        if row['strand'] == '0':
-            row['strand'] = '-'
-        else:
-            row['strand'] = '+'
-        one_based_tpl = row['tpl'] + 1
-        tag = row['refName'] + "_" + str(one_based_tpl) + "_" + row['strand']
-        # print (index, row['ipd_ratio'], row['pvalue'])
-        my_loci[tag] = row['pvalue']
-
-# print (my_loci)
-
-
-
+file = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/ipd_ratio/E_coli_H10407_2.ipd3.csv" 
+# bench_gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_2.gff"
 bench_gff = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/gffs/E_coli_H10407_2.gff"
-# depth_gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_1.gff" 
-
-
+my_loci =  get_abun(file)
 
 bench_loci = read_gff(bench_gff)
 # print (bench_loci)
@@ -198,6 +210,33 @@ f1 = 2 * (precision * recall) / (precision + recall)
 print ("Recall: ", recall)
 print ("Precision: ", precision)
 print ("F1 score: ", f1)
+
+
+
+
+# file = "/home/shuaiw/borg/bench/breakdb/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_494_C_0_547023.ipd3.csv"
+## read the ipd file using pd
+
+
+# X2 = df['ipd_ratio'].values.reshape(-1,1)
+# gmm2 = GaussianMixture(2, weights_init=np.array([.99, .01]), means_init=np.array([1.1, 3]).reshape((2,1)))
+# gmm2.fit(X2)
+# print (gmm2.means_, gmm2.aic(X2), gmm2.weights_.flatten())
+# ## add a pvalue column to the dataframe, indicating the p value of a ipd_ratio belong to the lower distribution
+# df['pvalue'] = gmm2.predict_proba(X2)[:,0]
+# print (df)
+
+
+# print (my_loci)
+
+
+
+# bench_gff = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/gffs/E_coli_H10407_2.gff"
+
+# depth_gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_1.gff" 
+
+
+
 
 
 

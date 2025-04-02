@@ -228,3 +228,15 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengf
   work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_new \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10"\
   --job-name=pf
+
+
+python comp_ipd_ratio.py /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv \
+  /home/shuaiw/borg/bench/test/test.csv \
+  /home/shuaiw/borg/bench/test/E_coli_H10407_1.gff \
+  /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa \
+  /home/shuaiw/borg/bench/test/test.png \
+  1
+
+/home/shuaiw/smrtlink/motifMaker find -g /home/shuaiw/borg/bench/test/E_coli_H10407_1.gff \
+      -o /home/shuaiw/borg/bench/test/test.motif \
+          -m 30 -j 10 -f /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa
