@@ -249,5 +249,5 @@ if __name__ == "__main__":
 # python cal_invasion_score.py  --work_dir /home/shuaiw/borg/all_test_ccs3 --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt
 # python cal_invasion_score.py  --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt
 # python cal_invasion_score.py  --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_plasmid_summary.tsv
-
+# python cal_invasion_score.py --work_dir /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30 --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list
 

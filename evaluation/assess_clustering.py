@@ -3,6 +3,7 @@ from sklearn.metrics import adjusted_rand_score
 import pandas as pd
 import numpy as np  
 from collections import defaultdict
+import os
 
 # Example: True labels vs. Predicted clusters
 true_labels = [0, 0, 1, 1, 2, 2]
@@ -293,7 +294,13 @@ def get_plasmid_dict(fai):
 def host_linkage_eva(): 
     fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
     plasmid_anno_file = fai + ".plasmid"
+    plasmid_list = fai + ".plasmid.list"
     plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
+    f = open(plasmid_list, 'w')
+    print ('seq_name', file = f)
+    for contig in plasmid_host_dict:
+        print (contig, file = f)
+    f.close()
     output_host_linkage(plasmid_host_dict, contig_length_dict, plasmid_anno_file)
 
 
@@ -334,6 +341,65 @@ def host_linkage_eva():
         total += 1
     print (recall, total, "recall", recall/total, report_num, "FP", FP/report_num)
 
+def cal_AUC(): 
+    fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
+    plasmid_anno_file = fai + ".plasmid"
+    plasmid_list = fai + ".plasmid.list"
+    plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
+    dir = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/hosts/"
+    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/hosts/"
+    dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/hosts/"
+    cutoff = 0.4
+    data = []
+    for cutoff in range(0, 100, 5):
+        cutoff = cutoff / 100
+        guess_num = 0
+        correct_num = 0
+        
+        for plasmid in plasmid_host_dict:
+            host_file = dir + plasmid + ".host_prediction.csv"
+
+            if not os.path.exists(host_file):
+                print (host_file, "not exist")
+                continue
+            df = pd.read_csv(host_file)
+            ## get first row of df
+            for index, row in df.iterrows():
+                best_host = row['host']
+                best_score = row['final_score']
+                break
+            if best_score > cutoff:
+                guess_num += 1
+                if best_host in plasmid_host_dict[plasmid][2]:
+                    correct_num += 1
+        if guess_num == 0:
+            continue
+        recall = correct_num / len(plasmid_host_dict)
+        precision = correct_num / guess_num
+        print (recall, precision)
+        data.append([cutoff, recall, precision, 1-precision])
+    ## plot the AUC curve
+    import matplotlib.pyplot as plt
+    import matplotlib
+    import numpy as np
+    import seaborn as sns
+    
+    df = pd.DataFrame(data, columns=['cutoff', 'recall', 'precision', 'FP'])
+    print (df)
+    plt.figure(figsize=(8, 6))
+    ## use seaborn
+    sns.set(style="whitegrid")
+    ## plot dot plot, with x as precision, y as recall
+    ## sort df by recall
+    df = df.sort_values(by=['cutoff'])
+    plt.plot(df['FP'], df['recall'], marker='o', linestyle='-', color='b')
+    plt.xlabel('FP')
+    plt.ylabel('recall')
+    plt.savefig("../tmp/precision_recall_curve.png")
+
+
+
+
 def output_host_linkage(plasmid_host_dict, contig_length_dict, plasmid_anno_file):
     f = open(plasmid_anno_file, 'w')
     for plasmid in plasmid_host_dict:
@@ -373,9 +439,9 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-
+cal_AUC()
 # host_linkage_eva()
-for_zymo()
+# for_zymo()
 # for_zymo_maxbat()
 # all_break()
 # all_break_metabat()
