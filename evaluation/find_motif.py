@@ -281,6 +281,8 @@ def separat_motif(raw_gff):
 
             print (f">context_{i}\n{attributes_dict['context']}", file = context_f)
             # print (f">{seqid}_{start}\t{check_existing_motif(attributes_dict)}\n{attributes_dict['context']}", file = context_f)
+            if i == 10000:
+                break
             i += 1
     context_f.close()
     run_streme(context_fasta)
@@ -400,14 +402,28 @@ if __name__ == "__main__":
     streme_output = "/home/shuaiw/borg/streme_output"
     context_fasta = "/home/shuaiw/methylation/data/borg/b_contigs/test2/" + "context.fasta"
     control_fasta = "/home/shuaiw/methylation/data/borg/b_contigs/test2/" + "control.fasta"
+
+
+    raw_gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
+    ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
+    ipd_ratio = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
+    streme_output = "/home/shuaiw/borg/bench/test/streme_output"
+    context_fasta = "/home/shuaiw/borg/bench/test/context.fasta"
+    control_fasta = "/home/shuaiw/borg/bench/test/control.fasta"
+
+
+
+
     max_seq_num = 1000
     flank_len = 25
     ref_seq, ref_id = read_ref(ref)
-    for_dict, rev_dict, for_dict_all, rev_dict_all = load_ipd_ratio(ipd_ratio, ref_seq)
+    # for_dict, rev_dict, for_dict_all, rev_dict_all = load_ipd_ratio(ipd_ratio, ref_seq)
     # generate_control(control_fasta, ref_seq, for_dict, rev_dict, max_seq_num, flank_len)
     # read_streme(streme_output)
 
-    motifs, motif_sites = read_streme (streme_output)
-    motif_stastics(ref_id, motifs, motif_sites, for_dict_all, rev_dict_all)
+    separat_motif(raw_gff)
+
+    # motifs, motif_sites = read_streme (streme_output)
+    # motif_stastics(ref_id, motifs, motif_sites, for_dict_all, rev_dict_all)
 
     # streme -p /home/shuaiw/methylation/data/borg/b_contigs/test2/context.fasta -n /home/shuaiw/methylation/data/borg/b_contigs/test2/control.fasta --oc ~/borg/streme_output

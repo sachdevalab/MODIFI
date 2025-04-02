@@ -64,7 +64,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
     plt.xlabel("IPD ratio")
     plt.ylabel("Frequency")
     plt.title("IPD ratio distribution of motif " + motif_new)
-    plt.savefig("tmp/" + motif_new + ".png")
+    plt.savefig("../tmp/" + motif_new + ".png")
     plt.close()
 
     # print ("motif_loci_num", motif_loci_num)
@@ -114,9 +114,9 @@ def get_modified_ratio(gff):
     print ("no. of modified loci", len(modified_loci))
     return modified_loci
 
-def read_ipd_ratio():
+def read_ipd_ratio(ipd_ratio_file):
     ipd_ratio_dict = {}
-    df = pd.read_csv("/home/shuaiw/methylation/data/borg/bench/zymo2/ipd_ratio/E_coli_K12-MG1655_1.ipd3.csv", nrows = 1000)
+    df = pd.read_csv(ipd_ratio_file, nrows = 10000000)
     for index, row in df.iterrows():
         # print (row['refName'], row['tpl'], row['strand'], row['coverage'], row['ipd_ratio'])
         if row['strand'] == 1:
@@ -137,14 +137,15 @@ def read_ipd_ratio():
 if __name__ == "__main__":
     # motif_new = "CTGCAG"
     # exact_pos = 5
-    score_cutoff = 0
+    score_cutoff = 30
     # my_ref = "/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa"
     # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
 
-    my_ref = "/home/shuaiw/methylation/data/borg/bench/zymo2/contigs/E_coli_K12-MG1655_1.fa"
-    gff = "/home/shuaiw/methylation/data/borg/bench/zymo2/gffs/E_coli_K12-MG1655_1.gff"
-    all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
+    my_ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
+    gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
+    # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
     profile = "/home/shuaiw/borg/test.csv"
+    ipd_ratio_file = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
 
     # my_ref = sys.argv[1]
     # gff = sys.argv[2]
@@ -154,17 +155,17 @@ if __name__ == "__main__":
     REF = read_ref(my_ref)
     # print (REF)
     modified_loci = get_modified_ratio(gff)
-    motifs = pd.read_csv(all_motifs)
-    ipd_ratio_dict = read_ipd_ratio()
-    print (len(ipd_ratio_dict))
-    data = []
+    # motifs = pd.read_csv(all_motifs)
+    ipd_ratio_dict = read_ipd_ratio(ipd_ratio_file)
+    # print (len(ipd_ratio_dict))
+    # data = []
     # for index, motif in motifs.iterrows():
         # motif_new = motif["motifString"]
         # exact_pos = motif["centerPos"]
     # motif_new = "AACNNNNNNGTGC"
     # exact_pos = 2
-    motif_new = "CCWGG"
-    exact_pos = 2
+    motif_new = "AGCANNNNNNCCT"
+    exact_pos = 4
     # motif_new = "GATC"
     # exact_pos = 2
     motif_profile = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
