@@ -429,6 +429,7 @@ def corr_depth(normal, p5):
     plt.plot(df2['ipd_ratio'][:100], label='p5')
     plt.legend()
     plt.savefig("../tmp/tMean.png")
+    print (np.mean(df['tErr']), np.mean(df2['tErr']))
 
 if __name__ == "__main__":
 

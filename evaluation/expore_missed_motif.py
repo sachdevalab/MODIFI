@@ -37,7 +37,10 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
             #     motif_sites[r + ":" + str(i) + "+"] = motif_new
             tag = r + ":" + str(site+exact_pos) + "+"
             record_modified_sites[tag] = motif_new
-            print (tag)
+            ##  also mark the nearby sites
+            # for i in range(site-100, site+100):
+            #     record_modified_sites[r + ":" + str(i) + "+"] = motif_new
+            # print (tag)
             motif_loci_num += 1
             for_loci_num += 1
             if tag in modified_loci:
@@ -51,6 +54,8 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
         ]:
             tag = r + ":" + str(site+rev_exact_pos) + "-"
             record_modified_sites[tag] = motif_new
+            # for i in range(site-100, site+100):
+            #     record_modified_sites[r + ":" + str(i) + "+"] = motif_new
             motif_loci_num += 1
             rev_loci_num += 1
             if tag in modified_loci:
@@ -145,7 +150,7 @@ if __name__ == "__main__":
     # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
 
     my_ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
-    gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_gmm/gffs/E_coli_H10407_1.gff"
+    gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_1.gff"
     # gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
     # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
     profile = "/home/shuaiw/borg/test.csv"
@@ -166,12 +171,10 @@ if __name__ == "__main__":
     # for index, motif in motifs.iterrows():
         # motif_new = motif["motifString"]
         # exact_pos = motif["centerPos"]
-    # motif_new = "AACNNNNNNGTGC"
-    # exact_pos = 2
+    # motif_new = "AGCANNNNNNCCT"
+    # exact_pos = 4
     motif_new = "GATC"
     exact_pos = 2
-    # motif_new = "GATC"
-    # exact_pos = 2
     all_record = {}
     motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
     ## add record_modified_sites to all_record
@@ -190,7 +193,7 @@ if __name__ == "__main__":
     for k, v in record_modified_sites.items():
         all_record[k] = v
     record_modified_sites  = all_record
-    print ("no. of modified sites", len(record_modified_sites))
+    print ("no. of final modified sites", len(record_modified_sites))
     
     # print (motif_new, motif_profile)
     new_gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.new.gff"
@@ -209,7 +212,7 @@ if __name__ == "__main__":
         strand = field[6]
         score = int(field[5])
         tag = ref + ":" + str(pos) + strand
-        if tag not in record_modified_sites:
+        if tag not in all_record and score >= 40:
             print (line.strip(), file = h)
     h.close()
 

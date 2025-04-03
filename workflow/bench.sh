@@ -228,6 +228,13 @@ sbatch  --partition standard --wrap "snakemake --config \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 clean=False min_frac=0.1 min_score=30 min_sites=10" \
   --job-name=zymo4
 
+sbatch  --partition standard --wrap "snakemake --config \
+  whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.10pct.bam \
+  whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.1_cov1_s30 \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10" \
+  --job-name=zymo4
+
 
 sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.time snakemake --config \
   whole_bam=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.align.ccs.bam \

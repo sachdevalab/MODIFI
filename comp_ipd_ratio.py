@@ -91,14 +91,14 @@ def get_ipd_ratio(csv, output, gff, figure_file, min_cov=5):
     print (f"mean: {mean}, std: {std}, cal pvalue...")
     ## try this otherwise exception will be raised
     try:
-        # df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
+        df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
 
-        X2 = df['ipd_ratio'].values.reshape(-1,1)
-        gmm2 = GaussianMixture(2, weights_init=np.array([.99, .01]), means_init=np.array([1, 2]).reshape((2,1)))
-        gmm2.fit(X2)
-        print (gmm2.means_, gmm2.aic(X2), gmm2.weights_.flatten())
-        ## add a pvalue column to the dataframe, indicating the p value of a ipd_ratio belong to the lower distribution
-        df['pvalue'] = gmm2.predict_proba(X2)[:,0]
+        # X2 = df['ipd_ratio'].values.reshape(-1,1)
+        # gmm2 = GaussianMixture(2, weights_init=np.array([.99, .01]), means_init=np.array([1, 2]).reshape((2,1)))
+        # gmm2.fit(X2)
+        # print (gmm2.means_, gmm2.aic(X2), gmm2.weights_.flatten())
+        # ## add a pvalue column to the dataframe, indicating the p value of a ipd_ratio belong to the lower distribution
+        # df['pvalue'] = gmm2.predict_proba(X2)[:,0]
 
         df['score'] = df['pvalue'].apply(phred_qv) 
     except:
