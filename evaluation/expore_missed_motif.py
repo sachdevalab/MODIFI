@@ -29,12 +29,14 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
     rev_modified_num = 0
 
     motif_ipd_ratio = []
+    record_modified_sites = {}
 
     for r, contig in REF.items():
         for site in nt_search(str(contig), motif_new)[1:]:
             # for i in range(site, site + motif_len):
             #     motif_sites[r + ":" + str(i) + "+"] = motif_new
             tag = r + ":" + str(site+exact_pos) + "+"
+            record_modified_sites[tag] = motif_new
             print (tag)
             motif_loci_num += 1
             for_loci_num += 1
@@ -48,6 +50,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
             1:
         ]:
             tag = r + ":" + str(site+rev_exact_pos) + "-"
+            record_modified_sites[tag] = motif_new
             motif_loci_num += 1
             rev_loci_num += 1
             if tag in modified_loci:
@@ -91,7 +94,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
 
     return [for_loci_num, for_modified_num,for_ratio,\
             rev_loci_num, rev_modified_num, rev_ratio,\
-            motif_loci_num, motif_modify_num, ratio, proportion_all_modified]
+            motif_loci_num, motif_modify_num, ratio, proportion_all_modified], record_modified_sites
 
 
 
@@ -116,7 +119,7 @@ def get_modified_ratio(gff):
 
 def read_ipd_ratio(ipd_ratio_file):
     ipd_ratio_dict = {}
-    df = pd.read_csv(ipd_ratio_file, nrows = 10000000)
+    df = pd.read_csv(ipd_ratio_file, nrows = 1000)
     for index, row in df.iterrows():
         # print (row['refName'], row['tpl'], row['strand'], row['coverage'], row['ipd_ratio'])
         if row['strand'] == 1:
@@ -128,7 +131,7 @@ def read_ipd_ratio(ipd_ratio_file):
     print (len(ipd_ratio_dict))
     ## print some of the ipd_ratio_dict
     for i, (k, v) in enumerate(ipd_ratio_dict.items()):
-        print (k, v)
+        # print (k, v)
         if i > 10:
             break
     return ipd_ratio_dict
@@ -142,7 +145,8 @@ if __name__ == "__main__":
     # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
 
     my_ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
-    gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
+    gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_gmm/gffs/E_coli_H10407_1.gff"
+    # gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
     # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
     profile = "/home/shuaiw/borg/test.csv"
     ipd_ratio_file = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
@@ -164,12 +168,54 @@ if __name__ == "__main__":
         # exact_pos = motif["centerPos"]
     # motif_new = "AACNNNNNNGTGC"
     # exact_pos = 2
-    motif_new = "AGCANNNNNNCCT"
-    exact_pos = 4
+    motif_new = "GATC"
+    exact_pos = 2
     # motif_new = "GATC"
     # exact_pos = 2
-    motif_profile = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
-    print (motif_new, motif_profile)
+    all_record = {}
+    motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
+    ## add record_modified_sites to all_record
+    for k, v in record_modified_sites.items():
+        all_record[k] = v
+    motif_new = "CTTCAG"
+    exact_pos = 5
+    motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
+    ## add record_modified_sites to all_record
+    for k, v in record_modified_sites.items():
+        all_record[k] = v
+    motif_new = "CTGAAG"
+    exact_pos = 5
+    motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
+    ## add record_modified_sites to all_record
+    for k, v in record_modified_sites.items():
+        all_record[k] = v
+    record_modified_sites  = all_record
+    print ("no. of modified sites", len(record_modified_sites))
+    
+    # print (motif_new, motif_profile)
+    new_gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.new.gff"
+    h = open(new_gff, "w")
+    ## read the gff file
+    f = open(gff, "r")
+    modified_loci = {}
+    for line in f:
+        if line[0] == "#":
+            print (line.strip(), file = h)
+            continue
+        field = line.strip().split("\t")
+
+        ref = field[0]
+        pos = int(field[3]) 
+        strand = field[6]
+        score = int(field[5])
+        tag = ref + ":" + str(pos) + strand
+        if tag not in record_modified_sites:
+            print (line.strip(), file = h)
+    h.close()
+
+
+    ## filter gff file
+
     #     data.append([motif_new, exact_pos] + motif_profile)
 
     # df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\

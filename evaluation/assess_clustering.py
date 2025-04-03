@@ -348,7 +348,7 @@ def cal_AUC():
     plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
     dir = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/hosts/"
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/hosts/"
-    dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/hosts/"
+    dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_gmm/hosts/"
     cutoff = 0.4
     data = []
     for cutoff in range(0, 100, 5):
