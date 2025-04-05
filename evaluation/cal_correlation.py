@@ -414,22 +414,35 @@ def corr_ipd_sum(ipd_summary):
     print ("tMean and control", corr)
 
 def corr_depth(normal, p5):
-    df = pd.read_csv(normal, nrows=1000)
-    df2 = pd.read_csv(p5, nrows=1000)
+    df = pd.read_csv(normal, nrows=10000)
+    df2 = pd.read_csv(p5, nrows=10000)
+    ## align df and df2 with same tpl, remove the elements with tpl not in df2
+    df = df[df['tpl'].isin(df2['tpl'])]
+    df2 = df2[df2['tpl'].isin(df['tpl'])]
     print (pearsonr(df['tMean'], df2['tMean']))
     print  (pearsonr(df['control'], df2['control']))
     print  (pearsonr(df['ipd_ratio'], df2['ipd_ratio']))
 
     ## print first 10 tMean 
-    for i in range(100):
-        print (df['tMean'][i],  df2['tMean'][i], df['ipd_ratio'][i], df2['ipd_ratio'][i])
+    # for i in range(100):
+    #     print (df['tMean'][i],  df2['tMean'][i], df['ipd_ratio'][i], df2['ipd_ratio'][i])
+
+    ## get the diff list between df['tMean'] and df2['tMean']
+    diff = {}
+    for i in range(10000):
+        if df['strand'][i] == 0:
+            continue
+        diff[df['tpl'][i]] = -df['tMean'][i] + df2['tMean'][i]
+    ## sort the diff dict
+    diff = sorted(diff.items(), key=lambda x: x[1], reverse=True)
+    print (diff[:10])
     
-    ## plot the line plot for  df2['tMean'] and  df['tMean']
-    plt.plot(df['ipd_ratio'][:100], label='normal')
-    plt.plot(df2['ipd_ratio'][:100], label='p5')
-    plt.legend()
-    plt.savefig("../tmp/tMean.png")
-    print (np.mean(df['tErr']), np.mean(df2['tErr']))
+    # ## plot the line plot for  df2['tMean'] and  df['tMean']
+    # plt.plot(df['ipd_ratio'][:100], label='normal')
+    # plt.plot(df2['ipd_ratio'][:100], label='p5')
+    # plt.legend()
+    # plt.savefig("../tmp/tMean.png")
+    # print (np.mean(df['tErr']), np.mean(df2['tErr']))
 
 if __name__ == "__main__":
 
@@ -459,7 +472,7 @@ if __name__ == "__main__":
     # ipd_summary = "/home/shuaiw/borg/break_contigs/break_contigs.csv"
     # corr_ipd_sum(ipd_summary)
 
-    p5 = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05/ipd_ratio/E_coli_H10407_1.ipd3.csv"
+    p5 = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter/ipd_ratio/E_coli_H10407_1.ipd3.csv"
     normal = "/home/shuaiw/borg/bench/zymo_new_ref/ipd_ratio/E_coli_H10407_1.ipd3.csv"
     corr_depth(normal, p5)
 

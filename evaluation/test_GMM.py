@@ -139,21 +139,24 @@ def get_abun(file):
     df = df.dropna(subset=['ipd_ratio'])
     ## remove the elements with coverage < min_cov
     df = df[df['coverage'] >= int(1)]
+    # df = df[df['tErr'] <= 1]
 
     ### remove the elements with ipd_ratio is inifinite
     df = df[~df['ipd_ratio'].isin([np.inf, -np.inf])]
 
+    ## log the ipd_ratio
+    # df['ipd_ratio'] = np.log(df['ipd_ratio'])
 
-    # mean = df['ipd_ratio'].mean()
-    # std = df['ipd_ratio'].std()
-    # df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
+    mean = df['ipd_ratio'].mean()
+    std = df['ipd_ratio'].std()
+    df['pvalue'] = df['ipd_ratio'].apply(lambda x: p_value_right_tail(x, mean, std))
 
-    X2 = df['ipd_ratio'].values.reshape(-1,1)
-    gmm2 = GaussianMixture(2, weights_init=np.array([.99, .01]), means_init=np.array([1, 2]).reshape((2,1)))
-    gmm2.fit(X2)
-    print (gmm2.means_, gmm2.aic(X2), gmm2.weights_.flatten())
-    ## add a pvalue column to the dataframe, indicating the p value of a ipd_ratio belong to the lower distribution
-    df['pvalue'] = gmm2.predict_proba(X2)[:,0]
+    # X2 = df['ipd_ratio'].values.reshape(-1,1)
+    # gmm2 = GaussianMixture(2, weights_init=np.array([.99, .01]), means_init=np.array([1, 2]).reshape((2,1)))
+    # gmm2.fit(X2)
+    # print (gmm2.means_, gmm2.aic(X2), gmm2.weights_.flatten())
+    # ## add a pvalue column to the dataframe, indicating the p value of a ipd_ratio belong to the lower distribution
+    # df['pvalue'] = gmm2.predict_proba(X2)[:,0]
 
     # X2 = df['ipd_ratio'].values.reshape(-1,1)
     # gmm1 = GaussianMixture(1)
@@ -181,9 +184,9 @@ def get_abun(file):
 # ## test the function
 # file = "/home/shuaiw/borg/bench/C227/WGA2/ipd_ratio/CP011331.1.ipd3.csv"
 file = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_2.ipd3.csv" 
-file = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/ipd_ratio/E_coli_H10407_2.ipd3.csv" 
+# file = "/home/shuaiw/borg/bench/zymo_new_ref/ipd_ratio/E_coli_H10407_2.ipd3.csv" 
 # bench_gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_2.gff"
-bench_gff = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/gffs/E_coli_H10407_2.gff"
+bench_gff = "/home/shuaiw/borg/bench/zymo_new_ref/gffs/E_coli_H10407_2.gff"
 my_loci =  get_abun(file)
 
 bench_loci = read_gff(bench_gff)

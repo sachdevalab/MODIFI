@@ -45,15 +45,19 @@ def run_streme(kmer_file, streme_path="streme"):
     ## if the output directory exists, remove it
     if os.path.exists(output_dir):
         os.system(f"rm -rf {output_dir}")
+    print ("output_dir", output_dir)
 
-    cmd = "{streme} .  -p {input_file} -oc {output} --dna"
+    cmd = f"streme .  -p {kmer_file} -oc {output_dir} --dna -n /home/shuaiw/borg/bench/test/control.fasta"
+    # cmd = f"meme {kmer_file} -oc {output_dir} -minw 2 -maxw 10 -dna -revcomp -p 10"
+    
 
-    cmd = cmd.format(
-        streme=streme_path,
-        output=output_dir,
-        input_file=kmer_file,
-    )
+    # cmd = cmd.format(
+    #     streme=streme_path,
+    #     output=output_dir,
+    #     input_file=kmer_file,
+    # )
     logging.info("Running STREME: %s", cmd)
+    print (cmd)
 
     subprocess.check_output(
         cmd, shell=True, stderr=subprocess.DEVNULL, universal_newlines=True
@@ -271,6 +275,7 @@ def separat_motif(raw_gff):
     context_fasta = raw_gff[:-4] + ".context.fasta"
     context_f = open(context_fasta, 'w')
     i = 1
+    context_dict = {}
     with open(raw_gff, 'r') as file:
         for line in file:
             if line.startswith('#'):
@@ -278,12 +283,20 @@ def separat_motif(raw_gff):
             parts = line.strip().split('\t')
             seqid, source, feature_type, start, end, score, strand, phase, attributes = parts
             attributes_dict = {key: value for key, value in (item.split('=') for item in attributes.split(';'))}
+            if float(attributes_dict['IPDRatio']) > 3:
+                continue
+            context_dict[attributes_dict['context']] = float(attributes_dict['IPDRatio'])
 
-            print (f">context_{i}\n{attributes_dict['context']}", file = context_f)
+    ### sort the context_dict by IPDRatio
+    context_dict = dict(sorted(context_dict.items(), key=lambda item: item[1], reverse=True))
+    for context in context_dict:
+        if i > 0:
+            print (context, context_dict[context])
+            print (f">context_{i}\n{context}", file = context_f)
             # print (f">{seqid}_{start}\t{check_existing_motif(attributes_dict)}\n{attributes_dict['context']}", file = context_f)
-            if i == 10000:
-                break
-            i += 1
+        if i == 10000:
+            break
+        i += 1
     context_f.close()
     run_streme(context_fasta)
 
@@ -395,23 +408,23 @@ def motif_stastics(ref_id, motifs, motif_sites, for_dict, rev_dict):
 
 if __name__ == "__main__":
 
-    raw_gff = "/home/shuaiw/methylation/data/borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_10_L.gff"
-    # raw_gff = "/home/shuaiw/methylation/data/borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_11_C.gff"
-    ref="/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
-    ipd_ratio ="/home/shuaiw/methylation/data/borg/b_contigs/test2/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_0_219069.ipd3.csv"
-    streme_output = "/home/shuaiw/borg/streme_output"
-    context_fasta = "/home/shuaiw/methylation/data/borg/b_contigs/test2/" + "context.fasta"
-    control_fasta = "/home/shuaiw/methylation/data/borg/b_contigs/test2/" + "control.fasta"
+    # raw_gff = "/home/shuaiw/methylation/data/borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_10_L.gff"
+    # # raw_gff = "/home/shuaiw/methylation/data/borg/split_bam_dir/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_11_C.gff"
+    # ref="/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
+    # ipd_ratio ="/home/shuaiw/methylation/data/borg/b_contigs/test2/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_0_219069.ipd3.csv"
+    # streme_output = "/home/shuaiw/borg/streme_output"
+    # context_fasta = "/home/shuaiw/methylation/data/borg/b_contigs/test2/" + "context.fasta"
+    # control_fasta = "/home/shuaiw/methylation/data/borg/b_contigs/test2/" + "control.fasta"
 
 
-    raw_gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
+    # raw_gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
+    raw_gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_1.gff"
+    # raw_gff = "/home/shuaiw/borg/bench/zymo_new_ref/gffs/E_coli_H10407_1.gff"
     ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
-    ipd_ratio = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
-    streme_output = "/home/shuaiw/borg/bench/test/streme_output"
-    context_fasta = "/home/shuaiw/borg/bench/test/context.fasta"
-    control_fasta = "/home/shuaiw/borg/bench/test/control.fasta"
-
-
+    # ipd_ratio = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
+    # streme_output = "/home/shuaiw/borg/bench/test/streme_output"
+    # context_fasta = "/home/shuaiw/borg/bench/test/context.fasta"
+    # control_fasta = "/home/shuaiw/borg/bench/test/control.fasta"
 
 
     max_seq_num = 1000
