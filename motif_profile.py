@@ -10,6 +10,7 @@ from collections import defaultdict
 from matplotlib.ticker import MaxNLocator
 import seaborn as sns
 import matplotlib.pyplot as plt
+import os
 
 
 def read_ref(ref):
@@ -198,12 +199,18 @@ def reload_motif_sites(REF, df):
 
 def read_ipd_ratio(ipd_ratio_file):
     ipd_info_dict = {}
-    df_ipd = pd.read_csv(ipd_ratio_file)
-    ## convert strand to - and +
-    df_ipd['strand'] = df_ipd['strand'].replace({1: '-', 0: '+'})
-    for index, row in df_ipd.iterrows():
-        tag = row['refName'] + ":" + str(row['tpl']+1) + row['strand']
-        ipd_info_dict [tag] = row
+    ## if file is empty, return empty dict
+    if os.stat(ipd_ratio_file).st_size == 0:
+        print ("ipd ratio file is empty")
+        return ipd_info_dict
+    else:
+
+        df_ipd = pd.read_csv(ipd_ratio_file)
+        ## convert strand to - and +
+        df_ipd['strand'] = df_ipd['strand'].replace({1: '-', 0: '+'})
+        for index, row in df_ipd.iterrows():
+            tag = row['refName'] + ":" + str(row['tpl']+1) + row['strand']
+            ipd_info_dict [tag] = row
     return ipd_info_dict
 
 

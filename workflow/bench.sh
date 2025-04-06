@@ -265,7 +265,11 @@ sbatch  --partition standard --wrap "snakemake --config \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=5 min_frac=0.1 min_score=30 min_sites=10" \
   --job-name=cov5
 
+sbatch  --partition standard --wrap "hifiasm_meta -o /home/shuaiw/methylation/data/borg/bench/zymop5_ass/zymop5 \
+-t 64 /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.fq.gz"\
+  --job-name=assemble
 
+samtools fastq /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam >/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.fq 
 
 
 sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.time snakemake --config \
