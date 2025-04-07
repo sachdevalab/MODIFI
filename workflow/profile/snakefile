@@ -16,7 +16,7 @@ min_cov = config["min_cov"]
 
 
 # Create required directories dynamically
-sub_dirs=[".", "profiles"]
+sub_dirs=[".", "profiles","bins"]
 for sub in sub_dirs:
     os.makedirs(os.path.join(work_dir, sub), exist_ok=True)
 
@@ -70,8 +70,9 @@ rule profiling:
 rule merge_profiles:
     input:
         prof=os.path.join(work_dir, "profiles"),
-        prof2=expand(os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
-               sample=get_samples())
+        whole_ref=whole_ref,
+        # prof2=expand(os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
+        #        sample=get_samples())
     output:
         heatmap=os.path.join(work_dir, "motif_heatmap.pdf"),
         merged=os.path.join(work_dir, "motif_profile.csv")
@@ -83,5 +84,6 @@ rule merge_profiles:
         python /home/shuaiw/Methy/merge_profile.py --all_profiles {input.prof} \
         --heatmap  {output.heatmap} \
         --summary {output.merged} \
-        --min_frac {params.min_frac}
+        --min_frac {params.min_frac} \
+        --whole_ref {input.whole_ref} 
         """

@@ -10,11 +10,12 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
-
 import sys
 import argparse
 from adjustText import adjust_text
 import numpy as np
+
+from bin import bin_contigs_to_fastas
 
 # sys.setrecursionlimit(20000)
 
@@ -356,6 +357,7 @@ if __name__ == "__main__":
     # required.add_argument("--all_profiles", type=str, help="<str> separate by space", nargs="+", metavar="\b")
     required.add_argument("--heatmap", type=str, help="<str> heatmap file.", metavar="\b")
     required.add_argument("--summary", type=str, help="<str> output motif summary.", metavar="\b")
+    required.add_argument("--whole_ref", type=str, help="<str> raw ref with contigs.", metavar="\b")
     optional.add_argument("--min_frac", type=float, default=0.5, help="<float> minimum fraction of methylation to keep the motif.")
     optional.add_argument("-h", "--help", action="help")
     args = vars(parser.parse_args())
@@ -370,6 +372,7 @@ if __name__ == "__main__":
     pca_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_pca.pdf"
     tree_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_tree.pdf"
     summary_file = "/".join(heat_map.split("/")[:-1]) + "/summary.csv"
+    bin_dir = "/".join(heat_map.split("/")[:-1]) + "/bins/"
 
     profiles = merge_profile(profile_list)
     ## save the profiles
@@ -396,6 +399,7 @@ if __name__ == "__main__":
         plt.savefig(heat_map)
         plt.clf()
 
+    bin_contigs_to_fastas(cluster_fig.replace(".pdf", ".j.csv"), args['whole_ref'], bin_dir)
     summary( min_frac, summary_file, profiles)
 
 

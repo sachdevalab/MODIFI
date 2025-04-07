@@ -33,6 +33,9 @@ def break_contigs(fasta_file, break_fasta_file):
     return
 
 ## total contig number : 36608
-fasta_file = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
-break_fasta_file = "/home/shuaiw/methylation/data/borg/contigs/all_break.contigs.fa"
+# fasta_file = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
+# break_fasta_file = "/home/shuaiw/methylation/data/borg/contigs/all_break.contigs.fa"
+
+fasta_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa"
+break_fasta_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_break.fa"
 break_contigs(fasta_file, break_fasta_file)
