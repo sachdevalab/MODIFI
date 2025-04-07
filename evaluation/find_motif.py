@@ -418,7 +418,7 @@ if __name__ == "__main__":
 
 
     # raw_gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
-    raw_gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_1.gff"
+    raw_gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter/gffs/E_coli_H10407_1.gff"
     # raw_gff = "/home/shuaiw/borg/bench/zymo_new_ref/gffs/E_coli_H10407_1.gff"
     ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
     # ipd_ratio = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
