@@ -2,11 +2,13 @@ import pandas as pd
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from typing import List, Tuple
+import sys
+import os
 
 # -------------------------------
 # Parameters
 # -------------------------------
-DEPTH_THRESHOLD = 1
+DEPTH_THRESHOLD = 5
 MAX_GAP = 10
 
 
@@ -106,15 +108,23 @@ def process_depth_and_gff(depth_file: str, reference_fasta: str, input_gff: str,
     segment_metadata = extract_segmented_fasta(segments, reference_fasta, output_fasta)
     update_gff(input_gff, output_gff, segment_metadata)
 
+if __name__ == "__main__":
+    # -------------------------------
+    # Example usage:
+    # process_depth_and_gff("depth.txt", "reference.fa", "input.gff", "segmented.fasta", "segmented.gff")
 
-# -------------------------------
-# Example usage:
-# process_depth_and_gff("depth.txt", "reference.fa", "input.gff", "segmented.fasta", "segmented.gff")
+    # depth_file = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30/bams/E_coli_H10407_1.depth"
+    # reference_fasta = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
+    # raw_gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter/gffs/E_coli_H10407_1.gff"
+    # segment = "/home/shuaiw/methylation/data/borg/bench/test/segmented.fasta"
+    # output_gff = "/home/shuaiw/methylation/data/borg/bench/test/segmented.gff"
 
-depth_file = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30/bams/E_coli_H10407_1.depth"
-reference_fasta = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
-raw_gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter/gffs/E_coli_H10407_1.gff"
-segment = "/home/shuaiw/methylation/data/borg/bench/test/segmented.fasta"
-output_gff = "/home/shuaiw/methylation/data/borg/bench/test/segmented.gff"
-process_depth_and_gff(depth_file, reference_fasta, raw_gff, segment, output_gff,
-                      depth_threshold=DEPTH_THRESHOLD, max_gap=MAX_GAP)
+    depth_file = sys.argv[1]
+    reference_fasta = sys.argv[2]
+    raw_gff = sys.argv[3]
+    segment = sys.argv[4]
+    output_gff = sys.argv[5]
+
+
+    process_depth_and_gff(depth_file, reference_fasta, raw_gff, segment, output_gff,
+                        depth_threshold=DEPTH_THRESHOLD, max_gap=MAX_GAP)

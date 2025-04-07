@@ -10,10 +10,11 @@ whole_bam = config["whole_bam"]
 whole_ref = config["whole_ref"]
 work_dir = config["work_dir"]
 min_score = config["min_score"]
+min_cov = config["min_cov"]
 
 
 # Create required directories dynamically
-sub_dirs=[".", "motifs"]
+sub_dirs=[".", "motifs","segs"]
 for sub in sub_dirs:
     os.makedirs(os.path.join(work_dir, sub), exist_ok=True)
 
@@ -30,12 +31,28 @@ rule all:
     input:
         expand(os.path.join(work_dir, "motifs", "{sample}.motifs.csv"), sample=get_samples())
 
-rule ipd_ratio:
+rule seg:
     input:
         gff=os.path.join(work_dir, "gffs", "{sample}.gff"),
-        ref=os.path.join(work_dir, "contigs", "{sample}.fa")
+        ref=os.path.join(work_dir, "contigs", "{sample}.fa"),
+        bam=os.path.join(work_dir, "bams", "{sample}.bam")
     output:
-        os.path.join(work_dir, "motifs", "{sample}.motifs.csv")
+        seg_ref=os.path.join(work_dir, "segs", "{sample}.seg.fa"),
+        seg_gff=os.path.join(work_dir, "segs", "{sample}.seg.gff"),
+    shell:
+        """
+        set -euo pipefail
+        samtools depth -aa {input.bam} > {input.bam}.depth
+        python /home/shuaiw/Methy/segment_genome.py {input.bam}.depth {input.ref} {input.gff} {output.seg_ref} {output.seg_gff}
+        """
+
+rule ipd_ratio:
+    input:
+        gff=os.path.join(work_dir, "segs", "{sample}.seg.gff"),
+        ref=os.path.join(work_dir, "segs", "{sample}.seg.fa"),
+        bam=os.path.join(work_dir, "bams", "{sample}.bam")
+    output:
+        os.path.join(work_dir, "motifs", "{sample}.motifs.csv"),
     threads: 2
     params:
         min_score=min_score
@@ -44,3 +61,18 @@ rule ipd_ratio:
         set -euo pipefail
         /home/shuaiw/smrtlink/motifMaker find -f {input.ref} -g {input.gff} -o {output} -j {threads} -m {params.min_score}
         """
+
+# rule ipd_ratio:
+#     input:
+#         gff=os.path.join(work_dir, "gffs", "{sample}.gff"),
+#         ref=os.path.join(work_dir, "contigs", "{sample}.fa")
+#     output:
+#         os.path.join(work_dir, "motifs", "{sample}.motifs.csv")
+#     threads: 2
+#     params:
+#         min_score=min_score
+#     shell:
+#         """
+#         set -euo pipefail
+#         /home/shuaiw/smrtlink/motifMaker find -f {input.ref} -g {input.gff} -o {output} -j {threads} -m {params.min_score}
+#         """

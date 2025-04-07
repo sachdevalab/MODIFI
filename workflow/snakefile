@@ -128,11 +128,12 @@ rule motif:
     output:
         os.path.join(work_dir, "motif_done.txt")
     params:
-        min_score = min_score
+        min_score = min_score,
+        min_cov = min_cov
     shell:
         """
         cd motif 
-        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_score={params.min_score}
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_score={params.min_score} min_cov={params.min_cov}
         cd ..
         """
 
