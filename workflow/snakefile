@@ -19,6 +19,7 @@ clean_flag = config.get("clean", True)
 min_frac = config["min_frac"]
 min_sites = config["min_sites"]
 min_score = config["min_score"]
+plasmid_file = config.get("plasmid_file", 'NA')
 
 if not config.get("max_NM"):
     if config["read_type"] == "hifi" or config["read_type"] == "ccs":
@@ -146,11 +147,11 @@ rule profile:
         min_frac=min_frac,
         min_sites=min_sites,
         min_score = min_score, 
-        min_cov = min_cov
+        min_cov = min_cov,
     shell:
         """
         cd profile 
-        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_frac={params.min_frac} min_sites={params.min_sites} min_score={params.min_score} min_cov={params.min_cov}
+        /usr/bin/time -v -o {output} snakemake --config whole_bam={whole_bam} whole_ref={whole_ref} work_dir={work_dir} min_frac={params.min_frac} min_sites={params.min_sites} min_score={params.min_score} min_cov={params.min_cov} plasmid_file={plasmid_file}
         cd ..
         """
 

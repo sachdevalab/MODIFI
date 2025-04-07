@@ -13,6 +13,7 @@ min_frac = config["min_frac"]
 min_sites = config["min_sites"]
 min_score = config["min_score"]
 min_cov = config["min_cov"]
+plasmid_file = config.get("plasmid_file", 'NA')
 
 
 # Create required directories dynamically
@@ -71,6 +72,7 @@ rule merge_profiles:
     input:
         prof=os.path.join(work_dir, "profiles"),
         whole_ref=whole_ref,
+        plasmid_file=plasmid_file
         # prof2=expand(os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
         #        sample=get_samples())
     output:
@@ -85,5 +87,6 @@ rule merge_profiles:
         --heatmap  {output.heatmap} \
         --summary {output.merged} \
         --min_frac {params.min_frac} \
-        --whole_ref {input.whole_ref} 
+        --whole_ref {input.whole_ref} \
+        --plasmid_file {input.plasmid_file}
         """

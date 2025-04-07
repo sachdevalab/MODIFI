@@ -12,3 +12,4 @@ clean: True
 min_frac: 0.5     ## min methylation fraction to keep a motif
 min_sites: 100        ## min number of methylation sites to keep a motif
 min_score: 30         ## min score for modification determination
+plasmid_file: NA

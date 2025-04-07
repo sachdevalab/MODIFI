@@ -5,7 +5,7 @@ import os
 import argparse
 import re
 
-def invasion_score_from_counts(motif_data, neutral_score=1.0, max_sites=50000):
+def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_sites=50000):
     """
     Adds confidence weighting based on motif site counts.
     """
@@ -177,12 +177,22 @@ def summary_host(host_dir):
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)
 
+def batch_MGE_invade(plasmid_file, profile_dir, host_dir, min_frac = 0.5):
 
+    MGE_dict = read_genomad(plasmid_file)
+    for plasmid_name in MGE_dict:
+        MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
+        if MGE_motif_num == 0:
+            print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
+            continue
+        print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
+        for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
+    summary_host(host_dir)
 
 
 if __name__ == "__main__":
     
-    parser = argparse.ArgumentParser(description="Get accurate hgt breakpoints", add_help=False, \
+    parser = argparse.ArgumentParser(description="get invasion score of MGE", add_help=False, \
     usage="%(prog)s -h", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     required = parser.add_argument_group("required arguments")
     optional = parser.add_argument_group("optional arguments")
@@ -197,7 +207,7 @@ if __name__ == "__main__":
 
 
 
-    min_frac = 0.5
+    min_frac = args["min_frac"]
     # plasmid_contig = "E_coli_H10407_4"
     # work_dir = "/home/shuaiw/borg/bench/zymo6_NM3/"
     # genomad_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_genomad/merged2_summary/merged2_plasmid_summary.tsv"
@@ -207,14 +217,7 @@ if __name__ == "__main__":
     os.makedirs(host_dir, exist_ok = True)
     
     if args["plasmid_file"]:
-        MGE_dict = read_genomad(args["plasmid_file"])
-        for plasmid_name in MGE_dict:
-            MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-            if MGE_motif_num == 0:
-                print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
-                continue
-            print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
-            for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
+        batch_MGE_invade(args["plasmid_file"], profile_dir, host_dir, min_frac)
     elif args["plasmid"]:
         plasmid_name = args["plasmid"]
         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)

@@ -16,6 +16,7 @@ from adjustText import adjust_text
 import numpy as np
 
 from bin import bin_contigs_to_fastas
+from cal_invasion_score import batch_MGE_invade
 
 # sys.setrecursionlimit(20000)
 
@@ -359,6 +360,7 @@ if __name__ == "__main__":
     required.add_argument("--summary", type=str, help="<str> output motif summary.", metavar="\b")
     required.add_argument("--whole_ref", type=str, help="<str> raw ref with contigs.", metavar="\b")
     optional.add_argument("--min_frac", type=float, default=0.5, help="<float> minimum fraction of methylation to keep the motif.")
+    optional.add_argument("--plasmid_file", type=str, help="<str> *_plasmid_summary.tsv by genomad.", default = 'NA', metavar="\b")
     optional.add_argument("-h", "--help", action="help")
     args = vars(parser.parse_args())
 
@@ -368,11 +370,13 @@ if __name__ == "__main__":
     profile_list = args['all_profiles']
     heat_map = args['heatmap']
     total_profile = args['summary']
-    cluster_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_cluster.pdf"
-    pca_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_pca.pdf"
-    tree_fig = "/".join(heat_map.split("/")[:-1]) + "/motif_tree.pdf"
-    summary_file = "/".join(heat_map.split("/")[:-1]) + "/summary.csv"
-    bin_dir = "/".join(heat_map.split("/")[:-1]) + "/bins/"
+    work_dir = "/".join(heat_map.split("/")[:-1])
+    cluster_fig = work_dir + "/motif_cluster.pdf"
+    pca_fig = work_dir + "/motif_pca.pdf"
+    tree_fig = work_dir + "/motif_tree.pdf"
+    summary_file = work_dir + "/summary.csv"
+    bin_dir = work_dir + "/bins/"
+    profile_dir = work_dir + "/profiles/"
 
     profiles = merge_profile(profile_list)
     ## save the profiles
@@ -401,6 +405,11 @@ if __name__ == "__main__":
 
     bin_contigs_to_fastas(cluster_fig.replace(".pdf", ".j.csv"), args['whole_ref'], bin_dir)
     summary( min_frac, summary_file, profiles)
+
+    host_dir = os.path.join(work_dir, "hosts")
+    os.makedirs(host_dir, exist_ok = True)
+    if args['plasmid_file'] != 'NA':
+        batch_MGE_invade(profile_dir, args['plasmid_file'], host_dir, min_frac=0.5)
 
 
 # python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/all_test_ccs/profiles         --heatmap  /home/shuaiw/methylation/data/borg/all_test_ccs/motif_heatmap.pdf         --summary /home/shuaiw/methylation/data/borg/all_test_ccs/motif_profile.csv
