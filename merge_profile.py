@@ -392,7 +392,7 @@ if __name__ == "__main__":
     # Filter columns where any value is greater than 0.5
     profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
 
-    print (profiles.shape)
+    print ("filtered shape", profiles.shape)
 
     if len(profiles) > 0:
         heatmap(profiles, heat_map)

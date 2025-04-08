@@ -262,8 +262,8 @@ sbatch  --partition standard --wrap "snakemake --config \
 sbatch  --partition standard --wrap "snakemake --config \
   whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/merged2_break.align.ccs.bam \
   whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_break.fa \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_break \
-  read_type=ccs min_len=1000 max_NM=3 clean=False" \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_break2 \
+  read_type=ccs min_len=1000 max_NM=3" \
   --job-name=zymo_break
 
 
