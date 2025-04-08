@@ -73,7 +73,7 @@ rule merge_profiles:
         prof=os.path.join(work_dir, "profiles"),
         whole_ref=whole_ref,
         prof2=expand(os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
-               sample=get_samples())
+               sample=get_samples())   ## important, otherwise some data will be lost
     output:
         heatmap=os.path.join(work_dir, "motif_heatmap.pdf"),
         merged=os.path.join(work_dir, "motif_profile.csv")
