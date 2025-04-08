@@ -72,7 +72,6 @@ rule merge_profiles:
     input:
         prof=os.path.join(work_dir, "profiles"),
         whole_ref=whole_ref,
-        plasmid_file=plasmid_file
         # prof2=expand(os.path.join(work_dir, "profiles", "{sample}.motifs.profile.csv"),
         #        sample=get_samples())
     output:
@@ -88,5 +87,5 @@ rule merge_profiles:
         --summary {output.merged} \
         --min_frac {params.min_frac} \
         --whole_ref {input.whole_ref} \
-        --plasmid_file {input.plasmid_file}
+        --plasmid_file {plasmid_file}
         """

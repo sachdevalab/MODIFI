@@ -375,7 +375,7 @@ if __name__ == "__main__":
     pca_fig = work_dir + "/motif_pca.pdf"
     tree_fig = work_dir + "/motif_tree.pdf"
     summary_file = work_dir + "/summary.csv"
-    bin_dir = work_dir + "/bins/"
+    bin_dir = work_dir + "/bins/bin"
     profile_dir = work_dir + "/profiles/"
 
     profiles = merge_profile(profile_list)
