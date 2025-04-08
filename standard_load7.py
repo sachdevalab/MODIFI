@@ -501,8 +501,12 @@ class NoisyReadFilter:
         new_fi = np.round(fi/avg_ipd*target_mean).astype(int)
         new_ri = np.round(ri/avg_ipd*target_mean).astype(int)
         ## replace the fi and ri tags
-        read.set_tag("fi", new_fi.tolist())
-        read.set_tag("ri", new_ri.tolist())
+        # print ("old fi", fi, "new fi", new_fi)
+        # print ("old ri", ri, "new ri", new_ri)
+        if len(new_fi) > 0:
+            read.set_tag("fi", new_fi.tolist())
+        if len(new_ri) > 0:
+            read.set_tag("ri", new_ri.tolist())
         return read
 
 
