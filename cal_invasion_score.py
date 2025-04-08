@@ -111,6 +111,8 @@ def for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_di
                 continue
             motif_data = extract_motif_data(host_profile, plasmid_profile, min_frac)
             motif_data = filter_motifs(host_motif, motif_data)
+            if host_name == "E_coli_H10407_1":
+                print (motif_data)
             result = invasion_score_from_counts(motif_data, min_frac)
             result['host'] = host_name
             data.append(result)
@@ -127,6 +129,7 @@ def for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_di
 
 def read_genomad(genomad_file):
     MGE_dict = {}
+    print (f"Reading {genomad_file}...")
     genomad = pd.read_csv(genomad_file, sep = "\t")
     for i, row in genomad.iterrows():
         
@@ -182,10 +185,10 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, min_frac = 0.5):
     MGE_dict = read_genomad(plasmid_file)
     for plasmid_name in MGE_dict:
         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-        if MGE_motif_num == 0:
-            print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
-            continue
-        print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
+        # if MGE_motif_num == 0:
+        #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
+        #     continue
+        print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
         for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac, {})
     summary_host(host_dir)
 
@@ -221,7 +224,7 @@ if __name__ == "__main__":
     elif args["plasmid"]:
         plasmid_name = args["plasmid"]
         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-        print (f"Processing {plasmid_name} with {MGE_motif_num} motifs.")
+        print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
         for_each_plasmid(args["plasmid"], profile_dir, host_dir, min_frac, {})
     else:
         print ("Please provide either --plasmid_file or --plasmid.")

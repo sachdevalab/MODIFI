@@ -52,7 +52,7 @@ class NoisyReadFilter:
         """
         # Step 1: Compute average IPD per read
         reads_with_ipd = self.compute_avg_ipd_per_read()
-
+        print (reads_with_ipd)
         # Step 2: Determine IPD cutoff
         cutoff = self.determine_ipd_cutoff(reads_with_ipd)
         print(f"IPD cutoff ({self.percentile}th percentile): {cutoff:.2f}")
@@ -66,7 +66,8 @@ class NoisyReadFilter:
 
 
 # Parameters
-input_bam = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/bams/E_coli_H10407_1.bam"
+# input_bam = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/bams/E_coli_H10407_6.bam"
+input_bam = "/home/shuaiw/methylation/data/borg/bench/E_coli_H10407_6/bams/E_coli_H10407_6.filtered.bam"
 output_bam = "/home/shuaiw/borg/bench/test/filtered.bam"
 MAX_NM = 500
 PERCENTILE = 95

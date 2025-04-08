@@ -77,6 +77,8 @@ def merge_profile(profile_list):
             profile = profile[['motif_modified_ratio']]
             profiles.append(profile['motif_modified_ratio'])
 
+    if not profiles:
+        return pd.DataFrame()
     ## name the columns
     profiles = pd.concat(profiles, axis=1)
     profiles.columns = samples
@@ -116,11 +118,15 @@ def summary( min_frac, summary_file, profiles):
     gff_file = os.path.join(work_dir, "gffs")
     gffs = [f for f in os.listdir(gff_file) if f.endswith(".gff") and not f.endswith(".reprocess.gff")]
     gff_num = len(gffs)
+    if profile_num > 0:
+        ratio_profile_ctg = round(profiles.shape[1]/profile_num,2)
+    else:
+        ratio_profile_ctg = 0
 
     f = open(summary_file, "w")
     print (f"No. of contigs with motifs: {profiles.shape[1]}", file=f)
     print (f"Minimum motif methylation fraction: {min_frac}", file=f)
-    print (f"Ratio of contigs profiles with motifs: {round(profiles.shape[1]/profile_num,2)}", file=f)
+    print (f"Ratio of contigs profiles with motifs: {ratio_profile_ctg}", file=f)
     print (f"No. of motifs: {profiles.shape[0]}", file=f)
     print (f"Number of contigs: {contig_num}", file=f)
     print (f"Number of bams: {bam_num}", file=f)
@@ -409,7 +415,7 @@ if __name__ == "__main__":
     host_dir = os.path.join(work_dir, "hosts")
     os.makedirs(host_dir, exist_ok = True)
     if args['plasmid_file'] != 'NA':
-        batch_MGE_invade(profile_dir, args['plasmid_file'], host_dir, min_frac=0.5)
+        batch_MGE_invade(args['plasmid_file'], profile_dir, host_dir, min_frac=0.5)
 
 
 # python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/all_test_ccs/profiles         --heatmap  /home/shuaiw/methylation/data/borg/all_test_ccs/motif_heatmap.pdf         --summary /home/shuaiw/methylation/data/borg/all_test_ccs/motif_profile.csv

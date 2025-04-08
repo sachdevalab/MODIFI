@@ -488,8 +488,23 @@ class NoisyReadFilter:
              pysam.AlignmentFile(self.output_bam, "wb", template=bam_in) as bam_out:
             for read in bam_in.fetch():
                 if read.query_name in keep_reads:
+                    # read = self.normlize(read)
                     bam_out.write(read)
         pysam.index(self.output_bam)
+
+    def normlize(self, read):
+        target_mean = 15
+        fi = np.array(read.get_tag("fi"))  # Reverse fi
+        ri = np.array(read.get_tag("ri"))
+        full_ipd = np.concatenate([fi, ri])
+        avg_ipd = np.mean(full_ipd)
+        new_fi = np.round(fi/avg_ipd*target_mean).astype(int)
+        new_ri = np.round(ri/avg_ipd*target_mean).astype(int)
+        ## replace the fi and ri tags
+        read.set_tag("fi", new_fi.tolist())
+        read.set_tag("ri", new_ri.tolist())
+        return read
+
 
     def run(self):
         """

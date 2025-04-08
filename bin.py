@@ -2,6 +2,7 @@ import pandas as pd
 from Bio import SeqIO
 from collections import defaultdict
 from typing import Dict, List
+import os
 
 
 def load_cluster_assignments(cluster_csv: str) -> Dict[int, List[str]]:
@@ -35,6 +36,10 @@ def bin_contigs_to_fastas(cluster_csv: str,
                           fasta_path: str,
                           output_prefix: str = "bin") -> None:
     """Main function to process input and create bin FASTA files."""
+    ## check if the input files exist
+    if not os.path.exists(cluster_csv):
+        print (f"Cluster CSV file not found: {cluster_csv}")
+        return
     cluster_map = load_cluster_assignments(cluster_csv)
     sequences = load_fasta_sequences(fasta_path)
     write_bins_to_fasta(cluster_map, sequences, output_prefix)
