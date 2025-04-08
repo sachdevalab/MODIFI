@@ -31,43 +31,28 @@ rule all:
     input:
         expand(os.path.join(work_dir, "motifs", "{sample}.motifs.csv"), sample=get_samples())
 
-rule seg:
-    input:
-        gff=os.path.join(work_dir, "gffs", "{sample}.gff"),
-        ref=os.path.join(work_dir, "contigs", "{sample}.fa"),
-        bam=os.path.join(work_dir, "bams", "{sample}.bam")
-    output:
-        seg_ref=os.path.join(work_dir, "segs", "{sample}.seg.fa"),
-        seg_gff=os.path.join(work_dir, "segs", "{sample}.seg.gff"),
-    shell:
-        """
-        set -euo pipefail
-        samtools depth -aa {input.bam} > {input.bam}.depth
-        python /home/shuaiw/Methy/segment_genome.py {input.bam}.depth {input.ref} {input.gff} {output.seg_ref} {output.seg_gff}
-        """
-
-rule ipd_ratio:
-    input:
-        gff=os.path.join(work_dir, "segs", "{sample}.seg.gff"),
-        ref=os.path.join(work_dir, "segs", "{sample}.seg.fa"),
-        bam=os.path.join(work_dir, "bams", "{sample}.bam")
-    output:
-        os.path.join(work_dir, "motifs", "{sample}.motifs.csv"),
-    threads: 2
-    params:
-        min_score=min_score
-    shell:
-        """
-        set -euo pipefail
-        /home/shuaiw/smrtlink/motifMaker find -f {input.ref} -g {input.gff} -o {output} -j {threads} -m {params.min_score}
-        """
+# rule seg:
+#     input:
+#         gff=os.path.join(work_dir, "gffs", "{sample}.gff"),
+#         ref=os.path.join(work_dir, "contigs", "{sample}.fa"),
+#         bam=os.path.join(work_dir, "bams", "{sample}.bam")
+#     output:
+#         seg_ref=os.path.join(work_dir, "segs", "{sample}.seg.fa"),
+#         seg_gff=os.path.join(work_dir, "segs", "{sample}.seg.gff"),
+#     shell:
+#         """
+#         set -euo pipefail
+#         samtools depth -aa {input.bam} > {input.bam}.depth
+#         python /home/shuaiw/Methy/segment_genome.py {input.bam}.depth {input.ref} {input.gff} {output.seg_ref} {output.seg_gff}
+#         """
 
 # rule ipd_ratio:
 #     input:
-#         gff=os.path.join(work_dir, "gffs", "{sample}.gff"),
-#         ref=os.path.join(work_dir, "contigs", "{sample}.fa")
+#         gff=os.path.join(work_dir, "segs", "{sample}.seg.gff"),
+#         ref=os.path.join(work_dir, "segs", "{sample}.seg.fa"),
+#         bam=os.path.join(work_dir, "bams", "{sample}.bam")
 #     output:
-#         os.path.join(work_dir, "motifs", "{sample}.motifs.csv")
+#         os.path.join(work_dir, "motifs", "{sample}.motifs.csv"),
 #     threads: 2
 #     params:
 #         min_score=min_score
@@ -76,3 +61,18 @@ rule ipd_ratio:
 #         set -euo pipefail
 #         /home/shuaiw/smrtlink/motifMaker find -f {input.ref} -g {input.gff} -o {output} -j {threads} -m {params.min_score}
 #         """
+
+rule ipd_ratio:
+    input:
+        gff=os.path.join(work_dir, "gffs", "{sample}.gff"),
+        ref=os.path.join(work_dir, "contigs", "{sample}.fa")
+    output:
+        os.path.join(work_dir, "motifs", "{sample}.motifs.csv")
+    threads: 2
+    params:
+        min_score=min_score
+    shell:
+        """
+        set -euo pipefail
+        /home/shuaiw/smrtlink/motifMaker find -f {input.ref} -g {input.gff} -o {output} -j {threads} -m {params.min_score}
+        """

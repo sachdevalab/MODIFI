@@ -8,7 +8,7 @@ import os
 # -------------------------------
 # Parameters
 # -------------------------------
-DEPTH_THRESHOLD = 5
+DEPTH_THRESHOLD = 1
 MAX_GAP = 10
 
 
