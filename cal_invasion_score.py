@@ -113,7 +113,7 @@ def for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_di
             motif_data = filter_motifs(host_motif, motif_data)
             # if host_name == "E_coli_H10407_1":
             #     print (motif_data)
-            result = invasion_score_from_counts(motif_data, min_frac)
+            result = invasion_score_from_counts(motif_data, min_frac, 0.5)
             result['host'] = host_name
             data.append(result)
     ## convert the data to a df, and sort by final_score
