@@ -47,9 +47,13 @@ def bin_contigs_to_fastas(cluster_csv: str,
 
 if __name__ == "__main__":
     # Example usage:
-    cluster_csv = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_NM3/motif_cluster.h.csv"  # Path to the cluster CSV file
-    fasta_path = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa"  # Path to the input FASTA file
-    output_prefix = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_NM3/bins/bin"  # Prefix for output files
+    # cluster_csv = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_NM3/motif_cluster.h.csv"  # Path to the cluster CSV file
+    # fasta_path = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa"  # Path to the input FASTA file
+    # output_prefix = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_NM3/bins/bin"  # Prefix for output files
+
+    cluster_csv = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_new/motif_cluster.csv"  # Path to the cluster CSV file
+    fasta_path = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_200ppm_r1_LR_scaffold.fa"  # Path to the input FASTA file
+    output_prefix = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_new/bins/bin"  # Prefix for output files
 
     bin_contigs_to_fastas(cluster_csv, fasta_path, output_prefix)
 

@@ -37,11 +37,10 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
             if f_plasmid > min_frac:
                 motif_score = 1
             else:
-                motif_score = 1 - abs(f_host - f_plasmid)
-        # print (m['motif'], motif_score, weight)
+                motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
+        print (m['motif'], motif_score, weight)
         scores.append(motif_score * log(weight))
         weights.append(log(weight))
-
     if not scores:
         return {'invasion_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
 
@@ -111,8 +110,8 @@ def for_each_plasmid(plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_di
                 continue
             motif_data = extract_motif_data(host_profile, plasmid_profile, min_frac)
             motif_data = filter_motifs(host_motif, motif_data)
-            # if host_name == "E_coli_H10407_1":
-            #     print (motif_data)
+            if host_name == "B_multivorans_249_1":
+                print (motif_data)
             result = invasion_score_from_counts(motif_data, min_frac, 0.5)
             result['host'] = host_name
             data.append(result)
