@@ -284,12 +284,6 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengf
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10"\
   --job-name=pf
 
-sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.time snakemake --config \
-  whole_bam=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.align.ccs.bam \
-  whole_ref=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_200ppm_r1_LR_scaffold.fa \
-  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_new_long \
-  read_type=ccs min_len=50000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10"\
-  --job-name=pf
 
 
 python comp_ipd_ratio.py /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv \
@@ -320,3 +314,13 @@ snakemake --config \
   kmer_mean_db=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/control/control_db.up7.down3.mean.dat \
   kmer_num_db=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/control/control_db.up7.down3.num.dat \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.5 min_score=30 min_sites=10 clean=False
+
+
+sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.time snakemake --config \
+  whole_bam=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_200ppm_r1_LR_scaffold.fa \
+  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_new_long \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
+  plasmid_file=/groups/diamond/projects/animal/rumen/RuReacBro20203/assembly/RuReacBro_20230708_11_72h_200ppm_r1_LR/genomad/circular_elements_summary/circular_elements_plasmid_summary.tsv"\
+  --job-name=pf
+
