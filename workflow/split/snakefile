@@ -22,7 +22,7 @@ rule split_bam:
         whole_ref = f"{whole_ref}",
         work_dir = f"{work_dir}"
     output:
-        # touch(os.path.join(work_dir, "split_bam_done.txt"))
+        touch(os.path.join(work_dir, "split_bam_done.txt"))
     threads: 100
     params:
         min_len=min_contig_len,
@@ -33,6 +33,6 @@ rule split_bam:
         python /home/shuaiw/Methy/split_bam.py --bam {input.whole_bam} \
         --whole_ref {input.whole_ref} --work_dir {input.work_dir} --threads {threads} \
         --min_len {params.min_len} --max_NM {params.max_NM}
-        # touch {output}
+        touch {output}
         """
 

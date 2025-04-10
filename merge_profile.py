@@ -365,6 +365,7 @@ if __name__ == "__main__":
     required.add_argument("--heatmap", type=str, help="<str> heatmap file.", metavar="\b")
     required.add_argument("--summary", type=str, help="<str> output motif summary.", metavar="\b")
     required.add_argument("--whole_ref", type=str, help="<str> raw ref with contigs.", metavar="\b")
+    required.add_argument("--min_ctg_len", type=int, default = 1000, help="minimal contig length.", metavar="\b")
     optional.add_argument("--min_frac", type=float, default=0.5, help="<float> minimum fraction of methylation to keep the motif.")
     optional.add_argument("--plasmid_file", type=str, help="<str> *_plasmid_summary.tsv by genomad.", default = 'NA', metavar="\b")
     optional.add_argument("-h", "--help", action="help")

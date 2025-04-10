@@ -348,7 +348,7 @@ def cal_AUC():
     plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
     dir = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/hosts/"
     dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec/hosts/"
-    dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/hosts/"
+    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/hosts/"
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.1_cov1_s30/hosts/"
     cutoff = 0.4
     data = []
@@ -397,6 +397,30 @@ def cal_AUC():
     plt.xlabel('FP')
     plt.ylabel('recall')
     plt.savefig("../tmp/precision_recall_curve.png")
+    print ("motif assessment")
+    assess_motif(dir)
+
+def assess_motif(dir):
+    high_dir = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/hosts/"
+    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec/hosts/"
+
+    profile_file = os.path.join(high_dir, "../motif_profile.csv")
+    df = pd.read_csv(profile_file)
+    true_motif_list = df['motifString'].tolist()
+
+    profile_file = os.path.join(dir, "../motif_profile.csv")
+    df = pd.read_csv(profile_file)
+    motif_list = df['motifString'].tolist()
+
+    ## cal the recall and precision of motif
+    recall_motif = 0
+    for i in range(len(motif_list)):
+        if motif_list[i] in true_motif_list:
+            recall_motif += 1
+    recall = recall_motif / len(true_motif_list)
+    print (recall, "motif recall")
+    precision_motif = recall_motif / len(motif_list)
+    print (precision_motif, "motif precision", recall_motif, len(motif_list), len(true_motif_list))
 
 
 
@@ -441,6 +465,7 @@ def check_host(host_list, cluster, plasmid):
 
 
 cal_AUC()
+# assess_motif()
 # host_linkage_eva()
 # for_zymo()
 # for_zymo_maxbat()
