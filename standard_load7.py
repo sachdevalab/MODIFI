@@ -468,6 +468,9 @@ class NoisyReadFilter:
                     ri = np.array(read.get_tag("ri"))
                     full_ipd = np.concatenate([fi, ri])
                     avg_ipd = np.mean(full_ipd)
+                    if np.isnan(avg_ipd):
+                        print(f"NaN IPD value for read {read.query_name}", "IPD value number", len(full_ipd), "IPD values", full_ipd)
+                        continue
                     reads_with_ipd.append((read.query_name, avg_ipd))
                 except KeyError:
                     continue  # Skip reads without fi/ri tags
@@ -477,7 +480,10 @@ class NoisyReadFilter:
         """
         Determines the IPD cutoff based on the given percentile.
         """
-        all_ipds = [r[1] for r in reads_with_ipd]
+        all_ipds = [float(r[1]) for r in reads_with_ipd]
+        ## check if nan values exist
+        all_ipds = [x for x in all_ipds if not np.isnan(x)]
+        # print ("all ipds", len(all_ipds), all_ipds[:10], self.percentile)
         return np.percentile(all_ipds, self.percentile)
 
     def filter_reads(self, keep_reads):
@@ -516,6 +522,7 @@ class NoisyReadFilter:
         """
         # Step 1: Compute average IPD per read
         reads_with_ipd = self.compute_avg_ipd_per_read()
+        # print (f"Total reads with IPD: {len(reads_with_ipd)}", reads_with_ipd)
 
         # Step 2: Determine IPD cutoff
         cutoff = self.determine_ipd_cutoff(reads_with_ipd)
