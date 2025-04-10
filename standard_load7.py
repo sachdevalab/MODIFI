@@ -525,8 +525,12 @@ class NoisyReadFilter:
         # print (f"Total reads with IPD: {len(reads_with_ipd)}", reads_with_ipd)
 
         # Step 2: Determine IPD cutoff
-        cutoff = self.determine_ipd_cutoff(reads_with_ipd)
-        print(f"IPD cutoff ({self.percentile}th percentile): {cutoff:.2f}")
+        if len(reads_with_ipd) > 0:
+            cutoff = self.determine_ipd_cutoff(reads_with_ipd)
+            print(f"IPD cutoff ({self.percentile}th percentile): {cutoff:.2f}")
+        else:
+            print(f"No reads were found for {self.input_bam}, reads might be removed due to low mapping quality")
+            cutoff = 0
 
         # Step 3: Make a set of read names to keep
         keep_reads = {qname for qname, avg in reads_with_ipd if avg <= cutoff}

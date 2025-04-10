@@ -9,6 +9,9 @@ import argparse
 from Bio import SeqIO
 import numpy as np
 
+MAP_Q = 20
+MAX_DEPTH = 500
+
 pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
 
 def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3):
@@ -28,7 +31,7 @@ def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3
             continue
         contig_bam = bam_dir + contig + ".bam"
         ref = contig_dir + contig + ".fa"
-        args.append((contig, ref, contig_bam, bam, whole_ref, max_NM))
+        args.append((contig, ref, contig_bam, bam, whole_ref, max_NM, MAP_Q, MAX_DEPTH))
         i += 1
     # samfile.close()
 
@@ -63,7 +66,7 @@ def calculate_identity(read):
     identity = match_bases / aligned_bases if aligned_bases > 0 else 0
     return identity
 
-def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, max_NM, identity_cutoff = 0.8, len_cutoff=1000, q=20, max_depth=500):
+def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_depth=500):
     print (f"Processing {contig} {ref}")
     os.system(f"samtools faidx {whole_ref} {contig} > {ref}")
     os.system(f"samtools faidx {ref}")
@@ -164,5 +167,6 @@ if __name__ == "__main__":
     # threads = int(sys.argv[4])
     # min_len = int(sys.argv[5])
     # split_bam(bam, split_bam_dir, ref, threads, min_len)
+    
     main()
 
