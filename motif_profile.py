@@ -261,8 +261,13 @@ def count_ipd_ratio(ipd_info_dict, motif_sites):
         ax[1].set_ylabel("IPD Ratio")
 
         # Remove individual legends from subplots
-        ax[0].legend_.remove()
-        ax[1].legend_.remove()
+        # ax[0].legend_.remove()
+        # ax[1].legend_.remove()
+        if ax[0].legend_ is not None:
+            ax[0].legend_.remove()
+        if ax[1].legend_ is not None:
+            ax[1].legend_.remove()
+
 
         ## move legend of ax[1] to the below
         # ax[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5)

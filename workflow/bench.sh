@@ -321,6 +321,33 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengf
   whole_ref=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_200ppm_r1_LR_scaffold.fa \
   work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_new_long \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
-  plasmid_file=/groups/diamond/projects/animal/rumen/RuReacBro20203/assembly/RuReacBro_20230708_11_72h_200ppm_r1_LR/genomad/circular_elements_summary/circular_elements_plasmid_summary.tsv"\
+  plasmid_file=/groups/diamond/projects/animal/rumen/RuReacBro20203/assembly/RuReacBro_20230708_11_72h_200ppm_r1_LR/genomad/circular_elements_summary/circular_elements_plasmid_summary.tsv \
+  --rerun-incomplete"\
   --job-name=pf
+
+
+sbatch --partition standard --wrap "/usr/bin/time -v -o all_ccs_1k_NM1000_new.time snakemake \
+--config whole_bam=/home/shuaiw/methylation/data/borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam \
+whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+work_dir=/home/shuaiw/methylation/data/borg/bench/all_ccs_new \
+read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
+plasmid_file=/home/shuaiw/borg/contigs/borg_pure.txt" \
+ --job-name=all_dp0
+
+
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.new.time snakemake --config \
+  whole_bam=/home/shuaiw/borg/pengfan/align/RuReacBro_20230708_11_72h_20_new.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
+  plasmid_file=/home/shuaiw/borg/pengfan/contigs/MGE.list"\
+  --job-name=pf2
+
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil_zymo/time snakemake --config \
+  whole_bam=/home/shuaiw/borg/bench/soil_zymo/soil_zymo.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/contigs/soil_zymo.fa \
+  work_dir=/home/shuaiw/borg/bench/soil_zymo/run \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
+  plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"\
+  --job-name=soil
 

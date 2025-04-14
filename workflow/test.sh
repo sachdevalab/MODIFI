@@ -206,3 +206,6 @@ sbatch --partition standard --wrap "/usr/bin/time -v -o all_ccs_1k_NM1000_dp0.ti
 whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
  work_dir=/home/shuaiw/methylation/data/borg/bench/all_ccs_1k_dp1 read_type=ccs min_len=1000 max_NM=3000 min_cov=1 clean=False min_frac=0.1 min_score=30 min_sites=10"\
   --job-name=all_dp0
+
+
+python ../cal_invasion_score.py --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab

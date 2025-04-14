@@ -87,7 +87,9 @@ def merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict):
     ctg_list = bin_ctg_dict[bin_name]
     ## remove the ctg not in ctg_profile_dict
     ctg_list = [ctg for ctg in ctg_list if ctg in ctg_profile_dict]
-    if len(ctg_list) == 1:
+    if len(ctg_list) == 0:
+        return pd.DataFrame()
+    elif len(ctg_list) == 1:
         return ctg_profile_dict[ctg_list[0]]
     else:
         bin_df = ctg_profile_dict[ctg_list[0]]
@@ -132,6 +134,8 @@ def for_each_plasmid(bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, plasmid_nam
     for bin_name in bin_ctg_dict:
         # print (f"Processing {bin_name}...")
         bin_df = merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict)
+        if len(bin_df) == 0:
+            continue
         bin_motif = merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict)
         # print (bin_motif)
 
