@@ -346,13 +346,25 @@ if __name__ == "__main__":
     score_cutoff = int(sys.argv[8])
     min_cov = int(sys.argv[9])
 
+
+    motifs = pd.read_csv(all_motifs)
+    print (f"No. of raw motifs {len(motifs)}")
+    if len(motifs) == 0:
+        print ("no motifs found")
+        ## get a empty profile file
+        df = pd.DataFrame([], columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
+                                            "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
+                                            "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
+        df.to_csv(profile, index=False)
+
+        ## stop the program
+        sys.exit(0)
     REF = read_ref(my_ref)
     # print (REF)
     modified_loci, all_modified_loci = get_modified_ratio(gff)
     ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
     print ("ipd ratio is loaded")
-    motifs = pd.read_csv(all_motifs)
-    print (f"No. of raw motifs {len(motifs)}")
+
     data = []
     for index, motif in motifs.iterrows():
         if index % 100 == 0:

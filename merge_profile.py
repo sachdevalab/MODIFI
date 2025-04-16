@@ -360,7 +360,7 @@ if __name__ == "__main__":
     usage="%(prog)s -h", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     required = parser.add_argument_group("required arguments")
     optional = parser.add_argument_group("optional arguments")
-    required.add_argument("--all_profiles", type=str, help="<str> separate by space", metavar="\b")
+    required.add_argument("--all_profiles", type=str, help="<str> profile dir", metavar="\b")
     # required.add_argument("--all_profiles", type=str, help="<str> separate by space", nargs="+", metavar="\b")
     required.add_argument("--heatmap", type=str, help="<str> heatmap file.", metavar="\b")
     required.add_argument("--summary", type=str, help="<str> output motif summary.", metavar="\b")
@@ -402,6 +402,14 @@ if __name__ == "__main__":
         # PCA_plot(profiles, pca_fig)
         hierarchical_clustering(profiles, tree_fig)
         JC_hierarchical_clustering(profiles, tree_fig)
+
+        bin_contigs_to_fastas(cluster_fig.replace(".pdf", ".j.csv"), args['whole_ref'], bin_dir)
+        summary( min_frac, summary_file, profiles)
+
+        host_dir = os.path.join(work_dir, "hosts")
+        os.makedirs(host_dir, exist_ok = True)
+        if args['plasmid_file'] != 'NA':
+            batch_MGE_invade(args['plasmid_file'], profile_dir, host_dir, min_frac=0.5)
     else:
         print ("no motif identified")
         ## construct an  empty figure
@@ -410,13 +418,7 @@ if __name__ == "__main__":
         plt.savefig(heat_map)
         plt.clf()
 
-    bin_contigs_to_fastas(cluster_fig.replace(".pdf", ".j.csv"), args['whole_ref'], bin_dir)
-    summary( min_frac, summary_file, profiles)
 
-    host_dir = os.path.join(work_dir, "hosts")
-    os.makedirs(host_dir, exist_ok = True)
-    if args['plasmid_file'] != 'NA':
-        batch_MGE_invade(args['plasmid_file'], profile_dir, host_dir, min_frac=0.5)
 
 
 # python /home/shuaiw/Methy/merge_profile.py --all_profiles /home/shuaiw/methylation/data/borg/all_test_ccs/profiles         --heatmap  /home/shuaiw/methylation/data/borg/all_test_ccs/motif_heatmap.pdf         --summary /home/shuaiw/methylation/data/borg/all_test_ccs/motif_profile.csv
