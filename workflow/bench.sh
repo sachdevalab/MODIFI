@@ -260,6 +260,15 @@ sbatch  --partition standard --wrap "snakemake --config \
   plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list" \
   --job-name=recover    
 
+## test set new motif critera's impact on the result
+ sbatch  --partition standard --wrap "snakemake --config \
+  whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
+  whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3 \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.5 min_score=30 min_sites=50 clean=False \
+  plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list" \
+  --job-name=recover    
+
 
 sbatch  --partition standard --wrap "snakemake --config \
   whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/merged2_break.align.ccs.bam \
@@ -307,15 +316,6 @@ snakemake --config \
   kmer_num_db=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/control/control_db.up7.down3.num.dat \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.5 min_score=30 min_sites=10 clean=False
 
-snakemake --config \
-  whole_bam=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/bams/E_coli_H10407_1.bam \
-  whole_ref=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/contigs/E_coli_H10407_1.fa \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/E_coli_H10407_1 \
-  kmer_mean_db=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/control/control_db.up7.down3.mean.dat \
-  kmer_num_db=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/control/control_db.up7.down3.num.dat \
-  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.5 min_score=30 min_sites=10 clean=False
-
-
 sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.time snakemake --config \
   whole_bam=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.align.ccs.bam \
   whole_ref=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_200ppm_r1_LR_scaffold.fa \
@@ -330,7 +330,7 @@ sbatch --partition standard --wrap "/usr/bin/time -v -o all_ccs_1k_NM1000_new.ti
 --config whole_bam=/home/shuaiw/methylation/data/borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam \
 whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
 work_dir=/home/shuaiw/methylation/data/borg/bench/all_ccs_new \
-read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
+read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.5 min_score=30 min_sites=50 clean=False \
 plasmid_file=/home/shuaiw/borg/contigs/borg_pure.txt" \
  --job-name=all_dp0
 
@@ -347,7 +347,51 @@ plasmid_file=/home/shuaiw/borg/contigs/borg_pure.txt" \
   whole_bam=/home/shuaiw/borg/bench/soil_zymo/soil_zymo.align.ccs.bam \
   whole_ref=/home/shuaiw/borg/contigs/soil_zymo.fa \
   work_dir=/home/shuaiw/borg/bench/soil_zymo/run \
-  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.5 min_score=30 min_sites=50 clean=False \
   plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"\
   --job-name=soil
+
+
+ sbatch  --partition standard --wrap " snakemake --config \
+  whole_bam=/home/shuaiw/borg/pengfan/align/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 \
+  plasmid_file=/home/shuaiw/borg/pengfan/contigs/MGE.list"\
+  --job-name=pf3
+
+ sbatch  --partition standard --wrap " snakemake --config \
+  whole_bam=/home/shuaiw/borg/pengfan/align/RuReacBro_20230708_26_72h_NC_r4_LR.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 \
+  plasmid_file=/home/shuaiw/borg/pengfan/contigs/MGE.list"\
+  --job-name=pf4
+
+ sbatch  --partition standard --wrap " snakemake --config \
+  whole_bam=/home/shuaiw/borg/pengfan/align/RuReacBro_20230708_9_72h_NC_r2_HMW_LR.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_9_72h_NC_r2_HMW_LR_bin \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 \
+  plasmid_file=/home/shuaiw/borg/pengfan/contigs/MGE.list"\
+  --job-name=pf5
+
+ sbatch  --partition standard --wrap " snakemake --config \
+  whole_bam=/home/shuaiw/borg/pengfan/align/RuReacBro_20230708_Comb_RF_HMW_LR.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_HMW_LR_bin \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 \
+  plasmid_file=/home/shuaiw/borg/pengfan/contigs/MGE.list"\
+  --job-name=pf6
+
+ sbatch  --partition standard --wrap " snakemake --config \
+  whole_bam=/home/shuaiw/borg/pengfan/align/RuReacBro_20230708_Comb_RF_LR.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_LR_bin \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 \
+  plasmid_file=/home/shuaiw/borg/pengfan/contigs/MGE.list"\
+  --job-name=pf7
+
+
+python /home/shuaiw/Methy/motif_profile.py /home/shuaiw/methylation/data/borg/bench/all_ccs_new/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_435_C.fa /home/shuaiw/methylation/data/borg/bench/all_ccs_new/gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_435_C.gff /home/shuaiw/methylation/data/borg/bench/all_ccs_new/all.motifs.csv /home/shuaiw/methylation/data/borg/bench/all_ccs_new/profiles/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_435_C.motifs.profile.csv /home/shuaiw/methylation/data/borg/bench/all_ccs_new/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_435_C.ipd3.csv  0.1 10 30 1
 

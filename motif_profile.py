@@ -18,14 +18,14 @@ def read_ref(ref):
     for record in SeqIO.parse(ref, "fasta"):
     #     seq_dict[record.id] = record.seq
     # return seq_dict
-        REF[record.id] = record.seq
+        REF[record.id] = str(record.seq)
         # return str(record.seq), record.id
     return REF
 
 def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
     motif_len = len(motif_new)
     rev_exact_pos = motif_len - exact_pos + 1
-    motif_sites = {}
+
     valid_loci_num = 0   ## number of motif sites with >=min_cov 
     motif_loci_num = 0
     motif_modify_num = 0
@@ -35,10 +35,12 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
     rev_modified_num = 0
 
     for r, contig in REF.items():
-        for site in nt_search(str(contig), motif_new)[1:]:
+        # contig = str(contig)
+        for site in nt_search(contig, motif_new)[1:]:
             # for i in range(site, site + motif_len):
             #     motif_sites[r + ":" + str(i) + "+"] = motif_new
-            tag = r + ":" + str(site+exact_pos) + "+"
+            # tag = r + ":" + str(site+exact_pos) + "+"
+            tag = f"{r}:{site + exact_pos}+"
             if tag in ipd_info_dict:
                 if ipd_info_dict[tag]['coverage'] >= min_cov:
                     valid_loci_num += 1
@@ -49,10 +51,11 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
                 for_modified_num += 1
                 modified_loci[tag].add(motif_new)
 
-        for site in nt_search(str(contig), Seq(motif_new).reverse_complement())[
+        for site in nt_search(contig, Seq(motif_new).reverse_complement())[
             1:
         ]:
-            tag = r + ":" + str(site+rev_exact_pos) + "-"
+            # tag = r + ":" + str(site+rev_exact_pos) + "-"
+            tag = f"{r}:{site + rev_exact_pos}-"
             if tag in ipd_info_dict:
                 if ipd_info_dict[tag]['coverage'] >= min_cov:
                     valid_loci_num += 1
@@ -205,12 +208,35 @@ def read_ipd_ratio(ipd_ratio_file):
         return ipd_info_dict
     else:
 
-        df_ipd = pd.read_csv(ipd_ratio_file)
+        # df_ipd = pd.read_csv(ipd_ratio_file)
+
+        dtype_map = {
+            "refName": "category",
+            "strand": "int8",
+            "tpl": "int32",
+            "base": "category",
+            "coverage": "int16",
+            "tMean": "float32",
+            "tErr": "float32",
+            "control": "float32",
+            "ipd_ratio": "float32",
+            "kmer_count": "int32",
+            "pvalue": "float32",
+            "score": "int8"
+        }
+
+        df_ipd = pd.read_csv(ipd_ratio_file, dtype=dtype_map)
+
+        df_ipd['strand'] = df_ipd['strand'].map({1: '-', 0: '+'})
+        df_ipd['tag'] = df_ipd['refName'].astype(str) + ":" + (df_ipd['tpl'] + 1).astype(str) + df_ipd['strand'].astype(str)
+        ipd_info_dict = df_ipd.set_index('tag').T.to_dict()
+
+
         ## convert strand to - and +
-        df_ipd['strand'] = df_ipd['strand'].replace({1: '-', 0: '+'})
-        for index, row in df_ipd.iterrows():
-            tag = row['refName'] + ":" + str(row['tpl']+1) + row['strand']
-            ipd_info_dict [tag] = row
+        # df_ipd['strand'] = df_ipd['strand'].replace({1: '-', 0: '+'})
+        # for index, row in df_ipd.iterrows():
+        #     tag = row['refName'] + ":" + str(row['tpl']+1) + row['strand']
+        #     ipd_info_dict [tag] = row
     return ipd_info_dict
 
 
@@ -324,9 +350,13 @@ if __name__ == "__main__":
     # print (REF)
     modified_loci, all_modified_loci = get_modified_ratio(gff)
     ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
+    print ("ipd ratio is loaded")
     motifs = pd.read_csv(all_motifs)
+    print (f"No. of raw motifs {len(motifs)}")
     data = []
     for index, motif in motifs.iterrows():
+        if index % 100 == 0:
+            print (index, motif)
         motif_new = motif["motifString"]
         exact_pos = motif["centerPos"]
         motif_profile, all_modified_loci = get_motif_sites(REF, motif_new, exact_pos, all_modified_loci)

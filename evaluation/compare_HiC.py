@@ -28,6 +28,8 @@ def compare_hic_our(hic_linkages, our_linkages):
         both_link += 1
         if our_linkages[plasmid] == hic_linkages[plasmid]:
             cosistency_num += 1
+        else:
+            print (f"{plasmid} is not consistent: {our_linkages[plasmid]} vs {hic_linkages[plasmid]}")
     print(f"both linkages: {both_link}")
     print(f"cosistency linkages: {cosistency_num}")
     print (f"cosistency rate: {cosistency_num / both_link}")
