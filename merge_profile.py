@@ -50,7 +50,7 @@ def load_contigs():
 
     return contig_dict
 
-def merge_profile(profile_list):
+def merge_profile(profile_list, min_motif_sites=1):
     ## initialize the profiles as df
     profiles = []
     samples = []
@@ -137,7 +137,7 @@ def summary( min_frac, summary_file, profiles):
 
     f.close()
 
-def JC_hierarchical_clustering(df, tree_fig, cutoff=0.45):
+def JC_hierarchical_clustering(df, cluster_fig, cutoff=0.45):
     matrix = df.to_numpy()
     ## Trabspose the matrix
     matrix = matrix.T
@@ -180,7 +180,7 @@ def heatmap(df, heat_map):
             plt.savefig(heat_map)
             plt.clf()
 
-def hierarchical_clustering(df, tree_fig, cutoff=1.6):
+def hierarchical_clustering(df, tree_fig, cluster_fig, cutoff=1.6):
     matrix = df.to_numpy()
     ## Trabspose the matrix
     matrix = matrix.T
@@ -353,6 +353,47 @@ def PCA_plot(df, pca_fig):
         adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
     plt.savefig(pca_fig)
 
+def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_frac, whole_ref, plasmid_file):
+    
+    cluster_fig = os.path.join(work_dir, "motif_cluster.pdf")
+    pca_fig = os.path.join(work_dir, "motif_pca.pdf")
+    tree_fig = os.path.join(work_dir, "motif_tree.pdf")
+    summary_file = os.path.join(work_dir, "summary.csv")
+    bin_dir = os.path.join(work_dir, "bins", "bin")
+    profile_dir = os.path.join(work_dir, "profiles")
+
+    profiles = merge_profile(profile_list)
+    ## save the profiles
+    profiles.to_csv(total_profile, index=True)
+    
+    profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
+    # Filter columns where any value is greater than 0.5
+    profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
+
+    print ("filtered shape", profiles.shape)
+
+    if len(profiles) > 0:
+        heatmap(profiles, heat_map)
+        # UMAP(profiles, cluster_fig)
+        TSE(profiles, cluster_fig)
+        # PCA_plot(profiles, pca_fig)
+        hierarchical_clustering(profiles, tree_fig, cluster_fig)
+        JC_hierarchical_clustering(profiles, cluster_fig)
+
+        bin_contigs_to_fastas(cluster_fig.replace(".pdf", ".j.csv"), whole_ref, bin_dir)
+        summary( min_frac, summary_file, profiles)
+
+        host_dir = os.path.join(work_dir, "hosts")
+        os.makedirs(host_dir, exist_ok = True)
+        if plasmid_file != 'NA' and os.path.exists(plasmid_file):
+            batch_MGE_invade(plasmid_file, profile_dir, host_dir, min_frac=0.5)
+    else:
+        print ("no motif identified")
+        ## construct an  empty figure
+        plt.figure()
+        plt.text(0.5, 0.5, 'No motif identified', horizontalalignment='center', verticalalignment='center')
+        plt.savefig(heat_map)
+        plt.clf()
 
 if __name__ == "__main__":
 
@@ -372,51 +413,17 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
 
     min_frac = args['min_frac']
-    min_motif_sites = 1
-
     profile_list = args['all_profiles']
     heat_map = args['heatmap']
     total_profile = args['summary']
+    plasmid_file = args['plasmid_file']
+    whole_ref = args['whole_ref']
+
     work_dir = "/".join(heat_map.split("/")[:-1])
-    cluster_fig = work_dir + "/motif_cluster.pdf"
-    pca_fig = work_dir + "/motif_pca.pdf"
-    tree_fig = work_dir + "/motif_tree.pdf"
-    summary_file = work_dir + "/summary.csv"
-    bin_dir = work_dir + "/bins/bin"
-    profile_dir = work_dir + "/profiles/"
+    merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_frac, whole_ref, plasmid_file)
 
-    profiles = merge_profile(profile_list)
-    ## save the profiles
-    profiles.to_csv(total_profile, index=True)
-    
-    profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
-    # Filter columns where any value is greater than 0.5
-    profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
 
-    print ("filtered shape", profiles.shape)
 
-    if len(profiles) > 0:
-        heatmap(profiles, heat_map)
-        # UMAP(profiles, cluster_fig)
-        TSE(profiles, cluster_fig)
-        # PCA_plot(profiles, pca_fig)
-        hierarchical_clustering(profiles, tree_fig)
-        JC_hierarchical_clustering(profiles, tree_fig)
-
-        bin_contigs_to_fastas(cluster_fig.replace(".pdf", ".j.csv"), args['whole_ref'], bin_dir)
-        summary( min_frac, summary_file, profiles)
-
-        host_dir = os.path.join(work_dir, "hosts")
-        os.makedirs(host_dir, exist_ok = True)
-        if args['plasmid_file'] != 'NA':
-            batch_MGE_invade(args['plasmid_file'], profile_dir, host_dir, min_frac=0.5)
-    else:
-        print ("no motif identified")
-        ## construct an  empty figure
-        plt.figure()
-        plt.text(0.5, 0.5, 'No motif identified', horizontalalignment='center', verticalalignment='center')
-        plt.savefig(heat_map)
-        plt.clf()
 
 
 

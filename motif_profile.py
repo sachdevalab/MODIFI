@@ -22,7 +22,7 @@ def read_ref(ref):
         # return str(record.seq), record.id
     return REF
 
-def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
+def get_motif_sites(REF, motif_new, exact_pos, modified_loci, min_cov, ipd_info_dict):
     motif_len = len(motif_new)
     rev_exact_pos = motif_len - exact_pos + 1
 
@@ -98,7 +98,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
             rev_loci_num, rev_modified_num, rev_ratio,\
             motif_loci_num, motif_modify_num, ratio, proportion_all_modified, valid_loci_num, valid_ratio], modified_loci
 
-def get_modified_ratio(gff):
+def get_modified_ratio(gff, score_cutoff):
     ## read the gff file
     f = open(gff, "r")
     modified_loci = {}
@@ -152,7 +152,7 @@ def get_reprocess_gff(gff, all_modified_loci, anno):
         i += 1
     out.close()
 
-def count_motifs(modified_loci, all_modified_loci):
+def count_motifs(modified_loci, all_modified_loci, score_cutoff):
     non_motif_loci = 0
     motig_modified_loci = defaultdict(int)
     for tag in modified_loci:
@@ -321,7 +321,56 @@ def count_ipd_ratio(ipd_info_dict, motif_sites):
     else:
         print ("no motif sites in the ipd file")
 
-    
+def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov):
+    motifs = pd.read_csv(all_motifs)
+    print (f"No. of raw motifs {len(motifs)}")
+    if len(motifs) == 0:
+        print ("no motifs found")
+        ## get a empty profile file
+        df = pd.DataFrame([], columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
+                                            "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
+                                            "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
+        df.to_csv(profile, index=False)
+
+        ## stop the program
+        # sys.exit(0)
+        return 0
+    REF = read_ref(my_ref)
+    # print (REF)
+    modified_loci, all_modified_loci = get_modified_ratio(gff, score_cutoff)
+    ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
+    print ("ipd ratio is loaded")
+
+    data = []
+    for index, motif in motifs.iterrows():
+        # if index % 100 == 0:
+        #     print (index, motif)
+        motif_new = motif["motifString"]
+        exact_pos = motif["centerPos"]
+        motif_profile, all_modified_loci = get_motif_sites(REF, motif_new, exact_pos, all_modified_loci, min_cov, ipd_info_dict)
+        data.append([motif_new, exact_pos] + motif_profile)
+
+    df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
+                                        "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
+                                        "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
+    df = df.round(4)
+    df.to_csv(profile, index=False)
+    anno = count_motifs(modified_loci, all_modified_loci, score_cutoff)
+    get_reprocess_gff(gff, all_modified_loci, anno)
+
+
+    ## filter df, keep the motifs with motif_modified_num > 1000
+    df = df[df["motif_modified_num"] >= min_sites]
+    df = df[df["motif_modified_ratio"] >= min_frac]
+    print (len(df), "motifs left after filtering")
+    if len(df) > 0:
+        motif_sites = reload_motif_sites(REF, df)
+        # ipd_ratio_file = "/home/shuaiw/borg/all_test/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.ipd3.csv"
+
+        count_ipd_ratio(ipd_info_dict, motif_sites)
+    else:
+        print ("no motif sites left after filtering")
+    return 0
 
 
          
@@ -346,54 +395,10 @@ if __name__ == "__main__":
     score_cutoff = int(sys.argv[8])
     min_cov = int(sys.argv[9])
 
-
-    motifs = pd.read_csv(all_motifs)
-    print (f"No. of raw motifs {len(motifs)}")
-    if len(motifs) == 0:
-        print ("no motifs found")
-        ## get a empty profile file
-        df = pd.DataFrame([], columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
-                                            "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
-                                            "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
-        df.to_csv(profile, index=False)
-
-        ## stop the program
-        sys.exit(0)
-    REF = read_ref(my_ref)
-    # print (REF)
-    modified_loci, all_modified_loci = get_modified_ratio(gff)
-    ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
-    print ("ipd ratio is loaded")
-
-    data = []
-    for index, motif in motifs.iterrows():
-        if index % 100 == 0:
-            print (index, motif)
-        motif_new = motif["motifString"]
-        exact_pos = motif["centerPos"]
-        motif_profile, all_modified_loci = get_motif_sites(REF, motif_new, exact_pos, all_modified_loci)
-        data.append([motif_new, exact_pos] + motif_profile)
-
-    df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
-                                        "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
-                                        "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
-    df = df.round(4)
-    df.to_csv(profile, index=False)
-    anno = count_motifs(modified_loci, all_modified_loci)
-    get_reprocess_gff(gff, all_modified_loci, anno)
+    motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov)
 
 
-    ## filter df, keep the motifs with motif_modified_num > 1000
-    df = df[df["motif_modified_num"] >= min_sites]
-    df = df[df["motif_modified_ratio"] >= min_frac]
-    print (len(df), "motifs left after filtering")
-    if len(df) > 0:
-        motif_sites = reload_motif_sites(REF, df)
-        # ipd_ratio_file = "/home/shuaiw/borg/all_test/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.ipd3.csv"
 
-        count_ipd_ratio(ipd_info_dict, motif_sites)
-    else:
-        print ("no motif sites left after filtering")
 
 
 

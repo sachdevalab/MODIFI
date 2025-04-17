@@ -21,14 +21,15 @@ def get_contig_list(ipd_dir, ref_dir, list_file):
             else:
                 f.write(contig + "\n")
     f.close()
+    
+if __name__ == "__main__":
+    work_dir = sys.argv[1]
 
-work_dir = sys.argv[1]
+    ref_dir = os.path.join(work_dir, "contigs")
+    ipd_dir = os.path.join(work_dir, "ipd")
+    list_file = os.path.join(work_dir, "contigs_list.txt")
 
-ref_dir = os.path.join(work_dir, "contigs")
-ipd_dir = os.path.join(work_dir, "ipd")
-list_file = os.path.join(work_dir, "contigs_list.txt")
-
-get_contig_list(ipd_dir, ref_dir, list_file)
+    get_contig_list(ipd_dir, ref_dir, list_file)
 
 
 

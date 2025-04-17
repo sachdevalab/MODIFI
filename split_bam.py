@@ -17,9 +17,9 @@ pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
 def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3):
     # Ensure the output directory exists
     os.makedirs(split_bam_dir, exist_ok=True)
-    bam_dir = split_bam_dir + "/bams/"
+    bam_dir = os.path.join(split_bam_dir, "bams")
     os.makedirs(bam_dir, exist_ok=True)
-    contig_dir = split_bam_dir + "/contigs/"
+    contig_dir = os.path.join(split_bam_dir, "contigs")
     os.makedirs(contig_dir, exist_ok=True)
     i = 1
     args = []
@@ -29,8 +29,9 @@ def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3
         contig_len = len(record.seq)
         if contig_len < min_len:
             continue
-        contig_bam = bam_dir + contig + ".bam"
-        ref = contig_dir + contig + ".fa"
+        contig_bam = os.path.join(bam_dir, contig + ".bam")
+        print (f"Processing {contig} {contig_bam}")
+        ref = os.path.join(contig_dir, contig + ".fa")
         args.append((contig, ref, contig_bam, bam, whole_ref, max_NM, MAP_Q, MAX_DEPTH))
         i += 1
     # samfile.close()

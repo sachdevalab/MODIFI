@@ -194,9 +194,7 @@ whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_
  work_dir=/home/shuaiw/methylation/data/borg/bench/all_subreads2 min_len=1000 max_NM=100000 min_cov=3"\
   --job-name=all
 
-  snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam\
- whole_ref=/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa\
-  work_dir=/home/shuaiw/methylation/data/borg/new_test11 clean=False
+
 
 
   runMetaBat.sh --noBinOut --saveCls all_break.contigs.fa /home/shuaiw/borg/all_break/all_break.align.ccs.bam
@@ -209,3 +207,14 @@ whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_
 
 
 python ../cal_invasion_score.py --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab
+
+  snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam\
+ whole_ref=/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa\
+  work_dir=/home/shuaiw/methylation/data/borg/new_test11 clean=False
+
+
+python main.py \
+  --work_dir /home/shuaiw/methylation/data/borg/new_test12 \
+  --whole_bam /home/shuaiw/methylation/data/borg/b_contigs/11.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa \
+  --read_type subreads 

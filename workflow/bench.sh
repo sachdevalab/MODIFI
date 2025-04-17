@@ -347,7 +347,7 @@ plasmid_file=/home/shuaiw/borg/contigs/borg_pure.txt" \
   whole_bam=/home/shuaiw/borg/bench/soil_zymo/soil_zymo.align.ccs.bam \
   whole_ref=/home/shuaiw/borg/contigs/soil_zymo.fa \
   work_dir=/home/shuaiw/borg/bench/soil_zymo/run \
-  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.5 min_score=30 min_sites=50 clean=False \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.4 min_score=30 min_sites=30 clean=False \
   plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"\
   --job-name=soil
 

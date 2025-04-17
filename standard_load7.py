@@ -25,7 +25,9 @@ mapQvThreshold = 0
 maxAlignments = 10000 ##1500
 randomSeed = None
 max_region = 100000
-MAX_NM = 3
+# MAX_NM = 3
+MIN_POS = 10
+PERCENTILE = 95
 
 def _subreadNormalizationFactor(rawIpds):
     """
@@ -51,7 +53,7 @@ def _subreadNormalizationFactor(rawIpds):
         print("got small cap: %s" % str(capIpds))
     return capIpds.mean()
 
-def _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor=1.0):
+def _loadRawIpds(alignments, refGroupId, each_ref, ref_seq, complement_ref_seq, start, end, factor=1.0):
     t0 = time.time()
     # (start, end) = (0, each_ref.Length)
 
@@ -136,9 +138,9 @@ def _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor=1.0):
         capValue = np.percentile(ipdVect, 99)
     print ("capValue", capValue)
     print ("pos num", len(s0dict), len(s1dict))
-    return cal_mean(s0dict, s1dict, each_ref.Name, capValue, start, end, t0, 3)
+    return cal_mean(s0dict, s1dict, each_ref.Name, capValue, ref_seq, complement_ref_seq, start, end, t0, 3)
 
-def cal_mean(s0dict, s1dict, ref_Name, capValue, start, end, t0, min_dp=3):
+def cal_mean(s0dict, s1dict, ref_Name, capValue, ref_seq, complement_ref_seq, start, end, t0, min_dp=3):
     # ref_Name = each_ref.Name
     ref_Name = ref_Name
 
@@ -208,7 +210,7 @@ def extract_context(fasta):
         # seq = raw_seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
     return seq_dict
 
-def load_IPD(each_ref, contig_bam, df_file):
+def load_IPD(each_ref, contig_bam, df_file, fasta, max_mismatch, ref_seq, complement_ref_seq,):
     t0 = time.time()
     alignments = AlignmentSet(contig_bam, referenceFastaFname=fasta)
     refInfo = alignments.referenceInfoTable
@@ -235,7 +237,7 @@ def load_IPD(each_ref, contig_bam, df_file):
         if i == chunks_num-1:
             end = each_ref.Length
         print ("chunk", i, start, end)
-        result += _loadRawIpds(alignments, refGroupId, each_ref, start, end, factor, )
+        result += _loadRawIpds(alignments, refGroupId, each_ref, ref_seq, complement_ref_seq, start, end, factor, )
 
     # chunk_result = _loadRawIpds(alignments, refGroupId, each_ref, factor, )
     # print ("rawIpds", rawIpds.shape, round(time.time()-t0))
@@ -246,7 +248,7 @@ def load_IPD(each_ref, contig_bam, df_file):
     get_output(combined_df, df_file)
 
 
-def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, factor=1.0):
+def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, complement_ref_seq, start, end, max_mismatch, factor=1.0):
     t0 = time.time()
     # (start, end) = (0, each_ref.Length)
 
@@ -277,7 +279,7 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, 
 
     # for aln in alignments.readsInRange(refGroupId, start, end):
     for aln in hits:
-        if aln.get_tag("NM") > MAX_NM:
+        if aln.get_tag("NM") > max_mismatch:
             continue
         forward_IPD_info = np.array(aln.get_tag("fi")[::-1]) * factor  ## weired, why need to reverse
         reverse_IPD_info = np.array(aln.get_tag("ri")) * factor
@@ -362,7 +364,7 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, 
         capValue = np.percentile(ipdVect, 99)
     print ("capValue", capValue)
     print ("pos num", len(s0dict), len(s1dict))
-    return cal_mean(s0dict, s1dict, each_ref, capValue, start, end, t0, 1)
+    return cal_mean(s0dict, s1dict, each_ref, capValue, ref_seq, complement_ref_seq, start, end, t0, 1)
 
 def norm(rawIpd, referencePositions, matched, aln):
     np.logical_and(np.logical_not(np.isnan(rawIpd)),
@@ -389,14 +391,14 @@ def norm(rawIpd, referencePositions, matched, aln):
     return ipd, tpl
 
 
-def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file):
+def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file, max_mismatch, complement_ref_seq,):
     print (f"handle contig {each_ref}, with length {len(ref_seq)}...")
     t0 = time.time()
 
     ## filter the reads
     input_bam = contig_bam
     output_bam = contig_bam.replace(".bam", ".filtered.bam")
-    filter_instance = NoisyReadFilter(input_bam, output_bam, MAX_NM, PERCENTILE)
+    filter_instance = NoisyReadFilter(input_bam, output_bam, max_mismatch, PERCENTILE)
     filter_instance.run()
     contig_bam = output_bam
     print ("filtered bam", contig_bam)
@@ -430,7 +432,7 @@ def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file):
         if i == chunks_num-1:
             end = max_length
         print ("chunk", i, start, end)
-        result += _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, start, end, factor, )
+        result += _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, complement_ref_seq,start, end, max_mismatch, factor, )
         # break
     combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'base', 'coverage', 'tMean', 'tErr'])
     ## remove the rows with tMean = 0
@@ -539,10 +541,7 @@ class NoisyReadFilter:
         self.filter_reads(keep_reads)
         print(f"Filtered BAM written to {self.output_bam}")
 
-
-
-if __name__ == "__main__":
-
+def standard_load_main():
     parser = argparse.ArgumentParser(description="Get accurate hgt breakpoints", add_help=False, \
     usage="%(prog)s -h", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     required = parser.add_argument_group("required arguments")
@@ -561,40 +560,15 @@ if __name__ == "__main__":
     outputfile = args["o"]
     maxAlignments = args["maxAlignments"]
     read_type = args["read_type"].lower()
-    MAX_NM = args["max_NM"]
-    MIN_POS = 10
-    PERCENTILE = 95
+    max_mismatch = args["max_NM"]
+
 
     print ("subread_bam", subread_bam)
     print ("fasta", fasta)
     print ("outputfile", outputfile)
     print ("maxAlignments", maxAlignments)
     print ("read_type", read_type)
-    print ("MAX_NM", MAX_NM)
-
-    # subread_bam = sys.argv[1]
-    # fasta = sys.argv[2]
-    # outputfile = sys.argv[3]
-
-    # ## set default value for maxAlignments if not set
-    # if len(sys.argv) > 4:
-    #     maxAlignments = int(sys.argv[4])
-    #     print ("para maxAlignments", maxAlignments)
-
-    # read_type = sys.argv[5]
-
-    # subread_bam = "/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam"
-    # fasta = "/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa"
-    # outputfile = "/home/shuaiw/methylation/data/borg/b_contigs/test/test_7.csv"
-
-    # subread_bam = "/home/shuaiw/methylation/data/borg/new_test5/bams/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_766_C.bam"
-    # fasta = "/home/shuaiw/methylation/data/borg/new_test5/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_766_C.fa"
-    # outputfile = "/home/shuaiw/methylation/data/borg/new_test5/ipd/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_766_C.ipd_test.csv"
-
-
-    ## build outdir if not exists
-    # if not os.path.exists(outdir):
-    #     os.makedirs(outdir)
+    print ("MAX_NM", max_mismatch)
 
     seq_dict = extract_context(fasta)
     print ("fasta loaded, contig num:", len(seq_dict))
@@ -604,15 +578,41 @@ if __name__ == "__main__":
         ## complement the sequence
         complement_ref_seq = ref_seq.complement()
         if read_type == "subreads":
-            load_IPD(each_ref, subread_bam, outputfile)
+            load_IPD(each_ref, subread_bam, outputfile, fasta, max_mismatch, ref_seq, complement_ref_seq,)
         elif read_type == "ccs":
 
-            load_IPD_hifi(each_ref, ref_seq, subread_bam, outputfile)
+            load_IPD_hifi(each_ref, ref_seq, subread_bam, outputfile, max_mismatch, complement_ref_seq,)
         else:
             ## raise error
             print ("read type not supported")
             break
 
     print ("IPD loaded")
+
+def IPD_load_worker(fasta, subread_bam, outputfile, max_mismatch, read_type):
+    seq_dict = extract_context(fasta)
+    print ("fasta loaded, contig num:", len(seq_dict))
+    print ("outputfile", outputfile)
+
+    for each_ref in seq_dict:
+        ref_seq = seq_dict[each_ref]
+        ## complement the sequence
+        complement_ref_seq = ref_seq.complement()
+        if read_type == "subreads":
+            load_IPD(each_ref, subread_bam, outputfile, fasta, max_mismatch, ref_seq, complement_ref_seq,)
+        elif read_type == "ccs":
+
+            load_IPD_hifi(each_ref, ref_seq, subread_bam, outputfile, max_mismatch, complement_ref_seq,)
+        else:
+            ## raise error
+            print ("read type not supported")
+            break
+
+    print ("IPD loaded")
+    return 0
+
+if __name__ == "__main__":
+
+    standard_load_main()
 
     # python /home/shuaiw/Methy/standard_load6.py /home/shuaiw/methylation/data/borg/new_test5/bams/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_766_C.bam /home/shuaiw/methylation/data/borg/new_test5/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_766_C.fa /home/shuaiw/methylation/data/borg/new_test5/ipd/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_766_C.ipd1.csv

@@ -9,6 +9,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.mixture import GaussianMixture
 
+P_CUTOFF = 0.05
 
 
 def p_value_right_tail(x, mu, sigma):
@@ -50,7 +51,9 @@ def calculate_x_from_pvalue(p_value, mu, sigma, tail="right"):
         x = mu + z * sigma
         return x
 
-def get_ipd_ratio(csv, output, gff, figure_file, min_cov=5):
+def get_ipd_ratio(csv, output, gff, figure_file, ref, min_cov=5):
+    seq_dict = get_ref(ref)
+    print ("loaded fasta")
     df = pd.read_csv(csv, sep = ",")
     df['tpl'] = df['tpl'].astype(int)
     df['strand'] = df['strand'].astype(int)
@@ -115,7 +118,8 @@ def get_ipd_ratio(csv, output, gff, figure_file, min_cov=5):
     df.to_csv(output, index=False)
     visu(df, figure_file)
     ## ImportError: Matplotlib requires numpy>=1.23; you have 1.22.4
-    get_gff(df, gff)
+    get_gff(df, gff, seq_dict)
+    return 0
 
 def visu(df, figure_path):
     if df.empty:
@@ -159,7 +163,7 @@ def get_ref(ref):
     return seq_dict
 
 
-def get_gff(df, gff):
+def get_gff(df, gff, seq_dict):
     print ("start get gff...")
     df = df[df['pvalue'] <= P_CUTOFF]
     # gff = "tmp/test.gff"
@@ -204,10 +208,9 @@ if __name__ == "__main__":
     # fig = None #sys.argv[5]
     figure_file = sys.argv[5]
     min_cov = sys.argv[6]
-    P_CUTOFF = 0.05
-    seq_dict = get_ref(ref)
-    print ("loaded fasta")
-    get_ipd_ratio(csv, output, gff, figure_file, min_cov)
+    
+
+    get_ipd_ratio(csv, output, gff, figure_file, ref, min_cov)
 
 
     # csv = "/home/shuaiw/methylation/data/borg/b_contigs/control/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L_0_219069.ipd2.csv"
