@@ -420,7 +420,7 @@ def assess_motif(dir):
     recall = recall_motif / len(true_motif_list)
     print (recall, "motif recall")
     precision_motif = recall_motif / len(motif_list)
-    print (precision_motif, "motif precision", recall_motif, len(motif_list), len(true_motif_list))
+    print (precision_motif, "motif precision", recall_motif, "recall_motif", len(motif_list), "detected motif", len(true_motif_list), "true motifs")
 
 
 

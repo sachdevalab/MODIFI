@@ -20,7 +20,7 @@ def collect_motifs(folder, all_motif, MIN_FRAC, MIN_detect):
     ## only keep one row for each motif indentifier
     motifs = motifs.drop_duplicates(subset=['indentifier'])
     motifs.to_csv(all_motif, index=False)
-    print ("no of motifs", len(motifs))
+    print ("no of motifs from all contigs:", len(motifs))
 
 
 if __name__ == "__main__":

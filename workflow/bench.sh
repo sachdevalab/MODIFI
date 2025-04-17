@@ -265,7 +265,7 @@ sbatch  --partition standard --wrap "snakemake --config \
   whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
   whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
   work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3 \
-  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.5 min_score=30 min_sites=50 clean=False \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=50 clean=False \
   plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list" \
   --job-name=recover    
 
@@ -330,7 +330,7 @@ sbatch --partition standard --wrap "/usr/bin/time -v -o all_ccs_1k_NM1000_new.ti
 --config whole_bam=/home/shuaiw/methylation/data/borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam \
 whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
 work_dir=/home/shuaiw/methylation/data/borg/bench/all_ccs_new \
-read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.5 min_score=30 min_sites=50 clean=False \
+read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.4 min_score=30 min_sites=30 clean=False \
 plasmid_file=/home/shuaiw/borg/contigs/borg_pure.txt" \
  --job-name=all_dp0
 
