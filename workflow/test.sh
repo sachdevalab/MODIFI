@@ -218,3 +218,4 @@ python main.py \
   --whole_bam /home/shuaiw/methylation/data/borg/b_contigs/11.align.bam \
   --whole_ref /home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa \
   --read_type subreads 
+

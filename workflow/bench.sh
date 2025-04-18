@@ -395,3 +395,25 @@ plasmid_file=/home/shuaiw/borg/contigs/borg_pure.txt" \
 
 python /home/shuaiw/Methy/motif_profile.py /home/shuaiw/methylation/data/borg/bench/all_ccs_new/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_435_C.fa /home/shuaiw/methylation/data/borg/bench/all_ccs_new/gffs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_435_C.gff /home/shuaiw/methylation/data/borg/bench/all_ccs_new/all.motifs.csv /home/shuaiw/methylation/data/borg/bench/all_ccs_new/profiles/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_435_C.motifs.profile.csv /home/shuaiw/methylation/data/borg/bench/all_ccs_new/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_435_C.ipd3.csv  0.1 10 30 1
 
+## test set new motif critera's impact on the result
+ sbatch  --partition standard --wrap "snakemake --config \
+  whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
+  whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3 \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=50 clean=False \
+  plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list" \
+  --job-name=recover    
+
+sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylation/data/borg/bench/pipeline_zymo.time python main.py \
+  --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec4 \
+  --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
+  --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list  " \
+  --job-name=pipeline

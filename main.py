@@ -23,6 +23,7 @@ DEPTH_THRESHOLD = 5
 MAX_GAP = 10
 
 motif_maker_bin = "/home/shuaiw/smrtlink/motifMaker"
+## pbindex
 
 
 def parse_arguments():
@@ -323,9 +324,9 @@ def main():
     paras = get_paras(args)
 
     # === Insert your pipeline logic below ===
-    print("\n[Placeholder] Pipeline execution starts here...\n")
-    split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
-    print ("Splitting BAM files done.")
+    # print("\n[Placeholder] Pipeline execution starts here...\n")
+    # split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
+    # print ("Splitting BAM files done.")
 
     for result in load_ipd_parallel(args, paras):
         print(f"IPD loading finished with code: {result}")
@@ -346,7 +347,7 @@ def main():
     for result in profile_parallel(args, paras):
         print(f" collection finished with code: {result}")
     print ("Motif profile done.")
-    
+
     run_merge_profile(args, paras)
     print ("Motif profile merging done.")
     print("\n[Placeholder] Pipeline execution ends here...\n")
