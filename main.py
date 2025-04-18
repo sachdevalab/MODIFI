@@ -122,7 +122,7 @@ def compare_ipd_parallel(args, paras):
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         futures = []
 
-        for bam in os.listdir(paras["ipd"]):
+        for bam in os.listdir(paras["ipd_dir"]):
             if not bam.endswith(".ipd1.csv"):
                 continue
             ctg_name = bam.replace(".ipd1.csv", "")
