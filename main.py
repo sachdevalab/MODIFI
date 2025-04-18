@@ -62,6 +62,11 @@ def parse_arguments():
                         help="Optional plasmid FASTA file (set to 'NA' if not used).")
     parser.add_argument("--threads", type=int, default=64,
                         help="Number of threads to use for processing.")
+    parser.add_argument("--up", type=int, default=7,
+                        help="Number of upstream bases to consider for k-mer analysis.")
+    parser.add_argument("--down", type=int, default=3,
+                        help="Number of downstream bases to consider for k-mer analysis.")
+    
 
     return parser.parse_args()
 
@@ -105,6 +110,8 @@ def get_control_parallele(args, paras):
         "--thread_num", str(args.threads),
         "--kmer_mean_file", str(args.kmer_mean_db),
         "--kmer_num_file", str(args.kmer_num_db),
+        "--up", str(args.up),
+        "--down", str(args.down),
     ]
 
     print("Running command:", " ".join(cmd))
