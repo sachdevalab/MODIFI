@@ -194,7 +194,7 @@ def motif_parallel(args, paras):
             seg_ref = os.path.join(paras["segs"], f"{ctg_name}.seg.fa")
             seg_gff = os.path.join(paras["segs"], f"{ctg_name}.seg.gff")
             fasta = os.path.join(paras["ctg_dir"], f"{ctg_name}.fa")
-            motifs = os.path.join(paras["motifs"], f"{ctg_name}.motif.csv")
+            motifs = os.path.join(paras["motifs"], f"{ctg_name}.motifs.csv")
 
             future = executor.submit(
                 motif_worker,
@@ -240,7 +240,7 @@ def profile_parallel(args, paras):
             seg_ref = os.path.join(paras["segs"], f"{ctg_name}.seg.fa")
             seg_gff = os.path.join(paras["segs"], f"{ctg_name}.seg.gff")
             fasta = os.path.join(paras["ctg_dir"], f"{ctg_name}.fa")
-            motifs = os.path.join(paras["motifs"], f"{ctg_name}.motif.csv")
+            motifs = os.path.join(paras["motifs"], f"{ctg_name}.motifs.csv")
             profile = os.path.join(paras["profiles"], f"{ctg_name}.motifs.profile.csv")
             ipd_ratio = os.path.join(paras["ipd_ratio"], f"{ctg_name}.ipd3.csv")
 
@@ -335,21 +335,21 @@ def main():
     # split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
     # print ("Splitting BAM files done.")
 
-    for result in load_ipd_parallel(args, paras):
-        print(f"IPD loading finished with code: {result}")
+    # for result in load_ipd_parallel(args, paras):
+    #     print(f"IPD loading finished with code: {result}")
 
-    get_control_parallele(args, paras)
-    print ("Control file generation done.")
+    # get_control_parallele(args, paras)
+    # print ("Control file generation done.")
 
-    for result in compare_ipd_parallel(args, paras):
-        print(f"IPD ratio calculation finished with code: {result}")
-    print ("IPD ratio calculation done.")
+    # for result in compare_ipd_parallel(args, paras):
+    #     print(f"IPD ratio calculation finished with code: {result}")
+    # print ("IPD ratio calculation done.")
 
-    for result in motif_parallel(args, paras):
-        print(f"Motif finished with code: {result}")
-    print ("Motif done.")
+    # for result in motif_parallel(args, paras):
+    #     print(f"Motif finished with code: {result}")
+    # print ("Motif done.")
 
-    collect_motifs_worker(args, paras)
+    # collect_motifs_worker(args, paras)
 
     for result in profile_parallel(args, paras):
         print(f" collection finished with code: {result}")

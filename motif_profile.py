@@ -240,7 +240,7 @@ def read_ipd_ratio(ipd_ratio_file):
     return ipd_info_dict
 
 
-def count_ipd_ratio(ipd_info_dict, motif_sites):
+def count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file):
     data = []
     # df_ipd = pd.read_csv(ipd_ratio_file)
     # for index, row in df_ipd.iterrows():
@@ -367,7 +367,7 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
         motif_sites = reload_motif_sites(REF, df)
         # ipd_ratio_file = "/home/shuaiw/borg/all_test/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.ipd3.csv"
 
-        count_ipd_ratio(ipd_info_dict, motif_sites)
+        count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file)
     else:
         print ("no motif sites left after filtering")
     return 0
