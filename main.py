@@ -66,6 +66,16 @@ def parse_arguments():
                         help="Number of upstream bases to consider for k-mer analysis.")
     parser.add_argument("--down", type=int, default=3,
                         help="Number of downstream bases to consider for k-mer analysis.")
+    parser.add_argument(
+        "--run_steps",
+        nargs="+",
+        choices=[
+            "split", "load", "control", "compare", "motif", "profile", "merge"
+        ],
+        default=["split", "load", "control", "compare", "motif", "profile", "merge"],
+        help="Steps to run in the pipeline (default: all), for easy test."
+    )
+
     
 
     return parser.parse_args()
@@ -332,31 +342,40 @@ def main():
 
     # === Insert your pipeline logic below ===
     print("\n[Placeholder] Pipeline execution starts here...\n")
-    split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
-    print ("Splitting BAM files done.")
 
-    for result in load_ipd_parallel(args, paras):
-        print(f"IPD loading finished with code: {result}")
+    if "split" in args.run_steps:
+        split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
+        print ("Splitting BAM files done.")
 
-    get_control_parallele(args, paras)
-    print ("Control file generation done.")
+    if "load" in args.run_steps:
+        for result in load_ipd_parallel(args, paras):
+            print(f"IPD loading finished with code: {result}")
+        print ("IPD loading done.")
 
-    for result in compare_ipd_parallel(args, paras):
-        print(f"IPD ratio calculation finished with code: {result}")
-    print ("IPD ratio calculation done.")
+    if "control" in args.run_steps:
+        get_control_parallele(args, paras)
+        print ("Control file generation done.")
 
-    for result in motif_parallel(args, paras):
-        print(f"Motif finished with code: {result}")
-    print ("Motif done.")
+    if "compare" in args.run_steps:
+        for result in compare_ipd_parallel(args, paras):
+            print(f"IPD ratio calculation finished with code: {result}")
+        print ("IPD ratio calculation done.")
 
-    collect_motifs_worker(args, paras)
+    if "motif" in args.run_steps:
+        for result in motif_parallel(args, paras):
+            print(f"Motif finished with code: {result}")
+        print ("Motif identification done.")
 
-    for result in profile_parallel(args, paras):
-        print(f" collection finished with code: {result}")
-    print ("Motif profile done.")
+    if "profile" in args.run_steps:
+        collect_motifs_worker(args, paras)
+        for result in profile_parallel(args, paras):
+            print(f" collection finished with code: {result}")
+        print ("Motif profile done.")
 
-    run_merge_profile(args, paras)
-    print ("Motif profile merging done.")
+    if "merge" in args.run_steps:
+        run_merge_profile(args, paras)
+        print ("Motif profile merging done.")
+
     print("\n[Placeholder] Pipeline execution ends here...\n")
     print("🔬 Pipeline execution completed.")
 
