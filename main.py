@@ -60,6 +60,8 @@ def parse_arguments():
                         help="Minimum score for modification calling.")
     parser.add_argument("--plasmid_file", type=str, default="NA",
                         help="Optional plasmid FASTA file (set to 'NA' if not used).")
+    parser.add_argument("--bin_file", type=str, required=False, default=None,
+                        help="Path to the binning file containing contig-to-bin mappings.")
     parser.add_argument("--threads", type=int, default=64,
                         help="Number of threads to use for processing.")
     parser.add_argument("--up", type=int, default=7,
@@ -283,6 +285,7 @@ def run_merge_profile(args, paras):
             min_frac = args.min_frac, 
             whole_ref = args.whole_ref, 
             plasmid_file = args.plasmid_file,
+            bin_file = args.bin_file,
         )
 
 def get_paras(args):

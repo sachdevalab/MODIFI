@@ -353,7 +353,7 @@ def PCA_plot(df, pca_fig):
         adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
     plt.savefig(pca_fig)
 
-def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_frac, whole_ref, plasmid_file):
+def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_frac, whole_ref, plasmid_file, bin_file=None):
     
     cluster_fig = os.path.join(work_dir, "motif_cluster.pdf")
     pca_fig = os.path.join(work_dir, "motif_pca.pdf")
@@ -377,7 +377,7 @@ def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_fr
         # UMAP(profiles, cluster_fig)
         TSE(profiles, cluster_fig)
         # PCA_plot(profiles, pca_fig)
-        hierarchical_clustering(profiles, tree_fig, cluster_fig)
+        # hierarchical_clustering(profiles, tree_fig, cluster_fig)
         JC_hierarchical_clustering(profiles, cluster_fig)
 
         bin_contigs_to_fastas(cluster_fig.replace(".pdf", ".j.csv"), whole_ref, bin_dir)
@@ -386,7 +386,7 @@ def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_fr
         host_dir = os.path.join(work_dir, "hosts")
         os.makedirs(host_dir, exist_ok = True)
         if plasmid_file != 'NA' and os.path.exists(plasmid_file):
-            batch_MGE_invade(plasmid_file, profile_dir, host_dir, min_frac=0.5)
+            batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=bin_file, min_frac=0.5)
     else:
         print ("no motif identified")
         ## construct an  empty figure

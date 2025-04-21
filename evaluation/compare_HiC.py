@@ -37,7 +37,7 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
         if our_linkages[plasmid] == hic_linkages[plasmid]:
             cosistency_num += 1
         else:
-            print (f"{plasmid} is not consistent: {our_linkages[plasmid]} ({our_ctg_linkages[plasmid]}) vs Hi-C {hic_linkages[plasmid]} : ({bin2ctg_dict[hic_linkages[plasmid]]})")
+            print (f"{plasmid} is not consistent: {our_linkages[plasmid]} ({our_ctg_linkages[plasmid]}) vs Hi-C {hic_linkages[plasmid]} : ({bin2ctg_dict[hic_linkages[plasmid]][0]}, {len(bin2ctg_dict[hic_linkages[plasmid]])})")
     if both_link == 0:
         cosistency_rate = 0
     else:
@@ -120,12 +120,31 @@ def load_ctg2bin(ctg2bin):
         bin2ctg_dict[bin_name].append(contig)
     return ctg2bin_dict, bin2ctg_dict
 
+def generate_bin_file(bin_file, fai):
+    ctg2bin_dict, bin2ctg_dict = load_ctg2bin(ctg2bin)
+    out = open(bin_file, "w")
+    for line in open(fai, "r"):
+        if line.startswith("#"):
+            continue
+        contig, length = line.strip().split("\t")[:2]
+        if contig not in ctg2bin_dict:
+            bin_name = contig
+        else:
+            bin_name = ctg2bin_dict[contig]
+        print(f"{contig}\t{bin_name}", file=out)
+    out.close()
+    print(f"bin file is saved to {bin_file}")
+
+
 if __name__ == "__main__":
     hic_file = "/home/shuaiw/borg/pengfan/hic_10mgs_linkages.csv"
+    bin_file = "/home/shuaiw/borg/pengfan/10mgs_bins.tab"
     host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/host_summary.csv"
     bin_dir = "/groups/diamond/projects/animal/rumen/RuReacBro20203/analysis/RuReacBro2023_CircCont/bins/Final_Genomes_qc_rmcirc/sequence"
     ctg2bin = "/home/shuaiw/borg/pengfan/ctg2bin.csv"
+    fai = "/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa.fai"
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_LR_bin/host_summary.csv"
 
-    main()
+    # main()
+    generate_bin_file(bin_file, fai)
     # contig2bin(bin_dir, ctg2bin)

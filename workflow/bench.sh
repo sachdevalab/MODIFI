@@ -327,13 +327,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengf
 
 
 
- sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.new.time snakemake --config \
-  whole_bam=/home/shuaiw/borg/pengfan/align/RuReacBro_20230708_11_72h_20_new.align.ccs.bam \
-  whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
-  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin \
-  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
-  plasmid_file=/home/shuaiw/borg/pengfan/contigs/MGE.list"\
-  --job-name=pf2
+
 
 
 
@@ -410,3 +404,27 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.4 min_score=30 min_sites=30 clean=False \
   plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"\
   --job-name=soil
+
+
+   sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.new.time snakemake --config \
+  whole_bam=/home/shuaiw/borg/pengfan/align/RuReacBro_20230708_11_72h_20_new.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
+  plasmid_file=/home/shuaiw/borg/pengfan/contigs/MGE.list"\
+  --job-name=pf2
+
+python main.py \
+  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin \
+  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_11_72h_20_new.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --run_steps merge
