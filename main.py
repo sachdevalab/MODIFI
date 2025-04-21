@@ -331,25 +331,25 @@ def main():
     paras = get_paras(args)
 
     # === Insert your pipeline logic below ===
-    # print("\n[Placeholder] Pipeline execution starts here...\n")
-    # split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
-    # print ("Splitting BAM files done.")
+    print("\n[Placeholder] Pipeline execution starts here...\n")
+    split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
+    print ("Splitting BAM files done.")
 
-    # for result in load_ipd_parallel(args, paras):
-    #     print(f"IPD loading finished with code: {result}")
+    for result in load_ipd_parallel(args, paras):
+        print(f"IPD loading finished with code: {result}")
 
-    # get_control_parallele(args, paras)
-    # print ("Control file generation done.")
+    get_control_parallele(args, paras)
+    print ("Control file generation done.")
 
-    # for result in compare_ipd_parallel(args, paras):
-    #     print(f"IPD ratio calculation finished with code: {result}")
-    # print ("IPD ratio calculation done.")
+    for result in compare_ipd_parallel(args, paras):
+        print(f"IPD ratio calculation finished with code: {result}")
+    print ("IPD ratio calculation done.")
 
-    # for result in motif_parallel(args, paras):
-    #     print(f"Motif finished with code: {result}")
-    # print ("Motif done.")
+    for result in motif_parallel(args, paras):
+        print(f"Motif finished with code: {result}")
+    print ("Motif done.")
 
-    # collect_motifs_worker(args, paras)
+    collect_motifs_worker(args, paras)
 
     for result in profile_parallel(args, paras):
         print(f" collection finished with code: {result}")

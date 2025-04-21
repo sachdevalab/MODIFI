@@ -1,5 +1,6 @@
 hic_file = "/home/shuaiw/borg/pengfan/hic_10mgs_linkages.csv"
-host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/host_summary.csv"
+# host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/host_summary.csv"
+host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_LR_bin/host_summary.csv"
 
 import pandas as pd
 
@@ -30,11 +31,15 @@ def compare_hic_our(hic_linkages, our_linkages):
             cosistency_num += 1
         else:
             print (f"{plasmid} is not consistent: {our_linkages[plasmid]} vs {hic_linkages[plasmid]}")
+    if both_link == 0:
+        cosistency_rate = 0
+    else:
+        cosistency_rate = cosistency_num / both_link
     print(f"both linkages: {both_link}")
     print(f"cosistency linkages: {cosistency_num}")
-    print (f"cosistency rate: {cosistency_num / both_link}")
+    print (f"cosistency rate: {cosistency_rate}")
     print ("our link num", len(our_linkages))
-    return both_link, cosistency_num, cosistency_num / both_link, len(our_linkages)
+    return both_link, cosistency_num, cosistency_rate, len(our_linkages)
 
 data = []
 for cutoff in range(0, 16):
