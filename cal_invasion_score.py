@@ -113,6 +113,8 @@ def merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict):
 def merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict):
     ctg_list = bin_ctg_dict[bin_name]
     if len(ctg_list) == 1:
+        if ctg_list[0] not in ctg_motif_dict:
+            return pd.DataFrame()
         return ctg_motif_dict[ctg_list[0]]
     else:
         motif_df = pd.DataFrame()
@@ -126,7 +128,21 @@ def merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict):
         motif_df = motif_df.drop_duplicates()
         return motif_df
 
-def for_each_plasmid(bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_dict={}):
+def merge_bin_motif(bin_ctg_dict, ctg_motif_dict, ctg_profile_dict):
+    bin_df_dict = {}
+    bin_motif_dict = {}
+    for bin_name in bin_ctg_dict:
+        # if bin_name != "RuReacBro_20230708_7_40h_PC_r3_metabinner_4_rmcirc":
+        #     continue
+        bin_df = merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict)
+        bin_motif = merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict)
+        bin_df_dict[bin_name] = bin_df
+        bin_motif_dict[bin_name] = bin_motif
+    return bin_df_dict, bin_motif_dict
+        
+
+def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict, ctg_motif_dict,\
+                      plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_dict={}):
     plasmid_profile = f"{profile_dir}/{plasmid_name}.motifs.profile.csv"
     ## check if the plasmid profile exists
     if not os.path.exists(plasmid_profile):
@@ -135,16 +151,22 @@ def for_each_plasmid(bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, plasmid_nam
     data = []
     for bin_name in bin_ctg_dict:
         # print (f"Processing {bin_name}...")
-        bin_df = merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict)
+        bin_df = bin_df_dict[bin_name]
         if len(bin_df) == 0:
             continue
-        bin_motif = merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict)
+        bin_motif = bin_motif_dict[bin_name]
+
+        # bin_df = merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict)
+        # if len(bin_df) == 0:
+        #     continue
+        # bin_motif = merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict)
         # print (bin_motif)
 
         motif_data = extract_motif_data(bin_df, plasmid_profile, min_frac)
         motif_data = filter_motifs(bin_motif, motif_data)
-        # if ctg_name == "B_multivorans_249_1":
-        #     print (motif_data)
+        motif_data = filter_unique_motifs_by_host_total(motif_data, key="motif", score_key="host_total")
+        if bin_name == "RuReacBro_20230708_7_40h_PC_r3_metabinner_4_rmcirc":
+            print (motif_data)
         result = invasion_score_from_counts(motif_data, min_frac, 0.5)
         result['host'] = bin_name
         data.append(result)
@@ -186,6 +208,48 @@ def filter_motifs(host_motif, motif_data):
             new_motif_data.append(m)
     return new_motif_data
 
+def filter_unique_motifs_by_host_total(motif_list, key="motif", score_key="host_total"):
+    """
+    Removes redundant motifs, keeping the one with the higher host_total if motifs overlap.
+
+    Parameters:
+        motif_list (list of dict): List of motif dictionaries.
+        key (str): The dictionary key that contains the motif string.
+        score_key (str): The key used to prioritize motifs when redundant (default: "host_total").
+
+    Returns:
+        list of dict: Filtered list of non-redundant motifs.
+    """
+    # Start with an empty list of accepted motifs
+    filtered = []
+
+    for motif in motif_list:
+        mseq = motif[key]
+        keep = True
+        to_remove = []
+
+        for existing in filtered:
+            eseq = existing[key]
+
+            # If motifs are related (one contains the other)
+            if mseq in eseq or eseq in mseq:
+                # Compare host_total scores
+                if motif[score_key] > existing[score_key]:
+                    to_remove.append(existing)  # mark existing for removal
+                else:
+                    keep = False  # don't keep current motif
+                    break
+
+        # Remove lower-scoring overlapping motifs
+        for rem in to_remove:
+            filtered.remove(rem)
+
+        if keep:
+            filtered.append(motif)
+
+    return filtered
+
+
 def count_MGE_with_motif(plasmid_name, profile_dir):
     plasmid_motif_file = os.path.join(profile_dir,"../motifs", f"{plasmid_name}.motifs.csv")
     if not os.path.exists(plasmid_motif_file):
@@ -216,7 +280,7 @@ def summary_host(host_dir):
 def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_frac = 0.5, threads = 1):
 
     MGE_dict = read_genomad(plasmid_file)
-    ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, MGE_dict)
+    ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, MGE_dict, threads)
     if bin_file is not None:
         if not os.path.exists(bin_file):
             print (f"{bin_file} does not exist.")
@@ -224,6 +288,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_fra
     else:
         ctg_bin_dict, bin_ctg_dict = ctg_single_dict, single_ctg_dict
     print (f"Loading is done, {len(bin_ctg_dict)} bins.")
+    bin_df_dict, bin_motif_dict = merge_bin_motif(bin_ctg_dict, ctg_motif_dict, ctg_profile_dict)
     print ("threads number for linkage prediction: ", threads)
     with ProcessPoolExecutor(max_workers=threads) as executor:
         futures = []
@@ -235,6 +300,8 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_fra
             print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
             future = executor.submit(
                 for_each_plasmid,
+                bin_df_dict = bin_df_dict,
+                bin_motif_dict = bin_motif_dict,
                 bin_ctg_dict = bin_ctg_dict,
                 ctg_profile_dict = ctg_profile_dict,
                 ctg_motif_dict = ctg_motif_dict,
@@ -288,7 +355,7 @@ def load_bin(bin_file):
         bin_ctg_dict[bin_id].append(contig)
     return ctg_bin_dict, bin_ctg_dict
 
-def load_ctg_motifs(profile_dir, MGE_dict):
+def load_ctg_motifs_bk(profile_dir, MGE_dict):
     ctg_single_dict = {}
     single_ctg_dict = defaultdict(list)
     ctg_profile_dict = {}
@@ -316,7 +383,55 @@ def load_ctg_motifs(profile_dir, MGE_dict):
             single_ctg_dict[ctg_name].append(ctg_name)
             ctg_profile_dict[ctg_name] = host_df
     return ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict
- 
+
+
+def process_file_with_args(args):
+    file, profile_dir, MGE_dict = args
+    if file.endswith(".motifs.profile.csv"):
+        ctg_name = file.split(".")[0]
+        if ctg_name in MGE_dict:  # Skip other MGEs, only focus on chromosomal host
+            return None
+        host_motif = os.path.join(profile_dir, "../motifs", f"{ctg_name}.motifs.csv")
+        if not os.path.exists(host_motif):
+            print(f"{host_motif} does not exist.")
+            return None
+        motif_df = pd.read_csv(host_motif)
+        host_profile = os.path.join(profile_dir, file)
+        if not os.path.exists(host_profile):
+            print(f"{host_profile} does not exist.")
+            return None
+        host_df = pd.read_csv(host_profile)
+        return {
+            "ctg_name": ctg_name,
+            "motif_df": motif_df,
+            "host_df": host_df
+        }
+    return None
+
+def load_ctg_motifs(profile_dir, MGE_dict, threads=4):
+    # Use ProcessPoolExecutor to process files in parallel
+    results = []
+    with ProcessPoolExecutor(max_workers=threads) as executor:
+        args = [(file, profile_dir, MGE_dict) for file in os.listdir(profile_dir)]
+        for result in executor.map(process_file_with_args, args):
+            if result is not None:
+                results.append(result)
+
+    # Combine results into dictionaries
+    ctg_single_dict = {}
+    single_ctg_dict = defaultdict(list)
+    ctg_profile_dict = {}
+    ctg_motif_dict = {}
+
+    for result in results:
+        ctg_name = result["ctg_name"]
+        ctg_single_dict[ctg_name] = ctg_name
+        single_ctg_dict[ctg_name].append(ctg_name)
+        ctg_profile_dict[ctg_name] = result["host_df"]
+        ctg_motif_dict[ctg_name] = result["motif_df"]
+
+    return ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict
+
 
 if __name__ == "__main__":
     
@@ -330,6 +445,8 @@ if __name__ == "__main__":
     optional.add_argument("--plasmid", type=str, help="<str> plasmid contig name.", metavar="\b")
     optional.add_argument("--bin_file", type=str, help="<str> binning file: contig bin_id", metavar="\b")
     optional.add_argument("--min_frac", type=float, help="<str> output motif summary.", default=0.5, metavar="\b")
+    ## add threads
+    optional.add_argument("--threads", type=int, help="<int> number of threads.", default=1, metavar="\b")
 
     optional.add_argument("-h", "--help", action="help")
     args = vars(parser.parse_args())
@@ -348,19 +465,21 @@ if __name__ == "__main__":
 
 
     if args["plasmid_file"]:
-        batch_MGE_invade(args["plasmid_file"], profile_dir, host_dir, bin_file, min_frac)
+        batch_MGE_invade(args["plasmid_file"], profile_dir, host_dir, bin_file, min_frac, args["threads"])
     elif args["plasmid"]:
         plasmid_name = args["plasmid"]
         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
         print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
-        ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, {})
+        ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, {}, args["threads"])
+        print (f"Loading is done, {len(single_ctg_dict)} contigs.", len(ctg_motif_dict))
         if bin_file is not None:
             if not os.path.exists(bin_file):
                 print (f"{bin_file} does not exist.")
             ctg_bin_dict, bin_ctg_dict = load_bin(bin_file)
         else:
             ctg_bin_dict, bin_ctg_dict = ctg_single_dict, single_ctg_dict
-        for_each_plasmid(bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, args["plasmid"], profile_dir, host_dir, min_frac, {})
+        bin_df_dict, bin_motif_dict = merge_bin_motif(bin_ctg_dict, ctg_motif_dict, ctg_profile_dict)
+        for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, args["plasmid"], profile_dir, host_dir, min_frac, {})
     else:
         print ("Please provide either --plasmid_file or --plasmid.")
 

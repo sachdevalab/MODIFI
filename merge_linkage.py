@@ -37,8 +37,9 @@ def summary_host(host_dir_list, total_summary_file):
 
 
 if __name__ == "__main__":
-    host_dir_list = ["/home/shuaiw/methylation/data/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/hosts", \
-                     "/home/shuaiw/methylation/data/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin/hosts"]
+    # host_dir_list = ["/home/shuaiw/methylation/data/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/hosts", \
+    #                  "/home/shuaiw/methylation/data/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin/hosts"]
+    host_dir_list = ["/home/shuaiw/methylation/data/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/hosts"]
     total_summary_file = "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"
     summary_host(host_dir_list, total_summary_file)
     # main()

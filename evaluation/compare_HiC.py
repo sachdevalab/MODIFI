@@ -53,7 +53,7 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
 def main():
     ctg2bin_dict, bin2ctg_dict = load_ctg2bin(ctg2bin)
     data = []
-    for cutoff in range(6, 16):
+    for cutoff in range(6, 21):
         my_cutoff = cutoff / 20
         hic_linkages = read_hic(hic_file)
         our_linkages, our_ctg_linkages = read_our(host_sum, ctg2bin_dict, my_cutoff)
