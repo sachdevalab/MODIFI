@@ -4,6 +4,7 @@ from Bio.SeqRecord import SeqRecord
 from typing import List, Tuple
 import sys
 import os
+import numpy as np
 
 # -------------------------------
 # Parameters
@@ -17,6 +18,9 @@ MAX_GAP = 10
 # -------------------------------
 def segment_by_depth(depth_file: str, depth_threshold: int, max_gap: int) -> List[Tuple[str, int, int]]:
     depth_df = pd.read_csv(depth_file, sep="\t", header=None, names=["seqname", "pos", "depth"])
+    ## calculate the mean depth of the contig 
+    mean_depth = round(np.mean(depth_df["depth"]), 2)
+    print (f"mean depth: {mean_depth}", depth_file)
     segments = []
     current_seq = None
     start = None
@@ -48,7 +52,10 @@ def segment_by_depth(depth_file: str, depth_threshold: int, max_gap: int) -> Lis
     if start is not None:
         segments.append((current_seq, start, last_pos))
 
-    return segments
+    
+
+
+    return segments, mean_depth
 
 
 # -------------------------------
@@ -104,9 +111,10 @@ def update_gff(input_gff: str, output_gff: str, segment_metadata: List[Tuple[str
 def process_depth_and_gff(depth_file: str, reference_fasta: str, input_gff: str,
                           output_fasta: str, output_gff: str,
                           depth_threshold: int = DEPTH_THRESHOLD, max_gap: int = MAX_GAP):
-    segments = segment_by_depth(depth_file, depth_threshold, max_gap)
+    segments, mean_depth = segment_by_depth(depth_file, depth_threshold, max_gap)
     segment_metadata = extract_segmented_fasta(segments, reference_fasta, output_fasta)
     update_gff(input_gff, output_gff, segment_metadata)
+    return mean_depth
 
 if __name__ == "__main__":
     # -------------------------------

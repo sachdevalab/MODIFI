@@ -51,7 +51,7 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
 def main():
     ctg2bin_dict, bin2ctg_dict = load_ctg2bin(ctg2bin)
     data = []
-    for cutoff in range(0, 16):
+    for cutoff in range(6, 16):
         my_cutoff = cutoff / 20
         hic_linkages = read_hic(hic_file)
         our_linkages, our_ctg_linkages = read_our(host_sum, ctg2bin_dict, my_cutoff)
@@ -139,12 +139,13 @@ def generate_bin_file(bin_file, fai):
 if __name__ == "__main__":
     hic_file = "/home/shuaiw/borg/pengfan/hic_10mgs_linkages.csv"
     bin_file = "/home/shuaiw/borg/pengfan/10mgs_bins.tab"
-    host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/host_summary.csv"
     bin_dir = "/groups/diamond/projects/animal/rumen/RuReacBro20203/analysis/RuReacBro2023_CircCont/bins/Final_Genomes_qc_rmcirc/sequence"
     ctg2bin = "/home/shuaiw/borg/pengfan/ctg2bin.csv"
     fai = "/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa.fai"
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_LR_bin/host_summary.csv"
 
-    # main()
-    generate_bin_file(bin_file, fai)
+    host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin/host_summary.csv"
+
+    main()
+    # generate_bin_file(bin_file, fai)
     # contig2bin(bin_dir, ctg2bin)

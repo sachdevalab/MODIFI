@@ -5,6 +5,10 @@ from tqdm import tqdm
 import os
 import subprocess
 import sys
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from split_bam import split_bam
 from standard_load7 import IPD_load_worker
@@ -172,7 +176,7 @@ def motif_worker(bam, fasta, gff, seg_ref, seg_gff, motif, threads, min_score):
         print("Running command:", " ".join(cmd))
         subprocess.run(cmd, stdout=depth_output, stderr=subprocess.DEVNULL, check=True)
 
-    process_depth_and_gff(depth_file, fasta, gff, seg_ref, seg_gff,
+    mean_depth = process_depth_and_gff(depth_file, fasta, gff, seg_ref, seg_gff,
                         depth_threshold=DEPTH_THRESHOLD, max_gap=MAX_GAP)
 
     cmd = [
@@ -187,10 +191,11 @@ def motif_worker(bam, fasta, gff, seg_ref, seg_gff, motif, threads, min_score):
     print("Running command:", " ".join(cmd))
     subprocess.run(cmd, check=True)
 
-    return 0
+    return mean_depth
 
 def motif_parallel(args, paras):
     print ("Detect motif in parallel...")
+    ctg_depth_dict = {}
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         futures = []
 
@@ -224,9 +229,10 @@ def motif_parallel(args, paras):
 
         for future in tqdm(as_completed(futures), total=len(futures)):
             finish_code = future.result()
-
-            yield finish_code
-
+            ctg_depth_dict[ctg_name] = finish_code
+            # yield finish_code
+    return ctg_depth_dict
+    
 def collect_motifs_worker(args, paras):
     collect_motifs(
         folder=paras["motifs"],
@@ -288,6 +294,22 @@ def run_merge_profile(args, paras):
             bin_file = args.bin_file,
         )
 
+def depth_analysis(paras, ctg_depth_dict):
+    ## change the dict to df
+    depth_df = (
+        pd.DataFrame.from_dict(ctg_depth_dict, orient="index", columns=["depth"])
+        .reset_index()
+        .rename(columns={"index": "contig"})
+    )
+    depth_df.to_csv(paras["depth_file"], index=False)
+    ## plot the depth distribution
+    sns.set(style="whitegrid")
+    sns.histplot(depth_df, x="depth")
+    ## save the plot
+
+    plt.savefig(paras["depth_plot"])
+
+
 def get_paras(args):
     """
     Get parameters for the pipeline.
@@ -311,6 +333,8 @@ def get_paras(args):
     paras["all_motifs"] = os.path.join(args.work_dir, "all.motifs.csv")
     paras["total_profile"] = os.path.join(args.work_dir, "motif_profile.csv")
     paras["heatmap"] = os.path.join(args.work_dir, "motif_heatmap.pdf")
+    paras["depth_file"] = os.path.join(args.work_dir, "mean_depth.csv")
+    paras["depth_plot"] = os.path.join(args.work_dir, "depth_distribution.pdf")
 
     ## build the directory if not exist
     os.makedirs(args.work_dir, exist_ok=True)
@@ -330,6 +354,7 @@ def get_paras(args):
 
 def main():
     args = parse_arguments()
+    ctg_depth_dict = {}
 
     if args.max_NM is None:
         if args.read_type == "hifi":
@@ -365,8 +390,11 @@ def main():
         print ("IPD ratio calculation done.")
 
     if "motif" in args.run_steps:
-        for result in motif_parallel(args, paras):
-            print(f"Motif finished with code: {result}")
+        ctg_depth_dict = motif_parallel(args, paras)
+        # for result in motif_parallel(args, paras):
+        #     print(f"Motif finished with code: {result}")
+        # print (ctg_depth_dict)
+        depth_analysis(paras, ctg_depth_dict)
         print ("Motif identification done.")
 
     if "profile" in args.run_steps:
