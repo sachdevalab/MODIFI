@@ -17,10 +17,12 @@ def read_our(host_sum, ctg2bin_dict, score_cutoff = 0.45):
     our_ctg_linkages = {}
     for index, row in df.iterrows():
         if row['host'] not in ctg2bin_dict:
+            bin_name = row['host']
             ## raise error
-            print (f"contig {row['host']} is not in ctg2bin_dict")
-            sys.exit(1)
-        bin_name = ctg2bin_dict[row['host']]
+            # print (f"contig {row['host']} is not in ctg2bin_dict")
+            # sys.exit(1)
+        else:
+            bin_name = ctg2bin_dict[row['host']]
         our_linkages[row['plasmid']] = bin_name
         our_ctg_linkages[row['plasmid']] = row['host']
         # our_linkages[row['plasmid']] = row['host']
@@ -145,6 +147,7 @@ if __name__ == "__main__":
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_LR_bin/host_summary.csv"
 
     host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin/host_summary.csv"
+    host_sum = "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"
 
     main()
     # generate_bin_file(bin_file, fai)
