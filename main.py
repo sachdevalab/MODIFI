@@ -292,6 +292,7 @@ def run_merge_profile(args, paras):
             whole_ref = args.whole_ref, 
             plasmid_file = args.plasmid_file,
             bin_file = args.bin_file,
+            threads = args.threads,
         )
 
 def depth_analysis(paras, ctg_depth_dict):

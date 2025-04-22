@@ -353,7 +353,7 @@ def PCA_plot(df, pca_fig):
         adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
     plt.savefig(pca_fig)
 
-def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_frac, whole_ref, plasmid_file, bin_file=None):
+def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_frac, whole_ref, plasmid_file, bin_file=None, threads=1):
     
     cluster_fig = os.path.join(work_dir, "motif_cluster.pdf")
     pca_fig = os.path.join(work_dir, "motif_pca.pdf")
@@ -386,7 +386,7 @@ def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_fr
         host_dir = os.path.join(work_dir, "hosts")
         os.makedirs(host_dir, exist_ok = True)
         if plasmid_file != 'NA' and os.path.exists(plasmid_file):
-            batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=bin_file, min_frac=0.5)
+            batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=bin_file, min_frac=0.5, threads=threads)
     else:
         print ("no motif identified")
         ## construct an  empty figure

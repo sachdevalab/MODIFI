@@ -5,6 +5,8 @@ import os
 import argparse
 import re
 from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from tqdm import tqdm
 
 def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_sites=50000):
     """
@@ -211,7 +213,47 @@ def summary_host(host_dir):
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)
 
-def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_frac = 0.5):
+def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_frac = 0.5, threads = 1):
+
+    MGE_dict = read_genomad(plasmid_file)
+    ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, MGE_dict)
+    if bin_file is not None:
+        if not os.path.exists(bin_file):
+            print (f"{bin_file} does not exist.")
+        ctg_bin_dict, bin_ctg_dict = load_bin(bin_file)
+    else:
+        ctg_bin_dict, bin_ctg_dict = ctg_single_dict, single_ctg_dict
+    print (f"Loading is done, {len(bin_ctg_dict)} bins.")
+    print ("threads number for linkage prediction: ", threads)
+    with ProcessPoolExecutor(max_workers=threads) as executor:
+        futures = []
+        for plasmid_name in MGE_dict:
+            MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
+            if MGE_motif_num == 0:
+                print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
+                continue
+            print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
+            future = executor.submit(
+                for_each_plasmid,
+                bin_ctg_dict = bin_ctg_dict,
+                ctg_profile_dict = ctg_profile_dict,
+                ctg_motif_dict = ctg_motif_dict,
+                plasmid_name = plasmid_name,
+                profile_dir = profile_dir,
+                host_dir = host_dir,
+                min_frac = min_frac,
+                MGE_dict={},
+            )
+            futures.append(future)
+        result = []
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            finish_code = future.result()
+            result.append(finish_code)
+        
+            # for_each_plasmid(bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, plasmid_name, profile_dir, host_dir, min_frac, {})
+    summary_host(host_dir)
+
+def batch_MGE_invade_single(plasmid_file, profile_dir, host_dir, bin_file=None, min_frac = 0.5):
 
     MGE_dict = read_genomad(plasmid_file)
     ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, MGE_dict)
