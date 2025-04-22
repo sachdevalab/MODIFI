@@ -14,6 +14,8 @@ import sys
 import argparse
 from adjustText import adjust_text
 import numpy as np
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from tqdm import tqdm
 
 from bin import bin_contigs_to_fastas
 from cal_invasion_score import batch_MGE_invade
@@ -49,6 +51,69 @@ def load_contigs():
     contig_dict.update(control_dict)
 
     return contig_dict
+
+def read_profile_worker(profile_list, file, sample_name,  min_motif_sites=1):
+    ### profile_list is the directory of the profiles
+    profile = pd.read_csv(os.path.join(profile_list, file), sep = ",")
+    # profile = pd.read_csv(os.path.join(file), sep = ",")
+    ## extract the sample name
+
+
+
+    # print (sample_name, profile.head())
+    motifs_names = profile['motifString']
+    # print (motifs_names)
+    ## if motif_modified_num < min_motif_sites, we set the motif_modified_ratio to 0
+    ### minimium number of motif sites cutoff, it too less motif sites, no meaning to calculate the ratio
+    profile.loc[profile['motif_modified_num'] < min_motif_sites, 'motif_modified_ratio'] = 0
+    ## we only want the motif_modified_ratio column
+    profile = profile[['motif_modified_ratio']]
+    return profile['motif_modified_ratio'], sample_name, motifs_names
+
+def merge_profile_parallele(profile_list, min_motif_sites=1, threads = 1):
+    ## initialize the profiles as df
+    profiles = []
+    samples = []
+    motifs_names = ''
+    print ("threads used in profile merge:", threads)
+    with ProcessPoolExecutor(max_workers=threads) as executor:
+        futures = []
+        for file in os.listdir(profile_list):
+        # for file in profile_list:
+            if file.endswith(".csv"):
+                match = re.search(r'(.*?).motifs.profile.csv', file)
+                if not match:
+                    print ("cannot extract sample name from", file)
+                    continue
+                sample_name = match.group(1).split("/")[-1]
+                future = executor.submit(
+                    read_profile_worker,
+                    profile_list = profile_list,
+                    file = file,
+                    sample_name = sample_name,
+                    min_motif_sites = min_motif_sites,
+                )
+                futures.append(future)
+
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            motif_modified_ratio_column, sample_name, motifs_names = future.result()
+
+            profiles.append(motif_modified_ratio_column)
+
+            samples.append(sample_name)
+            motifs_names = motifs_names
+    if not profiles:
+        return pd.DataFrame()
+    ## name the columns
+    profiles = pd.concat(profiles, axis=1)
+    profiles.columns = samples
+    ## define the row names as motifs_names
+    # print (motifs_names)
+    profiles.index = motifs_names
+    print (profiles.head())
+    ## print the shape of the profiles
+    print (profiles.shape)
+    return profiles
 
 def merge_profile(profile_list, min_motif_sites=1):
     ## initialize the profiles as df
@@ -362,7 +427,8 @@ def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_fr
     bin_dir = os.path.join(work_dir, "bins", "bin")
     profile_dir = os.path.join(work_dir, "profiles")
 
-    profiles = merge_profile(profile_list)
+    # profiles = merge_profile(profile_list)
+    profiles = merge_profile_parallele(profile_list, threads=threads)
     ## save the profiles
     profiles.to_csv(total_profile, index=True)
     
