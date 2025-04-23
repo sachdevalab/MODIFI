@@ -8,6 +8,16 @@ from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 
+from derep_motifs import MotifFilter
+
+# IGNORE_MOTIFS = [
+#     "GATC",
+#     "CCWGG",
+# ]
+
+IGNORE_MOTIFS = [
+]
+
 def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_sites=50000):
     """
     Adds confidence weighting based on motif site counts.
@@ -27,6 +37,7 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
             continue
 
         weight = h_total
+        weight = min(weight, 1000)   ### set weight to 1000, once the h_total is larger than 1000
         total_sites += h_total + p_total
         total_host_sites += h_total
 
@@ -149,6 +160,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         print (f"{plasmid_profile} does not exist.")
         return
     data = []
+    motif_data_dict = {}
     for bin_name in bin_ctg_dict:
         # print (f"Processing {bin_name}...")
         bin_df = bin_df_dict[bin_name]
@@ -164,9 +176,13 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
 
         motif_data = extract_motif_data(bin_df, plasmid_profile, min_frac)
         motif_data = filter_motifs(bin_motif, motif_data)
-        motif_data = filter_unique_motifs_by_host_total(motif_data, key="motif", score_key="host_total")
-        if bin_name == "RuReacBro_20230708_7_40h_PC_r3_metabinner_4_rmcirc":
+
+        motif_filter = MotifFilter(motif_data)
+        motif_data = motif_filter.filter()
+        
+        if bin_name == "RuReacBro_20230708_7_48h_PC_r3_vamb_18_rmcirc":
             print (motif_data)
+        motif_data_dict[bin_name] = motif_data
         result = invasion_score_from_counts(motif_data, min_frac, 0.5)
         result['host'] = bin_name
         data.append(result)
@@ -176,10 +192,17 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
     ## host column the first, final_score the second, invasion_score the third, confidence the forth, total_sites the fifth
     data = data[['host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num']]
     ## print top ten
+    ## remove the rows with final_score = 0
+    data = data[data['final_score'] > 0]
     print (data.head(10))
     ## output the data to a csv file
     host_prediction = os.path.join(host_dir, f"{plasmid_name}.host_prediction.csv")
     data.to_csv(host_prediction, index = False)
+    ## output the motif data to a csv file
+    motif_data_file = os.path.join(host_dir, f"{plasmid_name}.motif_data.csv")
+    with open(motif_data_file, 'w') as f:
+        for index, rows in data.iterrows():
+            print (rows, motif_data_dict[rows['host']], file = f)
 
 def read_genomad(genomad_file):
     MGE_dict = {}
@@ -202,53 +225,21 @@ def filter_motifs(host_motif, motif_data):
         motif_tga = row['motifString'] + "_tga_" + str(row['centerPos'])
         motif_tag_dict[motif_tga] = 1
     new_motif_data = []
+
     for m in motif_data:
+        ## remove the ignored motifs
+        ignore_flag = False
+        for ignore_motif in IGNORE_MOTIFS:
+            if ignore_motif in m['motif']:
+                ignore_flag = True
+                break
+        if ignore_flag:
+            continue
+
         tag = m['motif'] + "_tga_" + str(m['centerPos'])
         if tag in motif_tag_dict:
             new_motif_data.append(m)
     return new_motif_data
-
-def filter_unique_motifs_by_host_total(motif_list, key="motif", score_key="host_total"):
-    """
-    Removes redundant motifs, keeping the one with the higher host_total if motifs overlap.
-
-    Parameters:
-        motif_list (list of dict): List of motif dictionaries.
-        key (str): The dictionary key that contains the motif string.
-        score_key (str): The key used to prioritize motifs when redundant (default: "host_total").
-
-    Returns:
-        list of dict: Filtered list of non-redundant motifs.
-    """
-    # Start with an empty list of accepted motifs
-    filtered = []
-
-    for motif in motif_list:
-        mseq = motif[key]
-        keep = True
-        to_remove = []
-
-        for existing in filtered:
-            eseq = existing[key]
-
-            # If motifs are related (one contains the other)
-            if mseq in eseq or eseq in mseq:
-                # Compare host_total scores
-                if motif[score_key] > existing[score_key]:
-                    to_remove.append(existing)  # mark existing for removal
-                else:
-                    keep = False  # don't keep current motif
-                    break
-
-        # Remove lower-scoring overlapping motifs
-        for rem in to_remove:
-            filtered.remove(rem)
-
-        if keep:
-            filtered.append(motif)
-
-    return filtered
-
 
 def count_MGE_with_motif(plasmid_name, profile_dir):
     plasmid_motif_file = os.path.join(profile_dir,"../motifs", f"{plasmid_name}.motifs.csv")
