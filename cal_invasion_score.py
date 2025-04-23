@@ -50,6 +50,8 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
             ## whether f_host and f_plasmid both are larger than 0.5
             if f_plasmid > min_frac:
                 motif_score = 1
+            elif f_plasmid > f_host:
+                motif_score = 1
             else:
                 motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
         # print (m['motif'], motif_score, weight)
@@ -179,7 +181,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
 
         motif_filter = MotifFilter(motif_data)
         motif_data = motif_filter.filter()
-        
+
         if bin_name == "RuReacBro_20230708_7_48h_PC_r3_vamb_18_rmcirc":
             print (motif_data)
         motif_data_dict[bin_name] = motif_data

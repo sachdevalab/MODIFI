@@ -428,7 +428,7 @@ python main.py \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --run_steps merge \
-  --threads 10
+  --threads 20 
 
 python cal_invasion_score.py \
   --work_dir /home/shuaiw/methylation/data/borg/pengfan/RuReacBro_20230708_11_72h_20_bin\

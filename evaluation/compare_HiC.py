@@ -53,7 +53,7 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
 def main():
     ctg2bin_dict, bin2ctg_dict = load_ctg2bin(ctg2bin)
     data = []
-    for cutoff in range(6, 21):
+    for cutoff in range(6, 18):
         my_cutoff = cutoff / 20
         hic_linkages = read_hic(hic_file)
         our_linkages, our_ctg_linkages = read_our(host_sum, ctg2bin_dict, my_cutoff)
@@ -145,9 +145,10 @@ if __name__ == "__main__":
     ctg2bin = "/home/shuaiw/borg/pengfan/ctg2bin.csv"
     fai = "/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa.fai"
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_LR_bin/host_summary.csv"
+    host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/host_summary.csv"
 
-    host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin/host_summary.csv"
-    host_sum = "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"
+    # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin/host_summary.csv"
+    # host_sum = "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"
 
     main()
     # generate_bin_file(bin_file, fai)
