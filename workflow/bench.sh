@@ -325,12 +325,6 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengf
   --rerun-incomplete"\
   --job-name=pf
 
-
-
-
-
-
-
  sbatch  --partition standard --wrap " snakemake --config \
   whole_bam=/home/shuaiw/borg/pengfan/align/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR.align.ccs.bam \
   whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
@@ -397,15 +391,6 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list  " \
   --job-name=pipeline
 
- sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil_zymo/time snakemake --config \
-  whole_bam=/home/shuaiw/borg/bench/soil_zymo/soil_zymo.align.ccs.bam \
-  whole_ref=/home/shuaiw/borg/contigs/soil_zymo.fa \
-  work_dir=/home/shuaiw/borg/bench/soil_zymo/run \
-  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.4 min_score=30 min_sites=30 clean=False \
-  plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"\
-  --job-name=soil
-
-
    sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.new.time snakemake --config \
   whole_bam=/home/shuaiw/borg/pengfan/align/RuReacBro_20230708_11_72h_20_new.align.ccs.bam \
   whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
@@ -435,3 +420,33 @@ python cal_invasion_score.py \
   --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab\
   --min_frac 0.4 \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list
+
+python cal_invasion_score.py \
+  --work_dir /home/shuaiw/methylation/data/borg/pengfan/RuReacBro_20230708_11_72h_20_bin\
+  --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab\
+  --min_frac 0.4 --threads 10 --plasmid RuReacBro_20230708_26_72h_NC_r4_LR_9420_C
+
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil_zymo/time snakemake --config \
+  whole_bam=/home/shuaiw/borg/bench/soil_zymo/soil_zymo.align.ccs.bam \
+  whole_ref=/home/shuaiw/borg/contigs/soil_zymo.fa \
+  work_dir=/home/shuaiw/borg/bench/soil_zymo/run \
+  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.4 min_score=30 min_sites=30 clean=False \
+  plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"\
+  --job-name=soil
+
+
+ sbatch  --partition standard --wrap "python main.py \
+  --work_dir /home/shuaiw/borg/bench/soil_zymo/run \
+  --whole_bam /home/shuaiw/borg/bench/soil_zymo/soil_zymo.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+  --run_steps profile merge \
+  --threads 64 "\
+  --job-name=soil

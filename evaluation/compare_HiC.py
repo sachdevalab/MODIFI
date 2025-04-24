@@ -93,7 +93,7 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
         if set(our_linkages[plasmid]) & set(hic_linkages[plasmid]):
             cosistency_num += 1
         else:
-            print (f"{plasmid} is not consistent: {our_linkages[plasmid]} ({our_ctg_linkages[plasmid]}) vs Hi-C {hic_linkages[plasmid]} : ({bin2ctg_dict[hic_linkages[plasmid][0]][0]}, {len(bin2ctg_dict[hic_linkages[plasmid][0]])})")
+            print (f"{plasmid} is not consistent: {our_linkages[plasmid]} ({our_ctg_linkages[plasmid]}) vs Hi-C {hic_linkages[plasmid]} : ({bin2ctg_dict[hic_linkages[plasmid][0]][0]}, {len(bin2ctg_dict[hic_linkages[plasmid][0]])})\n")
     if both_link == 0:
         cosistency_rate = 0
     else:

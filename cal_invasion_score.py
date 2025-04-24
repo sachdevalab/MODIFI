@@ -26,6 +26,7 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
     weights = []
     total_sites = 0
     total_host_sites = 0
+    restriction_signal = 1
 
     for m in motif_data:
         h_total = m['host_total']
@@ -54,6 +55,13 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
                 motif_score = 1
             else:
                 motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
+        ## high confidence that the plasmid should be restricted
+        if f_host > 0.5 and h_total > 500:
+            if p_total > 10 and p_meth == 0:
+                restriction_signal = 0
+            if p_total > 200 and f_plasmid < 0.1:
+                restriction_signal = 0
+
         # print (m['motif'], motif_score, weight)
         scores.append(motif_score * log(weight))
         weights.append(log(weight))
@@ -71,7 +79,7 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
     motif_confidence = log(1+len(motif_data))/log(1+3)   
     if motif_confidence > 1:
         motif_confidence = 1
-    final_score = invasion_score * confidence * motif_confidence
+    final_score = invasion_score * confidence * motif_confidence * restriction_signal
 
     return {
         'invasion_score': round(invasion_score, 4),
@@ -204,7 +212,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
     motif_data_file = os.path.join(host_dir, f"{plasmid_name}.motif_data.csv")
     with open(motif_data_file, 'w') as f:
         for index, rows in data.iterrows():
-            print (rows, motif_data_dict[rows['host']], file = f)
+            print (rows.to_dict(), motif_data_dict[rows['host']], file = f)
 
 def read_genomad(genomad_file):
     MGE_dict = {}
