@@ -2,18 +2,30 @@
 import pandas as pd
 import os
 import sys
+from collections import defaultdict
+import numpy as np
+### plot the consistency rate line plot
+## plot another subplot with the our link num
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def read_hic(hic_file):
-    hic_linkages = {}
+    hic_linkages = defaultdict(list)
     df = pd.read_csv(hic_file)
     for index, row in df.iterrows():
-        hic_linkages[row['circular_element']] = row['bin']
+        hic_linkages[row['circular_element']].append(row['bin'])
+    multiple_host_plasmid_num = 0
+    for plasmid in hic_linkages:
+        if len(hic_linkages[plasmid]) > 1:
+            multiple_host_plasmid_num += 1
+            # print (f"{plasmid} has multiple host: {hic_linkages[plasmid]}")
+    print (f"multiple host plasmid num: {multiple_host_plasmid_num} out of {len(hic_linkages)}")
     return hic_linkages
 
 def read_our(host_sum, ctg2bin_dict, score_cutoff = 0.45):
     df = pd.read_csv(host_sum)
     df = df[df['final_score'] > score_cutoff]
-    our_linkages = {}
+    our_linkages = defaultdict(list)
     our_ctg_linkages = {}
     for index, row in df.iterrows():
         if row['host'] not in ctg2bin_dict:
@@ -23,9 +35,48 @@ def read_our(host_sum, ctg2bin_dict, score_cutoff = 0.45):
             # sys.exit(1)
         else:
             bin_name = ctg2bin_dict[row['host']]
-        our_linkages[row['plasmid']] = bin_name
+        our_linkages[row['plasmid']].append(bin_name)
         our_ctg_linkages[row['plasmid']] = row['host']
         # our_linkages[row['plasmid']] = row['host']
+    multiple_host_plasmid_num = 0
+    for plasmid in our_linkages:
+        if len(our_linkages[plasmid]) > 1:
+            multiple_host_plasmid_num += 1
+            # print (f"{plasmid} has multiple host: {our_linkages[plasmid]}")
+    print (f"multiple host plasmid num: {multiple_host_plasmid_num} out of {len(our_linkages)}")
+    return our_linkages, our_ctg_linkages
+
+def read_our_multiple(host_sum, ctg2bin_dict, score_cutoff = 0.45):
+    df = pd.read_csv(host_sum)
+    df = df[df['final_score'] > score_cutoff]
+    our_linkages = defaultdict(list)
+    our_ctg_linkages = {}
+    main_dir = "/".join(host_sum.split("/")[:-1])
+    for index, row in df.iterrows():
+        plasmid_host_file = os.path.join(main_dir, "hosts", row['plasmid'] + ".host_prediction.csv")
+        ## read the host prediction file
+        if not os.path.exists(plasmid_host_file):
+            print (f"{plasmid_host_file} does not exist")
+            continue
+        plasmid_host_df = pd.read_csv(plasmid_host_file)
+        plasmid_host_df = plasmid_host_df[plasmid_host_df['final_score'] > score_cutoff]
+        for index1, row1 in plasmid_host_df.iterrows():
+            if row1['host'] not in ctg2bin_dict:
+                bin_name = row1['host']
+                ## raise error
+                # print (f"contig {row1['host']} is not in ctg2bin_dict")
+                # sys.exit(1)
+            else:
+                bin_name = ctg2bin_dict[row1['host']]
+            our_linkages[row['plasmid']].append(bin_name)
+        our_ctg_linkages[row['plasmid']] = row['host']
+        # our_linkages[row['plasmid']] = row['host']
+    multiple_host_plasmid_num = 0
+    for plasmid in our_linkages:
+        if len(our_linkages[plasmid]) > 1:
+            multiple_host_plasmid_num += 1
+            # print (f"{plasmid} has multiple host: {our_linkages[plasmid]}")
+    print (f"multiple host plasmid num: {multiple_host_plasmid_num} out of {len(our_linkages)}")
     return our_linkages, our_ctg_linkages
 
 def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
@@ -36,10 +87,13 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
             # print(f"{plasmid} is not in HiC linkages")
             continue
         both_link += 1
-        if our_linkages[plasmid] == hic_linkages[plasmid]:
+        # if our_linkages[plasmid] in hic_linkages[plasmid]:
+        #     cosistency_num += 1
+        ## check if the two list has a same element
+        if set(our_linkages[plasmid]) & set(hic_linkages[plasmid]):
             cosistency_num += 1
         else:
-            print (f"{plasmid} is not consistent: {our_linkages[plasmid]} ({our_ctg_linkages[plasmid]}) vs Hi-C {hic_linkages[plasmid]} : ({bin2ctg_dict[hic_linkages[plasmid]][0]}, {len(bin2ctg_dict[hic_linkages[plasmid]])})")
+            print (f"{plasmid} is not consistent: {our_linkages[plasmid]} ({our_ctg_linkages[plasmid]}) vs Hi-C {hic_linkages[plasmid]} : ({bin2ctg_dict[hic_linkages[plasmid][0]][0]}, {len(bin2ctg_dict[hic_linkages[plasmid][0]])})")
     if both_link == 0:
         cosistency_rate = 0
     else:
@@ -52,23 +106,22 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
 
 def main():
     ctg2bin_dict, bin2ctg_dict = load_ctg2bin(ctg2bin)
+    hic_linkages = read_hic(hic_file)
+    ## output the MGE with multiple host
+
+    # """
     data = []
     for cutoff in range(6, 18):
         my_cutoff = cutoff / 20
-        hic_linkages = read_hic(hic_file)
+        
         our_linkages, our_ctg_linkages = read_our(host_sum, ctg2bin_dict, my_cutoff)
+        # our_linkages, our_ctg_linkages = read_our_multiple(host_sum, ctg2bin_dict, my_cutoff)
         print (f"cutoff: {my_cutoff}")
         both_link, cosistency_num, consis_rate, our_num = compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict)
         data.append([my_cutoff, both_link, cosistency_num, consis_rate, our_num])
     df = pd.DataFrame(data, columns=['cutoff', 'both_link', 'cosistency_num', 'consis_rate', 'our_num'])
 
-    ### plot the consistency rate line plot
-    ## plot another subplot with the our link num
-    import matplotlib.pyplot as plt
-    import seaborn as sns
     sns.set(style="whitegrid")
-
-
     plt.figure(figsize=(5, 9))  # Adjust the figure size to accommodate the third subplot
 
     ## plot three subplots
@@ -92,6 +145,7 @@ def main():
 
     plt.tight_layout()
     plt.savefig('../tmp/both_linkages.png')
+    # """
 
 def contig2bin(bin_dir, ctg2bin):
     out = open(ctg2bin, "w")
