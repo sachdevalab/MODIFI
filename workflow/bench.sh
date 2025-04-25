@@ -465,3 +465,17 @@ sbatch  --partition standard --wrap "python main.py \
   --min_sites 30 \
   --threads 64 "\
   --job-name=c227
+
+sbatch  --partition standard --wrap "python main.py \
+  --work_dir /home/shuaiw/borg/allison/ecoli/test \
+  --whole_bam /home/shuaiw/borg/allison/ecoli/native/bams/CP011331.1.bam \
+  --whole_ref /home/shuaiw/borg/allison/ecoli/native/contigs/CP011331.1.fa \
+  --read_type subreads \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --threads 1 "\
+  --job-name=c227

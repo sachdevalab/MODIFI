@@ -13,7 +13,8 @@ def get_contig_list(ipd_dir, ref_dir, list_file):
     for file in os.listdir(ipd_dir):
         if file.endswith(".ipd1.csv"):
             ## sample name
-            sample = file.split(".")[0]
+            # sample = file.split(".")[0]
+            sample = file.split(".ipd1.csv")[0]
             contig = os.path.join(ref_dir, sample + ".fa")
             if not os.path.exists(contig):
                 print (f"Contig {contig} not found")
