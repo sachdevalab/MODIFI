@@ -463,6 +463,7 @@ sbatch  --partition standard --wrap "python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
+  --run_steps compare motif profile merge \
   --threads 64 "\
   --job-name=c227
 

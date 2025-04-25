@@ -440,13 +440,16 @@ def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_fr
 
     if len(profiles) > 0:
         heatmap(profiles, heat_map)
-        # UMAP(profiles, cluster_fig)
-        TSE(profiles, cluster_fig)
-        # PCA_plot(profiles, pca_fig)
-        # hierarchical_clustering(profiles, tree_fig, cluster_fig)
-        JC_hierarchical_clustering(profiles, cluster_fig)
 
-        bin_contigs_to_fastas(cluster_fig.replace(".pdf", ".j.csv"), whole_ref, bin_dir)
+        if len(profiles) > 1:  ## cluster only if there are more than 1 contig
+            # UMAP(profiles, cluster_fig)
+            TSE(profiles, cluster_fig)
+            # PCA_plot(profiles, pca_fig)
+            # hierarchical_clustering(profiles, tree_fig, cluster_fig)
+            JC_hierarchical_clustering(profiles, cluster_fig)
+
+            bin_contigs_to_fastas(cluster_fig.replace(".pdf", ".j.csv"), whole_ref, bin_dir)
+            
         summary( min_frac, summary_file, profiles)
 
         host_dir = os.path.join(work_dir, "hosts")

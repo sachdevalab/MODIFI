@@ -57,11 +57,11 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
                 motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
 
         ## high confidence that the plasmid should be restricted-- orphan MTase?
-        if f_host > 0.5 and h_total > 500:
-            if p_total > 10 and p_meth == 0:
-                restriction_signal = 0
-            if p_total > 200 and f_plasmid < 0.1:
-                restriction_signal = 0
+        # if f_host > 0.5 and h_total > 500:
+        #     if p_total > 10 and p_meth == 0:
+        #         restriction_signal = 0
+        #     if p_total > 200 and f_plasmid < 0.1:
+        #         restriction_signal = 0
 
         # print (m['motif'], motif_score, weight)
         scores.append(motif_score * log(weight))
@@ -162,10 +162,30 @@ def merge_bin_motif(bin_ctg_dict, ctg_motif_dict, ctg_profile_dict):
         bin_motif_dict[bin_name] = bin_motif
     return bin_df_dict, bin_motif_dict
         
+def estimate_cov(cov_dict, bin_name, bin_ctg_dict):
+
+    
+    ctg_cov_list = []
+    for ctg in bin_ctg_dict[bin_name]:
+        if ctg in cov_dict:
+            ctg_cov_list.append(cov_dict[ctg])
+    if len(ctg_cov_list) >0:
+        bin_cov = np.mean(ctg_cov_list)
+    else:
+        bin_cov = 'NA'
+    return bin_cov
 
 def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict, ctg_motif_dict,\
                       plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_dict={}):
+
+    
+
     plasmid_profile = f"{profile_dir}/{plasmid_name}.motifs.profile.csv"
+    cov_dict = load_coverage(host_dir)
+    if plasmid_name not in cov_dict:
+        MGE_cov = 'NA'
+    else:
+        MGE_cov = cov_dict[plasmid_name]
     ## check if the plasmid profile exists
     if not os.path.exists(plasmid_profile):
         print (f"{plasmid_profile} does not exist.")
@@ -179,11 +199,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
             continue
         bin_motif = bin_motif_dict[bin_name]
 
-        # bin_df = merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict)
-        # if len(bin_df) == 0:
-        #     continue
-        # bin_motif = merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict)
-        # print (bin_motif)
+        
 
         motif_data = extract_motif_data(bin_df, plasmid_profile, min_frac)
         motif_data = filter_motifs(bin_motif, motif_data)
@@ -196,12 +212,17 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         motif_data_dict[bin_name] = motif_data
         result = invasion_score_from_counts(motif_data, min_frac, 0.5)
         result['host'] = bin_name
+        bin_cov = estimate_cov(cov_dict, bin_name, bin_ctg_dict)
+        result['host_cov'] = bin_cov
+        result['MGE_cov'] = MGE_cov
+        result['MGE'] = plasmid_name
+
         data.append(result)
     ## convert the data to a df, and sort by final_score
     data = pd.DataFrame(data)
     data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
     ## host column the first, final_score the second, invasion_score the third, confidence the forth, total_sites the fifth
-    data = data[['host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num']]
+    data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov']]
     ## print top ten
     ## remove the rows with final_score = 0
     data = data[data['final_score'] > 0]
@@ -260,6 +281,19 @@ def count_MGE_with_motif(plasmid_name, profile_dir):
     plasmid_motif = pd.read_csv(plasmid_motif_file)
     return len(plasmid_motif)
 
+def load_coverage(host_dir):
+    cov_file = os.path.join(host_dir, "../mean_depth.csv")
+    if not os.path.exists(cov_file):
+        print (f"{cov_file} does not exist.")
+        return {}
+    cov_df = pd.read_csv(cov_file)
+    cov_dict = {}
+    for i, row in cov_df.iterrows():
+        contig = row['contig']
+        mean_depth = row['depth']
+        cov_dict[contig] = mean_depth
+    return cov_dict
+
 def summary_host(host_dir):
     data = []
     for file in os.listdir(host_dir):
@@ -270,8 +304,10 @@ def summary_host(host_dir):
             ## extract the first row
             ## add new column for plasmid_name at the start
             if len(df) > 0:
-                df.insert(0, 'MGE', plasmid_name)
+                # df.insert(0, 'MGE', plasmid_name)
                 data.append(df.iloc[0])
+                
+                
     data = pd.DataFrame(data)
     ## sort by final_score
     data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
