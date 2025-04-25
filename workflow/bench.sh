@@ -419,6 +419,7 @@ python cal_invasion_score.py \
   --work_dir /home/shuaiw/methylation/data/borg/pengfan/RuReacBro_20230708_11_72h_20_bin\
   --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab\
   --min_frac 0.4 \
+  --threads 10 \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list
 
 python cal_invasion_score.py \
@@ -433,7 +434,6 @@ python cal_invasion_score.py \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.4 min_score=30 min_sites=30 clean=False \
   plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"\
   --job-name=soil
-
 
  sbatch  --partition standard --wrap "python main.py \
   --work_dir /home/shuaiw/borg/bench/soil_zymo/run \
@@ -450,3 +450,18 @@ python cal_invasion_score.py \
   --run_steps profile merge \
   --threads 64 "\
   --job-name=soil
+
+
+sbatch  --partition standard --wrap "python main.py \
+  --work_dir /home/shuaiw/borg/allison/ecoli/native \
+  --whole_bam /home/shuaiw/borg/allison/ecoli/soil_p0.01_C227_align.align.bam \
+  --whole_ref /home/shuaiw/borg/allison/ecoli/soil_ecoli.fa \
+  --read_type subreads \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --threads 64 "\
+  --job-name=c227

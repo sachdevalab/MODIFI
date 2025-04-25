@@ -55,7 +55,8 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
                 motif_score = 1
             else:
                 motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
-        ## high confidence that the plasmid should be restricted
+
+        ## high confidence that the plasmid should be restricted-- orphan MTase?
         if f_host > 0.5 and h_total > 500:
             if p_total > 10 and p_meth == 0:
                 restriction_signal = 0
@@ -269,7 +270,7 @@ def summary_host(host_dir):
             ## extract the first row
             ## add new column for plasmid_name at the start
             if len(df) > 0:
-                df.insert(0, 'plasmid', plasmid_name)
+                df.insert(0, 'MGE', plasmid_name)
                 data.append(df.iloc[0])
     data = pd.DataFrame(data)
     ## sort by final_score

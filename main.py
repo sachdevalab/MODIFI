@@ -165,7 +165,7 @@ def compare_ipd_parallel(args, paras):
 
             yield finish_code
 
-def motif_worker(bam, fasta, gff, seg_ref, seg_gff, motif, threads, min_score):
+def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, min_score):
     ## run samtools depth
     depth_file = f"{bam}.depth"
     cmd = [
@@ -191,7 +191,7 @@ def motif_worker(bam, fasta, gff, seg_ref, seg_gff, motif, threads, min_score):
     print("Running command:", " ".join(cmd))
     subprocess.run(cmd, check=True)
 
-    return mean_depth
+    return ctg_name, mean_depth
 
 def motif_parallel(args, paras):
     print ("Detect motif in parallel...")
@@ -215,6 +215,7 @@ def motif_parallel(args, paras):
 
             future = executor.submit(
                 motif_worker,
+                ctg_name = ctg_name,
                 bam=bam,
                 fasta=fasta,
                 gff=gff,
@@ -228,9 +229,11 @@ def motif_parallel(args, paras):
 
 
         for future in tqdm(as_completed(futures), total=len(futures)):
-            finish_code = future.result()
-            ctg_depth_dict[ctg_name] = finish_code
+            ctg_name, mean_depth = future.result()
+            # print ("*****", ctg_name, mean_depth)
+            ctg_depth_dict[ctg_name] = mean_depth
             # yield finish_code
+    # print (ctg_depth_dict)
     return ctg_depth_dict
     
 def collect_motifs_worker(args, paras):
