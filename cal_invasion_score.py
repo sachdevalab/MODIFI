@@ -163,8 +163,6 @@ def merge_bin_motif(bin_ctg_dict, ctg_motif_dict, ctg_profile_dict):
     return bin_df_dict, bin_motif_dict
         
 def estimate_cov(cov_dict, bin_name, bin_ctg_dict):
-
-    
     ctg_cov_list = []
     for ctg in bin_ctg_dict[bin_name]:
         if ctg in cov_dict:
@@ -175,11 +173,16 @@ def estimate_cov(cov_dict, bin_name, bin_ctg_dict):
         bin_cov = 'NA'
     return bin_cov
 
+def summary_motif_info(motif_data):
+    ## summary it into a string, use ; separate motifs, use : to separate the motif info
+    motif_info = []
+    for m in motif_data:
+        motif_info.append(m['motif'] + ":" + str(m['centerPos']) + ":" + str(m['host_total']) + ":" + str(m['host_meth']) + ":" + str(m['plasmid_total']) + ":" + str(m['plasmid_meth']))
+    motif_info = ";".join(motif_info)
+    return motif_info
+
 def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict, ctg_motif_dict,\
                       plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_dict={}):
-
-    
-
     plasmid_profile = f"{profile_dir}/{plasmid_name}.motifs.profile.csv"
     cov_dict = load_coverage(host_dir)
     if plasmid_name not in cov_dict:
@@ -199,8 +202,6 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
             continue
         bin_motif = bin_motif_dict[bin_name]
 
-        
-
         motif_data = extract_motif_data(bin_df, plasmid_profile, min_frac)
         motif_data = filter_motifs(bin_motif, motif_data)
 
@@ -216,13 +217,14 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         result['host_cov'] = bin_cov
         result['MGE_cov'] = MGE_cov
         result['MGE'] = plasmid_name
+        result['motif_info'] = summary_motif_info(motif_data)
 
         data.append(result)
     ## convert the data to a df, and sort by final_score
     data = pd.DataFrame(data)
     data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
     ## host column the first, final_score the second, invasion_score the third, confidence the forth, total_sites the fifth
-    data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov']]
+    data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
     ## print top ten
     ## remove the rows with final_score = 0
     data = data[data['final_score'] > 0]
