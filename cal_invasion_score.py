@@ -9,6 +9,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 
 from derep_motifs import MotifFilter
+from get_kmer_freq import kmer_freq_sim_bin_worker
 
 # IGNORE_MOTIFS = [
 #     "GATC",
@@ -228,6 +229,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
     ## print top ten
     ## remove the rows with final_score = 0
     data = data[data['final_score'] > 0]
+    # data = report_gc(data, host_dir, bin_ctg_dict)
     print (data.head(10))
     ## output the data to a csv file
     host_prediction = os.path.join(host_dir, f"{plasmid_name}.host_prediction.csv")
@@ -237,6 +239,29 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
     with open(motif_data_file, 'w') as f:
         for index, rows in data.iterrows():
             print (rows.to_dict(), motif_data_dict[rows['host']], file = f)
+
+def report_gc(data, host_dir, bin_ctg_dict):
+    """
+    report GC for MGE and host
+    also report the cosine similarity for MGE and host tetranuceleotide frequency
+    """
+    work_dir = os.path.join(host_dir, "../")
+    ## add new columns for MGE_gc, host_gc, cos_sim
+    data['MGE_gc'] = 0
+    data['host_gc'] = 0
+    data['cos_sim'] = 0
+    for index, row in data.iterrows():
+        if row['MGE'] not in bin_ctg_dict:
+            bin_ctg_dict[row['MGE']] = [row['MGE']]
+        MGE_gc, host_gc, tetra_sim = kmer_freq_sim_bin_worker(row['MGE'], row['host'], bin_ctg_dict, work_dir)
+        ## add new columns for MGE_gc, host_gc, cos_sim
+        data.at[index, 'MGE_gc'] = MGE_gc
+        data.at[index, 'host_gc'] = host_gc
+        data.at[index, 'cos_sim'] = tetra_sim
+    return data
+
+
+        
 
 def read_genomad(genomad_file):
     MGE_dict = {}
@@ -296,11 +321,11 @@ def load_coverage(host_dir):
         cov_dict[contig] = mean_depth
     return cov_dict
 
-def summary_host(host_dir):
+def summary_host(host_dir, bin_ctg_dict):
     data = []
     for file in os.listdir(host_dir):
         if file.endswith(".host_prediction.csv"):
-            plasmid_name = file.split(".")[0]
+            # plasmid_name = file.split(".")[0]
             host_prediction = os.path.join(host_dir, file)
             df = pd.read_csv(host_prediction)
             ## extract the first row
@@ -313,6 +338,7 @@ def summary_host(host_dir):
     data = pd.DataFrame(data)
     ## sort by final_score
     data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
+    data = report_gc(data, host_dir, bin_ctg_dict)
     ## output the data to a csv file
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)
@@ -358,7 +384,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_fra
             result.append(finish_code)
         
             # for_each_plasmid(bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, plasmid_name, profile_dir, host_dir, min_frac, {})
-    summary_host(host_dir)
+    summary_host(host_dir, bin_ctg_dict)
 
 def batch_MGE_invade_single(plasmid_file, profile_dir, host_dir, bin_file=None, min_frac = 0.5):
 
@@ -378,7 +404,7 @@ def batch_MGE_invade_single(plasmid_file, profile_dir, host_dir, bin_file=None, 
             continue
         print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
         for_each_plasmid(bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, plasmid_name, profile_dir, host_dir, min_frac, {})
-    summary_host(host_dir)
+    summary_host(host_dir, bin_ctg_dict)
 
 def load_bin(bin_file):
     bin_df = pd.read_csv(bin_file, sep= "\t", header = 0)
@@ -524,7 +550,7 @@ if __name__ == "__main__":
         print ("Please provide either --plasmid_file or --plasmid.")
 
     ## extract the info saved in the host_dir
-    summary_host(host_dir)
+    # summary_host(host_dir)
 
 
 

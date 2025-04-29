@@ -463,7 +463,7 @@ sbatch  --partition standard --wrap "python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --run_steps compare motif profile merge \
+  --run_steps control compare motif profile merge \
   --threads 64 "\
   --job-name=c227
 
@@ -480,3 +480,20 @@ sbatch  --partition standard --wrap "python main.py \
   --min_sites 30 \
   --threads 1 "\
   --job-name=c227
+
+
+sbatch  --partition standard --wrap " python main.py \
+  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2 \
+  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_11_72h_20_new.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --threads 64"\
+  --job-name=new_pf
