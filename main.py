@@ -9,6 +9,9 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import time
+import psutil
+import logging
 
 from split_bam import split_bam
 from standard_load7 import IPD_load_worker
@@ -29,6 +32,36 @@ MAX_GAP = 10
 motif_maker_bin = "/home/shuaiw/smrtlink/motifMaker"
 ## pbindex
 
+def record_resource_usage(step_name, func, *args, **kwargs):
+    """
+    Record CPU time and peak memory usage for a given function.
+
+    Parameters:
+        step_name (str): Name of the step being executed.
+        func (callable): The function to execute.
+        *args: Positional arguments for the function.
+        **kwargs: Keyword arguments for the function.
+
+    Returns:
+        The return value of the function.
+    """
+    print(f"🔄 Starting step: {step_name}")
+    start_cpu_time = time.process_time()  # Start CPU time
+    process = psutil.Process()
+
+    # Run the function
+    result = func(*args, **kwargs)
+
+    # Record resource usage
+    end_cpu_time = time.process_time()  # End CPU time
+    elapsed_cpu_time = end_cpu_time - start_cpu_time
+    peak_memory = process.memory_info().rss / (1024 * 1024)  # Convert to MB
+
+    logging.info(f"✅ Step '{step_name}' completed.")
+    logging.info(f"   ⏱️ CPU Time: {elapsed_cpu_time:.2f} seconds")
+    logging.info(f"   📈 Peak Memory: {peak_memory:.2f} MB\n")
+
+    return result
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -339,6 +372,7 @@ def get_paras(args):
     paras["heatmap"] = os.path.join(args.work_dir, "motif_heatmap.pdf")
     paras["depth_file"] = os.path.join(args.work_dir, "mean_depth.csv")
     paras["depth_plot"] = os.path.join(args.work_dir, "depth_distribution.pdf")
+    paras["log"] = os.path.join(args.work_dir, "log.txt")
 
     ## build the directory if not exist
     os.makedirs(args.work_dir, exist_ok=True)
@@ -366,53 +400,127 @@ def main():
         else:
             args.max_NM = 1000
 
-    print("🔬 Running MGE-host linkage pipeline with the following parameters:")
-    for k, v in vars(args).items():
-        print(f"  {k}: {v}")
+    logging.info("🔬 Running MGE-host linkage pipeline with the following parameters:")
 
     paras = get_paras(args)
 
+    # logging.basicConfig(
+    #     level=logging.INFO,
+    #     format="%(asctime)s [%(levelname)s] %(message)s",
+    #     handlers=[
+    #         logging.FileHandler(paras["log"]),
+    #         logging.StreamHandler(sys.stdout)
+    #     ]
+    # )
+
+    # logger = logging.getLogger(__name__)
+
+    logging.basicConfig(filename = paras["log"],\
+    format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]', level = logging.INFO,filemode='w')
+
+    ## output all the parameters to the log file
+    logging.info("Pipeline parameters:")
+    for k, v in vars(args).items():
+        logging.info(f"  {k}: {v}")
+
+
     # === Insert your pipeline logic below ===
-    print("\n[Placeholder] Pipeline execution starts here...\n")
+    logging.info("\n[Placeholder] Pipeline execution starts here...\n")
+
+
 
     if "split" in args.run_steps:
-        split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
-        print ("Splitting BAM files done.")
-
+        record_resource_usage(
+            "Splitting BAM files",
+            split_bam,
+            args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM
+        )
     if "load" in args.run_steps:
-        for result in load_ipd_parallel(args, paras):
-            print(f"IPD loading finished with code: {result}")
-        print ("IPD loading done.")
+        record_resource_usage(
+            "Loading IPD data",
+            lambda: list(load_ipd_parallel(args, paras))  # Wrap generator in a list to execute fully
+        )
 
     if "control" in args.run_steps:
-        get_control_parallele(args, paras)
-        print ("Control file generation done.")
+        record_resource_usage(
+            "Generating control files",
+            get_control_parallele,
+            args, paras
+        )
 
     if "compare" in args.run_steps:
-        for result in compare_ipd_parallel(args, paras):
-            print(f"IPD ratio calculation finished with code: {result}")
-        print ("IPD ratio calculation done.")
+        record_resource_usage(
+            "Calculating IPD ratios",
+            lambda: list(compare_ipd_parallel(args, paras))  # Wrap generator in a list to execute fully
+        )
 
     if "motif" in args.run_steps:
-        ctg_depth_dict = motif_parallel(args, paras)
-        # for result in motif_parallel(args, paras):
-        #     print(f"Motif finished with code: {result}")
-        # print (ctg_depth_dict)
-        depth_analysis(paras, ctg_depth_dict)
-        print ("Motif identification done.")
-
+        ctg_depth_dict = record_resource_usage(
+            "Motif identification",
+            motif_parallel,
+            args, paras
+        )
+        record_resource_usage(
+            "Depth analysis",
+            depth_analysis,
+            paras, ctg_depth_dict
+        )
     if "profile" in args.run_steps:
-        collect_motifs_worker(args, paras)
-        for result in profile_parallel(args, paras):
-            print(f" collection finished with code: {result}")
-        print ("Motif profile done.")
+        record_resource_usage(
+            "Collecting motifs",
+            collect_motifs_worker,
+            args, paras
+        )
+        record_resource_usage(
+            "Profiling motifs",
+            lambda: list(profile_parallel(args, paras))  # Wrap generator in a list to execute fully
+        )
 
     if "merge" in args.run_steps:
-        run_merge_profile(args, paras)
-        print ("Motif profile merging done.")
+        record_resource_usage(
+            "Merging motif profiles",
+            run_merge_profile,
+            args, paras
+        )
 
-    print("\n[Placeholder] Pipeline execution ends here...\n")
-    print("🔬 Pipeline execution completed.")
+    # if "split" in args.run_steps:
+    #     split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
+    #     print ("Splitting BAM files done.")
+
+    # if "load" in args.run_steps:
+    #     for result in load_ipd_parallel(args, paras):
+    #         print(f"IPD loading finished with code: {result}")
+    #     print ("IPD loading done.")
+
+    # if "control" in args.run_steps:
+    #     get_control_parallele(args, paras)
+    #     print ("Control file generation done.")
+
+    # if "compare" in args.run_steps:
+    #     for result in compare_ipd_parallel(args, paras):
+    #         print(f"IPD ratio calculation finished with code: {result}")
+    #     print ("IPD ratio calculation done.")
+
+    # if "motif" in args.run_steps:
+    #     ctg_depth_dict = motif_parallel(args, paras)
+    #     # for result in motif_parallel(args, paras):
+    #     #     print(f"Motif finished with code: {result}")
+    #     # print (ctg_depth_dict)
+    #     depth_analysis(paras, ctg_depth_dict)
+    #     print ("Motif identification done.")
+
+    # if "profile" in args.run_steps:
+    #     collect_motifs_worker(args, paras)
+    #     for result in profile_parallel(args, paras):
+    #         print(f" collection finished with code: {result}")
+    #     print ("Motif profile done.")
+
+    # if "merge" in args.run_steps:
+    #     run_merge_profile(args, paras)
+    #     print ("Motif profile merging done.")
+
+    logging.info("\n[Placeholder] Pipeline execution ends here...\n")
+    logging.info("🔬 Pipeline execution completed.")
 
 if __name__ == "__main__":
     main()

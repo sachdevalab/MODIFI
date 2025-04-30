@@ -258,6 +258,8 @@ def report_gc(data, host_dir, bin_ctg_dict):
         data.at[index, 'MGE_gc'] = MGE_gc
         data.at[index, 'host_gc'] = host_gc
         data.at[index, 'cos_sim'] = tetra_sim
+    ## rearrange the columns
+    data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
     return data
 
 

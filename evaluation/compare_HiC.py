@@ -35,8 +35,14 @@ def read_our(host_sum, ctg2bin_dict, score_cutoff = 0.45):
             # sys.exit(1)
         else:
             bin_name = ctg2bin_dict[row['host']]
-        our_linkages[row['plasmid']].append(bin_name)
-        our_ctg_linkages[row['plasmid']] = row['host']
+        ## try plasmid is in header of row
+        try:
+            plasmid_name = row['plasmid']
+        ## otherwise index with MGE
+        except KeyError:
+            plasmid_name = row['MGE']
+        our_linkages[plasmid_name].append(bin_name)
+        our_ctg_linkages[plasmid_name] = row['host']
         # our_linkages[row['plasmid']] = row['host']
     multiple_host_plasmid_num = 0
     for plasmid in our_linkages:
