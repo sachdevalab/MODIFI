@@ -32,6 +32,10 @@ MAX_GAP = 10
 motif_maker_bin = "/home/shuaiw/smrtlink/motifMaker"
 ## pbindex
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  # Set level for the logger
+
+
 def record_resource_usage(step_name, func, *args, **kwargs):
     """
     Record CPU time and peak memory usage for a given function.
@@ -45,21 +49,21 @@ def record_resource_usage(step_name, func, *args, **kwargs):
     Returns:
         The return value of the function.
     """
-    print(f"🔄 Starting step: {step_name}")
-    start_cpu_time = time.process_time()  # Start CPU time
+    logger.info(f"🔄 Starting step: {step_name}")
+    start_time = time.time()  # Start wall-clock time
     process = psutil.Process()
 
     # Run the function
     result = func(*args, **kwargs)
 
     # Record resource usage
-    end_cpu_time = time.process_time()  # End CPU time
-    elapsed_cpu_time = end_cpu_time - start_cpu_time
+    end_time = time.time()  # End wall-clock time
+    elapsed_time = (end_time - start_time) / 3600  # Convert to hours
     peak_memory = process.memory_info().rss / (1024 * 1024)  # Convert to MB
 
-    logging.info(f"✅ Step '{step_name}' completed.")
-    logging.info(f"   ⏱️ CPU Time: {elapsed_cpu_time:.2f} seconds")
-    logging.info(f"   📈 Peak Memory: {peak_memory:.2f} MB\n")
+    logger.info(f"✅ Step '{step_name}' completed.")
+    logger.info(f"   ⏱️ Wall-Clock Time: {elapsed_time:.2f} hours")
+    logger.info(f"   📈 Peak Memory: {peak_memory:.2f} MB\n")
 
     return result
 
@@ -120,7 +124,7 @@ def parse_arguments():
     return parser.parse_args()
 
 def load_ipd_parallel(args, paras):
-    print ("Loading IPD data in parallel...")
+    logger.info ("Loading IPD data in parallel...")
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         futures = []
 
@@ -163,11 +167,11 @@ def get_control_parallele(args, paras):
         "--down", str(args.down),
     ]
 
-    print("Running command:", " ".join(cmd))
+    logger.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
 def compare_ipd_parallel(args, paras):
-    print ("Detect modified bases in parallel...")
+    logger.info ("Detect modified bases in parallel...")
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         futures = []
 
@@ -206,7 +210,7 @@ def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, mi
     ]
 
     with open(depth_file, "w") as depth_output:
-        print("Running command:", " ".join(cmd))
+        logger.info(f"Running command: {' '.join(cmd)}")
         subprocess.run(cmd, stdout=depth_output, stderr=subprocess.DEVNULL, check=True)
 
     mean_depth = process_depth_and_gff(depth_file, fasta, gff, seg_ref, seg_gff,
@@ -221,13 +225,13 @@ def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, mi
         "-j", str(1),
         "-m", str(min_score),
     ]
-    print("Running command:", " ".join(cmd))
+    logger.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
     return ctg_name, mean_depth
 
 def motif_parallel(args, paras):
-    print ("Detect motif in parallel...")
+    logger.info ("Detect motif in parallel...")
     ctg_depth_dict = {}
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         futures = []
@@ -237,7 +241,7 @@ def motif_parallel(args, paras):
                 continue
             if gff.endswith(".reprocess.gff"):
                 continue
-            # print ("####", paras["gffs"], gff)
+            # logger.info ("####", paras["gffs"], gff)
             ctg_name = gff.replace(".gff", "")
             bam = os.path.join(paras["bam_dir"], f"{ctg_name}.bam")
             gff = os.path.join(paras["gffs"], gff)
@@ -263,10 +267,10 @@ def motif_parallel(args, paras):
 
         for future in tqdm(as_completed(futures), total=len(futures)):
             ctg_name, mean_depth = future.result()
-            # print ("*****", ctg_name, mean_depth)
+            # logger.info ("*****", ctg_name, mean_depth)
             ctg_depth_dict[ctg_name] = mean_depth
             # yield finish_code
-    # print (ctg_depth_dict)
+    # logger.info (ctg_depth_dict)
     return ctg_depth_dict
     
 def collect_motifs_worker(args, paras):
@@ -275,10 +279,10 @@ def collect_motifs_worker(args, paras):
         all_motif=paras["all_motifs"],
         MIN_FRAC=args.min_frac,
         MIN_detect=args.min_sites,)
-    print ("Motif collection done.")
+    logger.info ("Motif collection done.")
 
 def profile_parallel(args, paras):
-    print ("Profile motif in parallel...")
+    logger.info ("Profile motif in parallel...")
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         futures = []
 
@@ -287,7 +291,7 @@ def profile_parallel(args, paras):
                 continue
             if gff.endswith(".reprocess.gff"):
                 continue
-            # print ("####", paras["gffs"], gff)
+            # logger.info ("####", paras["gffs"], gff)
             ctg_name = gff.replace(".gff", "")
             bam = os.path.join(paras["bam_dir"], f"{ctg_name}.bam")
             gff = os.path.join(paras["gffs"], gff)
@@ -400,32 +404,46 @@ def main():
         else:
             args.max_NM = 1000
 
-    logging.info("🔬 Running MGE-host linkage pipeline with the following parameters:")
+    logger.info("🔬 Running MGE-host linkage pipeline with the following parameters:")
 
     paras = get_paras(args)
 
-    # logging.basicConfig(
-    #     level=logging.INFO,
-    #     format="%(asctime)s [%(levelname)s] %(message)s",
-    #     handlers=[
-    #         logging.FileHandler(paras["log"]),
-    #         logging.StreamHandler(sys.stdout)
-    #     ]
-    # )
 
-    # logger = logging.getLogger(__name__)
+    # logging.basicConfig(filename = paras["log"],\
+    # format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]', level = logging.INFO,filemode='w')
 
-    logging.basicConfig(filename = paras["log"],\
-    format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]', level = logging.INFO,filemode='w')
+    # Create formatter
+    formatter = logging.Formatter('[%(asctime)s - %(filename)s - %(levelname)s: %(message)s]')
+
+    # === File handler ===
+    file_handler = logging.FileHandler(paras["log"], mode='w')
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
+
+    # === Console handler ===
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    console_handler.setLevel(logging.INFO)
+
+    # === Clear previous handlers to prevent duplicates ===
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    # Add both handlers
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    # === Example usage ===
+    logger.info("Logging is now working to both file and terminal.")
 
     ## output all the parameters to the log file
-    logging.info("Pipeline parameters:")
+    logger.info("Pipeline parameters:")
     for k, v in vars(args).items():
-        logging.info(f"  {k}: {v}")
+        logger.info(f"  {k}: {v}")
 
 
     # === Insert your pipeline logic below ===
-    logging.info("\n[Placeholder] Pipeline execution starts here...\n")
+    logger.info("\n[Placeholder] Pipeline execution starts here...\n")
 
 
 
@@ -485,42 +503,42 @@ def main():
 
     # if "split" in args.run_steps:
     #     split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
-    #     print ("Splitting BAM files done.")
+    #     logger.info ("Splitting BAM files done.")
 
     # if "load" in args.run_steps:
     #     for result in load_ipd_parallel(args, paras):
-    #         print(f"IPD loading finished with code: {result}")
-    #     print ("IPD loading done.")
+    #         logger.info(f"IPD loading finished with code: {result}")
+    #     logger.info ("IPD loading done.")
 
     # if "control" in args.run_steps:
     #     get_control_parallele(args, paras)
-    #     print ("Control file generation done.")
+    #     logger.info ("Control file generation done.")
 
     # if "compare" in args.run_steps:
     #     for result in compare_ipd_parallel(args, paras):
-    #         print(f"IPD ratio calculation finished with code: {result}")
-    #     print ("IPD ratio calculation done.")
+    #         logger.info(f"IPD ratio calculation finished with code: {result}")
+    #     logger.info ("IPD ratio calculation done.")
 
     # if "motif" in args.run_steps:
     #     ctg_depth_dict = motif_parallel(args, paras)
     #     # for result in motif_parallel(args, paras):
-    #     #     print(f"Motif finished with code: {result}")
-    #     # print (ctg_depth_dict)
+    #     #     logger.info(f"Motif finished with code: {result}")
+    #     # logger.info (ctg_depth_dict)
     #     depth_analysis(paras, ctg_depth_dict)
-    #     print ("Motif identification done.")
+    #     logger.info ("Motif identification done.")
 
     # if "profile" in args.run_steps:
     #     collect_motifs_worker(args, paras)
     #     for result in profile_parallel(args, paras):
-    #         print(f" collection finished with code: {result}")
-    #     print ("Motif profile done.")
+    #         logger.info(f" collection finished with code: {result}")
+    #     logger.info ("Motif profile done.")
 
     # if "merge" in args.run_steps:
     #     run_merge_profile(args, paras)
-    #     print ("Motif profile merging done.")
+    #     logger.info ("Motif profile merging done.")
 
-    logging.info("\n[Placeholder] Pipeline execution ends here...\n")
-    logging.info("🔬 Pipeline execution completed.")
+    logger.info("\n[Placeholder] Pipeline execution ends here...\n")
+    logger.info("🔬 Pipeline execution completed.")
 
 if __name__ == "__main__":
     main()
