@@ -109,6 +109,11 @@ def parse_arguments():
                         help="Number of upstream bases to consider for k-mer analysis.")
     parser.add_argument("--down", type=int, default=3,
                         help="Number of downstream bases to consider for k-mer analysis.")
+    ## add a new parameter to control the whether to use detect misassembly
+    parser.add_argument("--detect_misassembly", action="store_false",
+                        help="Enable detection of misassembly in the pipeline.")
+    parser.add_argument("--visu_ipd", action="store_false",
+                        help="Enable visuliation of IPD distribution.")
     parser.add_argument(
         "--run_steps",
         nargs="+",
@@ -170,6 +175,14 @@ def get_control_parallele(args, paras):
     logger.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
+def safe_get_ipd_ratio(**kwargs):
+    try:
+        return get_ipd_ratio(**kwargs)
+    except Exception as e:
+        logger.error(f"Failed on {kwargs.get('csv')}: {e}")
+        return None
+
+
 def compare_ipd_parallel(args, paras):
     logger.info ("Detect modified bases in parallel...")
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
@@ -186,13 +199,14 @@ def compare_ipd_parallel(args, paras):
             figure_file = os.path.join(paras["figs"], f"{ctg_name}.png")
 
             future = executor.submit(
-                get_ipd_ratio,
+                safe_get_ipd_ratio,
                 csv = control,
                 output = ipd_ratio_file,
                 gff = gff,
                 ref = fasta,
                 figure_file = figure_file,
                 min_cov = args.min_cov,
+                visu_flag = args.visu_ipd,
             )
             futures.append(future)
 
@@ -313,6 +327,7 @@ def profile_parallel(args, paras):
                 min_sites = args.min_sites,
                 score_cutoff = args.min_score,
                 min_cov = args.min_cov,
+                misassembly = args.detect_misassembly,
             )
             futures.append(future)
 

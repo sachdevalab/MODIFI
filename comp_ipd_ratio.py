@@ -5,9 +5,14 @@ import numpy as np
 # from sklearn.mixture import GaussianMixture
 from scipy.stats import norm
 import sys
-import seaborn as sns
-import matplotlib.pyplot as plt
 from sklearn.mixture import GaussianMixture
+
+import matplotlib
+matplotlib.use('Agg')  # MUST come before importing pyplot
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 P_CUTOFF = 0.05
 
@@ -51,7 +56,7 @@ def calculate_x_from_pvalue(p_value, mu, sigma, tail="right"):
         x = mu + z * sigma
         return x
 
-def get_ipd_ratio(csv, output, gff, figure_file, ref, min_cov=5):
+def get_ipd_ratio(csv, output, gff, figure_file, ref, min_cov=5, visu_flag: bool = True):
     seq_dict = get_ref(ref)
     print ("loaded fasta")
     df = pd.read_csv(csv, sep = ",")
@@ -116,36 +121,38 @@ def get_ipd_ratio(csv, output, gff, figure_file, ref, min_cov=5):
     df = df.round(4)
 
     df.to_csv(output, index=False)
-    visu(df, figure_file)
+    if visu_flag:
+        visu(df, figure_file)
     ## ImportError: Matplotlib requires numpy>=1.23; you have 1.22.4
     get_gff(df, gff, seq_dict)
     return 0
 
 def visu(df, figure_path):
-    if df.empty:
-        print("DataFrame is empty. Cannot generate visualization.")
-        ## construct an  empty figure
-        plt.figure()
+    try:
+        if df.empty:
+            print("DataFrame is empty. Cannot generate visualization.")
+            ## construct an  empty figure
+            plt.figure()
+            plt.savefig(figure_path)
+            return
+        
+        sns.set(style="whitegrid")
+        fig, axs = plt.subplots(2, 2, figsize=(20, 10))
+        ## first row is covergae, second is tMean, third is control, fourth is ipd_ratio
+        ## plot for each strand separately
+        sns.histplot(df, x="coverage", hue="strand", multiple="stack", ax=axs[0, 0])
+        sns.histplot(df, x="tMean", hue="strand", multiple="stack", ax=axs[0, 1])
+        sns.histplot(df, x="control", hue="strand", multiple="stack", ax=axs[1, 0])
+        sns.histplot(df, x="ipd_ratio", hue="strand", multiple="stack", ax=axs[1, 1])
+        ## save the plot
+
+        ## add a dashed line at x=1
+        axs[1, 1].axvline(x=1, color='red', linestyle='--')
+
         plt.savefig(figure_path)
-        return
-    
-    sns.set(style="whitegrid")
-    fig, axs = plt.subplots(2, 2, figsize=(20, 10))
-    ## first row is covergae, second is tMean, third is control, fourth is ipd_ratio
-    ## plot for each strand separately
-    sns.histplot(df, x="coverage", hue="strand", multiple="stack", ax=axs[0, 0])
-    sns.histplot(df, x="tMean", hue="strand", multiple="stack", ax=axs[0, 1])
-    sns.histplot(df, x="control", hue="strand", multiple="stack", ax=axs[1, 0])
-    sns.histplot(df, x="ipd_ratio", hue="strand", multiple="stack", ax=axs[1, 1])
-    ## save the plot
-
-    ## add a dashed line at x=1
-    axs[1, 1].axvline(x=1, color='red', linestyle='--')
-
-    ### cal the number with strand 1 and 0
-    # print (df[df['strand'] == 1].shape[0])
-    # print (df[df['strand'] == 0].shape[0])
-    plt.savefig(figure_path)
+        plt.close()
+    except Exception as e:
+        print(f"Failed to generate figure at {figure_path}: {e}")
 
 def phred_qv(p, max_qv=60):
     """Compute Phred-transformed Quality Value, handling p=0 cases."""

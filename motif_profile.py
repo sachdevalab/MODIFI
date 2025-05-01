@@ -4,13 +4,17 @@ from Bio.Seq import Seq
 import xml.etree.ElementTree as ET
 import pandas as pd
 from scipy.stats import pearsonr
-# import matplotlib.pyplot as plt
 import sys
 from collections import defaultdict
-from matplotlib.ticker import MaxNLocator
-import seaborn as sns
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib
+matplotlib.use('Agg')  # MUST come before importing pyplot
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+from matplotlib.ticker import MaxNLocator
+
 
 
 def read_ref(ref):
@@ -239,7 +243,6 @@ def read_ipd_ratio(ipd_ratio_file):
         #     ipd_info_dict [tag] = row
     return ipd_info_dict
 
-
 def count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file):
     data = []
     # df_ipd = pd.read_csv(ipd_ratio_file)
@@ -262,66 +265,62 @@ def count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file):
         # Apply rolling mean smoothing, smooth it for each strand and each motif separately
         site_df['ipd_ratio'] = site_df.groupby(['refName', 'strand', 'motif'])['ipd_ratio'].transform(lambda x: x.rolling(window=100, min_periods=1).mean())
 
+        try:
+            fig, ax = plt.subplots(2, 1, figsize=(15, 7))
+            ## use grid
+            sns.set(style="whitegrid")
 
-        fig, ax = plt.subplots(2, 1, figsize=(15, 7))
-        ## use grid
-        sns.set(style="whitegrid")
-
-        # Get all unique motifs
-        motifs = site_df['motif'].unique()
-        palette = sns.color_palette("tab10", n_colors=len(motifs))  # or any other palette
-        motif_palette = dict(zip(motifs, palette))
-
-
-        # Plot for strand "+"
-        sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", palette=motif_palette, ax=ax[0])
-        ax[0].set_title("+")
-        ## remove x label
-        ax[0].set_xlabel("")
-        ax[0].set_ylabel("IPD Ratio")
-
-        # Plot for strand "-"
-        sns.lineplot(data=site_df[site_df['strand'] == "-"], x="tpl", y="ipd_ratio", hue="motif", palette=motif_palette, ax=ax[1])
-        ax[1].set_title("-")
-        ax[1].set_xlabel("")
-        ax[1].set_ylabel("IPD Ratio")
-
-        # Remove individual legends from subplots
-        # ax[0].legend_.remove()
-        # ax[1].legend_.remove()
-        if ax[0].legend_ is not None:
-            ax[0].legend_.remove()
-        if ax[1].legend_ is not None:
-            ax[1].legend_.remove()
+            # Get all unique motifs
+            motifs = site_df['motif'].unique()
+            palette = sns.color_palette("tab10", n_colors=len(motifs))  # or any other palette
+            motif_palette = dict(zip(motifs, palette))
 
 
-        ## move legend of ax[1] to the below
-        # ax[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5)
+            # Plot for strand "+"
+            sns.lineplot(data=site_df[site_df['strand'] == "+"], x="tpl", y="ipd_ratio", hue="motif", palette=motif_palette, ax=ax[0])
+            ax[0].set_title("+")
+            ## remove x label
+            ax[0].set_xlabel("")
+            ax[0].set_ylabel("IPD Ratio")
 
-        # Get handles and labels from one of the plots (e.g., ax[0])
-        handles, labels = ax[0].get_legend_handles_labels()
+            # Plot for strand "-"
+            sns.lineplot(data=site_df[site_df['strand'] == "-"], x="tpl", y="ipd_ratio", hue="motif", palette=motif_palette, ax=ax[1])
+            ax[1].set_title("-")
+            ax[1].set_xlabel("")
+            ax[1].set_ylabel("IPD Ratio")
 
-        # Create shared legend below the plots
-        fig.legend(
-            handles, labels,
-            loc='lower center',
-            bbox_to_anchor=(0.5, -0.05),
-            ncol=5,
-            frameon=False
-        )
+            if ax[0].legend_ is not None:
+                ax[0].legend_.remove()
+            if ax[1].legend_ is not None:
+                ax[1].legend_.remove()
 
-        # Set fixed number of X-Ticks to 5 while still hiding them
-        ax[0].xaxis.set_major_locator(MaxNLocator(nbins=5)) 
-        ax[1].xaxis.set_major_locator(MaxNLocator(nbins=5))
+            handles, labels = ax[0].get_legend_handles_labels()
 
-        ax[0].grid(True)
-        ax[1].grid(True)
-        fig = ipd_ratio_file[:-9] + ".pdf"
-        plt.savefig(fig, bbox_inches='tight')
+            # Create shared legend below the plots
+            fig.legend(
+                handles, labels,
+                loc='lower center',
+                bbox_to_anchor=(0.5, -0.05),
+                ncol=5,
+                frameon=False
+            )
+
+            # Set fixed number of X-Ticks to 5 while still hiding them
+            ax[0].xaxis.set_major_locator(MaxNLocator(nbins=5)) 
+            ax[1].xaxis.set_major_locator(MaxNLocator(nbins=5))
+
+            ax[0].grid(True)
+            ax[1].grid(True)
+            fig = ipd_ratio_file[:-9] + ".pdf"
+            plt.savefig(fig, bbox_inches='tight')
+            plt.close()
+        except Exception as e:
+            print(f"Plotting failed: {e}")
+        
     else:
         print ("no motif sites in the ipd file")
 
-def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov):
+def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov, misassembly = True):
     motifs = pd.read_csv(all_motifs)
     print (f"No. of raw motifs {len(motifs)}")
     if len(motifs) == 0:
@@ -364,10 +363,9 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
     df = df[df["motif_modified_ratio"] >= min_frac]
     print (len(df), "motifs left after filtering")
     if len(df) > 0:
-        motif_sites = reload_motif_sites(REF, df)
-        # ipd_ratio_file = "/home/shuaiw/borg/all_test/ipd_ratio/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_19121_L.ipd3.csv"
-
-        count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file)
+        if misassembly: ## detect misassembly    
+            motif_sites = reload_motif_sites(REF, df)
+            count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file)
     else:
         print ("no motif sites left after filtering")
     return 0
