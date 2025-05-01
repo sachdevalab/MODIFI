@@ -169,8 +169,54 @@ def get_ref(ref):
         # seq = raw_seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
     return seq_dict
 
+def get_gff(df, gff_path, seq_dict, p_cutoff=P_CUTOFF):
+    print("Start get_gff...")
 
-def get_gff(df, gff, seq_dict):
+    df = df[df['pvalue'] <= p_cutoff]
+    if df.empty:
+        print("No entries pass the p-value cutoff.")
+        return
+
+    # Write header lines
+    with open(gff_path, "w") as f:
+        print("##gff-version 3", file=f)
+        print("##source-version our_method", file=f)
+        print("##source-commandline xxx", file=f)
+        for seq, seq_str in seq_dict.items():
+            print(f"##sequence-region\t{seq}\t1\t{len(seq_str)}", file=f)
+
+        # Pre-fetch sequence lengths and prepare access
+        seq_lengths = {k: len(v) for k, v in seq_dict.items()}
+
+        # Convert DataFrame to NumPy for performance
+        for row in df.itertuples(index=False):
+            tpl = row.tpl
+            one_based_tpl = tpl + 1
+            ref = row.refName
+            strand = '-' if row.strand == 1 else '+'
+            score = row.score
+            ipd_ratio = row.ipd_ratio
+            coverage = row.coverage
+
+            # Efficient context handling
+            seq = seq_dict[ref]
+            start = max(0, tpl - 20)
+            end = min(seq_lengths[ref], tpl + 21)
+            context = seq[start:end]
+
+            if start == 0:
+                context = 'N' * (20 - tpl) + context
+            if end == seq_lengths[ref]:
+                context = context + 'N' * (tpl + 21 - seq_lengths[ref])
+
+            if strand == '-':
+                context = context.reverse_complement()
+
+            anno = f"coverage={coverage};context={context};IPDRatio={ipd_ratio}"
+            print(f"{ref}\tkinModCall\tmodified_base\t{one_based_tpl}\t{one_based_tpl}\t{score}\t{strand}\t.\t{anno}", file=f)
+
+
+def get_gff_bk(df, gff, seq_dict):
     print ("start get gff...")
     df = df[df['pvalue'] <= P_CUTOFF]
     # gff = "tmp/test.gff"
