@@ -321,10 +321,23 @@ def count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file):
         print ("no motif sites in the ipd file")
 
 def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov, misassembly = True):
+    ## check if input files exist, otherwise return 1
+    if not os.path.exists(my_ref):
+        print (f"ref file {my_ref} not found", flush=True)
+        return 1
+    if not os.path.exists(gff):
+        print (f"gff file {gff} not found", flush=True)
+        return 1
+    if not os.path.exists(all_motifs):
+        print (f"motif file {all_motifs} not found", flush=True)
+        return 1
+    if not os.path.exists(ipd_ratio_file):
+        print (f"ipd ratio file {ipd_ratio_file} not found", flush=True)
+        return 1
     motifs = pd.read_csv(all_motifs)
-    print (f"No. of raw motifs {len(motifs)}")
+    print (f"No. of raw motifs {len(motifs)}", flush=True)
     if len(motifs) == 0:
-        print ("no motifs found")
+        print ("no motifs found", flush=True)
         ## get a empty profile file
         df = pd.DataFrame([], columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
                                             "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
@@ -338,7 +351,7 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
     # print (REF)
     modified_loci, all_modified_loci = get_modified_ratio(gff, score_cutoff)
     ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
-    print ("ipd ratio is loaded")
+    print ("ipd ratio is loaded", flush=True)
 
     data = []
     for index, motif in motifs.iterrows():
@@ -361,13 +374,13 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
     ## filter df, keep the motifs with motif_modified_num > 1000
     df = df[df["motif_modified_num"] >= min_sites]
     df = df[df["motif_modified_ratio"] >= min_frac]
-    print (len(df), "motifs left after filtering")
+    print (len(df), "motifs left after filtering", flush=True)
     if len(df) > 0:
         if misassembly: ## detect misassembly    
             motif_sites = reload_motif_sites(REF, df)
             count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file)
     else:
-        print ("no motif sites left after filtering")
+        print ("no motif sites left after filtering", flush=True)
     return 0
 
 

@@ -161,7 +161,7 @@ def summary( min_frac, summary_file, profiles):
     ## count number of bams
     bam_dir = os.path.join(work_dir, "bams")
     ## count the number of bams
-    bams = [f for f in os.listdir(bam_dir) if f.endswith(".bam")]
+    bams = [f for f in os.listdir(bam_dir) if f.endswith(".bam") and not f.endswith(".filtered.bam")]
     bam_num = len(bams)
     ## count the number of contigs
     contig_file = os.path.join(work_dir, "contigs")

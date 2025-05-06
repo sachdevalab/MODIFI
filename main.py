@@ -409,7 +409,8 @@ def get_paras(args):
 
     return paras
 
-def main():
+if __name__ == "__main__":
+
     args = parse_arguments()
     ctg_depth_dict = {}
 
@@ -516,44 +517,8 @@ def main():
             args, paras
         )
 
-    # if "split" in args.run_steps:
-    #     split_bam(args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
-    #     logger.info ("Splitting BAM files done.")
-
-    # if "load" in args.run_steps:
-    #     for result in load_ipd_parallel(args, paras):
-    #         logger.info(f"IPD loading finished with code: {result}")
-    #     logger.info ("IPD loading done.")
-
-    # if "control" in args.run_steps:
-    #     get_control_parallele(args, paras)
-    #     logger.info ("Control file generation done.")
-
-    # if "compare" in args.run_steps:
-    #     for result in compare_ipd_parallel(args, paras):
-    #         logger.info(f"IPD ratio calculation finished with code: {result}")
-    #     logger.info ("IPD ratio calculation done.")
-
-    # if "motif" in args.run_steps:
-    #     ctg_depth_dict = motif_parallel(args, paras)
-    #     # for result in motif_parallel(args, paras):
-    #     #     logger.info(f"Motif finished with code: {result}")
-    #     # logger.info (ctg_depth_dict)
-    #     depth_analysis(paras, ctg_depth_dict)
-    #     logger.info ("Motif identification done.")
-
-    # if "profile" in args.run_steps:
-    #     collect_motifs_worker(args, paras)
-    #     for result in profile_parallel(args, paras):
-    #         logger.info(f" collection finished with code: {result}")
-    #     logger.info ("Motif profile done.")
-
-    # if "merge" in args.run_steps:
-    #     run_merge_profile(args, paras)
-    #     logger.info ("Motif profile merging done.")
-
     logger.info("\n[Placeholder] Pipeline execution ends here...\n")
     logger.info("🔬 Pipeline execution completed.")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
