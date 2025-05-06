@@ -98,8 +98,13 @@ if __name__ == "__main__":
     # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
 
     my_ref = "/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa"
-    native_csv = "/home/shuaiw/methylation/data/borg/bench/C227/native2/ipd_ratio/CP011331.1.ipd3.csv"
-    control_csv = "/home/shuaiw/methylation/data/borg/bench/C227/WGA2/ipd_ratio/CP011331.1.ipd3.csv"
+
+    # native_csv = "/home/shuaiw/methylation/data/borg/bench/C227/native2/ipd_ratio/CP011331.1.ipd3.csv"
+    # control_csv = "/home/shuaiw/methylation/data/borg/bench/C227/WGA2/ipd_ratio/CP011331.1.ipd3.csv"
+
+    native_csv = "/home/shuaiw/borg/allison/ecoli/native/ipd_ratio/CP011331.1.ipd3.csv"
+    control_csv = "/home/shuaiw/borg/allison/ecoli/WGA/ipd_ratio/CP011331.1.ipd3.csv"
+
     # gff = "/home/shuaiw/methylation/data/borg/bench/zymo2/gffs/E_coli_K12-MG1655_1.gff"
     # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
     # profile = "/home/shuaiw/borg/test.csv"
@@ -107,8 +112,8 @@ if __name__ == "__main__":
 
     REF = read_ref(my_ref)
     data = []
-    for coverage in [10, 15, 20]:
-        for cutoff in [0.001, 0.01, 0.05, 0.1]:
+    for coverage in [5, 10, 15, 20]:
+        for cutoff in [0.001, 0.005, 0.01, 0.05, 0.1]:
             native_ipd_ratio_dict = read_ipd_ratio(native_csv, cutoff, coverage)
 
             recall, native_motif_loci_num, native_motif_modify_num = get_motif_sites(REF, motif_new, exact_pos, native_ipd_ratio_dict)
@@ -119,20 +124,8 @@ if __name__ == "__main__":
             data.append([coverage, cutoff, recall, FDR, native_motif_loci_num, native_motif_modify_num , motif_loci_num, motif_modify_num])
     df = pd.DataFrame(data, columns=['coverage', 'cutoff', 'recall', 'FDR', 'native_motif_loci_num', 'native_motif_modify_num', 'motif_loci_num', 'motif_modify_num'])
     ## save df
-    df.to_csv("tmp/ecoli_base.csv", index = False)
+    df.to_csv("../../tmp/ecoli_base_meta.csv", index = False)
 
-    ## load the df
-    df = pd.read_csv("tmp/ecoli_base.csv")
-    ## plot the line plot using seaborn, and hue is the coverage
-    import seaborn as sns
-    sns.set_theme(style="whitegrid")
-    sns.lineplot(data=df, x="FDR", y="recall", hue="coverage")
-    # plot scatter plot
-    # plt.scatter(df['FDR'], df['recall'], c = df['coverage'])
-    plt.xlabel("FDR")
-    plt.ylabel("Recall")
-
-    plt.savefig("tmp/ecoli_recall.png")
 
 
 

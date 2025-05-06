@@ -321,67 +321,57 @@ def count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file):
         print ("no motif sites in the ipd file")
 
 def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov, misassembly = True):
-    ## check if input files exist, otherwise return 1
-    if not os.path.exists(my_ref):
-        print (f"ref file {my_ref} not found", flush=True)
-        return 1
-    if not os.path.exists(gff):
-        print (f"gff file {gff} not found", flush=True)
-        return 1
-    if not os.path.exists(all_motifs):
-        print (f"motif file {all_motifs} not found", flush=True)
-        return 1
-    if not os.path.exists(ipd_ratio_file):
-        print (f"ipd ratio file {ipd_ratio_file} not found", flush=True)
-        return 1
-    motifs = pd.read_csv(all_motifs)
-    print (f"No. of raw motifs {len(motifs)}", flush=True)
-    if len(motifs) == 0:
-        print ("no motifs found", flush=True)
-        ## get a empty profile file
-        df = pd.DataFrame([], columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
+    try:
+        motifs = pd.read_csv(all_motifs)
+        print (f"No. of raw motifs {len(motifs)}", flush=True)
+        if len(motifs) == 0:
+            print ("no motifs found", flush=True)
+            ## get a empty profile file
+            df = pd.DataFrame([], columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
+                                                "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
+                                                "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
+            df.to_csv(profile, index=False)
+
+            ## stop the program
+            # sys.exit(0)
+            return 0
+        REF = read_ref(my_ref)
+        # print (REF)
+        modified_loci, all_modified_loci = get_modified_ratio(gff, score_cutoff)
+        ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
+        print ("ipd ratio is loaded", flush=True)
+
+        data = []
+        for index, motif in motifs.iterrows():
+            # if index % 100 == 0:
+            #     print (index, motif)
+            motif_new = motif["motifString"]
+            exact_pos = motif["centerPos"]
+            motif_profile, all_modified_loci = get_motif_sites(REF, motif_new, exact_pos, all_modified_loci, min_cov, ipd_info_dict)
+            data.append([motif_new, exact_pos] + motif_profile)
+
+        df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
                                             "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
                                             "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
+        df = df.round(4)
         df.to_csv(profile, index=False)
+        anno = count_motifs(modified_loci, all_modified_loci, score_cutoff)
+        get_reprocess_gff(gff, all_modified_loci, anno)
 
-        ## stop the program
-        # sys.exit(0)
+
+        ## filter df, keep the motifs with motif_modified_num > 1000
+        df = df[df["motif_modified_num"] >= min_sites]
+        df = df[df["motif_modified_ratio"] >= min_frac]
+        print (len(df), "motifs left after filtering", flush=True)
+        if len(df) > 0:
+            if misassembly: ## detect misassembly    
+                motif_sites = reload_motif_sites(REF, df)
+                count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file)
+        else:
+            print ("no motif sites left after filtering", flush=True)
         return 0
-    REF = read_ref(my_ref)
-    # print (REF)
-    modified_loci, all_modified_loci = get_modified_ratio(gff, score_cutoff)
-    ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
-    print ("ipd ratio is loaded", flush=True)
-
-    data = []
-    for index, motif in motifs.iterrows():
-        # if index % 100 == 0:
-        #     print (index, motif)
-        motif_new = motif["motifString"]
-        exact_pos = motif["centerPos"]
-        motif_profile, all_modified_loci = get_motif_sites(REF, motif_new, exact_pos, all_modified_loci, min_cov, ipd_info_dict)
-        data.append([motif_new, exact_pos] + motif_profile)
-
-    df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
-                                        "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
-                                        "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
-    df = df.round(4)
-    df.to_csv(profile, index=False)
-    anno = count_motifs(modified_loci, all_modified_loci, score_cutoff)
-    get_reprocess_gff(gff, all_modified_loci, anno)
-
-
-    ## filter df, keep the motifs with motif_modified_num > 1000
-    df = df[df["motif_modified_num"] >= min_sites]
-    df = df[df["motif_modified_ratio"] >= min_frac]
-    print (len(df), "motifs left after filtering", flush=True)
-    if len(df) > 0:
-        if misassembly: ## detect misassembly    
-            motif_sites = reload_motif_sites(REF, df)
-            count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file)
-    else:
-        print ("no motif sites left after filtering", flush=True)
-    return 0
+    except Exception as e:
+        print(f"Error in motif_profile_worker: {e} {profile}", flush=True)
 
 
          
