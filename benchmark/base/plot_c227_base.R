@@ -7,8 +7,8 @@ library(cowplot)
 pdf(file="../../tmp/results/ecoli_base_combine.pdf", width=8, height=5, onefile=FALSE)
 
 # Read the CSV file
-df <- read_csv("../../tmp/results/ecoli_base.csv")
-df2 <- read_csv("../../tmp/results/ecoli_base_meta.csv")
+df <- read_csv("../../tmp/results/ecoli_base2.csv")
+df2 <- read_csv("../../tmp/results/ecoli_base_meta2.csv")
 
 # Create the line plot with color representing coverage
 p1 <- ggplot(df, aes(x = FDR, y = recall, color = as.factor(coverage))) +

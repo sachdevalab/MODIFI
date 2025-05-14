@@ -14,6 +14,7 @@ matplotlib.use('Agg')  # MUST come before importing pyplot
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.ticker import MaxNLocator
+import regex as re
 
 
 
@@ -25,6 +26,11 @@ def read_ref(ref):
         REF[record.id] = str(record.seq)
         # return str(record.seq), record.id
     return REF
+
+def find_motifs_regex(sequence, motif):
+    # Convert motif to regex pattern
+    pattern = re.compile(motif)
+    return [match.start() for match in pattern.finditer(sequence)]
 
 def get_motif_sites(REF, motif_new, exact_pos, modified_loci, min_cov, ipd_info_dict):
     motif_len = len(motif_new)
@@ -38,16 +44,16 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, min_cov, ipd_info_
     for_modified_num = 0
     rev_modified_num = 0
 
+    rev_motif_new = Seq(motif_new).reverse_complement()
+
     for r, contig in REF.items():
         # contig = str(contig)
-        for site in nt_search(contig, motif_new)[1:]:
-            # for i in range(site, site + motif_len):
-            #     motif_sites[r + ":" + str(i) + "+"] = motif_new
-            # tag = r + ":" + str(site+exact_pos) + "+"
+        # for site in nt_search(contig, motif_new)[1:]:
+        for site in find_motifs_regex(contig, motif_new):
             tag = f"{r}:{site + exact_pos}+"
-            if tag in ipd_info_dict:
-                if ipd_info_dict[tag]['coverage'] >= min_cov:
-                    valid_loci_num += 1
+            # if tag in ipd_info_dict:
+            #     if ipd_info_dict[tag]['coverage'] >= min_cov:
+            #         valid_loci_num += 1
             motif_loci_num += 1
             for_loci_num += 1
             if tag in modified_loci:
@@ -55,57 +61,35 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, min_cov, ipd_info_
                 for_modified_num += 1
                 modified_loci[tag].add(motif_new)
 
-        for site in nt_search(contig, Seq(motif_new).reverse_complement())[
-            1:
-        ]:
+        # for site in nt_search(contig, rev_motif_new)[1:]:
+        for site in find_motifs_regex(contig, motif_new):
             # tag = r + ":" + str(site+rev_exact_pos) + "-"
             tag = f"{r}:{site + rev_exact_pos}-"
-            if tag in ipd_info_dict:
-                if ipd_info_dict[tag]['coverage'] >= min_cov:
-                    valid_loci_num += 1
+            # if tag in ipd_info_dict:
+            #     if ipd_info_dict[tag]['coverage'] >= min_cov:
+            #         valid_loci_num += 1
             motif_loci_num += 1
             rev_loci_num += 1
             if tag in modified_loci:
                 motif_modify_num += 1
                 rev_modified_num += 1
                 modified_loci[tag].add(motif_new)
-    # print ("for_loci_num", for_loci_num, for_modified_num, "forward modified ratio", for_modified_num/for_loci_num)
-    # print ("rev_loci_num", rev_loci_num, rev_modified_num, "reverse modified ratio", rev_modified_num/rev_loci_num)
 
-    # print ("motif_loci_num", motif_loci_num)
-    # print ("motif_modify_num", motif_modify_num)
-    if motif_loci_num == 0:
-        ratio = 0
-    else:
-        ratio = motif_modify_num/motif_loci_num
-    if valid_loci_num == 0:
-        valid_ratio = 0
-    else:
-        valid_ratio = motif_modify_num/valid_loci_num
-    if for_loci_num == 0:
-        for_ratio = 0
-    else:
-        for_ratio = for_modified_num/for_loci_num
-    if rev_loci_num == 0:
-        rev_ratio = 0
-    else:
-        rev_ratio = rev_modified_num/rev_loci_num
-    if len(modified_loci) == 0:
-        proportion_all_modified = 0
-    else:
-        proportion_all_modified = motif_modify_num/len(modified_loci)
-
-    if ratio > 0.4 and proportion_all_modified > 0.1:
-        print (motif_new, "modified_ratio", ratio, motif_modify_num, motif_loci_num, proportion_all_modified)
+    ratio = motif_modify_num / motif_loci_num if motif_loci_num else 0
+    valid_ratio = motif_modify_num / valid_loci_num if valid_loci_num else 0
+    for_ratio = for_modified_num / for_loci_num if for_loci_num else 0
+    rev_ratio = rev_modified_num / rev_loci_num if rev_loci_num else 0
+    proportion_all_modified = motif_modify_num / len(modified_loci) if len(modified_loci) else 0
 
     return [for_loci_num, for_modified_num,for_ratio,\
             rev_loci_num, rev_modified_num, rev_ratio,\
-            motif_loci_num, motif_modify_num, ratio, proportion_all_modified, valid_loci_num, valid_ratio], modified_loci
+            motif_loci_num, motif_modify_num, ratio,\
+            proportion_all_modified, valid_loci_num, valid_ratio], modified_loci
 
 def get_modified_ratio(gff, score_cutoff):
     ## read the gff file
     f = open(gff, "r")
-    modified_loci = {}
+    # modified_loci = {}
     all_modified_loci = {}
     for line in f:
         if line[0] == "#":
@@ -113,15 +97,16 @@ def get_modified_ratio(gff, score_cutoff):
         line = line.strip().split("\t")
 
         ref = line[0]
-        pos = int(line[3]) 
+        pos = line[3]
         strand = line[6]
         score = int(line[5])
         all_modified_loci[ref + ":" + str(pos) + strand] = set()
         if score <= score_cutoff:
             continue
-        modified_loci[ref + ":" + str(pos) + strand] = score
-    print ("no. of modified loci", len(modified_loci))
-    return modified_loci, all_modified_loci
+        # modified_loci[ref + ":" + str(pos) + strand] = score
+    print ("no. of modified loci", len(all_modified_loci))
+    f.close()
+    return all_modified_loci
 
 def get_reprocess_gff(gff, all_modified_loci, anno):
     reprocess_gff = gff[:-4] + ".reprocess.gff"
@@ -211,9 +196,7 @@ def read_ipd_ratio(ipd_ratio_file):
         print ("ipd ratio file is empty")
         return ipd_info_dict
     else:
-
         # df_ipd = pd.read_csv(ipd_ratio_file)
-
         dtype_map = {
             "refName": "category",
             "strand": "int8",
@@ -320,31 +303,26 @@ def count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file):
     else:
         print ("no motif sites in the ipd file")
 
-def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov, misassembly = True):
+def motif_profile_worker_bk(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov, misassembly = True):
     try:
         motifs = pd.read_csv(all_motifs)
         print (f"No. of raw motifs {len(motifs)}", flush=True)
         if len(motifs) == 0:
             print ("no motifs found", flush=True)
-            ## get a empty profile file
             df = pd.DataFrame([], columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
                                                 "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
-                                                "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
+                                                "motif_loci_num", "motif_modified_num", "all_modified_ratio",\
+                                                "proportion", "valid_loci_num", "motif_modified_ratio"])
             df.to_csv(profile, index=False)
-
-            ## stop the program
-            # sys.exit(0)
             return 0
+        
         REF = read_ref(my_ref)
-        # print (REF)
         modified_loci, all_modified_loci = get_modified_ratio(gff, score_cutoff)
         ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
         print ("ipd ratio is loaded", flush=True)
 
         data = []
         for index, motif in motifs.iterrows():
-            # if index % 100 == 0:
-            #     print (index, motif)
             motif_new = motif["motifString"]
             exact_pos = motif["centerPos"]
             motif_profile, all_modified_loci = get_motif_sites(REF, motif_new, exact_pos, all_modified_loci, min_cov, ipd_info_dict)
@@ -352,7 +330,8 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
 
         df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
                                             "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
-                                            "motif_loci_num", "motif_modified_num", "all_modified_ratio", "proportion", "valid_loci_num", "motif_modified_ratio"])
+                                            "motif_loci_num", "motif_modified_num", "all_modified_ratio",\
+                                            "proportion", "valid_loci_num", "motif_modified_ratio"])
         df = df.round(4)
         df.to_csv(profile, index=False)
         anno = count_motifs(modified_loci, all_modified_loci, score_cutoff)
@@ -373,6 +352,48 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
     except Exception as e:
         print(f"Error in motif_profile_worker: {e} {profile}", flush=True)
 
+def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov, misassembly = True):
+    try:
+        print (my_ref, gff, profile)
+        # motifs = pd.read_csv(all_motifs) ## read the motifs file
+        motifs = all_motifs ### accept the motif df
+        # print (f"No. of raw motifs {len(motifs)}", flush=True)
+        if len(motifs) == 0:
+            print ("no motifs found", flush=True)
+            df = pd.DataFrame([], columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
+                                                "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
+                                                "motif_loci_num", "motif_modified_num", "all_modified_ratio",\
+                                                "proportion", "valid_loci_num", "motif_modified_ratio"])
+            df.to_csv(profile, index=False)
+            print ("no motifs found", profile, flush=True)
+            return 0
+        
+        REF = read_ref(my_ref)
+        all_modified_loci = get_modified_ratio(gff, score_cutoff)
+        # ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
+        ipd_info_dict = {}
+        print ("ipd ratio is loaded", flush=True)
+
+        data = []
+        for index, motif in motifs.iterrows():
+            # if index % 100 == 0:
+            #     print (index, my_ref, motif, "motifs processed", flush=True)
+            motif_new = motif["motifString"]
+            exact_pos = motif["centerPos"]
+            motif_profile, all_modified_loci = get_motif_sites(REF, motif_new, exact_pos, all_modified_loci, min_cov, ipd_info_dict)
+            data.append([motif_new, exact_pos] + motif_profile)
+
+        df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
+                                            "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
+                                            "motif_loci_num", "motif_modified_num", "all_modified_ratio",\
+                                            "proportion", "valid_loci_num", "motif_modified_ratio"])
+        df = df.round(4)
+        df.to_csv(profile, index=False)
+        print ("profiling finished", profile, flush=True)
+        return 0
+    except Exception as e:
+        print(f"Error in motif_profile_worker: {e} {profile}", flush=True)
+        return -1
 
          
 if __name__ == "__main__":
@@ -388,13 +409,15 @@ if __name__ == "__main__":
 
     my_ref = sys.argv[1]
     gff = sys.argv[2]
-    all_motifs = sys.argv[3]
+    all_motifs_file = sys.argv[3]
     profile = sys.argv[4]
     ipd_ratio_file = sys.argv[5]
     min_frac = float(sys.argv[6])
     min_sites = int(sys.argv[7])
     score_cutoff = int(sys.argv[8])
     min_cov = int(sys.argv[9])
+
+    all_motifs = pd.read_csv(all_motifs_file)
 
     motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov)
 

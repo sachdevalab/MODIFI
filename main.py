@@ -114,6 +114,8 @@ def parse_arguments():
                         help="Enable detection of misassembly in the pipeline.")
     parser.add_argument("--visu_ipd", action="store_false",
                         help="Enable visuliation of IPD distribution.")
+    parser.add_argument("--binning", action="store_false",
+                        help="Enable binning based on methylation.")
     parser.add_argument(
         "--run_steps",
         nargs="+",
@@ -297,9 +299,10 @@ def collect_motifs_worker(args, paras):
 
 def profile_parallel(args, paras):
     logger.info ("Profile motif in parallel...")
+    
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         futures = []
-
+        all_motifs = pd.read_csv(paras["all_motifs"]) 
         for gff in os.listdir(paras["gffs"]):
             if not gff.endswith(".gff"):
                 continue
@@ -316,11 +319,17 @@ def profile_parallel(args, paras):
             profile = os.path.join(paras["profiles"], f"{ctg_name}.motifs.profile.csv")
             ipd_ratio = os.path.join(paras["ipd_ratio"], f"{ctg_name}.ipd3.csv")
 
+            ## skip if the profile file already exists
+            if os.path.exists(profile):
+                # logger.info(f"Profile file {profile} already exists. Skipping...")
+                continue
+
+            
             future = executor.submit(
                 motif_profile_worker,
                 my_ref = fasta,
                 gff = gff,
-                all_motifs = paras["all_motifs"],
+                all_motifs = all_motifs,
                 profile = profile,
                 ipd_ratio_file = ipd_ratio,
                 min_frac = args.min_frac,
@@ -334,8 +343,9 @@ def profile_parallel(args, paras):
 
         for future in tqdm(as_completed(futures), total=len(futures)):
             finish_code = future.result()
-
             yield finish_code
+
+            # print (finish_code)
 
 def run_merge_profile(args, paras):
         merge_profile_worker(
@@ -348,6 +358,7 @@ def run_merge_profile(args, paras):
             plasmid_file = args.plasmid_file,
             bin_file = args.bin_file,
             threads = args.threads,
+            bin_flag = args.binning,
         )
 
 def depth_analysis(paras, ctg_depth_dict):
@@ -507,8 +518,10 @@ if __name__ == "__main__":
         )
         record_resource_usage(
             "Profiling motifs",
-            lambda: list(profile_parallel(args, paras))  # Wrap generator in a list to execute fully
+            lambda: list(profile_parallel(args, paras))  
         )
+
+
 
     if "merge" in args.run_steps:
         record_resource_usage(

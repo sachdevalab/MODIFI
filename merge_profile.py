@@ -418,7 +418,7 @@ def PCA_plot(df, pca_fig):
         adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
     plt.savefig(pca_fig)
 
-def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_frac, whole_ref, plasmid_file, bin_file=None, threads=1):
+def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_frac, whole_ref, plasmid_file, bin_file=None, threads=1, bin_flag = False):
     
     cluster_fig = os.path.join(work_dir, "motif_cluster.pdf")
     pca_fig = os.path.join(work_dir, "motif_pca.pdf")
@@ -441,7 +441,7 @@ def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_fr
     if len(profiles) > 0:
         heatmap(profiles, heat_map)
 
-        if len(profiles) > 1:  ## cluster only if there are more than 1 contig
+        if len(profiles) > 1 and bin_flag:  ## cluster only if there are more than 1 contig
             # UMAP(profiles, cluster_fig)
             TSE(profiles, cluster_fig)
             # PCA_plot(profiles, pca_fig)

@@ -435,7 +435,7 @@ python cal_invasion_score.py \
   plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"\
   --job-name=soil
 
- sbatch  --partition standard --wrap "python main.py \
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil_zymo/run/run.time python main.py \
   --work_dir /home/shuaiw/borg/bench/soil_zymo/run \
   --whole_bam /home/shuaiw/borg/bench/soil_zymo/soil_zymo.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
@@ -463,6 +463,7 @@ python cal_invasion_score.py \
   --min_score 30 \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+  --run_steps profile merge \
   --threads 64 "\
   --job-name=soil2
 
@@ -514,3 +515,18 @@ sbatch  --partition standard --wrap " python main.py \
   --run_steps profile merge \
   --threads 64"\
   --job-name=new_pf
+
+sbatch  --partition standard --wrap " python main.py \
+  --work_dir /home/shuaiw/methylation/data/borg/bench/mock3 \
+  --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/align/Mock_JF8.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/bam/Mock_JF8.fa \
+  --read_type subreads \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid PDZQ01000142.1\
+  --threads 64"\
+  --job-name=J8_mock
