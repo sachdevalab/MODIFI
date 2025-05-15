@@ -21,6 +21,7 @@ from segment_genome import process_depth_and_gff
 from collect_motifs import collect_motifs
 from motif_profile import motif_profile_worker
 from merge_profile import merge_profile_worker
+from cal_invasion_score import batch_MGE_invade
 
 
 # -------------------------------
@@ -110,19 +111,19 @@ def parse_arguments():
     parser.add_argument("--down", type=int, default=3,
                         help="Number of downstream bases to consider for k-mer analysis.")
     ## add a new parameter to control the whether to use detect misassembly
-    parser.add_argument("--detect_misassembly", action="store_false",
+    parser.add_argument("--detect_misassembly", action="store_true",
                         help="Enable detection of misassembly in the pipeline.")
-    parser.add_argument("--visu_ipd", action="store_false",
+    parser.add_argument("--visu_ipd", action="store_true",
                         help="Enable visuliation of IPD distribution.")
-    parser.add_argument("--binning", action="store_false",
+    parser.add_argument("--binning", action="store_true",
                         help="Enable binning based on methylation.")
     parser.add_argument(
         "--run_steps",
         nargs="+",
         choices=[
-            "split", "load", "control", "compare", "motif", "profile", "merge"
+            "split", "load", "control", "compare", "motif", "profile", "merge", "host"
         ],
-        default=["split", "load", "control", "compare", "motif", "profile", "merge"],
+        default=["split", "load", "control", "compare", "motif", "profile", "merge", "host"],
         help="Steps to run in the pipeline (default: all), for easy test."
     )
 
@@ -376,6 +377,10 @@ def depth_analysis(paras, ctg_depth_dict):
 
     plt.savefig(paras["depth_plot"])
 
+def predict_host_worker(args, paras):
+    os.makedirs(paras["hosts"], exist_ok = True)
+    if args.plasmid_file != 'NA' and os.path.exists(args.plasmid_file):
+        batch_MGE_invade(args.plasmid_file, paras["profiles"], paras["hosts"], bin_file=args.bin_file, min_frac=0.5, threads=args.threads)
 
 def get_paras(args):
     """
@@ -394,6 +399,7 @@ def get_paras(args):
     paras["segs"] = os.path.join(args.work_dir, "segs")
     paras["bins"] = os.path.join(args.work_dir, "bins")
     paras["profiles"] = os.path.join(args.work_dir, "profiles")
+    paras["hosts"] = os.path.join(args.work_dir, "hosts")
 
     paras["kmer_bin"] = os.path.join(sys.path[0], "src", "test")
     paras["ctg_list_file"] = os.path.join(args.work_dir, "contigs_list.txt")
@@ -527,6 +533,13 @@ if __name__ == "__main__":
         record_resource_usage(
             "Merging motif profiles",
             run_merge_profile,
+            args, paras
+        )
+    
+    if "host" in args.run_steps:
+        record_resource_usage(
+            "Predicting host",
+            predict_host_worker,
             args, paras
         )
 

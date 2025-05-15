@@ -51,9 +51,9 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, min_cov, ipd_info_
         # for site in nt_search(contig, motif_new)[1:]:
         for site in find_motifs_regex(contig, motif_new):
             tag = f"{r}:{site + exact_pos}+"
-            # if tag in ipd_info_dict:
-            #     if ipd_info_dict[tag]['coverage'] >= min_cov:
-            #         valid_loci_num += 1
+            if tag in ipd_info_dict:
+                if ipd_info_dict[tag]['coverage'] >= min_cov:
+                    valid_loci_num += 1
             motif_loci_num += 1
             for_loci_num += 1
             if tag in modified_loci:
@@ -65,9 +65,9 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, min_cov, ipd_info_
         for site in find_motifs_regex(contig, motif_new):
             # tag = r + ":" + str(site+rev_exact_pos) + "-"
             tag = f"{r}:{site + rev_exact_pos}-"
-            # if tag in ipd_info_dict:
-            #     if ipd_info_dict[tag]['coverage'] >= min_cov:
-            #         valid_loci_num += 1
+            if tag in ipd_info_dict:
+                if ipd_info_dict[tag]['coverage'] >= min_cov:
+                    valid_loci_num += 1
             motif_loci_num += 1
             rev_loci_num += 1
             if tag in modified_loci:
@@ -355,7 +355,6 @@ def motif_profile_worker_bk(my_ref, gff, all_motifs, profile, ipd_ratio_file, mi
 def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov, misassembly = True):
     try:
         print (my_ref, gff, profile)
-        # motifs = pd.read_csv(all_motifs) ## read the motifs file
         motifs = all_motifs ### accept the motif df
         # print (f"No. of raw motifs {len(motifs)}", flush=True)
         if len(motifs) == 0:
@@ -370,8 +369,8 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
         
         REF = read_ref(my_ref)
         all_modified_loci = get_modified_ratio(gff, score_cutoff)
-        # ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
-        ipd_info_dict = {}
+        ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
+        # ipd_info_dict = {}
         print ("ipd ratio is loaded", flush=True)
 
         data = []
@@ -420,10 +419,5 @@ if __name__ == "__main__":
     all_motifs = pd.read_csv(all_motifs_file)
 
     motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov)
-
-
-
-
-
 
 # python motif_profile.py /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/contigs/E_coli_H10407_1.fa /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/gffs/E_coli_H10407_1.gff /home/shuaiw/borg/bench/zymo_new_ref_NM3/all.motifs.csv /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/test.csv /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/ipd_ratio/E_coli_H10407_1.ipd3.csv 0.1 10 10 1

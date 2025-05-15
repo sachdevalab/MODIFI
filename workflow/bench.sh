@@ -308,13 +308,6 @@ python comp_ipd_ratio.py /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd
 
 checkm2 predict --input  bins/ --output-directory  test --force -x .fasta
 
-snakemake --config \
-  whole_bam=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/bams/E_coli_H10407_6.bam \
-  whole_ref=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/contigs/E_coli_H10407_6.fa \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/E_coli_H10407_6 \
-  kmer_mean_db=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/control/control_db.up7.down3.mean.dat \
-  kmer_num_db=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/control/control_db.up7.down3.num.dat \
-  read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.5 min_score=30 min_sites=10 clean=False
 
 sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.time snakemake --config \
   whole_bam=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.align.ccs.bam \
@@ -447,7 +440,7 @@ python cal_invasion_score.py \
   --min_score 30 \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
-  --run_steps profile merge \
+  --run_steps profile merge host \
   --threads 64 "\
   --job-name=soil
 
@@ -530,3 +523,20 @@ sbatch  --partition standard --wrap " python main.py \
   --plasmid PDZQ01000142.1\
   --threads 64"\
   --job-name=J8_mock
+
+
+
+sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylation/data/borg/bench/pipeline_zymo.time python main.py \
+  --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec6 \
+  --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
+  --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list  " \
+  --job-name=pipeline
+

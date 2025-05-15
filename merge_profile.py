@@ -53,22 +53,18 @@ def load_contigs():
     return contig_dict
 
 def read_profile_worker(profile_list, file, sample_name,  min_motif_sites=1):
-    ### profile_list is the directory of the profiles
     profile = pd.read_csv(os.path.join(profile_list, file), sep = ",")
-    # profile = pd.read_csv(os.path.join(file), sep = ",")
-    ## extract the sample name
-
-
-
-    # print (sample_name, profile.head())
     motifs_names = profile['motifString']
-    # print (motifs_names)
-    ## if motif_modified_num < min_motif_sites, we set the motif_modified_ratio to 0
-    ### minimium number of motif sites cutoff, it too less motif sites, no meaning to calculate the ratio
+    
     profile.loc[profile['motif_modified_num'] < min_motif_sites, 'motif_modified_ratio'] = 0
     ## we only want the motif_modified_ratio column
     profile = profile[['motif_modified_ratio']]
     return profile['motif_modified_ratio'], sample_name, motifs_names
+
+    # profile.loc[profile['motif_modified_num'] < min_motif_sites, 'all_modified_ratio'] = 0
+    # ## we only want the motif_modified_ratio column
+    # profile = profile[['all_modified_ratio']]
+    # return profile['all_modified_ratio'], sample_name, motifs_names
 
 def merge_profile_parallele(profile_list, min_motif_sites=1, threads = 1):
     ## initialize the profiles as df
@@ -86,6 +82,9 @@ def merge_profile_parallele(profile_list, min_motif_sites=1, threads = 1):
                     print ("cannot extract sample name from", file)
                     continue
                 sample_name = match.group(1).split("/")[-1]
+                # if sample_name != "E_coli_H10407_1":
+                #     continue
+                # print (file)
                 future = executor.submit(
                     read_profile_worker,
                     profile_list = profile_list,
@@ -228,8 +227,8 @@ def heatmap(df, heat_map):
     # Plot the heatmap with hierarchical clustering
     # sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(30, 60))
     ## check if df is not empty
-    if df.empty:
-        print ("empty dataframe")
+    if df.empty or df.shape[1] > 200:
+        print ("empty or too-large dataframe")
         ## construct an  empty figure
         plt.figure()
         plt.savefig(heat_map)
@@ -427,12 +426,18 @@ def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_fr
     bin_dir = os.path.join(work_dir, "bins", "bin")
     profile_dir = os.path.join(work_dir, "profiles")
 
-    # profiles = merge_profile(profile_list)
     profiles = merge_profile_parallele(profile_list, threads=threads)
-    ## save the profiles
     profiles.to_csv(total_profile, index=True)
+
+    # profiles = pd.read_csv(total_profile, index_col=0)
+    ## index the prfiles with index and columns
+    # if "GATC" in profiles.index:
+    #     print(profiles.loc["GATC", "E_coli_H10407_1"])
+    # else:
+    #     print("Motif 'GATC' not found in profiles.")
     
     profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
+    print ("filtered shape 1", profiles.shape)
     # Filter columns where any value is greater than 0.5
     profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
 
@@ -452,10 +457,10 @@ def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_fr
             
         summary( min_frac, summary_file, profiles)
 
-        host_dir = os.path.join(work_dir, "hosts")
-        os.makedirs(host_dir, exist_ok = True)
-        if plasmid_file != 'NA' and os.path.exists(plasmid_file):
-            batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=bin_file, min_frac=0.5, threads=threads)
+        # host_dir = os.path.join(work_dir, "hosts")
+        # os.makedirs(host_dir, exist_ok = True)
+        # if plasmid_file != 'NA' and os.path.exists(plasmid_file):
+        #     batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=bin_file, min_frac=0.5, threads=threads)
     else:
         print ("no motif identified")
         ## construct an  empty figure

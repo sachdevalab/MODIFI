@@ -183,9 +183,9 @@ def summary_motif_info(motif_data):
     return motif_info
 
 def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict, ctg_motif_dict,\
-                      plasmid_name, profile_dir, host_dir, min_frac = 0.5, MGE_dict={}):
+                      plasmid_name, profile_dir, host_dir,cov_dict, min_frac = 0.5, MGE_dict={}):
     plasmid_profile = f"{profile_dir}/{plasmid_name}.motifs.profile.csv"
-    cov_dict = load_coverage(host_dir)
+    # cov_dict = load_coverage(host_dir)
     if plasmid_name not in cov_dict:
         MGE_cov = 'NA'
     else:
@@ -204,13 +204,15 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         bin_motif = bin_motif_dict[bin_name]
 
         motif_data = extract_motif_data(bin_df, plasmid_profile, min_frac)
+        # print (motif_data)
         motif_data = filter_motifs(bin_motif, motif_data)
 
         motif_filter = MotifFilter(motif_data)
         motif_data = motif_filter.filter()
 
-        if bin_name == "RuReacBro_20230708_7_48h_PC_r3_vamb_18_rmcirc":
-            print (motif_data)
+        # if bin_name == "RuReacBro_20230708_7_48h_PC_r3_vamb_18_rmcirc":
+        #     print (motif_data)
+        # print (motif_data)
         motif_data_dict[bin_name] = motif_data
         result = invasion_score_from_counts(motif_data, min_frac, 0.5)
         result['host'] = bin_name
@@ -348,6 +350,7 @@ def summary_host(host_dir, bin_ctg_dict):
 def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_frac = 0.5, threads = 1):
 
     MGE_dict = read_genomad(plasmid_file)
+    cov_dict = load_coverage(host_dir)
     ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, MGE_dict, threads)
     if bin_file is not None:
         if not os.path.exists(bin_file):
@@ -376,6 +379,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_fra
                 plasmid_name = plasmid_name,
                 profile_dir = profile_dir,
                 host_dir = host_dir,
+                cov_dict = cov_dict,
                 min_frac = min_frac,
                 MGE_dict={},
             )
@@ -391,6 +395,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_fra
 def batch_MGE_invade_single(plasmid_file, profile_dir, host_dir, bin_file=None, min_frac = 0.5):
 
     MGE_dict = read_genomad(plasmid_file)
+    cov_dict = load_coverage(host_dir)
     ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, MGE_dict)
     if bin_file is not None:
         if not os.path.exists(bin_file):
@@ -405,7 +410,7 @@ def batch_MGE_invade_single(plasmid_file, profile_dir, host_dir, bin_file=None, 
             print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
             continue
         print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
-        for_each_plasmid(bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, plasmid_name, profile_dir, host_dir, min_frac, {})
+        for_each_plasmid(bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, plasmid_name, profile_dir, host_dir, cov_dict, min_frac, {})
     summary_host(host_dir, bin_ctg_dict)
 
 def load_bin(bin_file):
