@@ -98,6 +98,7 @@ def extract_motif_data(host_df, plasmid_profile, min_frac = 0.5, min_detect = 10
     plasmid_df = pd.read_csv(plasmid_profile)
     ## make a new df, by extract the motifString, centerPos, motif_loci_num, motif_modified_num, motif_modified_ratio from the original two dfs
     motif_data = pd.merge(host_df, plasmid_df, on = ['motifString', 'centerPos'], suffixes=('_host', '_plasmid'))
+    # print ("<<<<<", motif_data)
     motif_data = motif_data[(motif_data['motif_modified_ratio_host'] > min_frac) & (motif_data['motif_modified_num_host'] > min_detect)]
     motif_data = motif_data[['motifString', 'centerPos', 'motif_loci_num_host', 'motif_modified_num_host', 'motif_loci_num_plasmid', 'motif_modified_num_plasmid']]
     motif_data.columns = ['motif', 'centerPos', 'host_total', 'host_meth', 'plasmid_total', 'plasmid_meth']
@@ -203,10 +204,11 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         if len(bin_df) == 0:
             continue
         bin_motif = bin_motif_dict[bin_name]
-
+        # print (bin_motif)
         motif_data = extract_motif_data(bin_df, plasmid_profile, min_frac)
-        # print (motif_data)
+        # print ("###", motif_data)
         motif_data = filter_motifs(bin_motif, motif_data)
+        # print (motif_data)
 
         motif_filter = MotifFilter(motif_data)
         motif_data = motif_filter.filter()
@@ -352,8 +354,8 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_fra
 
     MGE_dict = read_genomad(plasmid_file)
     cov_dict = load_coverage(host_dir)
-    ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs_parallele(profile_dir, MGE_dict, threads)
-    # ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs_single(profile_dir, MGE_dict)
+    # ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs_parallele(profile_dir, MGE_dict, threads)
+    ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs_single(profile_dir, MGE_dict)
     if bin_file is not None:
         if not os.path.exists(bin_file):
             print (f"{bin_file} does not exist.")
@@ -444,6 +446,9 @@ def load_ctg_motifs_single(profile_dir, MGE_dict):
             host_motif = os.path.join(profile_dir,"../motifs", f"{ctg_name}.motifs.csv")
             host_profile = os.path.join(profile_dir, file)
 
+            # if ctg_name != "E_coli_H10407_1":
+            #     continue
+            
             if ctg_name in MGE_dict: ## skip other MGEs, only focus on chromosomal host
                 continue
             

@@ -16,6 +16,24 @@ import seaborn as sns
 from matplotlib.ticker import MaxNLocator
 import regex as re
 
+IUPAC_CODES = {
+    'A': 'A',
+    'C': 'C',
+    'G': 'G',
+    'T': 'T',
+    'U': 'U',
+    'R': '[AG]',
+    'Y': '[CT]',
+    'S': '[GC]',
+    'W': '[AT]',
+    'K': '[GT]',
+    'M': '[AC]',
+    'B': '[CGT]',
+    'D': '[AGT]',
+    'H': '[ACT]',
+    'V': '[ACG]',
+    'N': '[ACGT]'
+}
 
 
 def read_ref(ref):
@@ -27,9 +45,19 @@ def read_ref(ref):
         # return str(record.seq), record.id
     return REF
 
+def motif_to_regex(motif):
+    return ''.join(IUPAC_CODES.get(base.upper(), base) for base in motif)
+
+
+# def find_motifs_regex(sequence, motif):
+#     # Convert motif to regex pattern
+#     pattern = re.compile(motif)
+#     return [match.start() for match in pattern.finditer(sequence)]
+
 def find_motifs_regex(sequence, motif):
-    # Convert motif to regex pattern
-    pattern = re.compile(motif)
+    ## accept degeneratory codes
+    pattern_str = motif_to_regex(motif)
+    pattern = re.compile(pattern_str)
     return [match.start() for match in pattern.finditer(sequence)]
 
 def get_motif_sites(REF, motif_new, exact_pos, modified_loci, min_cov, ipd_info_dict):
@@ -62,7 +90,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, min_cov, ipd_info_
                 modified_loci[tag].add(motif_new)
 
         # for site in nt_search(contig, rev_motif_new)[1:]:
-        for site in find_motifs_regex(contig, motif_new):
+        for site in find_motifs_regex(contig, rev_motif_new):
             # tag = r + ":" + str(site+rev_exact_pos) + "-"
             tag = f"{r}:{site + rev_exact_pos}-"
             if tag in ipd_info_dict:
@@ -81,10 +109,15 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, min_cov, ipd_info_
     rev_ratio = rev_modified_num / rev_loci_num if rev_loci_num else 0
     proportion_all_modified = motif_modify_num / len(modified_loci) if len(modified_loci) else 0
 
+    # return [for_loci_num, for_modified_num,for_ratio,\  ## using valid ratio
+    #         rev_loci_num, rev_modified_num, rev_ratio,\
+    #         motif_loci_num, motif_modify_num, ratio,\
+    #         proportion_all_modified, valid_loci_num, valid_ratio], modified_loci
+
     return [for_loci_num, for_modified_num,for_ratio,\
             rev_loci_num, rev_modified_num, rev_ratio,\
             motif_loci_num, motif_modify_num, ratio,\
-            proportion_all_modified, valid_loci_num, valid_ratio], modified_loci
+            proportion_all_modified, motif_modify_num, ratio], modified_loci  ## not using valid ratio
 
 def get_modified_ratio(gff, score_cutoff):
     ## read the gff file
@@ -369,12 +402,15 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
         
         REF = read_ref(my_ref)
         all_modified_loci = get_modified_ratio(gff, score_cutoff)
-        ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
-        # ipd_info_dict = {}
+        # ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
+        ipd_info_dict = {}
         print ("ipd ratio is loaded", flush=True)
 
         data = []
         for index, motif in motifs.iterrows():
+            # if motif["motifString"] != "AGCANNNNNNCCT" and motif["motifString"] !=  "GATC":
+            #     continue
+            # print (index, motif, "motifs processed", flush=True)
             # if index % 100 == 0:
             #     print (index, my_ref, motif, "motifs processed", flush=True)
             motif_new = motif["motifString"]
