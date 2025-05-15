@@ -456,7 +456,7 @@ python cal_invasion_score.py \
   --min_score 30 \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
-  --run_steps profile merge \
+  --run_steps profile merge host\
   --threads 64 "\
   --job-name=soil2
 

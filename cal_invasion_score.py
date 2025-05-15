@@ -196,6 +196,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         return
     data = []
     motif_data_dict = {}
+    i = 0
     for bin_name in bin_ctg_dict:
         # print (f"Processing {bin_name}...")
         bin_df = bin_df_dict[bin_name]
@@ -221,6 +222,9 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         result['MGE_cov'] = MGE_cov
         result['MGE'] = plasmid_name
         result['motif_info'] = summary_motif_info(motif_data)
+        if i % 100 == 0:
+            print (f"Processing {plasmid_name} with {len(motif_data)} motifs, {i} bins.")
+        i += 1
 
         data.append(result)
     ## convert the data to a df, and sort by final_score
@@ -263,9 +267,6 @@ def report_gc(data, host_dir, bin_ctg_dict):
     ## rearrange the columns
     data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
     return data
-
-
-        
 
 def read_genomad(genomad_file):
     MGE_dict = {}
@@ -351,7 +352,8 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_fra
 
     MGE_dict = read_genomad(plasmid_file)
     cov_dict = load_coverage(host_dir)
-    ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, MGE_dict, threads)
+    ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs_parallele(profile_dir, MGE_dict, threads)
+    # ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs_single(profile_dir, MGE_dict)
     if bin_file is not None:
         if not os.path.exists(bin_file):
             print (f"{bin_file} does not exist.")
@@ -428,33 +430,43 @@ def load_bin(bin_file):
         bin_ctg_dict[bin_id].append(contig)
     return ctg_bin_dict, bin_ctg_dict
 
-def load_ctg_motifs_bk(profile_dir, MGE_dict):
+def load_ctg_motifs_single(profile_dir, MGE_dict):
     ctg_single_dict = {}
     single_ctg_dict = defaultdict(list)
     ctg_profile_dict = {}
     ctg_motif_dict = {}
     ## enumerage the files in the profile_dir
+    i = 0
     for file in os.listdir(profile_dir):
         if file.endswith(".motifs.profile.csv"):
             ## extract the host name
             ctg_name = file.split(".")[0]
+            host_motif = os.path.join(profile_dir,"../motifs", f"{ctg_name}.motifs.csv")
+            host_profile = os.path.join(profile_dir, file)
+
             if ctg_name in MGE_dict: ## skip other MGEs, only focus on chromosomal host
                 continue
-            host_motif = os.path.join(profile_dir,"../motifs", f"{ctg_name}.motifs.csv")
+            
             if not os.path.exists(host_motif):
                 print (f"{host_motif} does not exist.")
                 continue
             motif_df = pd.read_csv(host_motif)
             ctg_motif_dict[ctg_name] = motif_df
-            host_profile = os.path.join(profile_dir, file)
+            
             ## check if the host profile and host_motif exists
             if not os.path.exists(host_profile):
                 print (f"{host_profile} does not exist.")
                 continue
+
             host_df = pd.read_csv(host_profile)
+
             ctg_single_dict[ctg_name] = ctg_name
             single_ctg_dict[ctg_name].append(ctg_name)
             ctg_profile_dict[ctg_name] = host_df
+
+            if i % 100 == 0:
+                print (f"load_ctg_motifs_single Loading {i} files...")
+            i += 1
     return ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict
 
 
@@ -481,7 +493,8 @@ def process_file_with_args(args):
         }
     return None
 
-def load_ctg_motifs(profile_dir, MGE_dict, threads=4):
+def load_ctg_motifs_parallele(profile_dir, MGE_dict, threads=4):
+    print (f"load_ctg_motifs from {profile_dir}...")
     # Use ProcessPoolExecutor to process files in parallel
     results = []
     with ProcessPoolExecutor(max_workers=threads) as executor:
@@ -502,7 +515,7 @@ def load_ctg_motifs(profile_dir, MGE_dict, threads=4):
         single_ctg_dict[ctg_name].append(ctg_name)
         ctg_profile_dict[ctg_name] = result["host_df"]
         ctg_motif_dict[ctg_name] = result["motif_df"]
-
+    print ("load_ctg_motifs done.")
     return ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict
 
 
