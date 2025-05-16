@@ -93,7 +93,7 @@ def parse_arguments():
                         help="Path to optional k-mer mean IPD database.")
     parser.add_argument("--kmer_num_db", type=str, default=None,
                         help="Path to optional k-mer count database.")
-    parser.add_argument("--no-clean", action="store_false", dest="clean", help="Disable cleaning step")
+    parser.add_argument("--clean", action="store_false", dest="clean", help="Enable cleaning step")
     parser.add_argument("--min_frac", type=float, default=0.5,
                         help="Minimum methylation fraction to retain a motif.")
     parser.add_argument("--min_sites", type=int, default=100,
