@@ -527,7 +527,7 @@ sbatch  --partition standard --wrap " python main.py \
 
 
 sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylation/data/borg/bench/pipeline_zymo.time python main.py \
-  --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec6 \
+  --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec7 \
   --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
   --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
   --read_type hifi \

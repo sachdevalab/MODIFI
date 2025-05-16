@@ -453,7 +453,7 @@ if __name__ == "__main__":
     min_cov = int(sys.argv[9])
 
     all_motifs = pd.read_csv(all_motifs_file)
-
     motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_frac, min_sites, score_cutoff, min_cov)
 
 # python motif_profile.py /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/contigs/E_coli_H10407_1.fa /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/gffs/E_coli_H10407_1.gff /home/shuaiw/borg/bench/zymo_new_ref_NM3/all.motifs.csv /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/test.csv /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s10/ipd_ratio/E_coli_H10407_1.ipd3.csv 0.1 10 10 1
+# python motif_profile.py /home/shuaiw/borg/bench/soil_zymo/run2/contigs/E_coli_H10407_1.fa /home/shuaiw/borg/bench/soil_zymo/run2/gffs/E_coli_H10407_1.gff /home/shuaiw/borg/bench/soil_zymo/run2/all.motifs.csv /home/shuaiw/borg/bench/soil_zymo/run2/test.csv /home/shuaiw/borg/bench/soil_zymo/run2/ipd_ratio/E_coli_H10407_1.ipd3.csv 0.3 100 30 1
