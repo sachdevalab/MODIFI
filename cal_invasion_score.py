@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from derep_motifs import MotifFilter
 from get_kmer_freq import kmer_freq_sim_bin_worker
+from linkage_model import compute_p_same_room
 
 # IGNORE_MOTIFS = [
 #     "GATC",
@@ -19,7 +20,7 @@ from get_kmer_freq import kmer_freq_sim_bin_worker
 IGNORE_MOTIFS = [
 ]
 
-def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_sites=50000):
+def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_sites=5000):
     """
     Adds confidence weighting based on motif site counts.
     """
@@ -28,7 +29,7 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
     total_sites = 0
     total_host_sites = 0
     restriction_signal = 1
-
+    valid_motif_num = 0
     for m in motif_data:
         h_total = m['host_total']
         h_meth = m['host_meth']
@@ -37,25 +38,25 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
 
         if h_total == 0:
             continue
-
+        if p_total == 0:  #skip if plasmid has no motif string
+            continue
+        valid_motif_num += 1
         weight = h_total
         weight = min(weight, 1000)   ### set weight to 1000, once the h_total is larger than 1000
         total_sites += h_total + p_total
         total_host_sites += h_total
 
         f_host = h_meth / h_total
-        if p_total == 0:
-            motif_score = neutral_score
+
+        f_plasmid = p_meth / p_total
+        # motif_score = 1 - abs(f_host - f_plasmid)
+        ## whether f_host and f_plasmid both are larger than 0.5
+        # if f_plasmid > min_frac:
+        #     motif_score = 1
+        if f_plasmid > f_host:
+            motif_score = 1
         else:
-            f_plasmid = p_meth / p_total
-            # motif_score = 1 - abs(f_host - f_plasmid)
-            ## whether f_host and f_plasmid both are larger than 0.5
-            if f_plasmid > min_frac:
-                motif_score = 1
-            elif f_plasmid > f_host:
-                motif_score = 1
-            else:
-                motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
+            motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
 
         ## high confidence that the plasmid should be restricted-- orphan MTase?
         # if f_host > 0.5 and h_total > 500:
@@ -78,7 +79,7 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
         confidence = 1
 
     # motif confidence
-    motif_confidence = log(1+len(motif_data))/log(1+3)   
+    motif_confidence = log(1+valid_motif_num)/log(1+3)   
     if motif_confidence > 1:
         motif_confidence = 1
     final_score = invasion_score * confidence * motif_confidence * restriction_signal
@@ -91,6 +92,30 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
         'motif_confidence': round(motif_confidence, 4),
         'host_motif_num': len(motif_data)
     }
+
+
+def linkage_score_from_model(motif_data):
+    host_data_list = []
+    MGE_data_list = []
+
+    for m in motif_data:
+        h_total = m['host_total']
+        h_meth = m['host_meth']
+        p_total = m['plasmid_total']
+        p_meth = m['plasmid_meth']
+
+        host_data_list.append((h_meth, h_total))
+        MGE_data_list.append((p_meth, p_total))
+    if len(host_data_list) == 0 or len(MGE_data_list) == 0:
+        return {'invasion_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
+    else:
+        print ("host_data_list", host_data_list)
+        print ("MGE_data_list", MGE_data_list)
+        p_same = compute_p_same_room(host_data_list, MGE_data_list)
+        return {'invasion_score': 0.0, 'confidence': 0.0, 'final_score': p_same, 'total_sites': 0,
+        'motif_confidence': round(1, 4),
+        'host_motif_num': len(motif_data)}
+
 
 
 def extract_motif_data(host_df, plasmid_profile, min_frac = 0.5, min_detect = 100):
@@ -218,6 +243,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         # print (motif_data)
         motif_data_dict[bin_name] = motif_data
         result = invasion_score_from_counts(motif_data, min_frac, 0.5)
+        # result = linkage_score_from_model(motif_data)
         result['host'] = bin_name
         bin_cov = estimate_cov(cov_dict, bin_name, bin_ctg_dict)
         result['host_cov'] = bin_cov
@@ -255,9 +281,9 @@ def report_gc(data, host_dir, bin_ctg_dict):
     """
     work_dir = os.path.join(host_dir, "../")
     ## add new columns for MGE_gc, host_gc, cos_sim
-    data['MGE_gc'] = 0
-    data['host_gc'] = 0
-    data['cos_sim'] = 0
+    data['MGE_gc'] = 0.0
+    data['host_gc'] = 0.0
+    data['cos_sim'] = 0.0
     for index, row in data.iterrows():
         if row['MGE'] not in bin_ctg_dict:
             bin_ctg_dict[row['MGE']] = [row['MGE']]
@@ -369,9 +395,9 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_fra
         futures = []
         for plasmid_name in MGE_dict:
             MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-            if MGE_motif_num == 0:
-                print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
-                continue
+            # if MGE_motif_num == 0:
+            #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
+            #     continue
             print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
             future = executor.submit(
                 for_each_plasmid,
@@ -561,7 +587,7 @@ if __name__ == "__main__":
         plasmid_name = args["plasmid"]
         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
         print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
-        ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, {}, args["threads"])
+        ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs_parallele(profile_dir, {}, args["threads"])
         print (f"Loading is done, {len(single_ctg_dict)} contigs.", len(ctg_motif_dict))
         if bin_file is not None:
             if not os.path.exists(bin_file):

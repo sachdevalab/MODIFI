@@ -444,7 +444,7 @@ python cal_invasion_score.py \
   --threads 64 "\
   --job-name=soil
 
- sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil_zymo/run3.time python main.py \
+ sbatch  --partition standard --wrap "python main.py \
   --work_dir /home/shuaiw/borg/bench/soil_zymo/run3 \
   --whole_bam /home/shuaiw/borg/bench/soil_zymo/soil_zymo.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
@@ -455,6 +455,7 @@ python cal_invasion_score.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
+  --run_steps host \
   --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
   --threads 64 "\
   --job-name=soil3
@@ -543,8 +544,8 @@ sbatch  --partition standard --wrap " python main.py \
 
 
 sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylation/data/borg/bench/pipeline_zymo.time python main.py \
-  --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec7 \
-  --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
+  --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref2 \
+  --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.align.ccs.bam \
   --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
   --read_type hifi \
   --min_len 1000 \
@@ -554,6 +555,29 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   --min_score 30 \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list\
-  --threads 10  " \
+  --threads 64  " \
   --job-name=pipeline
 
+
+sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --enable-score-calibration \
+--threads 64 --sensitivity 7.0 --force-auto \
+ocean.fa \
+./genomad/ \
+/groups/diamond/databases/genomad/v1.7/" --job-name=genomad
+
+
+
+ sbatch  --partition standard --wrap "python main.py \
+  --work_dir /home/shuaiw/borg/bench/soil/run1 \
+  --whole_bam /home/shuaiw/methylation/data/borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 10 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --threads 64 "\
+  --job-name=soil
