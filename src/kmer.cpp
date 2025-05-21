@@ -454,10 +454,6 @@ void parallele_each_genome(string genome_list_file, Encode encoder, int start_g,
             string base_name = get_base_name(each_genome);
             string raw_ipd = ipd_dir + "/" + base_name + ".ipd1.csv";
             slide_kmer(each_genome, encoder, raw_ipd);
-            // cout << genome_index << " index " <<record_match_rate[genome_index].genome << " is " << record_match_rate[genome_index].match_rate << endl;
-        }
-        if (genome_index > 9998){
-            cout << "Too many genomes for record_match_rate!" << endl;
         }
         genome_index += 1;
     }
@@ -479,10 +475,7 @@ void parallele_each_genome_control(string genome_list_file, Encode encoder, int 
             string raw_ipd = ipd_dir + "/" + base_name + ".ipd1.csv";
             string control_ipd = control_dir + "/" + base_name + ".ipd2.csv";
             map_control(each_genome, encoder, raw_ipd, control_ipd);
-            // cout << genome_index << " index " <<record_match_rate[genome_index].genome << " is " << record_match_rate[genome_index].match_rate << endl;
-        }
-        if (genome_index > 9998){
-            cout << "Too many genomes for record_match_rate!" << endl;
+            
         }
         genome_index += 1;
     }
