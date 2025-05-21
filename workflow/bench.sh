@@ -581,3 +581,19 @@ ocean.fa \
   --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --threads 64 "\
   --job-name=soil
+
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o ocean.time python main.py \
+  --work_dir /home/shuaiw/borg/paper/ocean/run1 \
+  --whole_bam ocean_align.align.bam \
+  --whole_ref ocean.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 10 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file  /home/shuaiw/borg/paper/ocean/genomad/ocean_summary/MGE.tsv \
+  --threads 64 "\
+  --job-name=ocean
+

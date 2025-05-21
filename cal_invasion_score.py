@@ -20,6 +20,23 @@ from linkage_model import compute_p_same_room
 IGNORE_MOTIFS = [
 ]
 
+def count_uniq_motif(valid_motif_list):
+    ## RGATC 3 and GCGATC 4 all have GATC 2, so only count the unique motifs
+    num = 0
+    has_GATC = False
+    for motif_info in valid_motif_list:
+        ## if it has GATC and get the location of the match
+    
+        match = re.search('GATC', motif_info[0])
+        if match and motif_info[1] == match.start() + 2:  ## subset of GATC
+            if not has_GATC:  ## count once for GATC
+                num += 1
+                has_GATC = True
+        else:
+            num += 1
+    # print ("num", num, valid_motif_list)
+    return num
+
 def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_sites=5000):
     """
     Adds confidence weighting based on motif site counts.
@@ -30,6 +47,7 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
     total_host_sites = 0
     restriction_signal = 1
     valid_motif_num = 0
+    valid_motif_list = []
     for m in motif_data:
         h_total = m['host_total']
         h_meth = m['host_meth']
@@ -40,7 +58,9 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
             continue
         if p_total == 0:  #skip if plasmid has no motif string
             continue
-        valid_motif_num += 1
+        if p_meth > 0:
+            valid_motif_list.append([m['motif'], m['centerPos']])
+            valid_motif_num += 1
         weight = h_total
         weight = min(weight, 1000)   ### set weight to 1000, once the h_total is larger than 1000
         total_sites += h_total + p_total
@@ -79,6 +99,7 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
         confidence = 1
 
     # motif confidence
+    valid_motif_num = count_uniq_motif(valid_motif_list)  ## remove redundant motifs in counting
     motif_confidence = log(1+valid_motif_num)/log(1+3)   
     if motif_confidence > 1:
         motif_confidence = 1
@@ -115,8 +136,6 @@ def linkage_score_from_model(motif_data):
         return {'invasion_score': 0.0, 'confidence': 0.0, 'final_score': p_same, 'total_sites': 0,
         'motif_confidence': round(1, 4),
         'host_motif_num': len(motif_data)}
-
-
 
 def extract_motif_data(host_df, plasmid_profile, min_frac = 0.5, min_detect = 100):
     # host_df = pd.read_csv(host_profile)
@@ -551,6 +570,7 @@ def load_ctg_motifs_parallele(profile_dir, MGE_dict, threads=4):
 
 
 if __name__ == "__main__":
+    # count_uniq_motif([["RGATC", 3], ["GCGATC", 4], ["TTCC", 1]])
     
     parser = argparse.ArgumentParser(description="get invasion score of MGE", add_help=False, \
     usage="%(prog)s -h", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -600,8 +620,8 @@ if __name__ == "__main__":
     else:
         print ("Please provide either --plasmid_file or --plasmid.")
 
-    ## extract the info saved in the host_dir
-    # summary_host(host_dir)
+    # extract the info saved in the host_dir
+    summary_host(host_dir)
 
 
 
