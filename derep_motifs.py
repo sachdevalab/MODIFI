@@ -1,6 +1,53 @@
 import re
 from Bio.Seq import Seq  # BioPython is used for reverse complement functionality
 
+from Bio.Data import IUPACData
+
+# Precompute IUPAC base mappings
+IUPAC_BASES = {k: set(v) for k, v in IUPACData.ambiguous_dna_values.items()}
+
+def iupac_compatible(b1, b2):
+    """Return True if IUPAC bases b1 and b2 are compatible (non-empty intersection)."""
+    s1 = IUPAC_BASES.get(b1.upper(), set(b1.upper()))
+    s2 = IUPAC_BASES.get(b2.upper(), set(b2.upper()))
+    return bool(s1 & s2)
+
+def center_align_iupac_similarity(motif1, cent1, motif2, cent2):
+    """
+    Center-align two motifs and compute IUPAC compatibility score.
+    
+    Returns:
+        aligned1: Padded motif1
+        aligned2: Padded motif2
+        match_pct: % of positions that are compatible
+    """
+    ## count number of N in two motifs
+    n1 = motif1.count('N')
+    n2 = motif2.count('N')
+    if len(motif1) != len(motif2) or n1 > 2 or n2 > 2:
+        return None, None, 0.0
+    # Pad left and right to align centers
+    left_pad = max(cent2 - cent1, 0)
+    right_pad = max(cent1 - cent2, 0)
+    
+    padded1 = 'N' * left_pad + motif1 + 'N' * right_pad
+    padded2 = 'N' * right_pad + motif2 + 'N' * left_pad
+
+    # Equalize length by padding to the right
+    max_len = max(len(padded1), len(padded2))
+    padded1 = padded1.ljust(max_len, 'N')
+    padded2 = padded2.ljust(max_len, 'N')
+
+    # Compare base by base
+    compatible_count = 0
+    for b1, b2 in zip(padded1, padded2):
+        if iupac_compatible(b1, b2):
+            compatible_count += 1
+
+    match_pct = 100.0 * compatible_count / max_len
+
+    return padded1, padded2, match_pct
+
 
 class MotifFilter:
     IUPAC_CODES = {
@@ -175,26 +222,65 @@ class MotifFilter:
                 return False
         return True
 
+## for motif list, remove redundant motifs, keeping the one with the higher host_total if motifs overlap,
+def uniq_similar_motifs(motif_list):
+    ## using center_align_iupac_similarity
+    filtered = []
+    for motif in motif_list:
+        mseq = motif['motif']
+        keep = True
+        to_remove = []
+
+        for existing in filtered:
+            eseq = existing['motif']
+            a1, a2, sim = center_align_iupac_similarity(mseq, motif['centerPos'], eseq, existing['centerPos'])
+            if sim > 0.8:
+                # Compare host_total scores
+                if motif['host_meth'] > existing['host_meth']:
+                    to_remove.append(existing)
+                else:
+                    keep = False
+                    break
+        # Remove lower-scoring overlapping motifs
+        for rem in to_remove:
+            filtered.remove(rem)
+        if keep:
+            filtered.append(motif)
+    # print ("xx", motif_list, filtered, len(motif_list), len(filtered))
+    return filtered
+
 
 if __name__ == "__main__":
     # Example usage
-    motif_list = [
-        {'motif': 'GSCAGCNNNNNBNNV', 'centerPos': 4, 'host_total': 7114, 'host_meth': 3927, 'plasmid_total': 10, 'plasmid_meth': 6},
-        {'motif': 'GAAGAG', 'centerPos': 5, 'host_total': 1250, 'host_meth': 932, 'plasmid_total': 27, 'plasmid_meth': 1},
-        {'motif': 'HNCTCTTCNNNVNNNNB', 'centerPos': 3, 'host_total': 823, 'host_meth': 554, 'plasmid_total': 15, 'plasmid_meth': 0},
-        {'motif': 'CGBCAG', 'centerPos': 5, 'host_total': 7352, 'host_meth': 4933, 'plasmid_total': 30, 'plasmid_meth': 14},
-        {'motif': 'GGCAGC', 'centerPos': 4, 'host_total': 3057, 'host_meth': 2617, 'plasmid_total': 16, 'plasmid_meth': 16},
-        {'motif': 'CGCCAG', 'centerPos': 5, 'host_total': 3803, 'host_meth': 3313, 'plasmid_total': 3, 'plasmid_meth': 0}
-    ]
+    # motif_list = [
+    #     {'motif': 'GSCAGCNNNNNBNNV', 'centerPos': 4, 'host_total': 7114, 'host_meth': 3927, 'plasmid_total': 10, 'plasmid_meth': 6},
+    #     {'motif': 'GAAGAG', 'centerPos': 5, 'host_total': 1250, 'host_meth': 932, 'plasmid_total': 27, 'plasmid_meth': 1},
+    #     {'motif': 'HNCTCTTCNNNVNNNNB', 'centerPos': 3, 'host_total': 823, 'host_meth': 554, 'plasmid_total': 15, 'plasmid_meth': 0},
+    #     {'motif': 'CGBCAG', 'centerPos': 5, 'host_total': 7352, 'host_meth': 4933, 'plasmid_total': 30, 'plasmid_meth': 14},
+    #     {'motif': 'GGCAGC', 'centerPos': 4, 'host_total': 3057, 'host_meth': 2617, 'plasmid_total': 16, 'plasmid_meth': 16},
+    #     {'motif': 'CGCCAG', 'centerPos': 5, 'host_total': 3803, 'host_meth': 3313, 'plasmid_total': 3, 'plasmid_meth': 0}
+    # ]
 
-    motif_list = [{'motif': 'GAAGAGNNNNNNNNNS', 'centerPos': 5, 'host_total': 969, 'host_meth': 724, 'plasmid_total': 15, 'plasmid_meth': 0}, {'motif': 'CGBCAG', 'centerPos': 5, 'host_total': 7352, 'host_meth': 4933, 'plasmid_total': 30, 'plasmid_meth': 14}, {'motif': 'GGCAGCNNNNNNNNV', 'centerPos': 4, 'host_total': 2745, 'host_meth': 2359, 'plasmid_total': 11, 'plasmid_meth': 11}, {'motif': 'VNNCGCCAG', 'centerPos': 8, 'host_total': 3359, 'host_meth': 2929, 'plasmid_total': 2, 'plasmid_meth': 0}, {'motif': 'GSCAGCNNNNNBNNV', 'centerPos': 4, 'host_total': 7114, 'host_meth': 3927, 'plasmid_total': 10, 'plasmid_meth': 6}]
+    # motif_list = [{'motif': 'GAAGAGNNNNNNNNNS', 'centerPos': 5, 'host_total': 969, 'host_meth': 724, 'plasmid_total': 15, 'plasmid_meth': 0}, {'motif': 'CGBCAG', 'centerPos': 5, 'host_total': 7352, 'host_meth': 4933, 'plasmid_total': 30, 'plasmid_meth': 14}, {'motif': 'GGCAGCNNNNNNNNV', 'centerPos': 4, 'host_total': 2745, 'host_meth': 2359, 'plasmid_total': 11, 'plasmid_meth': 11}, {'motif': 'VNNCGCCAG', 'centerPos': 8, 'host_total': 3359, 'host_meth': 2929, 'plasmid_total': 2, 'plasmid_meth': 0}, {'motif': 'GSCAGCNNNNNBNNV', 'centerPos': 4, 'host_total': 7114, 'host_meth': 3927, 'plasmid_total': 10, 'plasmid_meth': 6}]
 
-    motif_filter = MotifFilter(motif_list)
-    filtered_motifs = motif_filter.filter()
-    print(filtered_motifs)
-    print (len(filtered_motifs), "motifs after filtering.")
+    # motif_filter = MotifFilter(motif_list)
+    # filtered_motifs = motif_filter.filter()
+    # print(filtered_motifs)
+    # print (len(filtered_motifs), "motifs after filtering.")
 
-    seq1 = "GSCAGCNNNNNBNNV"
-    seq2 = "GGCAGCNNNNNNNNV"
-    print (motif_filter.is_subset_or_reverse_complement(seq1, seq2))
-    print (motif_filter.is_subset_or_reverse_complement(seq2, seq1))
+    # seq1 = "GSCAGCNNNNNBNNV"
+    # seq2 = "GGCAGCNNNNNNNNV"
+    # print (motif_filter.is_subset_or_reverse_complement(seq1, seq2))
+    # print (motif_filter.is_subset_or_reverse_complement(seq2, seq1))
+
+    motif1 = "RGATCY"
+    cent1 = 2  # A in position 2
+
+    motif2 = "GCGATC"
+    cent2 = 3  # A in position 3
+
+    a1, a2, sim = center_align_iupac_similarity(motif1, cent1, motif2, cent2)
+
+    print("Motif 1 aligned:", a1)
+    print("Motif 2 aligned:", a2)
+    print(f"Compatibility: {sim:.1f}%")

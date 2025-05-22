@@ -8,7 +8,7 @@ from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 
-from derep_motifs import MotifFilter
+from derep_motifs import MotifFilter, uniq_similar_motifs
 from get_kmer_freq import kmer_freq_sim_bin_worker
 from linkage_model import compute_p_same_room
 
@@ -27,8 +27,8 @@ def count_uniq_motif(valid_motif_list):
     for motif_info in valid_motif_list:
         ## if it has GATC and get the location of the match
     
-        match = re.search('GATC', motif_info[0])
-        if match and motif_info[1] == match.start() + 2:  ## subset of GATC
+        match = re.search('GATC', motif_info["motif"])
+        if match and motif_info["centerPos"] == match.start() + 2:  ## subset of GATC
             if not has_GATC:  ## count once for GATC
                 num += 1
                 has_GATC = True
@@ -59,7 +59,7 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
         if p_total == 0:  #skip if plasmid has no motif string
             continue
         if p_meth > 0:
-            valid_motif_list.append([m['motif'], m['centerPos']])
+            valid_motif_list.append(m)
             valid_motif_num += 1
         weight = h_total
         weight = min(weight, 1000)   ### set weight to 1000, once the h_total is larger than 1000
@@ -99,7 +99,10 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
         confidence = 1
 
     # motif confidence
-    valid_motif_num = count_uniq_motif(valid_motif_list)  ## remove redundant motifs in counting
+    # valid_motif_num = count_uniq_motif(valid_motif_list)  ## remove redundant motifs in counting
+    filtered_motifs = uniq_similar_motifs(valid_motif_list)
+    valid_motif_num = len(filtered_motifs)
+    
     motif_confidence = log(1+valid_motif_num)/log(1+3)   
     if motif_confidence > 1:
         motif_confidence = 1

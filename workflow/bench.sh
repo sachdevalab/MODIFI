@@ -582,10 +582,10 @@ ocean.fa \
   --threads 64 "\
   --job-name=soil
 
- sbatch  --partition standard --wrap "/usr/bin/time -v -o ocean.time python main.py \
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/ocean/ocean.time python main.py \
   --work_dir /home/shuaiw/borg/paper/ocean/run1 \
-  --whole_bam ocean_align.align.bam \
-  --whole_ref ocean.fa \
+  --whole_bam /home/shuaiw/borg/paper/ocean/ocean_align.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/ocean/ocean.fa \
   --read_type hifi \
   --min_len 1000 \
   --max_NM 10 \
