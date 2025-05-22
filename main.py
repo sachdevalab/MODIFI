@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import time
 import psutil
 import logging
+import shutil
 
 from split_bam import split_bam
 from standard_load7 import IPD_load_worker
@@ -93,7 +94,7 @@ def parse_arguments():
                         help="Path to optional k-mer mean IPD database.")
     parser.add_argument("--kmer_num_db", type=str, default=None,
                         help="Path to optional k-mer count database.")
-    parser.add_argument("--clean", action="store_false", dest="clean", help="Enable cleaning step")
+    parser.add_argument("--clean", action="store_true", dest="clean", help="Enable cleaning step")
     parser.add_argument("--min_frac", type=float, default=0.5,
                         help="Minimum methylation fraction to retain a motif.")
     parser.add_argument("--min_sites", type=int, default=100,
@@ -114,7 +115,7 @@ def parse_arguments():
     parser.add_argument("--detect_misassembly", action="store_true",
                         help="Enable detection of misassembly in the pipeline.")
     parser.add_argument("--visu_ipd", action="store_true",
-                        help="Enable visuliation of IPD distribution.")
+                        help="Enable visulization of IPD distribution.")
     parser.add_argument("--binning", action="store_true",
                         help="Enable binning based on methylation.")
     parser.add_argument(
@@ -418,10 +419,12 @@ def get_paras(args):
     os.makedirs(paras["control"], exist_ok=True)
     os.makedirs(paras["ipd_ratio"], exist_ok=True)
     os.makedirs(paras["gffs"], exist_ok=True)
-    os.makedirs(paras["figs"], exist_ok=True)
+    if args.visu_ipd:
+        os.makedirs(paras["figs"], exist_ok=True)
     os.makedirs(paras["motifs"], exist_ok=True)
     os.makedirs(paras["segs"], exist_ok=True)
-    os.makedirs(paras["bins"], exist_ok=True)
+    if args.binning:
+        os.makedirs(paras["bins"], exist_ok=True)
     os.makedirs(paras["profiles"], exist_ok=True)
 
     return paras
@@ -542,6 +545,13 @@ if __name__ == "__main__":
             predict_host_worker,
             args, paras
         )
+    
+    if args.clean:
+        logger.info("Cleaning up intermediate files...")
+        for folder in [paras["bam_dir"], paras["ctg_dir"], paras["ipd_dir"], paras["control"], paras["ipd_ratio"], paras["segs"]]:
+            if os.path.exists(folder):
+                shutil.rmtree(folder)
+
 
     logger.info("\n[Placeholder] Pipeline execution ends here...\n")
     logger.info("🔬 Pipeline execution completed.")
