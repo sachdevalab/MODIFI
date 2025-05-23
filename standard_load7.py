@@ -210,7 +210,7 @@ def extract_context(fasta):
         # seq = raw_seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
     return seq_dict
 
-def load_IPD(each_ref, contig_bam, df_file, fasta, max_mismatch, ref_seq, complement_ref_seq,):
+def load_IPD(each_ref, contig_bam, ipd_file, fasta, max_mismatch, ref_seq, complement_ref_seq,):
     t0 = time.time()
     alignments = AlignmentSet(contig_bam, referenceFastaFname=fasta)
     refInfo = alignments.referenceInfoTable
@@ -245,7 +245,7 @@ def load_IPD(each_ref, contig_bam, df_file, fasta, max_mismatch, ref_seq, comple
     combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'base', 'coverage', 'tMean', 'tErr'])
     # combined_df.to_csv(df_file, index=False)
     # print ("raw ipd df saved", df_file, round(time.time()-t0))
-    get_output(combined_df, df_file)
+    get_output(combined_df, ipd_file)
 
 
 def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, complement_ref_seq, start, end, max_mismatch, factor=1.0):
@@ -325,6 +325,11 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, com
         # Mask for valid reference positions within the start-end range
         valid_mask = (reference_positions >= start) & (reference_positions < end)
 
+        if len(forward_IPD_info) != len(query_positions):
+            continue
+        if len(reverse_IPD_info) != len(query_positions):
+            continue
+
         # Apply vectorized filtering
         forward_mask = valid_mask & (forward_IPD_info[query_positions] != 0)
         reverse_mask = valid_mask & (reverse_IPD_info[query_positions] != 0)
@@ -391,7 +396,7 @@ def norm(rawIpd, referencePositions, matched, aln):
     return ipd, tpl
 
 
-def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file, max_mismatch, complement_ref_seq,):
+def load_IPD_hifi(each_ref, ref_seq, contig_bam, ipd_file, max_mismatch, complement_ref_seq,):
     print (f"handle contig {each_ref}, with length {len(ref_seq)}...")
     t0 = time.time()
 
@@ -436,18 +441,18 @@ def load_IPD_hifi(each_ref, ref_seq, contig_bam, df_file, max_mismatch, compleme
         # break
     combined_df = pd.DataFrame(result, columns=['refName', 'strand', 'tpl', 'base', 'coverage', 'tMean', 'tErr'])
     ## remove the rows with tMean = 0
-    get_output(combined_df, df_file)
+    get_output(combined_df, ipd_file)
 
 
-def get_output(combined_df, count_file):
+def get_output(combined_df, ipd_file):
     combined_df = combined_df[combined_df['tMean'] != 0]
-    ipd_file = count_file.replace(".count", ".ipd1.csv")
+    # ipd_file = count_file.replace(".count", ".ipd1.csv")
     if len(combined_df) > MIN_POS:
         combined_df.to_csv(ipd_file, index=False)
         print ("raw ipd df saved", ipd_file)
-    f = open(count_file, "w")
-    print (f"no. of ipds is {len(combined_df)} for {ipd_file}", file=f)
-    f.close()
+    # f = open(count_file, "w")
+    # print (f"no. of ipds is {len(combined_df)} for {ipd_file}", file=f)
+    # f.close()
 
 class NoisyReadFilter:
     def __init__(self, input_bam, output_bam, max_nm, percentile):
@@ -578,10 +583,10 @@ def standard_load_main():
         ## complement the sequence
         complement_ref_seq = ref_seq.complement()
         if read_type == "subreads":
-            load_IPD(each_ref, subread_bam, outputfile, fasta, max_mismatch, ref_seq, complement_ref_seq,)
+            load_IPD(each_ref, subread_bam, fasta, max_mismatch, ref_seq, complement_ref_seq,)
         elif read_type == "ccs":
 
-            load_IPD_hifi(each_ref, ref_seq, subread_bam, outputfile, max_mismatch, complement_ref_seq,)
+            load_IPD_hifi(each_ref, ref_seq, subread_bam, max_mismatch, complement_ref_seq,)
         else:
             ## raise error
             print ("read type not supported")
@@ -589,7 +594,7 @@ def standard_load_main():
 
     print ("IPD loaded")
 
-def IPD_load_worker(fasta, subread_bam, max_mismatch, read_type):
+def IPD_load_worker(fasta, subread_bam, max_mismatch, read_type, ipd_file):
     seq_dict = extract_context(fasta)
     print ("fasta loaded, contig num:", len(seq_dict))
     # print ("outputfile", outputfile)
@@ -599,10 +604,10 @@ def IPD_load_worker(fasta, subread_bam, max_mismatch, read_type):
         ## complement the sequence
         complement_ref_seq = ref_seq.complement()
         if read_type.lower() == "subreads":
-            load_IPD(each_ref, subread_bam, fasta, max_mismatch, ref_seq, complement_ref_seq,)
+            load_IPD(each_ref, subread_bam, ipd_file, fasta, max_mismatch, ref_seq, complement_ref_seq,)
         elif read_type.lower() == "ccs" or read_type.lower()== "hifi":
 
-            load_IPD_hifi(each_ref, ref_seq, subread_bam, max_mismatch, complement_ref_seq,)
+            load_IPD_hifi(each_ref, ref_seq, subread_bam, ipd_file, max_mismatch, complement_ref_seq,)
         else:
             ## raise error
             print ("read type not supported")

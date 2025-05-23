@@ -157,6 +157,7 @@ def load_ipd_parallel(args, paras):
                 subread_bam=bam_path,
                 max_mismatch=args.max_NM,
                 read_type=args.read_type,
+                ipd_file = ipd_file,
             )
             futures.append(future)
 
