@@ -522,7 +522,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
-  --run_steps profile merge \
+  --run_steps host \
   --threads 64"\
   --job-name=new_pf
 
@@ -561,8 +561,8 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
 
 sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --enable-score-calibration \
 --threads 64 --sensitivity 7.0 --force-auto \
-ocean.fa \
-./genomad/ \
+/groups/banfield/projects/human/nano/1_assembly/pacbio_assembly/NANO_2_INF1330004_3PB/NANO_2_INF1330004_3PB_HR_HIFIASM_META_scaffold_min1000.fa \
+/home/shuaiw/borg/allison/NANO_2_INF1330004_3PB_genomad/ \
 /groups/diamond/databases/genomad/v1.7/" --job-name=genomad
 
 
@@ -593,6 +593,7 @@ ocean.fa \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
+  --run_steps load control compare motif profile merge host \
   --plasmid_file  /home/shuaiw/borg/paper/ocean/genomad/ocean_summary/MGE.tsv \
   --threads 64 "\
   --job-name=ocean

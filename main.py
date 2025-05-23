@@ -143,13 +143,18 @@ def load_ipd_parallel(args, paras):
             bam_path = os.path.join(paras["bam_dir"], bam)
             ctg_name = bam.replace(".bam", "")
             fasta = os.path.join(paras["ctg_dir"], f"{ctg_name}.fa")
-            outputfile = os.path.join(paras["ipd_dir"], f"{ctg_name}.count")
+            # outputfile = os.path.join(paras["ipd_dir"], f"{ctg_name}.count")
+            ipd_file = os.path.join(paras["ipd_dir"], f"{ctg_name}.ipd1.csv")
+
+            ## if the output file already exists and not empty, skip it
+            if os.path.exists(ipd_file) and os.path.getsize(ipd_file) > 0:
+                # logger.info(f"Output file {outputfile} already exists. Skipping...")
+                continue
 
             future = executor.submit(
                 IPD_load_worker,
                 fasta=fasta,
                 subread_bam=bam_path,
-                outputfile=outputfile,
                 max_mismatch=args.max_NM,
                 read_type=args.read_type,
             )

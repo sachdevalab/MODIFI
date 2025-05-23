@@ -589,20 +589,20 @@ def standard_load_main():
 
     print ("IPD loaded")
 
-def IPD_load_worker(fasta, subread_bam, outputfile, max_mismatch, read_type):
+def IPD_load_worker(fasta, subread_bam, max_mismatch, read_type):
     seq_dict = extract_context(fasta)
     print ("fasta loaded, contig num:", len(seq_dict))
-    print ("outputfile", outputfile)
+    # print ("outputfile", outputfile)
 
     for each_ref in seq_dict:
         ref_seq = seq_dict[each_ref]
         ## complement the sequence
         complement_ref_seq = ref_seq.complement()
         if read_type.lower() == "subreads":
-            load_IPD(each_ref, subread_bam, outputfile, fasta, max_mismatch, ref_seq, complement_ref_seq,)
+            load_IPD(each_ref, subread_bam, fasta, max_mismatch, ref_seq, complement_ref_seq,)
         elif read_type.lower() == "ccs" or read_type.lower()== "hifi":
 
-            load_IPD_hifi(each_ref, ref_seq, subread_bam, outputfile, max_mismatch, complement_ref_seq,)
+            load_IPD_hifi(each_ref, ref_seq, subread_bam, max_mismatch, complement_ref_seq,)
         else:
             ## raise error
             print ("read type not supported")
