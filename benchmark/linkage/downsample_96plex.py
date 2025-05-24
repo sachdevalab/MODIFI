@@ -29,8 +29,30 @@ def subsample(out_dir, full_bam, run_cmd):
         print (run, file = f)
     f.close()
 
+def pure_main():
+    full_bam = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.align.ccs.bam"
+    out_dir = "/home/shuaiw/borg/paper/linkage"
+    run_cmd = "run_dp.sh"
+    subsample(out_dir, full_bam, run_cmd)
 
-full_bam = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.align.ccs.bam"
-out_dir = "/home/shuaiw/borg/paper/linkage"
-run_cmd = "run_dp.sh"
-subsample(out_dir, full_bam, run_cmd)
+def meta_subsample(out_dir, raw_96, soil):
+    # for p in ["10", "20", "30", "50", "05"]:
+    for p in ["20", "30", "50", "05"]:
+        prefix = f"m64004_210929_143746.raw.p{p}"
+        out_bam = os.path.join(out_dir, f"{prefix}.p{p}.bam")
+        merge_bam = os.path.join(out_dir, f"{prefix}.soil.merge.bam")
+        cmd = f"""
+            samtools view -s 42.{p} -b {raw_96} > {out_bam}
+            /home/shuaiw//smrtlink/pbindex {out_bam}
+            samtools index {out_bam}
+            samtools merge -f {merge_bam} {out_bam} {soil}
+            /home/shuaiw//smrtlink/pbindex {merge_bam}
+            samtools index {merge_bam}
+        """
+        os.system(cmd)
+
+
+soil = "/home/shuaiw/borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam"
+raw_96 = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam"
+out_dir = "/home/shuaiw/borg/paper/linkage/meta"
+meta_subsample(out_dir, raw_96, soil)

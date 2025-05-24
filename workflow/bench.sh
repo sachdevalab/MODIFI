@@ -598,3 +598,12 @@ sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --en
   --threads 64 "\
   --job-name=ocean
 
+
+ sbatch  --partition standard --wrap "gtdbtk classify_wf \
+  --genome_dir /home/shuaiw/borg/paper/ocean/run1/contigs \
+  --out_dir /home/shuaiw/borg/paper/ocean/gtdb \
+  --skip_ani_screen \
+  --cpus 64 \
+  -x fasta"\
+  --job-name=gtdb
+

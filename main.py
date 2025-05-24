@@ -140,6 +140,8 @@ def load_ipd_parallel(args, paras):
         for bam in os.listdir(paras["bam_dir"]):
             if not bam.endswith(".bam"):
                 continue
+            if bam.endswith(".filtered.bam"):
+                continue
             bam_path = os.path.join(paras["bam_dir"], bam)
             ctg_name = bam.replace(".bam", "")
             fasta = os.path.join(paras["ctg_dir"], f"{ctg_name}.fa")

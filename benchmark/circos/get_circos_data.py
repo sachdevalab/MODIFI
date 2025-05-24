@@ -168,10 +168,14 @@ def get_df():
     df.to_csv("motif_df.csv", index=False)
 
 def split_gff(gff2, contig):
-    # motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
-    motif_list = ["CACAG", "GGAACG", "TACACG"]
+    bin_size = 650  ## 50000
+    name_dict = {}
+    motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
+    # motif_list = ["CACAG", "GGAACG", "TACACG"]
     for motif in motif_list:
         motif_gff = open(out_dir + contig + "_" + motif + ".gff", "w")
+        motif_csv = out_dir + contig + "_" + motif + ".csv"
+        data = []
         for line in open(gff2):
             if line[0] == "#":
                 motif_gff.write(line)
@@ -179,7 +183,19 @@ def split_gff(gff2, contig):
             line = line.strip().split("\t")
             if motif in line[8]:
                 motif_gff.write(line[0] + "\t" + line[1] + "\t" + motif + "\t" + line[3] + "\t" + line[4] + "\t" + line[5] + "\t" + line[6] + "\t" + line[7] + "\t" + line[8] + "\n")
+                contig,type,start,stop,strand = line[0],motif,line[3],line[4],line[6]
+                ## convert start and stop to bin
+                bin_index = int(start) // bin_size
+                ## convert start and stop to bin
+                start = round((bin_index + 0.25) * bin_size)
+                stop = round((bin_index + 0.75) * bin_size)
+                name = contig + ":" + str(start) + "-" + str(stop) + strand + "_" + motif
+                if name not in name_dict:
+                    data.append([name,contig,type,start,stop,strand])
+                    name_dict[name] = 1
         motif_gff.close()
+        df = pd.DataFrame(data, columns=["name", "contig", "type", "start", "stop", "strand"])
+        df.to_csv(motif_csv, index=False)
          
 if __name__ == "__main__":
     # motif_new = "CTGCAG"
@@ -187,8 +203,8 @@ if __name__ == "__main__":
     score_cutoff = 30
     # my_ref = "/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa"
     # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
-    # contig = "E_coli_H10407_6"
-    contig = "B_cepacia_UCB-717_5"
+    contig = "E_coli_H10407_3"
+    # contig = "B_cepacia_UCB-717_5"
     my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
     gff = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.gff"
     gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
@@ -196,7 +212,7 @@ if __name__ == "__main__":
     # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
     profile = "/home/shuaiw/borg/test.csv"
     ipd_ratio_file = f"/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/{contig}.ipd3.csv"
-    out_dir = "/home/shuaiw/borg/paper/circos/"
+    out_dir = "/home/shuaiw/borg/paper/circos2/"
 
     split_gff(gff2, contig)
 
