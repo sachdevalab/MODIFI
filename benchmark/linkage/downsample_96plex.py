@@ -36,8 +36,9 @@ def pure_main():
     subsample(out_dir, full_bam, run_cmd)
 
 def meta_subsample(out_dir, raw_96, soil):
-    # for p in ["10", "20", "30", "50", "05"]:
-    for p in ["20", "30", "50", "05"]:
+    f = open("run_meta_dp.sh", "w")
+    print ("#!/bin/bash\n#SBATCH --job-name=plex_soil \n #SBATCH --partition=standard", file = f)
+    for p in ["10", "20", "30", "50", "05"]:
         prefix = f"m64004_210929_143746.raw.p{p}"
         out_bam = os.path.join(out_dir, f"{prefix}.p{p}.bam")
         merge_bam = os.path.join(out_dir, f"{prefix}.soil.merge.bam")
@@ -49,7 +50,33 @@ def meta_subsample(out_dir, raw_96, soil):
             /home/shuaiw//smrtlink/pbindex {merge_bam}
             samtools index {merge_bam}
         """
-        os.system(cmd)
+        # os.system(cmd)
+        prefix = f"{out_dir}/m64004_210929_143746.p{p}"
+        # alignment = f"""
+        #     ~/smrtlink/pbmm2 align --preset CCS -j $SLURM_CPUS_ON_NODE /home/shuaiw/borg/contigs/soil_zymo.fa {merge_bam} {prefix}.align.raw.bam
+        #     samtools sort -T {prefix} -@ $SLURM_CPUS_ON_NODE -o {prefix}.align.bam {prefix}.align.raw.bam
+        #     rm {prefix}.align.raw.bam
+        #     samtools index {prefix}.align.bam
+        #     /home/shuaiw//smrtlink/pbindex {prefix}.align.bam
+        # """
+        # print (alignment, file = f)
+        run = f"""
+            /usr/bin/time -v -o {prefix}.run.time python /home/shuaiw/Methy/main.py \
+            --work_dir {out_dir}/ \
+            --whole_bam {prefix}.align.bam \
+            --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
+            --read_type hifi \
+            --min_len 1000 \
+            --max_NM 10 \
+            --min_cov 1 \
+            --min_frac 0.4 \
+            --min_score 30 \
+            --min_sites 30 \
+            --clean \
+            --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list
+        """
+        print (run, file = f)
+    f.close()
 
 
 soil = "/home/shuaiw/borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam"

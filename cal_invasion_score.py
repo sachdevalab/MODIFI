@@ -140,10 +140,7 @@ def linkage_score_from_model(motif_data):
         'motif_confidence': round(1, 4),
         'host_motif_num': len(motif_data)}
 
-def extract_motif_data(host_df, plasmid_profile, min_frac = 0.5, min_detect = 100):
-    # host_df = pd.read_csv(host_profile)
-    plasmid_df = pd.read_csv(plasmid_profile)
-    ## make a new df, by extract the motifString, centerPos, motif_loci_num, motif_modified_num, motif_modified_ratio from the original two dfs
+def extract_motif_data(host_df, plasmid_df, min_frac = 0.5, min_detect = 100):
     motif_data = pd.merge(host_df, plasmid_df, on = ['motifString', 'centerPos'], suffixes=('_host', '_plasmid'))
     # print ("<<<<<", motif_data)
     motif_data = motif_data[(motif_data['motif_modified_ratio_host'] > min_frac) & (motif_data['motif_modified_num_host'] > min_detect)]
@@ -240,8 +237,9 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         MGE_cov = cov_dict[plasmid_name]
     ## check if the plasmid profile exists
     if not os.path.exists(plasmid_profile):
-        print (f"{plasmid_profile} does not exist.")
+        print (f"plasmid_profile {plasmid_profile} does not exist.")
         return
+    plasmid_df = pd.read_csv(plasmid_profile)
     data = []
     motif_data_dict = {}
     i = 0
@@ -252,7 +250,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
             continue
         bin_motif = bin_motif_dict[bin_name]
         # print (bin_motif)
-        motif_data = extract_motif_data(bin_df, plasmid_profile, min_frac)
+        motif_data = extract_motif_data(bin_df, plasmid_df, min_frac)
         # print ("###", motif_data)
         motif_data = filter_motifs(bin_motif, motif_data)
         # print (motif_data)
@@ -272,8 +270,8 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         result['MGE_cov'] = MGE_cov
         result['MGE'] = plasmid_name
         result['motif_info'] = summary_motif_info(motif_data)
-        if i % 100 == 0:
-            print (f"Processing {plasmid_name} with {len(motif_data)} motifs, {i} bins.")
+        # if i % 100 == 0:
+        #     print (f"Processing {plasmid_name} with {len(motif_data)} motifs, {i} bins.")
         i += 1
 
         data.append(result)
@@ -342,13 +340,13 @@ def filter_motifs(host_motif, motif_data):
 
     for m in motif_data:
         ## remove the ignored motifs
-        ignore_flag = False
-        for ignore_motif in IGNORE_MOTIFS:
-            if ignore_motif in m['motif']:
-                ignore_flag = True
-                break
-        if ignore_flag:
-            continue
+        # ignore_flag = False
+        # for ignore_motif in IGNORE_MOTIFS:
+        #     if ignore_motif in m['motif']:
+        #         ignore_flag = True
+        #         break
+        # if ignore_flag:
+        #     continue
 
         tag = m['motif'] + "_tga_" + str(m['centerPos'])
         if tag in motif_tag_dict:
@@ -358,7 +356,7 @@ def filter_motifs(host_motif, motif_data):
 def count_MGE_with_motif(plasmid_name, profile_dir):
     plasmid_motif_file = os.path.join(profile_dir,"../motifs", f"{plasmid_name}.motifs.csv")
     if not os.path.exists(plasmid_motif_file):
-        print (f"{plasmid_motif_file} does not exist.")
+        print (f"plasmid_motif_file {plasmid_motif_file} does not exist.")
         return 0
     plasmid_motif = pd.read_csv(plasmid_motif_file)
     return len(plasmid_motif)
@@ -417,9 +415,9 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, bin_file=None, min_fra
         futures = []
         for plasmid_name in MGE_dict:
             MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-            # if MGE_motif_num == 0:
-            #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
-            #     continue
+            if MGE_motif_num == 0:  # to speed up
+                print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
+                continue
             print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
             future = executor.submit(
                 for_each_plasmid,
@@ -490,7 +488,7 @@ def load_ctg_motifs_single(profile_dir, MGE_dict):
     for file in os.listdir(profile_dir):
         if file.endswith(".motifs.profile.csv"):
             ## extract the host name
-            ctg_name = file.split(".")[0]
+            ctg_name = file.split(".motifs.profile.csv")[0]
             host_motif = os.path.join(profile_dir,"../motifs", f"{ctg_name}.motifs.csv")
             host_profile = os.path.join(profile_dir, file)
 
@@ -501,14 +499,14 @@ def load_ctg_motifs_single(profile_dir, MGE_dict):
                 continue
             
             if not os.path.exists(host_motif):
-                print (f"{host_motif} does not exist.")
+                print (f"load_ctg_motifs_single host_motif {host_motif} does not exist.")
                 continue
             motif_df = pd.read_csv(host_motif)
             ctg_motif_dict[ctg_name] = motif_df
             
             ## check if the host profile and host_motif exists
             if not os.path.exists(host_profile):
-                print (f"{host_profile} does not exist.")
+                print (f"host_profile {host_profile} does not exist.")
                 continue
 
             host_df = pd.read_csv(host_profile)
@@ -526,17 +524,17 @@ def load_ctg_motifs_single(profile_dir, MGE_dict):
 def process_file_with_args(args):
     file, profile_dir, MGE_dict = args
     if file.endswith(".motifs.profile.csv"):
-        ctg_name = file.split(".")[0]
+        ctg_name = file.split(".motifs.profile.csv")[0]
         if ctg_name in MGE_dict:  # Skip other MGEs, only focus on chromosomal host
             return None
         host_motif = os.path.join(profile_dir, "../motifs", f"{ctg_name}.motifs.csv")
         if not os.path.exists(host_motif):
-            print(f"{host_motif} does not exist.")
+            print(f"process_file_with_args host_motif {host_motif} does not exist.")
             return None
         motif_df = pd.read_csv(host_motif)
         host_profile = os.path.join(profile_dir, file)
         if not os.path.exists(host_profile):
-            print(f"{host_profile} does not exist.")
+            print(f"host_profile {host_profile} does not exist.")
             return None
         host_df = pd.read_csv(host_profile)
         return {
@@ -614,7 +612,7 @@ if __name__ == "__main__":
         print (f"Loading is done, {len(single_ctg_dict)} contigs.", len(ctg_motif_dict))
         if bin_file is not None:
             if not os.path.exists(bin_file):
-                print (f"{bin_file} does not exist.")
+                print (f"bin_file {bin_file} does not exist.")
             ctg_bin_dict, bin_ctg_dict = load_bin(bin_file)
         else:
             ctg_bin_dict, bin_ctg_dict = ctg_single_dict, single_ctg_dict

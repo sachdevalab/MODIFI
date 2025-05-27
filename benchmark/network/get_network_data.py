@@ -24,6 +24,9 @@ def get_edge(cutoff=0.45):
 
 
 if __name__ == "__main__":  
-    host_sum_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/host_summary.csv"
-    gexf = "/home/shuaiw/borg/paper/network/RuReacBro_20230708_11_72h_20_bin.gexf"
+    # host_sum_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/host_summary.csv"
+    # gexf = "/home/shuaiw/borg/paper/network/RuReacBro_20230708_11_72h_20_bin.gexf"
+
+    host_sum_file = "/home/shuaiw/borg/bench/soil/run1/host_summary.csv"
+    gexf = "/home/shuaiw/borg/paper/network/soil_run1_bin.gexf"
     get_edge()  
