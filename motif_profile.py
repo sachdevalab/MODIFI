@@ -424,6 +424,11 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
                                             "proportion", "valid_loci_num", "motif_modified_ratio"])
         df = df.round(4)
         df.to_csv(profile, index=False)
+
+        # anno = count_motifs(modified_loci, all_modified_loci, score_cutoff)
+        anno = ''
+        get_reprocess_gff(gff, all_modified_loci, anno)
+
         print ("profiling finished", profile, flush=True)
         return 0
     except Exception as e:

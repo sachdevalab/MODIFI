@@ -150,7 +150,7 @@ def main():
     plt.ylabel('Number of Our Linkages')
 
     plt.tight_layout()
-    plt.savefig('../tmp/both_linkages.png')
+    plt.savefig('../../tmp/results/both_linkages.png')
     # """
 
 def contig2bin(bin_dir, ctg2bin):
@@ -205,7 +205,9 @@ if __name__ == "__main__":
     ctg2bin = "/home/shuaiw/borg/pengfan/ctg2bin.csv"
     fai = "/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa.fai"
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_LR_bin/host_summary.csv"
-    host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/host_summary.csv"
+    # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/host_summary.csv"
+    # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin/host_summary.csv"
+    host_sum =  "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"
 
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin/host_summary.csv"
     # host_sum = "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"

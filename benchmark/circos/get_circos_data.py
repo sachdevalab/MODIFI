@@ -170,7 +170,7 @@ def get_df():
 def split_gff(gff2, contig):
     bin_size = 650  ## 50000
     name_dict = {}
-    motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
+    
     # motif_list = ["CACAG", "GGAACG", "TACACG"]
     for motif in motif_list:
         motif_gff = open(out_dir + contig + "_" + motif + ".gff", "w")
@@ -201,17 +201,23 @@ if __name__ == "__main__":
     # motif_new = "CTGCAG"
     # exact_pos = 5
     score_cutoff = 30
-    # my_ref = "/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa"
-    # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
-    contig = "E_coli_H10407_3"
-    # contig = "B_cepacia_UCB-717_5"
-    my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
-    gff = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.gff"
-    gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
-    # gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
-    # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
-    profile = "/home/shuaiw/borg/test.csv"
-    ipd_ratio_file = f"/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/{contig}.ipd3.csv"
+
+
+    # contig = "E_coli_H10407_3"
+    # motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
+    # my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
+    # gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
+    # ipd_ratio_file = f"/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/{contig}.ipd3.csv"
+
+
+    motif_list = ["CAGAC", "CCGG", "TGCCCA", "TCTANNNNNNNRTNG","GAANNNNNNTGGC"]
+    # contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_553_L"
+    contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_10354_C"
+    my_ref = f"/home/shuaiw/borg/bench/soil/run1/contigs/{contig}.fa"
+    gff2 = f"/home/shuaiw/borg/bench/soil/run1/gffs/{contig}.reprocess.gff"
+    ipd_ratio_file = f"/home/shuaiw/borg/bench/soil/run1/ipd_ratio/{contig}.ipd3.csv"
+
+
     out_dir = "/home/shuaiw/borg/paper/circos2/"
 
     split_gff(gff2, contig)
