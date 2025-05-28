@@ -785,6 +785,3 @@ sbatch --partition standard --job-name=pf7 --wrap "python main.py \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --threads 64"
-
-
-
