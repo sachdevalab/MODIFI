@@ -113,6 +113,24 @@ def read_gtdb(gatk):
             bin2anno_dict[row['user_genome']] = phylum
     return bin2anno_dict
 
+def classify_cow_MGE():
+    MGE_type_file = "/home/shuaiw/borg/pengfan/contigs/All_Circular_Elements_genomad_summary.tsv"
+    plasmid_types={}
+    virus_types={}
+    for line in open(MGE_type_file, "r"):
+        if line.startswith("#"):
+            continue
+        line = line.strip().split("\t")
+        if len(line) < 3:
+            continue
+        MGE_name = line[0]
+        MGE_type = line[-1]
+        if MGE_type == "plasmid":
+            plasmid_types[MGE_name] = MGE_type
+        elif MGE_type == "virus":
+            virus_types[MGE_name] = MGE_type
+    return plasmid_types, virus_types
+
 if __name__ == "__main__":  
     # host_sum_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/host_summary.csv"
     # gexf = "/home/shuaiw/borg/paper/network/RuReacBro_20230708_11_72h_20_bin.gexf"
@@ -132,4 +150,5 @@ if __name__ == "__main__":
     gexf = "/home/shuaiw/borg/paper/network/RuReacBro_20230708_11_72h_20_bin.gexf"
     gatk = "/home/shuaiw/borg/pengfan/contigs/gatk_all.summary.tsv"
     bin2anno_dict = read_gtdb(gatk)
-    get_edge(bin2anno_dict=bin2anno_dict, cutoff=0.55)  
+    plasmid_types, virus_types = classify_cow_MGE()
+    get_edge(plasmid_types, virus_types, bin2anno_dict=bin2anno_dict, cutoff=0.55)  

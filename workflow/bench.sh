@@ -563,6 +563,21 @@ sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --en
   --threads 64 "\
   --job-name=infant
 
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/infant/infant2.time python main.py \
+  --work_dir /home/shuaiw/borg/paper/infant/NANO_2_INF1340011_4PB \
+  --whole_bam /home/shuaiw/borg/allison/NANO_2_INF1340011_4G1.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffold_min1000.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 10 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file  /home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_genomad/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffold_min1000_summary/all_summary.tsv \
+  --threads 64 "\
+  --job-name=infant2
+
  sbatch  --partition standard --wrap "gtdbtk classify_wf \
   --genome_dir /home/shuaiw/methylation/data/borg/contigs/bins/ \
   --out_dir /home/shuaiw/methylation/data/borg/contigs/GTDB \

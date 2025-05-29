@@ -61,8 +61,8 @@ def meta_subsample(out_dir, raw_96, soil):
         # """
         # print (alignment, file = f)
         run = f"""
-            /usr/bin/time -v -o {prefix}.run.time python /home/shuaiw/Methy/main.py \
-            --work_dir {out_dir}/ \
+            sbatch  --partition standard --wrap "/usr/bin/time -v -o {prefix}.run.time python /home/shuaiw/Methy/main.py \
+            --work_dir {prefix}/ \
             --whole_bam {prefix}.align.bam \
             --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
             --read_type hifi \
@@ -73,7 +73,9 @@ def meta_subsample(out_dir, raw_96, soil):
             --min_score 30 \
             --min_sites 30 \
             --clean \
-            --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list
+            --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+            --threads 64 "\
+            --job-name=p{p}
         """
         print (run, file = f)
     f.close()
