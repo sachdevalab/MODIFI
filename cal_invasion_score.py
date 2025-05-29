@@ -277,17 +277,18 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, bin_ctg_dict, ctg_profile_dict
         data.append(result)
     ## convert the data to a df, and sort by final_score
     data = pd.DataFrame(data)
-    data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
-    ## host column the first, final_score the second, invasion_score the third, confidence the forth, total_sites the fifth
-    data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
-    ## print top ten
-    ## remove the rows with final_score = 0
-    data = data[data['final_score'] > 0]
-    # data = report_gc(data, host_dir, bin_ctg_dict)
-    print (data.head(10))
-    ## output the data to a csv file
-    host_prediction = os.path.join(host_dir, f"{plasmid_name}.host_prediction.csv")
-    data.to_csv(host_prediction, index = False)
+    if len(data) > 0:
+        data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
+        ## host column the first, final_score the second, invasion_score the third, confidence the forth, total_sites the fifth
+        data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
+        ## print top ten
+        ## remove the rows with final_score = 0
+        data = data[data['final_score'] > 0]
+        # data = report_gc(data, host_dir, bin_ctg_dict)
+        print (data.head(5))
+        ## output the data to a csv file
+        host_prediction = os.path.join(host_dir, f"{plasmid_name}.host_prediction.csv")
+        data.to_csv(host_prediction, index = False)
     ## output the motif data to a csv file
     motif_data_file = os.path.join(host_dir, f"{plasmid_name}.motif_data.csv")
     with open(motif_data_file, 'w') as f:
@@ -380,6 +381,9 @@ def summary_host(host_dir, bin_ctg_dict):
         if file.endswith(".host_prediction.csv"):
             # plasmid_name = file.split(".")[0]
             host_prediction = os.path.join(host_dir, file)
+            ## check if host_prediction is empty
+            if os.path.getsize(host_prediction) == 0:
+                continue
             df = pd.read_csv(host_prediction)
             ## extract the first row
             ## add new column for plasmid_name at the start
@@ -390,8 +394,9 @@ def summary_host(host_dir, bin_ctg_dict):
                 
     data = pd.DataFrame(data)
     ## sort by final_score
-    data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
-    data = report_gc(data, host_dir, bin_ctg_dict)
+    if len(data) > 0:
+        data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
+        data = report_gc(data, host_dir, bin_ctg_dict)
     ## output the data to a csv file
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)
