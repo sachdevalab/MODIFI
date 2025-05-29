@@ -508,8 +508,8 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
 
 sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --enable-score-calibration \
 --threads 64 --sensitivity 7.0 --force-auto \
-/groups/banfield/projects/human/nano/1_assembly/pacbio_assembly/NANO_2_INF1330004_3PB/NANO_2_INF1330004_3PB_HR_HIFIASM_META_scaffold_min1000.fa \
-/home/shuaiw/borg/allison/NANO_2_INF1330004_3PB_genomad/ \
+/groups/banfield/projects/human/nano/1_assembly/pacbio_assembly/NANO_2_INF1340011_4PB/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffold_min1000.fa \
+/home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_genomad/ \
 /groups/diamond/databases/genomad/v1.7/" --job-name=genomad
 
 
