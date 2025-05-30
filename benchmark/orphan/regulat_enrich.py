@@ -18,13 +18,13 @@ def read_ref(ref):
         # return str(record.seq), record.id
     return REF
 
-def if_region_in_gene_regulatory_region(pos, Gene_regulatory_regions):
-    for start, end in Gene_regulatory_regions:
-        if start <= pos <= end:
+def if_region_in_gene_regulatory_region(pos, Gene_regulatory_regions, strand):
+    for start, end, cds_strand in Gene_regulatory_regions:
+        if cds_strand == strand and start <= pos <= end:
             return True
     return False
 
-def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_regions):
+def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_regions, background_regions):
     motif_len = len(motif_new)
     rev_exact_pos = motif_len - exact_pos + 1
 
@@ -33,7 +33,9 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
     normal_region_num = 0
     methlated_normal_region_num = 0
 
-    motif_ipd_ratio = []
+    control_region_num = 0
+    methylated_control_num = 0
+
     record_modified_sites = {}
 
     for r, contig in REF.items():
@@ -41,7 +43,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
 
             tag = r + ":" + str(site+exact_pos) + "+"
             ## check if the site is in the gene regulatory regions
-            if if_region_in_gene_regulatory_region(site + exact_pos, Gene_regulatory_regions):
+            if if_region_in_gene_regulatory_region(site + exact_pos, Gene_regulatory_regions, "+"):
                 gene_regu_flag = True
                 gene_regulatory_region_num += 1
             else:
@@ -53,6 +55,11 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
                     methylated_gene_regulatory_region_num += 1
                 else:
                     methlated_normal_region_num += 1
+
+            if if_region_in_gene_regulatory_region(site + exact_pos, background_regions, "+"):
+                control_region_num += 1
+                if tag in modified_loci:
+                    methylated_control_num += 1
 
 
         for site in nt_search(str(contig), Seq(motif_new).reverse_complement())[
@@ -62,7 +69,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
             record_modified_sites[tag] = motif_new
 
 
-            if if_region_in_gene_regulatory_region(site + rev_exact_pos, Gene_regulatory_regions):
+            if if_region_in_gene_regulatory_region(site + rev_exact_pos, Gene_regulatory_regions, "-"):
                 gene_regu_flag = True
                 gene_regulatory_region_num += 1
             else:
@@ -74,10 +81,16 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
                 else:
                     methlated_normal_region_num += 1
 
+            if if_region_in_gene_regulatory_region(site + exact_pos, background_regions, "-"):
+                control_region_num += 1
+                if tag in modified_loci:
+                    methylated_control_num += 1
+
     # print ("gene_regulatory_region_num", gene_regulatory_region_num, "methylated_gene_regulatory_region_num", methylated_gene_regulatory_region_num, "methylated ratio", methylated_gene_regulatory_region_num/gene_regulatory_region_num)
     # print ("normal_region_num", normal_region_num, "methlated_normal_region_num", methlated_normal_region_num, "methylated ratio", methlated_normal_region_num/normal_region_num)
     ## fisher test for the two proportions
-    a, b, c, d = methylated_gene_regulatory_region_num, gene_regulatory_region_num - methylated_gene_regulatory_region_num, methlated_normal_region_num, normal_region_num - methlated_normal_region_num
+    # a, b, c, d = methylated_gene_regulatory_region_num, gene_regulatory_region_num - methylated_gene_regulatory_region_num, methlated_normal_region_num, normal_region_num - methlated_normal_region_num
+    a, b, c, d = methylated_gene_regulatory_region_num, gene_regulatory_region_num - methylated_gene_regulatory_region_num, methylated_control_num, control_region_num - methylated_control_num
     odds_ratio, p_value = fisher_exact([[a, b], [c, d]])
     # print ("odds ratio", odds_ratio, "p-value", p_value)
     return odds_ratio, p_value, a, b, c, d
@@ -140,12 +153,29 @@ def collect_regulation_region(gff, genome):
             if strand == "+":
                 reg_start = max(1, start - 100)
                 reg_end = start + 50
+                Gene_regulatory_regions.append((reg_start, reg_end, "+"))
             elif strand == "-":
                 reg_start = max(1, end - 50)
                 reg_end = end + 100
-            Gene_regulatory_regions.append((reg_start, reg_end))
+                Gene_regulatory_regions.append((reg_start, reg_end, "-"))
     # print (len(Gene_regulatory_regions), "gene regulatory regions collected")
     return Gene_regulatory_regions
+
+def get_background(Gene_regulatory_regions):
+    max_len = Gene_regulatory_regions[-1][1]
+    ## randomly select 1000 regions from the genome, 500 in + strand and 500 in - strand
+    import random
+    region_length = 150
+    background_regions = []
+    for _ in range(500):
+        start = random.randint(1, max_len - region_length)
+        end = start + region_length
+        background_regions.append((start, end, "+"))
+    for _ in range(500):
+        start = random.randint(1, max_len - region_length)
+        end = start + region_length
+        background_regions.append((start, end, "-"))
+    return background_regions
 
 
 if __name__ == "__main__":
@@ -170,7 +200,12 @@ if __name__ == "__main__":
 
             # motif_new = "CAGNNNNNNTRG"
             # exact_pos = 2
+
+
             Gene_regulatory_regions = collect_regulation_region(genome_gff, genome)
+            if len(Gene_regulatory_regions) == 0:
+                continue
+            background_regions = get_background(Gene_regulatory_regions)
 
             REF = read_ref(my_ref)
             # print (REF)
@@ -181,7 +216,7 @@ if __name__ == "__main__":
             for index, motif in motifs.iterrows():
                 motif_new = motif["motifString"]
                 exact_pos = motif["centerPos"]
-                odds_ratio, p_value, a, b, c, d = get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_regions)
+                odds_ratio, p_value, a, b, c, d = get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_regions, background_regions)
                 if p_value <= 0.05:
                     print(f"genome {genome} , Motif: {motif_new}, Odds Ratio: {odds_ratio}, P-value: {p_value}", a, b, c, d)
                     data.append([genome, motif_new, exact_pos, odds_ratio, p_value, a, b, c, d])
