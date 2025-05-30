@@ -1,7 +1,3 @@
-"""
-Given the folder motifs/, enumerage all the motifs and collect them into a single file.
-"""
-
 import os
 import sys
 import pandas as pd
