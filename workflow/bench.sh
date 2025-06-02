@@ -807,3 +807,9 @@ sbatch --partition standard --wrap "MicrobeMod annotate_rm \
   -f /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
   -o /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements_RM -t 64" \
   --job-name=MicrobeMod
+
+
+sbatch --partition standard --wrap "MicrobeMod annotate_rm \
+  -f merged2.fa \
+  -o merged2_RM -t 64" \
+  --job-name=MicrobeMod
