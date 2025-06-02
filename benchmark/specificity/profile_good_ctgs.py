@@ -54,8 +54,67 @@ def plot_heatmap(profile_file, min_frac=0.4):
     # plt.savefig("../../tmp/results/tsne_plot.png", dpi=300, bbox_inches='tight')
     # plt.clf()
 
+def out_best_ctgs(ref, best_ref, best_ctgs):
+    ## use biopython to extract the best contigs from the reference fasta file
+    from Bio import SeqIO
+    from Bio.SeqIO.FastaIO import SimpleFastaParser
+    with open(ref, "r") as f_in, open(best_ref, "w") as f_out:
+        for record in SeqIO.parse(f_in, "fasta"):
+            if record.id in best_ctgs:
+                SeqIO.write(record, f_out, "fasta")
+    print(f"Extracted {len(best_ctgs)} best contigs to {best_ref}")
+
+def count_motifs(depth_file, best_ctgs, work_dir):
+    ## read depth file
+    depth_df = pd.read_csv(depth_file)
+    good_depth = {}
+    for index, row in depth_df.iterrows():
+        if row['depth'] >= 10:
+            good_depth[row['contig']] = row['depth']
+    best_depth_ctg = []
+    for ctg in best_ctgs:
+        if ctg in good_depth:
+            best_depth_ctg.append(ctg)
+    print(f"Total {len(best_depth_ctg)} contigs with depth >= 10 found.")
+    has_motif_ctg_num = 0
+    motif_num_list = []
+    for ctg in best_depth_ctg:
+        motif_file = os.path.join(work_dir,"motifs", f"{ctg}.motifs.csv")
+        # print (motif_file)
+        if os.path.exists(motif_file):
+            df_motif = pd.read_csv(motif_file)
+            ## only keep themotifs with fraction >= 0.4, and nDetected >=100
+            df_motif = df_motif[(df_motif['fraction'] >= 0.4) & (df_motif['nDetected'] >= 100)]
+            if not df_motif.empty:
+                has_motif_ctg_num += 1
+                motif_num_list.append(len(df_motif))
+                pass
+        else:
+            print(f"No motifs found for {ctg}.")
+    print (f"Total {has_motif_ctg_num} contigs with motifs found in the best contigs with depth >= 10.")
+    print (has_motif_ctg_num/ len(best_depth_ctg) * 100, "% of the best contigs with depth >= 10 have motifs.")
+    ## print mean and median of motif numbers
+    print(f"Mean motif number: {np.mean(motif_num_list)}")
+    print(f"Median motif number: {np.median(motif_num_list)}")
+    print(f"Max motif number: {np.max(motif_num_list)}")
+    print(f"Min motif number: {np.min(motif_num_list)}")
+    ## plot the distribution of motif numbers
+    plt.figure(figsize=(10, 6))
+    plt.hist(motif_num_list, bins=50, color='blue', alpha=0.7)
+    plt.title('Distribution of Motif Numbers in Best Contigs')
+    plt.xlabel('Number of Motifs')
+    plt.ylabel('Frequency')
+    plt.savefig(os.path.join("../../tmp/results", "motif_num_distribution.png"), dpi=300, bbox_inches='tight')
+
 
 fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
+ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
+best_ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.circular.contigs.fa"
 profile_file = "/home/shuaiw/borg/bench/soil/run1/motif_profile.csv"
-# get_best_ctg()
-plot_heatmap(profile_file)
+
+work_dir = "/home/shuaiw/borg/bench/soil/run1/"
+depth_file = os.path.join(work_dir, "mean_depth.csv")
+best_ctgs = get_best_ctg()
+count_motifs(depth_file, best_ctgs, work_dir)
+# out_best_ctgs(ref, best_ref, best_ctgs)
+# plot_heatmap(profile_file)

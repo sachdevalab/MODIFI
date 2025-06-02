@@ -2,6 +2,7 @@ import pandas as pd
 import os
 from collections import defaultdict
 import re
+import sys
 
 def read_tsv(anno_file):
     
@@ -49,17 +50,22 @@ def read_motifs(motif_dir, bin_name, bins={}):
             if os.path.exists(motif_file):
                 df_motif = pd.read_csv(motif_file)
                 df_motif['contig'] = ctg
-                bin_motif = pd.concat([bin_motif, df_motif])
+                if not df_motif.empty:
+                    bin_motif = pd.concat([bin_motif, df_motif])
     else:
         motif_file = os.path.join(motif_dir, f"{bin_name}.motifs.csv")
         if os.path.exists(motif_file):
             df_motif = pd.read_csv(motif_file)
             df_motif['contig'] = bin_name
-            bin_motif = df_motif
+            if not df_motif.empty:
+                bin_motif = df_motif
     return bin_motif
 
 def match_MTase_motifs(bin_Mtase, bin_motif, RM_file):
     ## collect all motifs from bin_motif
+    if len(bin_motif) == 0:
+        # print(f"No motifs found for {RM_file}. Skipping.")
+        return
     motifs = set(bin_motif['motifString'])
     ## enuerate bin_Mtase
     df = pd.DataFrame()
@@ -84,23 +90,52 @@ def match_MTase_motifs(bin_Mtase, bin_motif, RM_file):
         f.write("# bin_motif:\n")
         bin_motif.to_csv(f, index=False, sep="\t")
 
-anno_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_RM.rm.genes.tsv"
-motif_dir = "/home/shuaiw/borg/bench/zymo_new_ref2/motifs/"
 
-bin_name = "B_cereus_971_1"
 
-RM_dir = os.path.join(motif_dir, "..", "RM_system")
-## create RM_dir if not exists
-if not os.path.exists(RM_dir):
-    os.makedirs(RM_dir)
-RM_file = os.path.join(RM_dir, f"{bin_name}.RM.csv")
-df = read_tsv(anno_file)
-bin_Mtase = get_ctg_MTase_motifs(df, bin_name)
-bin_motif = read_motifs(motif_dir, bin_name)
+def RM_main(anno_file, motif_dir, bin_file=None):
+    if bin_file:
+        bins = bin_ctgs(bin_file)
+    else:
+        bins = {}
+        ## for file in motif_dir:
+        for file in os.listdir(motif_dir):
+            if file.endswith(".motifs.csv"):
+                bin_name = file.split(".motifs.csv")[0]
+                bins[bin_name] = [bin_name]
 
-print (bin_Mtase)
-print (bin_motif)
-match_MTase_motifs(bin_Mtase, bin_motif, RM_file)
+    RM_dir = os.path.join(motif_dir, "..", "RM_system")
+    ## create RM_dir if not exists
+    if not os.path.exists(RM_dir):
+        os.makedirs(RM_dir)
+
+    # bin_name = "B_cereus_971_1"
+    for bin_name in bins:
+        # print (f"Processing bin: {bin_name}")
+        RM_file = os.path.join(RM_dir, f"{bin_name}.RM.csv")
+        df = read_tsv(anno_file)
+        bin_Mtase = get_ctg_MTase_motifs(df, bin_name, bins)
+        bin_motif = read_motifs(motif_dir, bin_name, bins)
+
+        # print (bin_Mtase)
+        # print (bin_motif)
+        match_MTase_motifs(bin_Mtase, bin_motif, RM_file)
+
+if __name__ == "__main__":
+    ## acceept anno_file and motif_dir as arguments
+    
+    if len(sys.argv) < 3:
+        print("Usage: python analyze_RM.py <anno_file> <work_dir>")
+        sys.exit(1)
+    anno_file = sys.argv[1]
+    motif_dir = os.path.join(sys.argv[2], "motifs")
+    if len(sys.argv) > 3:
+        bin_file = sys.argv[3]
+    else:
+        bin_file = None
+
+    # anno_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_RM.rm.genes.tsv"
+    # motif_dir = "/home/shuaiw/borg/bench/zymo_new_ref2/motifs/"
+    RM_main(anno_file, motif_dir, bin_file)
 
 # anno_file = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_RM.rm.genes.tsv"
 # motif_dir = "/home/shuaiw/borg/bench/soil/run1/motifs/"
