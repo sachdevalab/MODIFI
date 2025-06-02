@@ -287,7 +287,6 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, com
         if len(forward_IPD_info) == 0 or len(reverse_IPD_info) == 0:
             print ("empty IPD info", aln.query_name, len(forward_IPD_info), len(reverse_IPD_info))
             continue
-
         # Initialize arrays
         rawIpd = np.zeros(len(aln.query_sequence))
         matched = np.zeros(len(aln.query_sequence), dtype=bool)
@@ -324,11 +323,6 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, com
 
         # Mask for valid reference positions within the start-end range
         valid_mask = (reference_positions >= start) & (reference_positions < end)
-
-        if len(forward_IPD_info) != len(query_positions):
-            continue
-        if len(reverse_IPD_info) != len(query_positions):
-            continue
 
         # Apply vectorized filtering
         forward_mask = valid_mask & (forward_IPD_info[query_positions] != 0)
@@ -583,10 +577,10 @@ def standard_load_main():
         ## complement the sequence
         complement_ref_seq = ref_seq.complement()
         if read_type == "subreads":
-            load_IPD(each_ref, subread_bam, fasta, max_mismatch, ref_seq, complement_ref_seq,)
+            load_IPD(each_ref, subread_bam, outputfile, fasta, max_mismatch, ref_seq, complement_ref_seq,)
         elif read_type == "ccs":
 
-            load_IPD_hifi(each_ref, ref_seq, subread_bam, max_mismatch, complement_ref_seq,)
+            load_IPD_hifi(each_ref, ref_seq, subread_bam, outputfile, max_mismatch, complement_ref_seq,)
         else:
             ## raise error
             print ("read type not supported")

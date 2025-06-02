@@ -20,7 +20,8 @@ def read_ref(ref):
 
 def if_region_in_gene_regulatory_region(pos, Gene_regulatory_regions, strand):
     for start, end, cds_strand in Gene_regulatory_regions:
-        if cds_strand == strand and start <= pos <= end:
+        if start <= pos <= end:
+        # if cds_strand == strand and start <= pos <= end:
             return True
     return False
 
@@ -43,7 +44,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
 
             tag = r + ":" + str(site+exact_pos) + "+"
             ## check if the site is in the gene regulatory regions
-            if if_region_in_gene_regulatory_region(site + exact_pos, Gene_regulatory_regions, "+"):
+            if if_region_in_gene_regulatory_region(site + exact_pos, Gene_regulatory_regions, "-"):
                 gene_regu_flag = True
                 gene_regulatory_region_num += 1
             else:
@@ -56,7 +57,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
                 else:
                     methlated_normal_region_num += 1
 
-            if if_region_in_gene_regulatory_region(site + exact_pos, background_regions, "+"):
+            if if_region_in_gene_regulatory_region(site + exact_pos, background_regions, "-"):
                 control_region_num += 1
                 if tag in modified_loci:
                     methylated_control_num += 1
@@ -69,7 +70,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
             record_modified_sites[tag] = motif_new
 
 
-            if if_region_in_gene_regulatory_region(site + rev_exact_pos, Gene_regulatory_regions, "-"):
+            if if_region_in_gene_regulatory_region(site + rev_exact_pos, Gene_regulatory_regions, "+"):
                 gene_regu_flag = True
                 gene_regulatory_region_num += 1
             else:
@@ -81,7 +82,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
                 else:
                     methlated_normal_region_num += 1
 
-            if if_region_in_gene_regulatory_region(site + exact_pos, background_regions, "-"):
+            if if_region_in_gene_regulatory_region(site + exact_pos, background_regions, "+"):
                 control_region_num += 1
                 if tag in modified_loci:
                     methylated_control_num += 1
@@ -184,6 +185,7 @@ if __name__ == "__main__":
     genome = "RuReacBro_20230708_10_40h_50ppm_r1_scaffold_3"
 
     data = []
+    i = 0
     for file in os.listdir("/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/motifs/"):
         if file.endswith(".motifs.csv"):
             ## check if the file has more than one line
@@ -200,6 +202,12 @@ if __name__ == "__main__":
 
             # motif_new = "CAGNNNNNNTRG"
             # exact_pos = 2
+            REF = read_ref(my_ref)
+            for ctg in REF:
+                ctg_len = len(REF[ctg])
+            if ctg_len < 100000:
+                # print(f"Contig {ctg} is too short, skipping.")
+                continue
 
 
             Gene_regulatory_regions = collect_regulation_region(genome_gff, genome)
@@ -207,20 +215,20 @@ if __name__ == "__main__":
                 continue
             background_regions = get_background(Gene_regulatory_regions)
 
-            REF = read_ref(my_ref)
+
             # print (REF)
             modified_loci = get_modified_ratio(gff)
 
             motifs = pd.read_csv(motif_file)
-
+            i += 1
             for index, motif in motifs.iterrows():
                 motif_new = motif["motifString"]
                 exact_pos = motif["centerPos"]
                 odds_ratio, p_value, a, b, c, d = get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_regions, background_regions)
                 if p_value <= 0.05:
-                    print(f"genome {genome} , Motif: {motif_new}, Odds Ratio: {odds_ratio}, P-value: {p_value}", a, b, c, d)
-                    data.append([genome, motif_new, exact_pos, odds_ratio, p_value, a, b, c, d])
-    df = pd.DataFrame(data, columns=["genome", "motif", "exact_pos", "odds_ratio", "p_value", "a", "b", "c", "d"])
+                    print(i, f"genome {genome} , Motif: {motif_new}, Odds Ratio: {odds_ratio}, P-value: {p_value}", a, b, c, d)
+                    data.append([i, genome, motif_new, exact_pos, odds_ratio, p_value, a, b, c, d])
+    df = pd.DataFrame(data, columns=["index", "genome", "motif", "exact_pos", "odds_ratio", "p_value", "a", "b", "c", "d"])
     df.to_csv("/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/regulatory_motif_enrichment.csv", index=False)
 
 
