@@ -6,6 +6,8 @@ import matplotlib
 import numpy as np
 from sklearn.manifold import TSNE
 
+from Bio.Seq import Seq
+
 
 def get_best_ctg(min_len = 1000000):
     """
@@ -64,6 +66,15 @@ def out_best_ctgs(ref, best_ref, best_ctgs):
                 SeqIO.write(record, f_out, "fasta")
     print(f"Extracted {len(best_ctgs)} best contigs to {best_ref}")
 
+def get_unique_motifs(df_motif):
+    df_motif = df_motif[(df_motif['fraction'] >= 0.4) & (df_motif['nDetected'] >= 100)]
+    ## rm redundant motifs which are reverse complement 
+    unique_motifs = []
+    for index, row in df_motif.iterrows():
+        if row['motifString'] not in unique_motifs and  str(Seq(row['motifString']).reverse_complement()) not in unique_motifs:
+            unique_motifs.append(row['motifString'])
+    return len(unique_motifs)
+
 def count_motifs(depth_file, best_ctgs, work_dir):
     ## read depth file
     depth_df = pd.read_csv(depth_file)
@@ -84,11 +95,11 @@ def count_motifs(depth_file, best_ctgs, work_dir):
         if os.path.exists(motif_file):
             df_motif = pd.read_csv(motif_file)
             ## only keep themotifs with fraction >= 0.4, and nDetected >=100
-            df_motif = df_motif[(df_motif['fraction'] >= 0.4) & (df_motif['nDetected'] >= 100)]
-            if not df_motif.empty:
+            unique_motifs_num = get_unique_motifs(df_motif)
+            if unique_motifs_num > 0:
                 has_motif_ctg_num += 1
-                motif_num_list.append(len(df_motif))
-                pass
+            motif_num_list.append(unique_motifs_num)
+
         else:
             print(f"No motifs found for {ctg}.")
     print (f"Total {has_motif_ctg_num} contigs with motifs found in the best contigs with depth >= 10.")
@@ -106,15 +117,69 @@ def count_motifs(depth_file, best_ctgs, work_dir):
     plt.ylabel('Frequency')
     plt.savefig(os.path.join("../../tmp/results", "motif_num_distribution.png"), dpi=300, bbox_inches='tight')
 
+def count_MT_num(anno_file):
+    
+    df = pd.read_csv(anno_file, sep="\t")
+    # Extract contig name from 'Gene' column and add as a new column
+    df['contig'] = df['Gene'].apply(lambda x: '_'.join(str(x).split('_')[:-1]))  
+    ctg_MT_num = {}
+    for index, row in df.iterrows():
+        if row['contig'] not in ctg_MT_num:
+            ctg_MT_num[row['contig']] = set()
+        if row['Gene type'] == 'MT':
+            ctg_MT_num[row['contig']].add(row['HMM'])
+    return ctg_MT_num
+
+def plot_MT_motif():
+    ctg_MT_num = count_MT_num(anno_file)
+    depth_df = pd.read_csv(depth_file)
+    good_depth = {}
+    for index, row in depth_df.iterrows():
+        if row['depth'] >= 10:
+            good_depth[row['contig']] = row['depth']
+    best_depth_ctg = []
+    for ctg in best_ctgs:
+        if ctg in good_depth:
+            best_depth_ctg.append(ctg)
+    print(f"Total {len(best_depth_ctg)} contigs with depth >= 10 found.")
+    has_motif_ctg_num = 0
+    motif_num_list = []
+    data = []
+    for ctg in best_depth_ctg:
+        motif_file = os.path.join(work_dir,"motifs", f"{ctg}.motifs.csv")
+        # print (motif_file)
+        if os.path.exists(motif_file):
+            df_motif = pd.read_csv(motif_file)
+            ## only keep themotifs with fraction >= 0.4, and nDetected >=100
+            unique_motifs_num = get_unique_motifs(df_motif)
+            data.append({
+                'contig': ctg,
+                'motif_num': unique_motifs_num,
+                'MT_num': len(ctg_MT_num[ctg]) if ctg in ctg_MT_num else 0
+            })
+        else:
+            print(f"No motifs found for {ctg}.")
+    df_data = pd.DataFrame(data)
+    ## plot dot plot with seaborn
+    plt.figure(figsize=(7, 6))
+    sns.scatterplot(data=df_data, x='MT_num', y='motif_num', palette='viridis', s=100)
+    plt.title('MTase Number vs Motif Number in Best Contigs')
+    plt.xlabel('Number of MTases')
+    plt.ylabel('Number of Motifs')
+    plt.savefig(os.path.join("../../tmp/results", "MT_motif_num_distribution.png"), dpi=300, bbox_inches='tight')
 
 fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
 ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
 best_ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.circular.contigs.fa"
 profile_file = "/home/shuaiw/borg/bench/soil/run1/motif_profile.csv"
+anno_file = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_RM.rm.genes.tsv"
 
 work_dir = "/home/shuaiw/borg/bench/soil/run1/"
 depth_file = os.path.join(work_dir, "mean_depth.csv")
 best_ctgs = get_best_ctg()
-count_motifs(depth_file, best_ctgs, work_dir)
+# count_motifs(depth_file, best_ctgs, work_dir)
+plot_MT_motif()
+
+
 # out_best_ctgs(ref, best_ref, best_ctgs)
 # plot_heatmap(profile_file)
