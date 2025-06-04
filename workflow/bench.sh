@@ -813,3 +813,17 @@ sbatch --partition standard --wrap "MicrobeMod annotate_rm \
   -f merged2.fa \
   -o merged2_RM -t 64" \
   --job-name=MicrobeMod
+
+
+sbatch --partition standard --job-name=borg --wrap "python main.py \
+  --work_dir /home/shuaiw/borg/bench/soil_borg/ \
+  --whole_bam /home/shuaiw/borg/bench/soil_borg/soil_borg.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/contigs/soil_borg.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --threads 64"
