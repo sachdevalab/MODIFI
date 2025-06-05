@@ -345,13 +345,13 @@ def host_linkage_eva():
         total += 1
     print (recall, total, "recall", recall/total, report_num, "FP", FP/report_num)
 
-def assess_linkage(result_dir, cutoff, plasmid_host_dict):
-    cutoff = cutoff / 100
+def assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff=0):
     guess_num = 0
     correct_num = 0
     
     for plasmid in plasmid_host_dict:
         host_file = os.path.join(result_dir, plasmid+ ".host_prediction.csv")
+        # print (plasmid, host_file)
 
         if not os.path.exists(host_file):
             print (host_file, "not exist")
@@ -360,9 +360,15 @@ def assess_linkage(result_dir, cutoff, plasmid_host_dict):
         ## get first row of df
         for index, row in df.iterrows():
             best_host = row['host']
-            best_score = row['final_score']
+            best_score = float(row['final_score'])
+            best_MGE_cov = float(row['MGE_cov'])
+            best_host_cov = float(row['host_cov'])
             break
+        if best_MGE_cov < depth_cutoff or best_host_cov < depth_cutoff:
+            # print (plasmid, "no host prediction")
+            continue
         if best_score > cutoff:
+            # print (plasmid, "best host", best_host, "score", best_score, cutoff)
             guess_num += 1
             if best_host in plasmid_host_dict[plasmid][2]:
                 correct_num += 1
@@ -371,7 +377,7 @@ def assess_linkage(result_dir, cutoff, plasmid_host_dict):
     else:
         precision = correct_num / guess_num
     recall = correct_num / len(plasmid_host_dict)
-    
+    print (correct_num, "correct_num", guess_num, "guess_num", recall, "recall", precision, "precision", len(plasmid_host_dict))
     return (recall, precision)
 
 def get_depth(result_dir):
@@ -412,6 +418,39 @@ def cal_AUC():
     # covert dp_df_all to one df
     dp_df_all = pd.concat(dp_df_all)
     dp_df_all.to_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex_depth.csv", index = False)
+
+
+def cal_AUC_depth(): 
+    fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
+    plasmid_anno_file = fai + ".plasmid"
+    plasmid_list = fai + ".plasmid.list"
+    plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
+    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/hosts/"
+    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3/hosts/"
+    result_dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec4/hosts/"
+    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/hosts/"
+    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.1_cov1_s30/hosts/"
+    cutoff = 0.45
+    data = []
+    dp_df_all = []
+
+    for p in ["10", "20", "100"]:
+        prefix = f"m64004_210929_143746.p{p}"
+        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta", prefix, "hosts")
+        if p == "100":
+            result_dir = "/home/shuaiw/borg/bench/soil_zymo/run3/hosts_mge/"
+        for depth_cutoff in [0, 5, 10]:
+            recall, precision = assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff)
+            print (p, recall, precision, "depth_cutoff", depth_cutoff)
+
+            data.append([p, recall, precision, 1-precision, depth_cutoff])
+    ## plot the AUC curve
+
+    
+    df = pd.DataFrame(data, columns=['proportion', 'recall', 'precision', 'FPR', 'depth_cutoff'])
+    print (df)
+    df.to_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex.csv", index = False)
+
 
 def assess_motif(dir):
     high_dir = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/hosts/"
@@ -477,7 +516,8 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-cal_AUC()
+# cal_AUC()
+cal_AUC_depth()
 # assess_motif()
 # host_linkage_eva()
 # for_zymo()

@@ -827,3 +827,16 @@ sbatch --partition standard --job-name=borg --wrap "python main.py \
   --min_score 30 \
   --min_sites 30 \
   --threads 64"
+
+
+sbatch --job-name=drep_job_1325 \
+  --partition standard \
+  --wrap "dRep dereplicate \
+    -p 64 \
+    -g /home/shuaiw/methylation/data/borg/contigs/circular/genome.list \
+    -comp 50 \
+    -con 10 \
+    --S_algorithm skani \
+    -ms 10000 \
+    -sa 0.95 \
+    -nc 0.1 /home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out"

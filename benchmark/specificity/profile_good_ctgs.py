@@ -66,6 +66,17 @@ def out_best_ctgs(ref, best_ref, best_ctgs):
                 SeqIO.write(record, f_out, "fasta")
     print(f"Extracted {len(best_ctgs)} best contigs to {best_ref}")
 
+def out_best_ctgs2(ref, best_ref, best_ctgs, best_ctg_dir):
+    ## use biopython to extract the best contigs from the reference fasta file
+    from Bio import SeqIO
+    from Bio.SeqIO.FastaIO import SimpleFastaParser
+    with open(ref, "r") as f_in:
+        for record in SeqIO.parse(f_in, "fasta"):
+            if record.id in best_ctgs:
+                with open(os.path.join(best_ctg_dir, str(record.id) + ".fasta"), "w") as f_out:
+                    SeqIO.write(record, f_out, "fasta")
+    print(f"Extracted {len(best_ctgs)} best contigs to {best_ref}")
+
 def get_unique_motifs(df_motif):
     df_motif = df_motif[(df_motif['fraction'] >= 0.4) & (df_motif['nDetected'] >= 100)]
     ## rm redundant motifs which are reverse complement 
@@ -171,6 +182,7 @@ def plot_MT_motif():
 fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
 ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
 best_ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.circular.contigs.fa"
+best_ctg_dir = "/home/shuaiw/methylation/data/borg/contigs/circular/"
 profile_file = "/home/shuaiw/borg/bench/soil/run1/motif_profile.csv"
 anno_file = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_RM.rm.genes.tsv"
 
@@ -178,7 +190,8 @@ work_dir = "/home/shuaiw/borg/bench/soil/run1/"
 depth_file = os.path.join(work_dir, "mean_depth.csv")
 best_ctgs = get_best_ctg()
 # count_motifs(depth_file, best_ctgs, work_dir)
-plot_MT_motif()
+# plot_MT_motif()
+out_best_ctgs2(ref, best_ref, best_ctgs, best_ctg_dir)  ## split ctgs
 
 
 # out_best_ctgs(ref, best_ref, best_ctgs)
