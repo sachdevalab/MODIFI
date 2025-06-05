@@ -214,7 +214,7 @@ def estimate_cov(cov_dict, bin_name, bin_ctg_dict):
         if ctg in cov_dict:
             ctg_cov_list.append(cov_dict[ctg])
     if len(ctg_cov_list) >0:
-        bin_cov = np.mean(ctg_cov_list)
+        bin_cov = round(np.mean(ctg_cov_list),2)
     else:
         bin_cov = 'NA'
     return bin_cov

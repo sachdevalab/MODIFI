@@ -434,7 +434,7 @@ def cal_AUC_depth():
     data = []
     dp_df_all = []
 
-    for p in ["10", "20", "100"]:
+    for p in ["05", "10", "20", "50", "100"]:
         prefix = f"m64004_210929_143746.p{p}"
         result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta", prefix, "hosts")
         if p == "100":
