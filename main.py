@@ -90,6 +90,8 @@ def parse_arguments():
                         help="Minimum contig length to process.")
     parser.add_argument("--min_cov", type=int, default=3,
                         help="Minimum read coverage required to retain a base.")
+    parser.add_argument("--min_ctg_cov", type=int, default=5,
+                        help="Minimum read coverage required to retain a contig.")
     parser.add_argument("--kmer_mean_db", type=str, default=None,
                         help="Path to optional k-mer mean IPD database.")
     parser.add_argument("--kmer_num_db", type=str, default=None,
@@ -492,11 +494,17 @@ if __name__ == "__main__":
 
 
     if "split" in args.run_steps:
-        record_resource_usage(
+        ctg_depth_dict = record_resource_usage(
             "Splitting BAM files",
             split_bam,
-            args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM
+            args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM, args.min_ctg_cov
         )
+        record_resource_usage(
+            "Depth analysis",
+            depth_analysis,
+            paras, ctg_depth_dict
+        )
+        
     if "load" in args.run_steps:
         record_resource_usage(
             "Loading IPD data",
@@ -522,11 +530,11 @@ if __name__ == "__main__":
             motif_parallel,
             args, paras
         )
-        record_resource_usage(
-            "Depth analysis",
-            depth_analysis,
-            paras, ctg_depth_dict
-        )
+        # record_resource_usage(
+        #     "Depth analysis",
+        #     depth_analysis,
+        #     paras, ctg_depth_dict
+        # )
     if "profile" in args.run_steps:
         record_resource_usage(
             "Collecting motifs",

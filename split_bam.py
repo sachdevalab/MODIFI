@@ -14,7 +14,7 @@ MAX_DEPTH = 500
 
 pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
 
-def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3):
+def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3,min_dp=0):
     # Ensure the output directory exists
     os.makedirs(split_bam_dir, exist_ok=True)
     bam_dir = os.path.join(split_bam_dir, "bams")
@@ -32,14 +32,17 @@ def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3
         contig_bam = os.path.join(bam_dir, contig + ".bam")
         print (f"Processing {contig} {contig_bam}")
         ref = os.path.join(contig_dir, contig + ".fa")
-        args.append((contig, ref, contig_bam, bam, whole_ref, max_NM, MAP_Q, MAX_DEPTH))
+        args.append((contig, contig_len, ref, contig_bam, bam, whole_ref, max_NM, MAP_Q, MAX_DEPTH,min_dp))
         i += 1
     # samfile.close()
-
+    ctg_depth_dict = {}
     # Use multiprocessing to handle each contig in parallel
     with Pool(processes=threads) as pool:
-        pool.starmap(handle_each_contig, args)
-    print ("there are ", i, " contigs")
+        results = pool.starmap(handle_each_contig, args)
+    for contig, mean_depth in results:
+        ctg_depth_dict[contig] = mean_depth
+
+    return ctg_depth_dict
 
 def count_cigar(read, long_cutoff = 50):
     gap_num = 0
@@ -67,17 +70,8 @@ def calculate_identity(read):
     identity = match_bases / aligned_bases if aligned_bases > 0 else 0
     return identity
 
-def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_depth=500):
+def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_depth=500, min_dp=0):
     print (f"Processing {contig} {ref}")
-    os.system(f"samtools faidx {whole_ref} {contig} > {ref}")
-    os.system(f"samtools faidx {ref}")
-
-    ## get the length of the contig using biopython
-    for record in SeqIO.parse(ref, "fasta"):
-        contig_len = len(record.seq)
-    print (f"Contig {contig} has length {contig_len}")
-    max_read_num = max_depth * contig_len / 1000
-
 
     #  Create a new header that only includes the specific contig
     samfile = pysam.AlignmentFile(bam, "rb")
@@ -87,17 +81,26 @@ def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_de
 
     ## first count the number of reads that are valid
     read_number = 0
+    total_bases = 0
     for read in samfile.fetch(contig):
         if read.is_unmapped:
             continue
         if read.mapping_quality < q:
             continue
         read_number += 1
-    print (f"Read number for {contig} is {read_number}")
-    if read_number == 0:
+        total_bases += read.query_alignment_length
+    # print (f"Read number for {contig} is {read_number}")
+    mean_depth = total_bases / contig_len if contig_len > 0 else 0
+    mean_depth = round(mean_depth, 2)
+    print(f"Mean depth for {contig}: {mean_depth:.2f}")
+    if mean_depth < min_dp:
+        print(f"Mean depth {mean_depth} is less than minimum depth {min_dp}. Skipping {contig}.")
+        return contig, mean_depth
+    
+    if mean_depth == 0:
         downsample_rate = 1
     else:
-        downsample_rate = float(max_read_num) / read_number
+        downsample_rate = min(float(max_depth) / mean_depth, 1.0)
     print (f"Downsample rate is {downsample_rate*100}%.")
 
 
@@ -114,25 +117,13 @@ def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_de
         ## downsample the reads
         if np.random.rand() > downsample_rate:
             continue
-        # map_num, map_len, long_gap = count_cigar(read)
-        # if map_len == 0:
-        #     # print ("exit as the read is unmapped", read.query_name, read.cigar)
-        #     # sys.exit(0)
-        #     raise ValueError("unmapped read")
-        ## get the tag of NM
-        ## skip if it has no NM tag
+
         if not read.has_tag('NM'):
             print (f"Read {read.query_name} has no NM tag")
             continue
         if read.get_tag("NM") > max_NM:
             continue
-        # nm = read.get_tag('NM')
-        # match_num = map_len - nm
-        # identity = match_num / (map_len - long_gap)
-        # # print (f"Read {read.query_name} has identity {identity} and length {map_len}")
-        # identity = calculate_identity(read)
-        # print (f"Read {read.query_name} has identity {identity}")
-        # if identity >= identity_cutoff and map_len >= len_cutoff:
+
         contig_samfile.write(read)
         valid_num += 1
     print (f"Finished {contig}, {valid_num} reads are written")
@@ -142,6 +133,9 @@ def handle_each_contig(contig,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_de
     ## index the bam file
     os.system(f"samtools index {contig_bam}")
     os.system(f"{pbindex_bin} {contig_bam}")
+    os.system(f"samtools faidx {whole_ref} {contig} > {ref}")
+    os.system(f"samtools faidx {ref}")
+    return contig, mean_depth
 
 def main():
     parser = argparse.ArgumentParser(description="Split BAM file by reference.")
