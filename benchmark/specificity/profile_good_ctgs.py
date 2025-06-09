@@ -13,12 +13,17 @@ def get_best_ctg(min_len = 1000000):
     """
     Get the best contig based on length from a fasta file.
     """
+    depth_df = pd.read_csv(depth_file)
+    good_depth = {}
+    for index, row in depth_df.iterrows():
+        if row['depth'] >= 10:
+            good_depth[row['contig']] = row['depth']
     best_ctgs = []
     with open(fai, "r") as f:
         for line in f:
             ctg, length, _, _, _ = line.strip().split("\t")
             length = int(length)
-            if ctg[-1] == "C" and length >= min_len:
+            if ctg[-1] == "C" and length >= min_len and ctg in good_depth:
                 best_ctgs.append(ctg)
     print (f"Total {len(best_ctgs)} contigs with length >= {min_len} found.")
     return best_ctgs
@@ -29,12 +34,12 @@ def plot_heatmap(profile_file, min_frac=0.4):
     best_ctgs = get_best_ctg()
     profiles = profiles.loc[:, profiles.columns.isin(best_ctgs)]
     print ("original shape", profiles.shape)                                    
-    profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
-    print ("filtered shape 1", profiles.shape)
+    # profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
+    # print ("filtered shape 1", profiles.shape)
     # Filter columns where any value is greater than 0.5
-    profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
+    # profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
 
-    print ("filtered shape", profiles.shape)
+    # print ("filtered shape", profiles.shape)
 
     df = profiles.T
 
@@ -42,19 +47,24 @@ def plot_heatmap(profile_file, min_frac=0.4):
     plt.savefig("../../tmp/results/heatmap.png", dpi=300, bbox_inches='tight')
     plt.clf()
 
+    drep_sim_dict = get_ctg_sim()
+    ### for each contig in df, calculate the similarity with other contigs, and caculate the euclidean distance
+    print (df)
 
-    # matrix = df.to_numpy()
-    # mask = matrix == 0
-    # matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
+def get_ctg_sim():
+    drep_sim_dict = {}
+    drep_sim = "/home/shuaiw/borg/contigs/dRep/dRep_out/data_tables/Mdb.csv"
+    df = pd.read_csv(drep_sim)
+    for index, row in df.iterrows():
+        ctg1 = row['genome1'][:-5]
+        ctg2 = row['genome2'][:-5]
+        drep_sim_dict[ctg1 + "&" + ctg2] = row['similarity']
+        drep_sim_dict[ctg2 + "&" + ctg1] = row['similarity']
+    return drep_sim_dict
 
-    # X_embedded = TSNE(n_components=2).fit_transform(matrix)
-    
-    # ## define fig size
-    # plt.figure(figsize=(10, 10))
-    # ## plot the cluster result using seaborn
-    # scatter_plot = sns.scatterplot(x=X_embedded[:, 0], y=X_embedded[:, 1], palette="viridis")
-    # plt.savefig("../../tmp/results/tsne_plot.png", dpi=300, bbox_inches='tight')
-    # plt.clf()
+
+
+
 
 def out_best_ctgs(ref, best_ref, best_ctgs):
     ## use biopython to extract the best contigs from the reference fasta file
@@ -188,11 +198,12 @@ anno_file = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HI
 
 work_dir = "/home/shuaiw/borg/bench/soil/run1/"
 depth_file = os.path.join(work_dir, "mean_depth.csv")
-best_ctgs = get_best_ctg()
+
+# best_ctgs = get_best_ctg()
 # count_motifs(depth_file, best_ctgs, work_dir)
 # plot_MT_motif()
-out_best_ctgs2(ref, best_ref, best_ctgs, best_ctg_dir)  ## split ctgs
+# out_best_ctgs2(ref, best_ref, best_ctgs, best_ctg_dir)  ## split ctgs
 
 
 # out_best_ctgs(ref, best_ref, best_ctgs)
-# plot_heatmap(profile_file)
+plot_heatmap(profile_file)

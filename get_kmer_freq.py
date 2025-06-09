@@ -163,6 +163,9 @@ def kmer_freq_sim_bin_worker(bin_name1, bin_name2, bin_ctg_dict, work_dir):
     bin_2_len, ben_2_gc = 0, 0
     for contig_name1 in bin_ctg_dict[bin_name1]:
         contig_file1 = os.path.join(work_dir, "contigs", contig_name1+'.fa')
+        ## check if contig file exists
+        if not os.path.exists(contig_file1):
+            continue
         seq1 = get_seq(contig_file1)
         seq_list_1.append(seq1)
 
@@ -175,6 +178,8 @@ def kmer_freq_sim_bin_worker(bin_name1, bin_name2, bin_ctg_dict, work_dir):
     
     for contig_name2 in bin_ctg_dict[bin_name2]:
         contig_file2 = os.path.join(work_dir, "contigs", contig_name2+'.fa')
+        if not os.path.exists(contig_file2):
+            continue
         seq2 = get_seq(contig_file2)
         seq_list_2.append(seq2)
         kmer_freq = Calc_gc(seq2)

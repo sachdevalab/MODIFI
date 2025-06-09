@@ -602,7 +602,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper
 
 
 sbatch  --partition standard --wrap " python main.py \
-  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2 \
+  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_11_72h_20_new.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
   --read_type hifi \
@@ -614,6 +614,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --clean \
   --run_steps host \
   --threads 64"\
   --job-name=new_pf
@@ -736,6 +737,7 @@ sbatch --partition standard --job-name=pf3 --wrap "python main.py \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --clean \
   --run_steps host \
   --threads 64"
 
@@ -752,6 +754,7 @@ sbatch --partition standard --job-name=pf4 --wrap "python main.py \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --clean \
   --run_steps host \
   --threads 64"
 
@@ -768,6 +771,7 @@ sbatch --partition standard --job-name=pf5 --wrap "python main.py \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --clean \
   --run_steps host \
   --threads 64"
 
@@ -784,6 +788,7 @@ sbatch --partition standard --job-name=pf6 --wrap "python main.py \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --clean \
   --run_steps host \
   --threads 64"
 
@@ -800,6 +805,8 @@ sbatch --partition standard --job-name=pf7 --wrap "python main.py \
   --min_sites 30 \
   --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --clean \
+  --run_steps host \
   --threads 64"
 
 

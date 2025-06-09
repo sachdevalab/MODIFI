@@ -434,20 +434,29 @@ def cal_AUC_depth():
     data = []
     dp_df_all = []
 
-    for p in ["05", "10", "20", "50", "100"]:
+    frac_dict = {
+        "05": 1.72,
+        "10": 3.38,
+        "20": 6.53,
+        "30": 9.50,
+        "50": 14.90,
+        "100": 25.94
+    }
+    for p in ["05", "10", "20", "30", "50", "100"]:
         prefix = f"m64004_210929_143746.p{p}"
         result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta", prefix, "hosts")
         if p == "100":
             result_dir = "/home/shuaiw/borg/bench/soil_zymo/run3/hosts_mge/"
+        frac = frac_dict[p]
         for depth_cutoff in [0, 5, 10]:
             recall, precision = assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff)
             print (p, recall, precision, "depth_cutoff", depth_cutoff)
 
-            data.append([p, recall, precision, 1-precision, depth_cutoff])
+            data.append([p, recall, precision, 1-precision, depth_cutoff, frac])
     ## plot the AUC curve
 
     
-    df = pd.DataFrame(data, columns=['proportion', 'recall', 'precision', 'FPR', 'depth_cutoff'])
+    df = pd.DataFrame(data, columns=['proportion', 'recall', 'precision', 'FPR', 'depth_cutoff', 'fraction'])
     print (df)
     df.to_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex.csv", index = False)
 
