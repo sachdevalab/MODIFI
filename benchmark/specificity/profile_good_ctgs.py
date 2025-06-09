@@ -5,6 +5,8 @@ import seaborn as sns
 import matplotlib
 import numpy as np
 from sklearn.manifold import TSNE
+from scipy.spatial.distance import pdist, squareform, cosine
+from sklearn.metrics.pairwise import cosine_similarity
 
 from Bio.Seq import Seq
 
@@ -34,34 +36,113 @@ def plot_heatmap(profile_file, min_frac=0.4):
     best_ctgs = get_best_ctg()
     profiles = profiles.loc[:, profiles.columns.isin(best_ctgs)]
     print ("original shape", profiles.shape)                                    
-    # profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
-    # print ("filtered shape 1", profiles.shape)
+    profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
+    print ("filtered shape 1", profiles.shape)
+    print (profiles)
     # Filter columns where any value is greater than 0.5
     # profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
 
     # print ("filtered shape", profiles.shape)
 
     df = profiles.T
+    # Compute pairwise Euclidean distance matrix
+    dist_matrix = pd.DataFrame(
+        squareform(pdist(df, metric='euclidean')),
+        index=df.index,
+        columns=df.index
+    )
+    print("Pairwise Euclidean distance matrix:")
+    # print(dist_matrix)
 
-    sns.clustermap(df, method='average', metric='euclidean', cmap='viridis', figsize=(20, 15))
+    ## compute pairwise cosine similarity matrix
+    cosine_sim_matrix = pd.DataFrame(
+        cosine_similarity(df),
+        index=df.index,
+        columns=df.index
+    )
+
+
+
+    ctg_phylum = get_phylum(best_ctgs)
+
+    phylum_colors = sns.color_palette("husl", len(set(ctg_phylum.values())))
+    phylum_color_dict = {phylum: color for phylum, color in zip(set(ctg_phylum.values()), phylum_colors)}
+    phylum_colors_list = [phylum_color_dict[ctg_phylum[ctg]] for ctg in df.index]
+
+    # Use clustermap instead of heatmap
+    g = sns.clustermap(
+        df,
+        method='average',
+        metric='euclidean',
+        cmap='viridis',
+        figsize=(60, 15),
+        row_colors=phylum_colors_list,
+        xticklabels=True,
+        yticklabels=True
+    )
+
     plt.savefig("../../tmp/results/heatmap.png", dpi=300, bbox_inches='tight')
     plt.clf()
 
     drep_sim_dict = get_ctg_sim()
-    ### for each contig in df, calculate the similarity with other contigs, and caculate the euclidean distance
-    print (df)
+    ## for each pair of contigs, get the Euclidean distance and dRep similarity
+    drep_sim_list = []
+    for ctg1 in df.index:
+        for ctg2 in df.index:
+            if ctg1 != ctg2:
+                euclidean_dist = cosine_sim_matrix.loc[ctg1, ctg2]
+                if ctg1 + "&" + ctg2 not in drep_sim_dict:
+                    print (f"Not Found dRep similarity for {ctg1} and {ctg2}")
+                    continue
+                drep_sim = drep_sim_dict[ctg1 + "&" + ctg2]
+                drep_sim_list.append((ctg1, ctg2, euclidean_dist, drep_sim))
+    drep_sim_df = pd.DataFrame(drep_sim_list, columns=['ctg1', 'ctg2', 'cos_sim', 'drep_sim'])
+    ### plot scatter plot of dRep similarity vs Euclidean distance
+    plt.figure(figsize=(7, 6))
+    sns.scatterplot(data=drep_sim_df, x='cos_sim', y='drep_sim', alpha=0.5)
+    plt.xlabel('Cosine Similarity')
+    plt.ylabel('dRep Similarity')
+    plt.savefig("../../tmp/results/drep_similarity_vs_cos_sim.png", dpi=300, bbox_inches='tight')
+    # # print (drep_sim_dict)
 
 def get_ctg_sim():
     drep_sim_dict = {}
     drep_sim = "/home/shuaiw/borg/contigs/dRep/dRep_out/data_tables/Mdb.csv"
     df = pd.read_csv(drep_sim)
     for index, row in df.iterrows():
-        ctg1 = row['genome1'][:-5]
-        ctg2 = row['genome2'][:-5]
+        ctg1 = row['genome1'][:-6]
+        ctg2 = row['genome2'][:-6]
         drep_sim_dict[ctg1 + "&" + ctg2] = row['similarity']
         drep_sim_dict[ctg2 + "&" + ctg1] = row['similarity']
     return drep_sim_dict
 
+def get_phylum(best_ctgs):
+    import re
+    bin_phylum = {}
+    df = pd.read_csv(gtdb_file, sep="\t")
+    for index, row in df.iterrows():
+        if re.search("Unclassified", row["classification"]):
+            taxon = "Unclassified"
+        else:
+            # print (row["classification"])
+            taxon = row["classification"].split(";")[1].strip()
+        bin_phylum[row["user_genome"]] = taxon
+    ctg_bin = {}
+    with open(bin_file, "r") as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            ctg, bin_id = line.strip().split("\t")
+            ctg_bin[ctg] = bin_id
+    
+    ctg_phylum = {}
+    for ctg in best_ctgs:
+        bin_id = ctg_bin[ctg]
+        if bin_id in bin_phylum:
+            ctg_phylum[ctg] = bin_phylum[bin_id]
+        else:
+            ctg_phylum[ctg] = "Unclassified"
+    return (ctg_phylum)
 
 
 
@@ -195,6 +276,8 @@ best_ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75
 best_ctg_dir = "/home/shuaiw/methylation/data/borg/contigs/circular/"
 profile_file = "/home/shuaiw/borg/bench/soil/run1/motif_profile.csv"
 anno_file = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_RM.rm.genes.tsv"
+bin_file = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab"
+gtdb_file = "/home/shuaiw/borg/contigs/GTDB/gtdbtk.all.summary.tsv"
 
 work_dir = "/home/shuaiw/borg/bench/soil/run1/"
 depth_file = os.path.join(work_dir, "mean_depth.csv")

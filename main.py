@@ -380,10 +380,18 @@ def depth_analysis(paras, ctg_depth_dict):
         .reset_index()
         .rename(columns={"index": "contig"})
     )
+    logger.info(f"{len(depth_df)} contigs in the assembly.")
+    over0_depth = depth_df[depth_df["depth"] > 0]
+    logger.info(f"{len(over0_depth)} contigs with depth > 0.")
+    ### report mean and median depth
+    mean_depth = over0_depth["depth"].mean()
+    median_depth = over0_depth["depth"].median()
+    logger.info(f"Mean depth: {mean_depth:.2f}, Median depth: {median_depth:.2f} in {len(over0_depth)} contigs with depth > 0.")
+
     depth_df.to_csv(paras["depth_file"], index=False)
     ## plot the depth distribution
     sns.set(style="whitegrid")
-    sns.histplot(depth_df, x="depth")
+    sns.histplot(over0_depth, x="depth")
     ## save the plot
 
     plt.savefig(paras["depth_plot"])

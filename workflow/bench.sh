@@ -847,3 +847,30 @@ sbatch --job-name=drep_job_1325 \
     -ms 10000 \
     -sa 0.95 \
     -nc 0.1 /home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out"
+
+sbatch --job-name=drep_job \
+  --partition standard \
+  --wrap "dRep compare \
+    -p 64 \
+    -g /home/shuaiw/methylation/data/borg/contigs/circular/genome.list \
+    --S_algorithm skani \
+    -ms 10000 \
+    -sa 0.95 \
+    -nc 0.1 /home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out2"
+
+
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil/run2.time python main.py \
+  --work_dir /home/shuaiw/borg/bench/soil/run2 \
+  --whole_bam /home/shuaiw/methylation/data/borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 10 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
+  --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --threads 64 "\
+  --job-name=soil
