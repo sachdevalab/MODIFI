@@ -39,12 +39,27 @@ def plot_heatmap(profile_file, min_frac=0.4):
     profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
     print ("filtered shape 1", profiles.shape)
     print (profiles)
+
+    drep_motifs = "/home/shuaiw/borg/bench/soil/run1/test.motifs_drep.csv"
+    drep_motif_df = pd.read_csv(drep_motifs)
+    drep_motifs_dict = {}
+    for index, row in drep_motif_df.iterrows():
+        motif = row['motifString']
+        if motif not in drep_motifs_dict:
+            drep_motifs_dict[motif] = 1
+
+    ## filter profiles to keep only the rows with motifString  that are in drep_motifs_dict
+    profiles = profiles[profiles.index.isin(drep_motifs_dict.keys())]
+    print ("filtered shape 2", profiles.shape)
+
     # Filter columns where any value is greater than 0.5
     # profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
 
     # print ("filtered shape", profiles.shape)
 
     df = profiles.T
+
+
     # Compute pairwise Euclidean distance matrix
     dist_matrix = pd.DataFrame(
         squareform(pdist(df, metric='euclidean')),
@@ -61,8 +76,6 @@ def plot_heatmap(profile_file, min_frac=0.4):
         columns=df.index
     )
 
-
-
     ctg_phylum = get_phylum(best_ctgs)
 
     phylum_colors = sns.color_palette("husl", len(set(ctg_phylum.values())))
@@ -75,11 +88,17 @@ def plot_heatmap(profile_file, min_frac=0.4):
         method='average',
         metric='euclidean',
         cmap='viridis',
-        figsize=(60, 15),
+        figsize=(30, 15),
         row_colors=phylum_colors_list,
         xticklabels=True,
         yticklabels=True
     )
+
+    # Add legend for phylum colors
+    from matplotlib.patches import Patch
+    handles = [Patch(facecolor=phylum_color_dict[phylum], label=phylum) for phylum in phylum_color_dict]
+    plt.legend(handles=handles, title="Phylum", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+
 
     plt.savefig("../../tmp/results/heatmap.png", dpi=300, bbox_inches='tight')
     plt.clf()
@@ -160,7 +179,7 @@ def out_best_ctgs(ref, best_ref, best_ctgs):
 def out_best_ctgs2(ref, best_ref, best_ctgs, best_ctg_dir):
     ## use biopython to extract the best contigs from the reference fasta file
     from Bio import SeqIO
-    from Bio.SeqIO.FastaIO import SimpleFastaParser
+    from Bio.SeqIO.FastaIO import SimpleFastaParser    
     with open(ref, "r") as f_in:
         for record in SeqIO.parse(f_in, "fasta"):
             if record.id in best_ctgs:

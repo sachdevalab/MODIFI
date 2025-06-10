@@ -167,9 +167,18 @@ def get_df():
     df = pd.DataFrame(data, columns=["chr", "start", "end", "color", "motif", "score", "strand"])
     df.to_csv("motif_df.csv", index=False)
 
-def split_gff(gff2, contig):
+def split_gff(gff2, contig, my_ref, out_dir):
     bin_size = 5000 ##650  ## 50000
+    max_length = 500000
     name_dict = {}
+    new_ref = out_dir + contig + ".fa"
+    ## use seq IO to read the reference file
+    for record in SeqIO.parse(my_ref, "fasta"):
+        if len(record.seq) > max_length:
+            record.seq = record.seq[:max_length]
+        ## write the record to the new reference file
+        SeqIO.write(record, new_ref, "fasta")
+        break
     
     # motif_list = ["CACAG", "GGAACG", "TACACG"]
     for motif in motif_list:
@@ -178,17 +187,19 @@ def split_gff(gff2, contig):
         data = []
         for line in open(gff2):
             if line[0] == "#":
-                motif_gff.write(line)
+                # motif_gff.write(line)
                 continue
             line = line.strip().split("\t")
             if motif in line[8]:
                 motif_gff.write(line[0] + "\t" + line[1] + "\t" + motif + "\t" + line[3] + "\t" + line[4] + "\t" + line[5] + "\t" + line[6] + "\t" + line[7] + "\t" + line[8] + "\n")
                 contig,type,start,stop,strand = line[0],motif,line[3],line[4],line[6]
+                if int(start) >= max_length:
+                    continue
                 ## convert start and stop to bin
-                bin_index = int(start) // bin_size
-                ## convert start and stop to bin
-                start = round((bin_index + 0.25) * bin_size)
-                stop = round((bin_index + 0.75) * bin_size)
+                # bin_index = int(start) // bin_size
+                # start = round((bin_index + 0.25) * bin_size)
+                # stop = round((bin_index + 0.75) * bin_size)
+
                 name = contig + ":" + str(start) + "-" + str(stop) + strand + "_" + motif
                 if name not in name_dict:
                     data.append([name,contig,type,start,stop,strand])
@@ -196,15 +207,71 @@ def split_gff(gff2, contig):
         motif_gff.close()
         df = pd.DataFrame(data, columns=["name", "contig", "type", "start", "stop", "strand"])
         df.to_csv(motif_csv, index=False)
-         
+
+
+def all_split_gff(out_dir):
+    bin_size = 5000 ##650  ## 50000
+    max_length = 240707   ## 500000
+    name_dict = {}
+    new_ref = out_dir  + "Ecoli.fa"
+    
+    ## remove new_ref if it exists
+    import os
+    if os.path.exists(new_ref):
+        os.remove(new_ref)
+    contig_list = ["E_coli_H10407_1", "E_coli_H10407_2", "E_coli_H10407_3","E_coli_H10407_4","E_coli_H10407_5","E_coli_H10407_6"]
+    # Open new_ref once for writing
+    with open(new_ref, "w") as f_out:
+        for contig in contig_list:
+            my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
+            
+            # Read and optionally truncate record, then write
+            for record in SeqIO.parse(my_ref, "fasta"):
+                if len(record.seq) > max_length:
+                    record.seq = record.seq[:max_length]
+                SeqIO.write(record, f_out, "fasta")
+                break  # if only writing the first record from each file
+    
+    # motif_list = ["CACAG", "GGAACG", "TACACG"]
+   
+    for motif in motif_list:
+        data = []
+        new_csv = out_dir + f"Ecoli_{motif}.csv"
+        for contig in contig_list:
+            gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
+        
+            
+            for line in open(gff2):
+                if line[0] == "#":
+                    # motif_gff.write(line)
+                    continue
+                line = line.strip().split("\t")
+                if motif in line[8]:
+                    
+                    contig,type,start,stop,strand = line[0],motif,line[3],line[4],line[6]
+                    if int(start) >= max_length:
+                        continue
+                    ## convert start and stop to bin
+                    # bin_index = int(start) // bin_size
+                    # start = round((bin_index + 0.25) * bin_size)
+                    # stop = round((bin_index + 0.75) * bin_size)
+
+                    name = contig + ":" + str(start) + "-" + str(stop) + strand + "_" + motif
+                    if name not in name_dict:
+                        data.append([name,contig,type,start,stop,strand])
+                        name_dict[name] = 1
+
+        df = pd.DataFrame(data, columns=["name", "contig", "type", "start", "stop", "strand"])
+        df.to_csv(new_csv, index=False)
+
 if __name__ == "__main__":
     # motif_new = "CTGCAG"
     # exact_pos = 5
     score_cutoff = 30
 
 
-    # contig = "E_coli_H10407_2"
-    contig = "B_cepacia_UCB-717_4"
+    contig = "E_coli_H10407_2"
+    # contig = "B_cepacia_UCB-717_4"
     motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
     my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
     gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
@@ -219,9 +286,10 @@ if __name__ == "__main__":
     # ipd_ratio_file = f"/home/shuaiw/borg/bench/soil/run1/ipd_ratio/{contig}.ipd3.csv"
 
 
-    out_dir = "/home/shuaiw/borg/paper/circos2/"
+    out_dir = "/home/shuaiw/borg/paper/circos3/"
 
-    split_gff(gff2, contig)
+    # split_gff(gff2, contig, my_ref, out_dir)
+    all_split_gff(out_dir)
 
 
 
