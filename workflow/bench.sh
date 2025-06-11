@@ -852,11 +852,13 @@ sbatch --job-name=drep_job \
   --partition standard \
   --wrap "dRep compare \
     -p 64 \
-    -g /home/shuaiw/methylation/data/borg/contigs/circular/genome.list \
-    --S_algorithm skani \
+    --S_algorithm ANImf \
     -ms 10000 \
     -sa 0.95 \
-    -nc 0.1 /home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out2"
+    --SkipMash \
+    -nc 0.1 /home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out3"
+  
+    # -g /home/shuaiw/methylation/data/borg/contigs/circular/genome.list \
 
 
  sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil/run2.time python main.py \
