@@ -860,6 +860,10 @@ sbatch --job-name=drep_job \
   
     # -g /home/shuaiw/methylation/data/borg/contigs/circular/genome.list \
 
+  fastANI --ql /home/shuaiw/methylation/data/borg/contigs/circular/genome.list \
+   --rl /home/shuaiw/methylation/data/borg/contigs/circular/genome.list \
+    -o fastANI.output -t 10
+
 
  sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil/run2.time python main.py \
   --work_dir /home/shuaiw/borg/bench/soil/run2 \

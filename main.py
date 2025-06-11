@@ -23,6 +23,7 @@ from collect_motifs import collect_motifs
 from motif_profile import motif_profile_worker
 from merge_profile import merge_profile_worker
 from cal_invasion_score import batch_MGE_invade
+from analyze_RM import RM_main
 
 
 # -------------------------------
@@ -120,11 +121,15 @@ def parse_arguments():
                         help="Enable visulization of IPD distribution.")
     parser.add_argument("--binning", action="store_true",
                         help="Enable binning based on methylation.")
+    parser.add_argument("--annotate_rm", action="store_true",
+                        help="Enable RM system annotation, MicrobeMod should be installed.")
+    parser.add_argument("--rm_gene_file", type=str,
+                        help="RM gene annotation file by MicrobeMod, with suffix .rm.genes.tsv.")
     parser.add_argument(
         "--run_steps",
         nargs="+",
         choices=[
-            "split", "load", "control", "compare", "motif", "profile", "merge", "host"
+            "split", "load", "control", "compare", "motif", "profile", "merge", "host", "anno"
         ],
         default=["split", "load", "control", "compare", "motif", "profile", "merge", "host"],
         help="Steps to run in the pipeline (default: all), for easy test."
@@ -419,6 +424,9 @@ def get_paras(args):
     paras["bins"] = os.path.join(args.work_dir, "bins")
     paras["profiles"] = os.path.join(args.work_dir, "profiles")
     paras["hosts"] = os.path.join(args.work_dir, "hosts")
+    paras["RM"] = os.path.join(args.work_dir, "RM_systems")
+    paras["RM_prefix"] = os.path.join(paras["RM"], "all_ctgs_RM")
+    paras["RM_genes"] = paras["RM_prefix"] + ".rm.genes.tsv"
 
     paras["kmer_bin"] = os.path.join(sys.path[0], "src", "test")
     paras["ctg_list_file"] = os.path.join(args.work_dir, "contigs_list.txt")
@@ -568,6 +576,30 @@ if __name__ == "__main__":
             "Predicting host",
             predict_host_worker,
             args, paras
+        )
+
+    if args.annotate_rm or "anno" in args.run_steps:
+        logger.info("Annotating RM systems...")
+        ## check if paras["RM"] exists, if not, create it
+        os.makedirs(paras["RM"], exist_ok=True)
+        cmd = [
+            "MicrobeMod", "annotate_rm",
+            "-f", args.whole_ref,  # or your desired fasta file
+            "-o", paras["RM_prefix"],
+            "-t", str(args.threads)
+        ]
+        if args.rm_gene_file:
+            print (f"Using RM gene annotation file: {args.rm_gene_file}")
+            paras["RM_genes"] = args.rm_gene_file
+        else:
+            logger.info(f"Running command: {' '.join(cmd)}")
+            subprocess.run(cmd, check=True)
+
+        RM_main(
+            anno_file=paras["RM_genes"],
+            motif_dir=paras["motifs"],
+            RM_dir=paras["RM"],
+            bin_file=args.bin_file
         )
     
     if args.clean:

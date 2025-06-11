@@ -92,7 +92,7 @@ def match_MTase_motifs(bin_Mtase, bin_motif, RM_file):
 
 
 
-def RM_main(anno_file, motif_dir, bin_file=None):
+def RM_main(anno_file, motif_dir, RM_dir, bin_file=None):
     if bin_file:
         bins = bin_ctgs(bin_file)
     else:
@@ -103,10 +103,7 @@ def RM_main(anno_file, motif_dir, bin_file=None):
                 bin_name = file.split(".motifs.csv")[0]
                 bins[bin_name] = [bin_name]
 
-    RM_dir = os.path.join(motif_dir, "..", "RM_system")
-    ## create RM_dir if not exists
-    if not os.path.exists(RM_dir):
-        os.makedirs(RM_dir)
+
 
     # bin_name = "B_cereus_971_1"
     for bin_name in bins:
@@ -135,7 +132,11 @@ if __name__ == "__main__":
 
     # anno_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_RM.rm.genes.tsv"
     # motif_dir = "/home/shuaiw/borg/bench/zymo_new_ref2/motifs/"
-    RM_main(anno_file, motif_dir, bin_file)
+    RM_dir = os.path.join(motif_dir, "..", "RM_system")
+    ## create RM_dir if not exists
+    if not os.path.exists(RM_dir):
+        os.makedirs(RM_dir)
+    RM_main(anno_file, motif_dir, RM_dir, bin_file)
 
 # anno_file = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_RM.rm.genes.tsv"
 # motif_dir = "/home/shuaiw/borg/bench/soil/run1/motifs/"
