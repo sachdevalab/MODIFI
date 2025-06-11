@@ -88,6 +88,7 @@ def read_our_multiple(host_sum, ctg2bin_dict, score_cutoff = 0.45):
 def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
     both_link = 0
     cosistency_num = 0
+    both_linkage_dict = {}
     for plasmid in our_linkages:
         if plasmid not in hic_linkages:
             # print(f"{plasmid} is not in HiC linkages")
@@ -98,6 +99,7 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
         ## check if the two list has a same element
         if set(our_linkages[plasmid]) & set(hic_linkages[plasmid]):
             cosistency_num += 1
+            both_linkage_dict[plasmid] = our_linkages[plasmid]
         else:
             print (f"{plasmid} is not consistent: {our_linkages[plasmid]} ({our_ctg_linkages[plasmid]}) vs Hi-C {hic_linkages[plasmid]} : ({bin2ctg_dict[hic_linkages[plasmid][0]][0]}, {len(bin2ctg_dict[hic_linkages[plasmid][0]])})\n")
     if both_link == 0:
@@ -108,7 +110,7 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
     print(f"cosistency linkages: {cosistency_num}")
     print (f"cosistency rate: {cosistency_rate}")
     print ("our link num", len(our_linkages))
-    return both_link, cosistency_num, cosistency_rate, len(our_linkages)
+    return both_link, cosistency_num, cosistency_rate, len(our_linkages), both_linkage_dict
 
 def main():
     ctg2bin_dict, bin2ctg_dict = load_ctg2bin(ctg2bin)
@@ -117,13 +119,19 @@ def main():
 
     # """
     data = []
-    for cutoff in range(6, 18):
+    for cutoff in range(9, 10):
         my_cutoff = cutoff / 20
         
         our_linkages, our_ctg_linkages = read_our(host_sum, ctg2bin_dict, my_cutoff)
         # our_linkages, our_ctg_linkages = read_our_multiple(host_sum, ctg2bin_dict, my_cutoff)
         print (f"cutoff: {my_cutoff}")
-        both_link, cosistency_num, consis_rate, our_num = compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict)
+        both_link, cosistency_num, consis_rate, our_num, both_linkage_dict = compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict)
+        
+        df2 = pd.read_csv(host_sum)
+        ## add a new column for both
+        df2['both_link'] = df2['plasmid'].apply(lambda x: 1 if x in both_linkage_dict else 0)
+        ## output df2 to a csv file
+        df2.to_csv(host_sum_compare, index=False)
         data.append([my_cutoff, both_link, cosistency_num, consis_rate, our_num])
     df = pd.DataFrame(data, columns=['cutoff', 'both_link', 'cosistency_num', 'consis_rate', 'our_num'])
 
@@ -208,6 +216,7 @@ if __name__ == "__main__":
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/host_summary.csv"
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin/host_summary.csv"
     host_sum =  "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"
+    host_sum_compare =  "/home/shuaiw/methylation/data/borg/pengfan/total_summary_compare.csv"
 
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin/host_summary.csv"
     # host_sum = "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"

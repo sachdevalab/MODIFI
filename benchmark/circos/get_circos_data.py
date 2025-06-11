@@ -211,15 +211,20 @@ def split_gff(gff2, contig, my_ref, out_dir):
 
 def all_split_gff(out_dir):
     bin_size = 5000 ##650  ## 50000
-    max_length = 240707   ## 500000
+    max_length = 240707   ## E coli
+    # max_length = 399533  ## K pneumoniae
+    # max_length = 500000000  ## merged
     name_dict = {}
-    new_ref = out_dir  + "Ecoli.fa"
+    # strain = "K_pneumoniae"
+    # strain = "merged"
+    strain = "Ecoli_H10407"
+    new_ref = out_dir  + f"{strain}.fa"
     
     ## remove new_ref if it exists
     import os
     if os.path.exists(new_ref):
         os.remove(new_ref)
-    contig_list = ["E_coli_H10407_1", "E_coli_H10407_2", "E_coli_H10407_3","E_coli_H10407_4","E_coli_H10407_5","E_coli_H10407_6"]
+    
     # Open new_ref once for writing
     with open(new_ref, "w") as f_out:
         for contig in contig_list:
@@ -236,7 +241,7 @@ def all_split_gff(out_dir):
    
     for motif in motif_list:
         data = []
-        new_csv = out_dir + f"Ecoli_{motif}.csv"
+        new_csv = out_dir + f"{strain}_{motif}.csv"
         for contig in contig_list:
             gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
         
@@ -248,8 +253,10 @@ def all_split_gff(out_dir):
                 line = line.strip().split("\t")
                 if motif in line[8]:
                     
-                    contig,type,start,stop,strand = line[0],motif,line[3],line[4],line[6]
+                    contig,type,start,stop,strand,score = line[0],motif,line[3],line[4],line[6],int(line[5])
                     if int(start) >= max_length:
+                        continue
+                    if score < 30:
                         continue
                     ## convert start and stop to bin
                     # bin_index = int(start) // bin_size
@@ -270,12 +277,12 @@ if __name__ == "__main__":
     score_cutoff = 30
 
 
-    contig = "E_coli_H10407_2"
-    # contig = "B_cepacia_UCB-717_4"
-    motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
-    my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
-    gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
-    ipd_ratio_file = f"/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/{contig}.ipd3.csv"
+    # contig = "E_coli_H10407_2"
+    # # contig = "B_cepacia_UCB-717_4"
+    # motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
+    # my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
+    # gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
+    # ipd_ratio_file = f"/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/{contig}.ipd3.csv"
 
 
     # motif_list = ["CAGAC", "CCGG", "TGCCCA", "TCTANNNNNNNRTNG","GAANNNNNNTGGC"]
@@ -287,6 +294,13 @@ if __name__ == "__main__":
 
 
     out_dir = "/home/shuaiw/borg/paper/circos3/"
+    motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
+    contig_list = ["E_coli_H10407_1", "E_coli_H10407_2", "E_coli_H10407_3","E_coli_H10407_4","E_coli_H10407_5","E_coli_H10407_6"]
+    # motif_list = ["GATC", "CGCATC"]  ## K_pneumoniae_BAA-2146_1
+    # contig_list = ["K_pneumoniae_BAA-2146_1", "K_pneumoniae_BAA-2146_2","K_pneumoniae_BAA-2146_3", "K_pneumoniae_BAA-2146_4", "K_pneumoniae_BAA-2146_5"]
+
+    # motif_list = ["TTGANNNNNNCCT", "CGTCGVNY", "ACAYNNNNNNNTGNG"]  
+    # contig_list = ["B_cereus_971_1","B_multivorans_249_1"]
 
     # split_gff(gff2, contig, my_ref, out_dir)
     all_split_gff(out_dir)

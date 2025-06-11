@@ -29,8 +29,11 @@ def get_edge(plasmid_types={}, virus_types={}, bin2anno_dict={}, cutoff=0.45):
             G.add_node(row['host'], label=row['host'], type=bin2anno_dict[row['host']])
         else:
             G.add_node(row['host'], label=row['host'], type="Unknown")
-        
-        G.add_edge(row['MGE'], row['host'], weight=row['final_score'])
+
+        if row['both_link'] == 1:
+            G.add_edge(row['MGE'], row['host'], weight=row['final_score'], type='share')
+        elif row['both_link'] == 0:
+            G.add_edge(row['MGE'], row['host'], weight=row['final_score'], type='unique')
     plot(G)
     nx.write_gexf(G,gexf)
 
@@ -42,7 +45,9 @@ def plot(G):
     # Use a large canvas
     plt.figure(figsize=(16, 12))  # Increased canvas size
 
-    pos = nx.spring_layout(G, k=0.15, iterations=20)
+    # pos = nx.spring_layout(G, k=0.15, iterations=20)
+    pos = nx.kamada_kawai_layout(G)
+
 
     # Separate nodes by type
     virus_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'Virus']
@@ -56,7 +61,30 @@ def plot(G):
     host_colors = [host_type_to_color[G.nodes[n]['type']] for n in host_nodes]
 
     # Draw edges
-    nx.draw_networkx_edges(G, pos, edge_color='gray', alpha=0.5)
+    # nx.draw_networkx_edges(G, pos, edge_color='gray', alpha=0.5)
+    edge_type_to_color = {
+        'share': 'green',
+        'unique': 'gray',
+        'transduction': 'purple',
+        # add more types and colors as needed
+        None: 'gray'  # default
+    }
+    # Group edges by type
+    edge_type_dict = {}
+    for u, v, d in G.edges(data=True):
+        etype = d.get('type', None)
+        edge_type_dict.setdefault(etype, []).append((u, v))
+
+    for etype, edges in edge_type_dict.items():
+        nx.draw_networkx_edges(
+            G, pos,
+            edgelist=edges,
+            edge_color=edge_type_to_color.get(etype, 'gray'),
+            alpha=0.7,
+            width=2,
+            label=etype
+        )
+
 
     # Draw nodes: viruses and plasmids as squares, hosts as circles colored by type
     nx.draw_networkx_nodes(G, pos, nodelist=virus_nodes, node_shape='s', node_color='red', label='Virus', node_size=100)
@@ -75,7 +103,7 @@ def plot(G):
     plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
 
     plt.title("Network of Host-MGE Interactions")
-    plt.tight_layout()
+    plt.tight_layout(pad=3.0)
     plt.savefig("../../tmp/results/network_plot.png", dpi=300, bbox_inches='tight')
     plt.close()
     
@@ -146,9 +174,9 @@ if __name__ == "__main__":
 
     # host_sum_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/host_summary.csv"
     # host_sum_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin/host_summary.csv"
-    host_sum_file = "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"
+    host_sum_file = "/home/shuaiw/methylation/data/borg/pengfan/total_summary_compare.csv"
     gexf = "/home/shuaiw/borg/paper/network/RuReacBro_20230708_11_72h_20_bin.gexf"
     gatk = "/home/shuaiw/borg/pengfan/contigs/gatk_all.summary.tsv"
     bin2anno_dict = read_gtdb(gatk)
     plasmid_types, virus_types = classify_cow_MGE()
-    get_edge(plasmid_types, virus_types, bin2anno_dict=bin2anno_dict, cutoff=0.55)  
+    get_edge(plasmid_types, virus_types, bin2anno_dict=bin2anno_dict, cutoff=0.45)  
