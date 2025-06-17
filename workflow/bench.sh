@@ -846,7 +846,7 @@ sbatch --job-name=drep_job_1325 \
     --S_algorithm skani \
     -ms 10000 \
     -sa 0.95 \
-    -nc 0.1 /home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out"
+    -nc 0.7 /home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out"
 
 sbatch --job-name=drep_job \
   --partition standard \
@@ -890,6 +890,7 @@ sbatch --job-name=drep_job \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
+  --run_steps compare motif profile merge host \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
   --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --threads 64 "\

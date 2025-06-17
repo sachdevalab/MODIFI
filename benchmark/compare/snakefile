@@ -14,7 +14,7 @@ ipd_sum_dir = os.path.join(work_dir, "ipdSum")
 def get_samples():
     bam_files = glob.glob(os.path.join(work_dir, "contigs", "*.fa"))
     samples = list(set(f.split("/")[-1].replace(".fa", "") for f in bam_files))
-    print (f"there are {len(samples)} samples to load ipd...")
+    # print (f"there are {len(samples)} samples to load ipd...")
     return samples
 
 rule all:
@@ -26,7 +26,7 @@ rule ipdSum:
         align_bam=os.path.join(work_dir, "bams", "{sample}.bam"),
         ref=os.path.join(work_dir, "contigs", "{sample}.fa"),
     output:
-        os.path.join(ipd_sum_dir, "{sample}.out")
+        os.path.join(ipd_sum_dir, "{sample}.out.pickle")
     shell:
         """
         bash /home/shuaiw/Methy/benchmark/compare/run_ipdSummary.sh {input.align_bam} {input.ref} {ipd_sum_dir}/{wildcards.sample}

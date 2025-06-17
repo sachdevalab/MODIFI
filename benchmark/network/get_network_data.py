@@ -4,8 +4,6 @@ import re
 import os
 import matplotlib.pyplot as plt
 
-
-
 def get_edge(plasmid_types={}, virus_types={}, bin2anno_dict={}, cutoff=0.45):
     """
     Get the edge data from the host summary file.
@@ -36,6 +34,7 @@ def get_edge(plasmid_types={}, virus_types={}, bin2anno_dict={}, cutoff=0.45):
             G.add_edge(row['MGE'], row['host'], weight=row['final_score'], type='unique')
     plot(G)
     nx.write_gexf(G,gexf)
+    nx.write_gml(G, gml)
 
 def plot(G):
     import matplotlib.patches as mpatches
@@ -107,7 +106,6 @@ def plot(G):
     plt.savefig("../../tmp/results/network_plot.png", dpi=300, bbox_inches='tight')
     plt.close()
     
-
 def get_MGE_type(plasmid_sum, virus_sum):
     """
     Get the MGE type from the plasmid and virus summary files.
@@ -176,6 +174,7 @@ if __name__ == "__main__":
     # host_sum_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin/host_summary.csv"
     host_sum_file = "/home/shuaiw/methylation/data/borg/pengfan/total_summary_compare.csv"
     gexf = "/home/shuaiw/borg/paper/network/RuReacBro_20230708_11_72h_20_bin.gexf"
+    gml = "/home/shuaiw/borg/paper/network/RuReacBro_20230708_11_72h_20_bin.gml"
     gatk = "/home/shuaiw/borg/pengfan/contigs/gatk_all.summary.tsv"
     bin2anno_dict = read_gtdb(gatk)
     plasmid_types, virus_types = classify_cow_MGE()

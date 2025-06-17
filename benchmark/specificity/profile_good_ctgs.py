@@ -30,16 +30,7 @@ def get_best_ctg(min_len = 1000000):
     print (f"Total {len(best_ctgs)} contigs with length >= {min_len} found.")
     return best_ctgs
 
-def plot_heatmap(profile_file, min_frac=0.4):
-    profiles = pd.read_csv(profile_file, index_col=0)
-    ## only keep the columns that are in the best contigs
-    best_ctgs = get_best_ctg()
-    profiles = profiles.loc[:, profiles.columns.isin(best_ctgs)]
-    print ("original shape", profiles.shape)                                    
-    profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
-    print ("filtered shape 1", profiles.shape)
-    print (profiles)
-
+def get_drep_motifs():
     drep_motifs = "/home/shuaiw/borg/bench/soil/run1/test.motifs_drep.csv"
     drep_motif_df = pd.read_csv(drep_motifs)
     drep_motifs_dict = {}
@@ -47,6 +38,70 @@ def plot_heatmap(profile_file, min_frac=0.4):
         motif = row['motifString']
         if motif not in drep_motifs_dict:
             drep_motifs_dict[motif] = 1
+    return drep_motifs_dict
+
+def plot_strain_heatmap(profile_file, min_frac=0.4):
+    profiles = pd.read_csv(profile_file, index_col=0)
+    ## only keep the columns that are in the best contigs
+    best_ctgs = get_best_ctg()
+    multiple_strain_ctg, ctg_phylum = read_drep_cluster()
+    ## retain only the contigs that are in multiple strain clusters
+    best_ctgs = [ctg for ctg in best_ctgs if ctg in multiple_strain_ctg]
+    print (f"Total {len(best_ctgs)} contigs")
+    
+    profiles = profiles.loc[:, profiles.columns.isin(best_ctgs)]
+    print ("original shape", profiles.shape)                                    
+    profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
+    print ("filtered shape 1", profiles.shape)
+    print (profiles)
+    drep_motifs_dict = get_drep_motifs()
+
+
+    ## filter profiles to keep only the rows with motifString  that are in drep_motifs_dict
+    profiles = profiles[profiles.index.isin(drep_motifs_dict.keys())]
+    print ("filtered shape 2", profiles.shape)
+
+
+    df = profiles.T
+    # ctg_phylum = get_phylum(best_ctgs)
+
+    phylum_colors = sns.color_palette("husl", len(set(ctg_phylum.values())))
+    phylum_color_dict = {phylum: color for phylum, color in zip(set(ctg_phylum.values()), phylum_colors)}
+    phylum_colors_list = [phylum_color_dict[ctg_phylum[ctg]] for ctg in df.index]
+
+    # Use clustermap instead of heatmap
+    g = sns.clustermap(
+        df,
+        method='average',
+        metric='euclidean',
+        cmap='viridis',
+        figsize=(30, 15),
+        row_colors=phylum_colors_list,
+        xticklabels=True,
+        yticklabels=True
+    )
+
+    # Add legend for phylum colors
+    from matplotlib.patches import Patch
+    handles = [Patch(facecolor=phylum_color_dict[phylum], label=phylum) for phylum in phylum_color_dict]
+    plt.legend(handles=handles, title="Strain", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+
+
+    plt.savefig("../../tmp/results/heatmap_strain_cluster.png", dpi=300, bbox_inches='tight')
+    plt.clf()
+
+def plot_heatmap(profile_file, min_frac=0.4):
+    profiles = pd.read_csv(profile_file, index_col=0)
+    ## only keep the columns that are in the best contigs
+    best_ctgs = get_best_ctg()
+    
+    profiles = profiles.loc[:, profiles.columns.isin(best_ctgs)]
+    print ("original shape", profiles.shape)                                    
+    profiles = profiles.loc[(profiles > min_frac).any(axis=1)]
+    print ("filtered shape 1", profiles.shape)
+    print (profiles)
+    drep_motifs_dict = get_drep_motifs()
+
 
     ## filter profiles to keep only the rows with motifString  that are in drep_motifs_dict
     profiles = profiles[profiles.index.isin(drep_motifs_dict.keys())]
@@ -54,28 +109,9 @@ def plot_heatmap(profile_file, min_frac=0.4):
 
     # Filter columns where any value is greater than 0.5
     # profiles = profiles.loc[:, (profiles > min_frac).any(axis=0)]
-
     # print ("filtered shape", profiles.shape)
 
     df = profiles.T
-
-
-    # Compute pairwise Euclidean distance matrix
-    dist_matrix = pd.DataFrame(
-        squareform(pdist(df, metric='euclidean')),
-        index=df.index,
-        columns=df.index
-    )
-    print("Pairwise Euclidean distance matrix:")
-    # print(dist_matrix)
-
-    ## compute pairwise cosine similarity matrix
-    cosine_sim_matrix = pd.DataFrame(
-        cosine_similarity(df),
-        index=df.index,
-        columns=df.index
-    )
-
     ctg_phylum = get_phylum(best_ctgs)
 
     phylum_colors = sns.color_palette("husl", len(set(ctg_phylum.values())))
@@ -103,6 +139,15 @@ def plot_heatmap(profile_file, min_frac=0.4):
     plt.savefig("../../tmp/results/heatmap.png", dpi=300, bbox_inches='tight')
     plt.clf()
 
+    # plot_drep_similarity_vs_cos_sim(df)
+
+def plot_drep_similarity_vs_cos_sim(df):
+    ## compute pairwise cosine similarity matrix
+    cosine_sim_matrix = pd.DataFrame(
+        cosine_similarity(df),
+        index=df.index,
+        columns=df.index
+    )
     drep_sim_dict = get_ctg_sim()
     ## for each pair of contigs, get the Euclidean distance and dRep similarity
     drep_sim_list = []
@@ -126,7 +171,7 @@ def plot_heatmap(profile_file, min_frac=0.4):
 
 def get_ctg_sim():
     drep_sim_dict = {}
-    drep_sim = "/home/shuaiw/borg/contigs/dRep/dRep_out/data_tables/Mdb.csv"
+    drep_sim = "/home/shuaiw/borg/contigs/dRep/dRep_out4/data_tables/Mdb.csv"
     df = pd.read_csv(drep_sim)
     for index, row in df.iterrows():
         ctg1 = row['genome1'][:-6]
@@ -134,6 +179,41 @@ def get_ctg_sim():
         drep_sim_dict[ctg1 + "&" + ctg2] = row['similarity']
         drep_sim_dict[ctg2 + "&" + ctg1] = row['similarity']
     return drep_sim_dict
+
+def get_ctg_sim2():
+    drep_sim_dict = {}
+    drep_sim = "/home/shuaiw/borg/contigs/fastANI.output"
+    df = pd.read_csv(drep_sim, header =None, sep="\t")
+    for index, row in df.iterrows():
+        ## get first colunm as ctg1 and second column as ctg2
+
+        ctg1 = row[0][:-6].split("/")[-1]
+        ctg2 = row[1][:-6].split("/")[-1]
+        drep_sim_dict[ctg1 + "&" + ctg2] = row[2]
+        drep_sim_dict[ctg2 + "&" + ctg1] = row[2]
+    # print (drep_sim_dict)
+    return drep_sim_dict
+
+def read_drep_cluster():
+    drep_clu_file = "/home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out2/data_tables/Cdb.csv"
+    drep_clu_dict = {}
+    df = pd.read_csv(drep_clu_file)
+    for index, row in df.iterrows():
+        drep_clu_dict[row['genome'][:-6]] = row['secondary_cluster']
+    ## count the number of contigs in each cluster
+    clu_count = {}
+    for ctg, clu in drep_clu_dict.items():
+        if clu not in clu_count:
+            clu_count[clu] = 0
+        clu_count[clu] += 1
+    multiple_strain_ctg = {}
+    ctg_phylum = {}
+    for ctg, clu in drep_clu_dict.items():
+        if clu_count[clu] > 1:
+            multiple_strain_ctg[ctg] = clu
+            ctg_phylum[ctg] = clu
+    print ("multiple_strain_ctg", multiple_strain_ctg)
+    return multiple_strain_ctg, ctg_phylum
 
 def get_phylum(best_ctgs):
     import re
@@ -162,9 +242,6 @@ def get_phylum(best_ctgs):
         else:
             ctg_phylum[ctg] = "Unclassified"
     return (ctg_phylum)
-
-
-
 
 def out_best_ctgs(ref, best_ref, best_ctgs):
     ## use biopython to extract the best contigs from the reference fasta file
@@ -308,4 +385,5 @@ depth_file = os.path.join(work_dir, "mean_depth.csv")
 
 
 # out_best_ctgs(ref, best_ref, best_ctgs)
-plot_heatmap(profile_file)
+# plot_heatmap(profile_file)
+plot_strain_heatmap(profile_file)

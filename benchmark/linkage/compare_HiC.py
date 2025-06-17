@@ -8,6 +8,7 @@ import numpy as np
 ## plot another subplot with the our link num
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib_venn import venn2
 
 def read_hic(hic_file):
     hic_linkages = defaultdict(list)
@@ -133,6 +134,11 @@ def main():
         ## output df2 to a csv file
         df2.to_csv(host_sum_compare, index=False)
         data.append([my_cutoff, both_link, cosistency_num, consis_rate, our_num])
+        print (len(hic_linkages), len(our_linkages), len(both_linkage_dict))
+        venn2(subsets = (len(hic_linkages)-len(both_linkage_dict), len(our_linkages)-len(both_linkage_dict), len(both_linkage_dict)), set_labels = ('Hi-C', 'Methylation'))
+        # plt.show()
+        ## save the venn diagram
+        plt.savefig(f"../../tmp/results/venn_{my_cutoff}.png")
     df = pd.DataFrame(data, columns=['cutoff', 'both_link', 'cosistency_num', 'consis_rate', 'our_num'])
 
     sns.set(style="whitegrid")

@@ -5,20 +5,9 @@
 conda activate /home/shuaiw/miniconda3/envs/methy3
 ```
 ## usage
-```
-cd /home/shuaiw/Methy/workflow
-```
-then run like
-```
-snakemake --config \
- whole_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.align.ccs.bam \
- whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_NM3 \
-  read_type=ccs min_len=1000 max_NM=3
-```
 
 ```
-python main.py \
+python /home/shuaiw/Methy/main.py \
   --work_dir /home/shuaiw/methylation/data/borg/new_test12 \
   --whole_bam /home/shuaiw/methylation/data/borg/b_contigs/11.align.bam \
   --whole_ref /home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa \
@@ -62,19 +51,6 @@ options:
 ```
 
 
-```
-whole_bam : "/home/shuaiw/methylation/data/borg/large_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam"
-whole_ref : "/home/shuaiw/methylation/data/borg/contigs/large.contigs.fa"
-work_dir : "/home/shuaiw/methylation/data/borg/new_test5"
-maxAlignments : 100000 
-read_type: "subreads"
-max_NM: 
-min_len: 50000
-min_cov: 3
-kmer_mean_db: 
-kmer_num_db:
-clean: True
-```
 
 
 ## Output interpretation
@@ -98,7 +74,10 @@ clean: True
 |6|score|
 |7|strand|
 |8|.|
-|9|additional annotation including coverage, local contex, and IPDRtio of this locus|
+|9|additional annotation including coverage, local context, and IPDRtio of this locus|
+
+`motifs/*motifs.csv`
+
 
 `profiles/*.motifs.profile.csv`
 | Column | Description |
@@ -115,6 +94,9 @@ clean: True
 |motif_modified_num|No. of methylated motif sites on both strand|
 |motif_modified_ratio|Fraction of methylation in all motif sites on the both strand|
 |proportion|Fraction of methylation of this motif and and methylation of all motifs|
+
+`hosts/`
+
 
 `summary files`
 | File | Description |
