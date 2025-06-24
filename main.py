@@ -135,8 +135,6 @@ def parse_arguments():
         help="Steps to run in the pipeline (default: all), for easy test."
     )
 
-    
-
     return parser.parse_args()
 
 def load_ipd_parallel(args, paras):
@@ -243,7 +241,7 @@ def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, mi
     ]
 
     with open(depth_file, "w") as depth_output:
-        logger.info(f"Running command: {' '.join(cmd)}")
+        # logger.info(f"Running command: {' '.join(cmd)}")
         subprocess.run(cmd, stdout=depth_output, stderr=subprocess.DEVNULL, check=True)
 
     mean_depth = process_depth_and_gff(depth_file, fasta, gff, seg_ref, seg_gff,
@@ -258,7 +256,7 @@ def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, mi
         "-j", str(1),
         "-m", str(min_score),
     ]
-    logger.info(f"Running command: {' '.join(cmd)}")
+    # logger.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
     return ctg_name, mean_depth
@@ -396,10 +394,14 @@ def depth_analysis(paras, ctg_depth_dict):
     depth_df.to_csv(paras["depth_file"], index=False)
     ## plot the depth distribution
     sns.set(style="whitegrid")
-    sns.histplot(over0_depth, x="depth")
-    ## save the plot
-
+    # Remove the lowest and highest 10% contigs by depth for plotting
+    lower_quantile = over0_depth["depth"].quantile(0.10)
+    upper_quantile = over0_depth["depth"].quantile(0.90)
+    filtered_depth = over0_depth[(over0_depth["depth"] >= lower_quantile) & (over0_depth["depth"] <= upper_quantile)]
+    sns.histplot(filtered_depth, x="depth")
     plt.savefig(paras["depth_plot"])
+    ## log the number of contigs with depth larger than min_ctg_cov
+    logger.info(f"{len(over0_depth[over0_depth['depth'] >= args.min_ctg_cov])} contigs with depth >= {args.min_ctg_cov}.")
 
 def predict_host_worker(args, paras):
     os.makedirs(paras["hosts"], exist_ok = True)

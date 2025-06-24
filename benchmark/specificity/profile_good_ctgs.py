@@ -195,7 +195,7 @@ def get_ctg_sim2():
     return drep_sim_dict
 
 def read_drep_cluster():
-    drep_clu_file = "/home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out2/data_tables/Cdb.csv"
+    drep_clu_file = "/home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out/data_tables/Cdb.csv"
     drep_clu_dict = {}
     df = pd.read_csv(drep_clu_file)
     for index, row in df.iterrows():

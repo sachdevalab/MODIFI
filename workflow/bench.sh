@@ -848,17 +848,6 @@ sbatch --job-name=drep_job_1325 \
     -sa 0.95 \
     -nc 0.7 /home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out"
 
-sbatch --job-name=drep_job \
-  --partition standard \
-  --wrap "dRep compare \
-    -p 64 \
-    --S_algorithm ANImf \
-    -ms 10000 \
-    -sa 0.95 \
-    --SkipMash \
-    -nc 0.1 /home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out3"
-  
-    # -g /home/shuaiw/methylation/data/borg/contigs/circular/genome.list \
 
   fastANI --ql /home/shuaiw/methylation/data/borg/contigs/circular/genome.list \
    --rl /home/shuaiw/methylation/data/borg/contigs/circular/genome.list \
@@ -881,7 +870,23 @@ sbatch --job-name=drep_job \
   --threads 64 "\
   --job-name=soil
 
- sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil/run_subreads.time python main.py \
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil/run_subreads2.time python main.py \
+  --work_dir /home/shuaiw/borg/bench/soil/run_subreads2 \
+  --whole_bam /home/shuaiw/methylation/data/borg/all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+  --read_type subreads \
+  --min_len 1000 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --min_ctg_cov 20 \
+  --run_steps merge host anno \
+  --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
+  --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --threads 64 "\
+  --job-name=soil_subreads2
+
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil/run_subreads2.time python main.py \
   --work_dir /home/shuaiw/borg/bench/soil/run_subreads \
   --whole_bam /home/shuaiw/methylation/data/borg/all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
   --whole_ref /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
@@ -890,8 +895,23 @@ sbatch --job-name=drep_job \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --run_steps compare motif profile merge host \
+  --run_steps host \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
   --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --threads 64 "\
   --job-name=soil_subreads
+
+
+sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylation/data/borg/bench/pipeline_zymo.time python main.py \
+  --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec8 \
+  --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
+  --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list  " \
+  --job-name=pipeline
