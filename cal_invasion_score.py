@@ -325,6 +325,8 @@ def read_genomad(genomad_file):
         
         if re.search('\|provirus', row['seq_name']):
             continue
+        if row['seq_name'] == 'seq_name':
+            continue
         # print (row['seq_name'])
         MGE_dict[row['seq_name']] = row
     return MGE_dict

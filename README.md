@@ -6,6 +6,16 @@ conda activate /home/shuaiw/miniconda3/envs/methy3
 ```
 ## usage
 
+First, align your PacBio reads (BAM) onto the assembled contigs using PBMM2 like:
+```
+~/smrtlink/pbmm2 align --preset CCS -j $threads $work_dir/${prefix}.p_ctg.fa $hifi_bam $work_dir/${prefix}.raw.bam
+samtools sort -T $work_dir/${prefix} -@ $threads -o $work_dir/${prefix}.align.bam $work_dir/${prefix}.raw.bam
+rm $work_dir/${prefix}.raw.bam
+samtools index $work_dir/${prefix}.align.bam
+/home/shuaiw//smrtlink/pbindex $work_dir/${prefix}.align.bam
+```
+
+Then, detect methylation based on the aligned bam like
 ```
 python /home/shuaiw/Methy/main.py \
   --work_dir /home/shuaiw/methylation/data/borg/new_test12 \
