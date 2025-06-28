@@ -1,0 +1,109 @@
+# Snakefile
+
+# Configuration
+configfile: "config.yaml"
+
+rule all:
+    input:
+        final_fa = f"{config['work_dir']}/{config['prefix']}.final.fa",
+        bam_index = f"{config['work_dir']}/{config['prefix']}.align.bam.bai",
+        methyl_time = f"{config['work_dir']}/{config['prefix']}.methyl.time"
+
+rule bam_to_fastq_gz:
+    input:
+        bam=config["hifi_bam"]
+    output:
+        fastq_gz=f"{config['work_dir']}/{config['prefix']}.hifi.fastq.gz"
+    threads: config["threads"]
+    shell:
+        """
+        mkdir -p {config[work_dir]}
+        samtools fastq {input.bam} | gzip -c > {output.fastq_gz}
+        """
+
+rule trim_reads_bbduk:
+    input:
+        fastq_gz=f"{config['work_dir']}/{config['prefix']}.hifi.fastq.gz"
+    output:
+        trimmed=f"{config['work_dir']}/{config['prefix']}.hifi.qc.fq.gz"
+    threads: 5
+    shell:
+        """
+        /shared/software/bbmap/39.01/bbduk.sh \
+            in={input.fastq_gz} \
+            out={output.trimmed} \
+            minavgquality=20 \
+            qtrim=rl \
+            trimq=20 \
+            threads={threads}
+        """
+
+rule assemble_hifiasm:
+    input:
+        fq=f"{config['work_dir']}/{config['prefix']}.hifi.qc.fq.gz"
+    output:
+        gfa=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.gfa",
+        log=f"{config['work_dir']}/{config['prefix']}.hifiasm.log"
+    threads: config["threads"]
+    shell:
+        """
+        hifiasm_meta -o {config[work_dir]}/{config[prefix]}.hifiasm \
+            -t {threads} {input.fq} > {output.log}
+        """
+
+rule gfa_to_fasta:
+    input:
+        gfa=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.gfa"
+    output:
+        fasta=f"{config['work_dir']}/{config['prefix']}.final.fa"
+    shell:
+        # You can toggle either version of awk
+        # Rohan's version:
+        """
+        awk '$1==\"S\" {{printf \">%s\\n%s\\n\", $2, $3}}' {input.gfa} > {config[work_dir]}/{config[prefix]}.p_ctg.fa
+        /home/rohan/dev/pipeline/workflow/scripts/gg_rename_assembly.py \
+            -i {config[work_dir]}/{config[prefix]}.p_ctg.fa \
+            -o {output.fasta} -s {config[prefix]}
+        """
+
+rule map_reads_to_assembly:
+    input:
+        fa = f"{config['work_dir']}/{config['prefix']}.final.fa",
+        fq = config["hifi_bam"]
+    output:
+        bam = temp(f"{config['work_dir']}/{config['prefix']}.align.bam"),
+        bai=f"{config['work_dir']}/{config['prefix']}.align.bam.bai"
+    threads: config["threads"]
+    shell:
+        """
+        samtools faidx {input.fa}
+        ~/smrtlink/pbmm2 align --preset CCS -j {threads} {input.fa} {input.fq} {config[work_dir]}/{config[prefix]}.raw.bam
+        samtools sort -T {config[work_dir]}/{config[prefix]} -@ {threads} -o {output.bam} {config[work_dir]}/{config[prefix]}.raw.bam
+        rm {config[work_dir]}/{config[prefix]}.raw.bam
+
+        samtools index {output.bam}
+        /home/shuaiw/smrtlink/pbindex {output.bam}
+        """
+
+rule call_methylation:
+    input:
+        bam=f"{config['work_dir']}/{config['prefix']}.align.bam",
+        fa=f"{config['work_dir']}/{config['prefix']}.final.fa"
+    output:
+        time=f"{config['work_dir']}/{config['prefix']}.methyl.time"
+    threads: config["threads"]
+    shell:
+        """
+        /usr/bin/time -v -o {output.time} python /home/shuaiw/Methy/main.py \
+          --work_dir {config[work_dir]}/{config[prefix]}_methylation \
+          --whole_bam {input.bam} \
+          --whole_ref {input.fa} \
+          --read_type hifi \
+          --min_len 1000 \
+          --max_NM 3000 \
+          --min_cov 1 \
+          --min_frac 0.4 \
+          --min_score 30 \
+          --min_sites 30 \
+          --threads {threads} 
+        """

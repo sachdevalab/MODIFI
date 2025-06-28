@@ -1,0 +1,5 @@
+hifi_bam: /home/shuaiw/borg/paper/linkage/m64004_210929_143746.p05.bam
+prefix: 96plex_p5
+work_dir: /home/shuaiw/borg/assembly/96plex/96plex_p5_2
+threads: 20
+
