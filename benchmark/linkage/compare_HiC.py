@@ -104,10 +104,14 @@ def read_our_multiple(host_sum, ctg2bin_dict, score_cutoff = 0.45):
     print (f"multiple host plasmid num: {multiple_host_plasmid_num} out of {len(our_linkages)}")
     return our_linkages, our_ctg_linkages
 
-def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict, bin_depth_dict):
+def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict, bin_depth_dict,ctg_len_dict):
     both_link = 0
     cosistency_num = 0
+    incosistency_num = 0
     both_linkage_dict = {}
+    inconsistent_hic_set = set()
+    hic_bin_set = {"consistent":[], "inconsistent":[]}
+    consistent_hic_set = set()
     for plasmid in hic_linkages:
         if plasmid not in our_linkages:
             print (f"###  Hi-C {plasmid} {bin_depth_dict[plasmid]} : {hic_linkages[plasmid]} {bin_depth_dict[hic_linkages[plasmid][0]]} is not in our linkages")
@@ -122,21 +126,48 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict, 
         if set(our_linkages[plasmid]) & set(hic_linkages[plasmid]):
             cosistency_num += 1
             both_linkage_dict[plasmid] = our_linkages[plasmid]
+            consistent_hic_set.add(bin2ctg_dict[hic_linkages[plasmid][0]][0])
+            hic_bin_set["consistent"].append(hic_linkages[plasmid][0])
         else:
             print (f"{plasmid} is not consistent: {our_linkages[plasmid]} ({our_ctg_linkages[plasmid]}) vs Hi-C {hic_linkages[plasmid]} : ({bin2ctg_dict[hic_linkages[plasmid][0]][0]}, {len(bin2ctg_dict[hic_linkages[plasmid][0]])})\n")
+            inconsistent_hic_set.add(bin2ctg_dict[hic_linkages[plasmid][0]][0])
+            hic_bin_set["inconsistent"].append(hic_linkages[plasmid][0])
+            incosistency_num += 1
     if both_link == 0:
         cosistency_rate = 0
     else:
         cosistency_rate = cosistency_num / both_link
     print(f"both linkages: {both_link}")
     print(f"cosistency linkages: {cosistency_num}")
+    print (f"incosistency linkages: {incosistency_num}")
     print (f"cosistency rate: {cosistency_rate}")
     print ("our link num", len(our_linkages))
+    print (len(inconsistent_hic_set), "inconsistent Hi-C contigs:", inconsistent_hic_set)
+    print (len(consistent_hic_set), "consistent Hi-C contigs:", consistent_hic_set)
+
+    for bin_name in set(hic_bin_set["consistent"]):
+        if bin_name not in bin2ctg_dict:
+            print (f"bin {bin_name} is not in bin2ctg_dict")
+            continue
+        len_list = []
+        for ctg in bin2ctg_dict[bin_name]:
+            if ctg not in ctg_len_dict:
+                print (f"contig {ctg} is not in ctg_len_dict")
+                continue
+            len_list.append(ctg_len_dict[ctg])
+        print ("consistent", bin_name, max(len_list), len(len_list), np.mean(len_list))
+
+    for bin_name in set(hic_bin_set["inconsistent"]):
+        len_list = []
+        for ctg in bin2ctg_dict[bin_name]:
+            len_list.append(ctg_len_dict[ctg])
+        print ("inconsistent", bin_name, max(len_list), len(len_list), np.mean(len_list))
+
     return both_link, cosistency_num, cosistency_rate, len(our_linkages), both_linkage_dict
 
 def main():
-    my_cutoff = 0.3
-
+    my_cutoff = 0.5
+    ctg_len_dict = get_ctg_len(fai)
     ctg2bin_dict, bin2ctg_dict = load_ctg2bin(ctg2bin)
     bin_depth_dict = read_depth(depth_file)
     # hic_linkages = read_hic(hic_file)
@@ -145,7 +176,7 @@ def main():
     our_linkages, our_ctg_linkages = read_our(host_sum, ctg2bin_dict, my_cutoff)
     # our_linkages, our_ctg_linkages = read_our_multiple(host_sum, ctg2bin_dict, my_cutoff)
     print (f"cutoff: {my_cutoff}")
-    both_link, cosistency_num, consis_rate, our_num, both_linkage_dict = compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict, bin_depth_dict)
+    both_link, cosistency_num, consis_rate, our_num, both_linkage_dict = compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict, bin_depth_dict,ctg_len_dict)
     
     df2 = pd.read_csv(host_sum)
     ## add a new column for both
@@ -194,11 +225,13 @@ def load_ctg2bin(ctg2bin):
 
 def generate_bin_file(bin_file, fai):
     ctg2bin_dict, bin2ctg_dict = load_ctg2bin(ctg2bin)
+    ctg_len_dict = {}
     out = open(bin_file, "w")
     for line in open(fai, "r"):
         if line.startswith("#"):
             continue
         contig, length = line.strip().split("\t")[:2]
+        ctg_len_dict[contig] = int(length)
         if contig not in ctg2bin_dict:
             bin_name = contig
         else:
@@ -206,6 +239,17 @@ def generate_bin_file(bin_file, fai):
         print(f"{contig}\t{bin_name}", file=out)
     out.close()
     print(f"bin file is saved to {bin_file}")
+    return  ctg_len_dict
+
+def get_ctg_len(fai):
+
+    ctg_len_dict = {}
+    for line in open(fai, "r"):
+        if line.startswith("#"):
+            continue
+        contig, length = line.strip().split("\t")[:2]
+        ctg_len_dict[contig] = int(length)
+    return  ctg_len_dict
 
 def read_depth(depth_file):
     depth_dict = {}

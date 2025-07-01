@@ -602,7 +602,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper
 
 
 sbatch  --partition standard --wrap " python main.py \
-  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin \
+  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2 \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_11_72h_20_new.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
   --read_type hifi \
@@ -886,7 +886,22 @@ sbatch --job-name=drep_job_1325 \
   --threads 64 "\
   --job-name=soil_subreads2
 
- sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil/run_subreads2.time python main.py \
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil/run_subreads3.time python main.py \
+  --work_dir /home/shuaiw/borg/bench/soil/run_subreads3 \
+  --whole_bam /home/shuaiw/methylation/data/borg/all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+  --read_type subreads \
+  --min_len 1000 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
+  --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --threads 64 "\
+  --job-name=soil_subreads
+
+
+python main.py \
   --work_dir /home/shuaiw/borg/bench/soil/run_subreads \
   --whole_bam /home/shuaiw/methylation/data/borg/all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
   --whole_ref /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
@@ -896,7 +911,39 @@ sbatch --job-name=drep_job_1325 \
   --min_score 30 \
   --min_sites 30 \
   --run_steps host \
-  --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
   --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
-  --threads 64 "\
-  --job-name=soil_subreads
+  --threads 20
+
+
+sbatch  --partition standard --wrap " python main.py \
+  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2 \
+  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_11_72h_20_new.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --run_steps host \
+  --threads 20"\
+  --job-name=new_pf
+
+sbatch  --partition standard --wrap " python main.py \
+  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin3 \
+  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_11_72h_20_new.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --threads 64"\
+  --job-name=new_pf

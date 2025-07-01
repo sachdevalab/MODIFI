@@ -263,6 +263,9 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
         i += 1
 
         data.append(result)
+        if i % 10000 == 0:
+            print (f"Processed {i} bins for {plasmid_name}...")
+    print (f"### Processed {i} bins for {plasmid_name}, total {len(data)} results.")
     ## convert the data to a df, and sort by final_score
     data = pd.DataFrame(data)
     if len(data) > 0:
@@ -280,8 +283,9 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
     with open(motif_data_file, 'w') as f:
         for index, rows in data.iterrows():
             print (rows.to_dict(), motif_data_dict[rows['host']], file = f)
+    return 1
 
-def report_gc(data, host_dir, bin_ctg_dict):
+def report_gc_bk(data, host_dir, bin_ctg_dict):
     """
     report GC for MGE and host
     also report the cosine similarity for MGE and host tetranuceleotide frequency
@@ -302,6 +306,44 @@ def report_gc(data, host_dir, bin_ctg_dict):
     ## rearrange the columns
     data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
     return data
+
+def report_gc(data, host_dir, bin_ctg_dict, threads):
+    """
+    report GC for MGE and host
+    also report the cosine similarity for MGE and host tetranuceleotide frequency
+    """
+    work_dir = os.path.join(host_dir, "../")
+    ## add new columns for MGE_gc, host_gc, cos_sim
+    data['MGE_gc'] = 0.0
+    data['host_gc'] = 0.0
+    data['cos_sim'] = 0.0
+
+    with ProcessPoolExecutor(max_workers=threads) as executor:
+        futures = []
+        for index, row in data.iterrows():
+            if row['MGE'] not in bin_ctg_dict:
+                bin_ctg_dict[row['MGE']] = [row['MGE']]
+            future = executor.submit(
+                kmer_freq_sim_bin_worker,
+                row['MGE'], row['host'], bin_ctg_dict, work_dir
+            )
+            futures.append(future)
+
+    results = []
+    for future in tqdm(as_completed(futures), total=len(futures)):
+        result = future.result()
+        if result is not None:
+            results.append(result)
+    for result in results:
+        MGE_gc, host_gc, tetra_sim = result
+        data.at[index, 'MGE_gc'] = MGE_gc
+        data.at[index, 'host_gc'] = host_gc
+        data.at[index, 'cos_sim'] = tetra_sim
+    data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites',\
+                  'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
+    return data
+
+    
 
 def read_genomad(genomad_file):
     MGE_dict = {}
@@ -363,7 +405,7 @@ def load_coverage(host_dir):
         cov_dict[contig] = mean_depth
     return cov_dict
 
-def summary_host(host_dir, bin_ctg_dict):
+def summary_host(host_dir, bin_ctg_dict, threads):
     data = []
     for file in os.listdir(host_dir):
         if file.endswith(".host_prediction.csv"):
@@ -384,12 +426,12 @@ def summary_host(host_dir, bin_ctg_dict):
     ## sort by final_score
     if len(data) > 0:
         data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
-        data = report_gc(data, host_dir, bin_ctg_dict)
+        data = report_gc(data, host_dir, bin_ctg_dict, threads)
     ## output the data to a csv file
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)
 
-def get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref):
+def get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref, MGE_dict):
     whole_ref_fai = whole_ref + ".fai"
     if not os.path.exists(whole_ref_fai):
         raise FileNotFoundError(f"{whole_ref_fai} does not exist. Please provide a valid whole reference fasta file.")
@@ -404,6 +446,8 @@ def get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref):
 
     bin_cov_dict = {}
     for bin_name in bin_ctg_dict:
+        if bin_name in MGE_dict:
+            continue
         ctg_cov_list = []
         bin_length = 0
         for ctg in bin_ctg_dict[bin_name]:
@@ -433,38 +477,59 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
     else:
         ctg_bin_dict, bin_ctg_dict = ctg_single_dict, single_ctg_dict
     print (f"Loading is done, {len(bin_ctg_dict)} bins.")
-    bin_cov_dict = get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref)  ## estimate the coverage for each bin, and remove bins with cov < min_ctg_cov
+    # """
+    bin_cov_dict = get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref, MGE_dict)  ## estimate the coverage for each bin, and remove bins with cov < min_ctg_cov
     print (f"Estimated {len(bin_cov_dict)} bins with coverage >= {min_ctg_cov}.")
     
     bin_df_dict, bin_motif_dict = merge_bin_motif(bin_cov_dict, bin_ctg_dict, ctg_motif_dict, ctg_profile_dict)
     print ("threads number for linkage prediction: ", threads)
     print ("MGE number: ", len(MGE_dict))
-    with ProcessPoolExecutor(max_workers=threads) as executor:
-        futures = []
-        for plasmid_name in MGE_dict:
-            MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-            # if MGE_motif_num == 0:  # to speed up
-            #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
-            #     continue
-            print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
-            future = executor.submit(
-                for_each_plasmid,
-                bin_df_dict = bin_df_dict,
-                bin_motif_dict = bin_motif_dict,
-                plasmid_name = plasmid_name,
-                profile_dir = profile_dir,
-                host_dir = host_dir,
-                cov_dict = cov_dict,
-                bin_cov_dict = bin_cov_dict,
-                min_frac = min_frac,
-            )
-            futures.append(future)
-        result = []
-        for future in tqdm(as_completed(futures), total=len(futures)):
-            finish_code = future.result()
-            result.append(finish_code)
-        
-    summary_host(host_dir, bin_ctg_dict)
+
+    # with ProcessPoolExecutor(max_workers=threads) as executor:
+    #     futures = []
+    #     for plasmid_name in MGE_dict:
+    #         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
+    #         # if MGE_motif_num == 0:  # to speed up
+    #         #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
+    #         #     continue
+    #         print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
+    #         future = executor.submit(
+    #             for_each_plasmid,
+    #             bin_df_dict = bin_df_dict,
+    #             bin_motif_dict = bin_motif_dict,
+    #             plasmid_name = plasmid_name,
+    #             profile_dir = profile_dir,
+    #             host_dir = host_dir,
+    #             cov_dict = cov_dict,
+    #             bin_cov_dict = bin_cov_dict,
+    #             min_frac = min_frac,
+    #         )
+    #         futures.append(future)
+    #     result = []
+    #     for future in tqdm(as_completed(futures), total=len(futures)):
+    #         finish_code = future.result()
+    #         result.append(finish_code)
+
+    for plasmid_name in MGE_dict:
+        MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
+        # if MGE_motif_num == 0:  # to speed up
+        #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
+        #     continue
+        print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
+
+        for_each_plasmid(
+            bin_df_dict = bin_df_dict,
+            bin_motif_dict = bin_motif_dict,
+            plasmid_name = plasmid_name,
+            profile_dir = profile_dir,
+            host_dir = host_dir,
+            cov_dict = cov_dict,
+            bin_cov_dict = bin_cov_dict,
+            min_frac = min_frac,
+        )
+
+
+    summary_host(host_dir, bin_ctg_dict, threads)
 
 def batch_MGE_invade_single(plasmid_file, profile_dir, host_dir, bin_file=None, min_frac = 0.5):
 
