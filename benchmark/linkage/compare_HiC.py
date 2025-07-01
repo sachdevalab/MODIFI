@@ -10,11 +10,29 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib_venn import venn2
 
-def read_hic(hic_file):
+def read_hic(individual_hic_file, sample, bin_depth_dict):
+    filtered_linkage = {}
+    df1 = pd.read_csv(hic_file)  ##  linkage exsits in >= 10 samples
+    for index, row in df1.iterrows():
+        tag = row['circular_element'] + "&" + row['bin']
+        if tag not in filtered_linkage:
+            filtered_linkage[tag] = 1
     hic_linkages = defaultdict(list)
-    df = pd.read_csv(hic_file)
+    df = pd.read_csv(individual_hic_file, sep = "\t")
     for index, row in df.iterrows():
-        hic_linkages[row['circular_element']].append(row['bin'])
+        if row['metagenome'] == sample:
+            tag = row['circular_element'] + "&" + row['bin']
+            if tag not in filtered_linkage:
+                continue
+            if row['bin'] not in bin_depth_dict:
+                continue
+            if bin_depth_dict[row['bin']] < 10:
+                continue
+            if row['circular_element'] not in bin_depth_dict:
+                continue
+            if bin_depth_dict[row['circular_element']] < 10:
+                continue
+            hic_linkages[row['circular_element']].append(row['bin'])
     multiple_host_plasmid_num = 0
     for plasmid in hic_linkages:
         if len(hic_linkages[plasmid]) > 1:
@@ -86,10 +104,13 @@ def read_our_multiple(host_sum, ctg2bin_dict, score_cutoff = 0.45):
     print (f"multiple host plasmid num: {multiple_host_plasmid_num} out of {len(our_linkages)}")
     return our_linkages, our_ctg_linkages
 
-def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
+def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict, bin_depth_dict):
     both_link = 0
     cosistency_num = 0
     both_linkage_dict = {}
+    for plasmid in hic_linkages:
+        if plasmid not in our_linkages:
+            print (f"###  Hi-C {plasmid} {bin_depth_dict[plasmid]} : {hic_linkages[plasmid]} {bin_depth_dict[hic_linkages[plasmid][0]]} is not in our linkages")
     for plasmid in our_linkages:
         if plasmid not in hic_linkages:
             # print(f"{plasmid} is not in HiC linkages")
@@ -114,58 +135,33 @@ def compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict):
     return both_link, cosistency_num, cosistency_rate, len(our_linkages), both_linkage_dict
 
 def main():
-    ctg2bin_dict, bin2ctg_dict = load_ctg2bin(ctg2bin)
-    hic_linkages = read_hic(hic_file)
-    ## output the MGE with multiple host
+    my_cutoff = 0.3
 
-    # """
+    ctg2bin_dict, bin2ctg_dict = load_ctg2bin(ctg2bin)
+    bin_depth_dict = read_depth(depth_file)
+    # hic_linkages = read_hic(hic_file)
+    hic_linkages = read_hic(individual_hic_file, sample, bin_depth_dict)
     data = []
-    for cutoff in range(9, 10):
-        my_cutoff = cutoff / 20
-        
-        our_linkages, our_ctg_linkages = read_our(host_sum, ctg2bin_dict, my_cutoff)
-        # our_linkages, our_ctg_linkages = read_our_multiple(host_sum, ctg2bin_dict, my_cutoff)
-        print (f"cutoff: {my_cutoff}")
-        both_link, cosistency_num, consis_rate, our_num, both_linkage_dict = compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict)
-        
-        df2 = pd.read_csv(host_sum)
-        ## add a new column for both
-        df2['both_link'] = df2['plasmid'].apply(lambda x: 1 if x in both_linkage_dict else 0)
-        ## output df2 to a csv file
-        df2.to_csv(host_sum_compare, index=False)
-        data.append([my_cutoff, both_link, cosistency_num, consis_rate, our_num])
-        print (len(hic_linkages), len(our_linkages), len(both_linkage_dict))
-        venn2(subsets = (len(hic_linkages)-len(both_linkage_dict), len(our_linkages)-len(both_linkage_dict), len(both_linkage_dict)), set_labels = ('Hi-C', 'Methylation'))
-        # plt.show()
-        ## save the venn diagram
-        plt.savefig(f"../../tmp/results/venn_{my_cutoff}.png")
+    our_linkages, our_ctg_linkages = read_our(host_sum, ctg2bin_dict, my_cutoff)
+    # our_linkages, our_ctg_linkages = read_our_multiple(host_sum, ctg2bin_dict, my_cutoff)
+    print (f"cutoff: {my_cutoff}")
+    both_link, cosistency_num, consis_rate, our_num, both_linkage_dict = compare_hic_our(hic_linkages, our_linkages, our_ctg_linkages, bin2ctg_dict, bin_depth_dict)
+    
+    df2 = pd.read_csv(host_sum)
+    ## add a new column for both
+    df2['both_link'] = df2['MGE'].apply(lambda x: 1 if x in both_linkage_dict else 0)
+    ## output df2 to a csv file
+    df2.to_csv(host_sum_compare, index=False)
+    data.append([my_cutoff, both_link, cosistency_num, consis_rate, our_num])
+    print (len(hic_linkages), len(our_linkages), len(both_linkage_dict))
+    venn2(subsets = (len(hic_linkages)-len(both_linkage_dict), len(our_linkages)-len(both_linkage_dict), len(both_linkage_dict)), set_labels = ('Hi-C', 'Methylation'))
+    # plt.show()
+    ## save the venn diagram
+    plt.savefig(f"../../tmp/results/venn_{my_cutoff}.png")
     df = pd.DataFrame(data, columns=['cutoff', 'both_link', 'cosistency_num', 'consis_rate', 'our_num'])
 
     sns.set(style="whitegrid")
     plt.figure(figsize=(5, 9))  # Adjust the figure size to accommodate the third subplot
-
-    ## plot three subplots
-    plt.subplot(3, 1, 1)
-    plt.plot(df['cutoff'], df['consis_rate'], marker='o')
-    plt.title('Ratio of Consistency Linkages')
-    plt.xlabel('Cutoff')
-    plt.ylabel('Ratio of Consistency Linkages')
-
-    plt.subplot(3, 1, 2)
-    plt.plot(df['cutoff'], df['cosistency_num'], marker='o')
-    plt.title('Number of Consistency Linkages')
-    plt.xlabel('Cutoff')
-    plt.ylabel('Number of Consistency Linkages')
-
-    plt.subplot(3, 1, 3)
-    plt.plot(df['cutoff'], df['our_num'], marker='o', color='green')  # Plot our_num
-    plt.title('Number of Our Linkages')
-    plt.xlabel('Cutoff')
-    plt.ylabel('Number of Our Linkages')
-
-    plt.tight_layout()
-    plt.savefig('../../tmp/results/both_linkages.png')
-    # """
 
 def contig2bin(bin_dir, ctg2bin):
     out = open(ctg2bin, "w")
@@ -211,18 +207,44 @@ def generate_bin_file(bin_file, fai):
     out.close()
     print(f"bin file is saved to {bin_file}")
 
+def read_depth(depth_file):
+    depth_dict = {}
+    with open(depth_file, "r") as f:
+        for line in f:
+            if line.startswith("contig"):
+                continue
+            contig, depth = line.strip().split(",")
+            depth_dict[contig] = float(depth)
+    ## get bin depth
+    ctg2bin_dict = {}
+    with open(bin_file, "r") as f:
+        for line in f:
+            contig, bin_name = line.strip().split("\t")
+            ctg2bin_dict[contig] = bin_name
+    bin_depth_dict = {}
+    for contig, depth in depth_dict.items():
+        bin_name = ctg2bin_dict.get(contig, contig)
+        if bin_name not in bin_depth_dict:
+            bin_depth_dict[bin_name] = []
+        bin_depth_dict[bin_name].append(depth)
+    for bin_name, depths in bin_depth_dict.items():
+        bin_depth_dict[bin_name] = np.mean(depths)
+    return bin_depth_dict
 
 if __name__ == "__main__":
     hic_file = "/home/shuaiw/borg/pengfan/hic_10mgs_linkages.csv"
+    individual_hic_file = "/home/shuaiw/borg/pengfan/bins_circular_elements_filt.tsv"
     bin_file = "/home/shuaiw/borg/pengfan/10mgs_bins.tab"
     bin_dir = "/groups/diamond/projects/animal/rumen/RuReacBro20203/analysis/RuReacBro2023_CircCont/bins/Final_Genomes_qc_rmcirc/sequence"
     ctg2bin = "/home/shuaiw/borg/pengfan/ctg2bin.csv"
     fai = "/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa.fai"
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_LR_bin/host_summary.csv"
-    # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/host_summary.csv"
+    host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/host_summary.csv"
+    depth_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/mean_depth.csv"
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin/host_summary.csv"
-    host_sum =  "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"
+    # host_sum =  "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"
     host_sum_compare =  "/home/shuaiw/methylation/data/borg/pengfan/total_summary_compare.csv"
+    sample = "RuReacBro_20230708_11_72h_200ppm_r1"
 
     # host_sum = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin/host_summary.csv"
     # host_sum = "/home/shuaiw/methylation/data/borg/pengfan/total_summary.csv"
@@ -230,3 +252,39 @@ if __name__ == "__main__":
     main()
     # generate_bin_file(bin_file, fai)
     # contig2bin(bin_dir, ctg2bin)
+
+# metagenome
+# RuReacBro_20230708_11_24h_200ppm_r1
+# RuReacBro_20230708_11_40h_200ppm_r1
+# RuReacBro_20230708_11_56h_200ppm_r1
+# RuReacBro_20230708_11_72h_200ppm_r1
+# RuReacBro_20230708_11_8h_200ppm_r1
+# RuReacBro_20230708_12_24h_200ppm_r2
+# RuReacBro_20230708_12_40h_200ppm_r2
+# RuReacBro_20230708_12_56h_200ppm_r2
+# RuReacBro_20230708_12_72h_200ppm_r2
+# RuReacBro_20230708_12_8h_200ppm_r2
+# RuReacBro_20230708_14_24h_200ppm_r3
+# RuReacBro_20230708_14_40h_200ppm_r3
+# RuReacBro_20230708_14_56h_200ppm_r3
+# RuReacBro_20230708_14_72h_200ppm_r3
+# RuReacBro_20230708_14_8h_200ppm_r3
+# RuReacBro_20230708_19_24h_NC_r3
+# RuReacBro_20230708_19_40h_NC_r3
+# RuReacBro_20230708_19_56h_NC_r3
+# RuReacBro_20230708_19_72h_NC_r3
+# RuReacBro_20230708_19_8h_NC_r3
+# RuReacBro_20230708_8_24h_NC_r1
+# RuReacBro_20230708_8_40h_NC_r1
+# RuReacBro_20230708_8_56h_NC_r1
+# RuReacBro_20230708_8_72h_NC_r1
+# RuReacBro_20230708_8_8h_NC_r1
+# RuReacBro_20230708_9_24h_NC_r2
+# RuReacBro_20230708_9_40h_NC_r2
+# RuReacBro_20230708_9_56h_NC_r2
+# RuReacBro_20230708_9_72h_NC_r2
+# RuReacBro_20230708_9_8h_NC_r2
+# RuReacBro_20230708_Comb_RF_WB
+# RuReacBro_20230708_Cow1_RF
+# RuReacBro_20230708_Cow2_RF
+# RuReacBro_20230708_Cow3_RF
