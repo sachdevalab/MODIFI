@@ -78,14 +78,6 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
         else:
             motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
 
-        ## high confidence that the plasmid should be restricted-- orphan MTase?
-        # if f_host > 0.5 and h_total > 500:
-        #     if p_total > 10 and p_meth == 0:
-        #         restriction_signal = 0
-        #     if p_total > 200 and f_plasmid < 0.1:
-        #         restriction_signal = 0
-
-        # print (m['motif'], motif_score, weight)
         scores.append(motif_score * log(weight))
         weights.append(log(weight))
     if not scores:
@@ -225,7 +217,15 @@ def summary_motif_info(motif_data):
     motif_info = ";".join(motif_info)
     return motif_info
 
-def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir,cov_dict, bin_cov_dict, min_frac = 0.5):
+def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name):
+    motif_data = extract_motif_data(bin_df, plasmid_df, min_frac)
+    motif_data = filter_motifs(bin_motif, motif_data)
+    motif_filter = MotifFilter(motif_data)
+    motif_data = motif_filter.filter()
+    result = invasion_score_from_counts(motif_data, min_frac, 0.5)
+    return result, motif_data, bin_name
+
+def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir,cov_dict, bin_cov_dict, threads, min_frac = 0.5):
     plasmid_profile = f"{profile_dir}/{plasmid_name}.motifs.profile.csv"
     # cov_dict = load_coverage(host_dir)
     if plasmid_name not in cov_dict:
@@ -237,35 +237,75 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
         print (f"plasmid_profile {plasmid_profile} does not exist.")
         return
     plasmid_df = pd.read_csv(plasmid_profile)
+
+
+    with ProcessPoolExecutor(max_workers=threads) as executor:
+        futures = []
+        for bin_name in bin_cov_dict:
+            bin_df = bin_df_dict[bin_name]
+            if len(bin_df) == 0:
+                continue
+            bin_motif = bin_motif_dict[bin_name]
+
+            future = executor.submit(
+                bin_worker,
+                bin_df = bin_df,
+                plasmid_df = plasmid_df,
+                bin_motif = bin_motif,
+                min_frac = min_frac,
+                bin_name = bin_name,
+            )
+            futures.append(future)
+            # if len(futures) > 10:
+            #     break
+            if len(futures) % 100 == 0:
+                print (f"Submitted {len(futures)} futures for plasmid {plasmid_name}.")
+        all_result = []
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            finish_code = future.result()
+            all_result.append(finish_code)
+
     data = []
     motif_data_dict = {}
     i = 0
-    for bin_name in bin_cov_dict:
-
-        bin_df = bin_df_dict[bin_name]
-        if len(bin_df) == 0:
+    for each_result in all_result:
+        result, motif_data, bin_name = each_result
+        if not motif_data:
             continue
-
-        motif_data = extract_motif_data(bin_df, plasmid_df, min_frac)
-        motif_data = filter_motifs(bin_motif_dict[bin_name], motif_data)
-        motif_filter = MotifFilter(motif_data)
-        motif_data = motif_filter.filter()
-
-        motif_data_dict[bin_name] = motif_data
-        result = invasion_score_from_counts(motif_data, min_frac, 0.5)
-        # result = linkage_score_from_model(motif_data)
         result['host'] = bin_name
         result['host_cov'] = bin_cov_dict[bin_name]
         result['MGE_cov'] = MGE_cov
         result['MGE'] = plasmid_name
         result['motif_info'] = summary_motif_info(motif_data)
-
+        motif_data_dict[result['host']] = motif_data
+        data.append(result)
         i += 1
 
-        data.append(result)
-        if i % 10000 == 0:
-            print (f"Processed {i} bins for {plasmid_name}...")
-    print (f"### Processed {i} bins for {plasmid_name}, total {len(data)} results.")
+
+    # for bin_name in bin_cov_dict:
+    #     bin_df = bin_df_dict[bin_name]
+    #     if len(bin_df) == 0:
+    #         continue
+    #     bin_motif = bin_motif_dict[bin_name]
+
+    #     motif_data = extract_motif_data(bin_df, plasmid_df, min_frac)
+    #     motif_data = filter_motifs(bin_motif, motif_data)
+    #     motif_filter = MotifFilter(motif_data)
+    #     motif_data = motif_filter.filter()
+
+        
+    #     result = invasion_score_from_counts(motif_data, min_frac, 0.5)
+    #     # result = linkage_score_from_model(motif_data)
+    #     result['host'] = bin_name
+    #     result['host_cov'] = bin_cov_dict[bin_name]
+    #     result['MGE_cov'] = MGE_cov
+    #     result['MGE'] = plasmid_name
+    #     result['motif_info'] = summary_motif_info(motif_data)
+    #     motif_data_dict[bin_name] = motif_data
+    #     i += 1
+    #     data.append(result)
+
+    print (f"### Processed bins for {plasmid_name}, total {len(data)} results.")
     ## convert the data to a df, and sort by final_score
     data = pd.DataFrame(data)
     if len(data) > 0:
@@ -342,8 +382,6 @@ def report_gc(data, host_dir, bin_ctg_dict, threads):
     data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites',\
                   'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
     return data
-
-    
 
 def read_genomad(genomad_file):
     MGE_dict = {}
@@ -509,13 +547,13 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
     #     for future in tqdm(as_completed(futures), total=len(futures)):
     #         finish_code = future.result()
     #         result.append(finish_code)
-
+    i = 0
     for plasmid_name in MGE_dict:
         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
         # if MGE_motif_num == 0:  # to speed up
         #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
         #     continue
-        print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
+        print (f"Processing {i}-th/{len(MGE_dict)} {plasmid_name} with {MGE_motif_num} original motifs.")
 
         for_each_plasmid(
             bin_df_dict = bin_df_dict,
@@ -525,8 +563,10 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
             host_dir = host_dir,
             cov_dict = cov_dict,
             bin_cov_dict = bin_cov_dict,
+            threads = threads,
             min_frac = min_frac,
         )
+        i += 1
 
 
     summary_host(host_dir, bin_ctg_dict, threads)
