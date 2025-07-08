@@ -66,10 +66,25 @@ rule gfa_to_fasta:
             -o {output.fasta} -s {config[prefix]}
         """
 
+rule checkM:
+    input:
+        fasta=f"{config['work_dir']}/{config['prefix']}.final.fa"
+    output:
+        checkm=f"{config['work_dir']}/{config['prefix']}.checkm.tsv",
+        finish=f"{config['work_dir']}/{config['prefix']}.checkm.finish"
+    threads: config["threads"]
+    shell:
+        """ 
+        python split_ctgs.py {input.fasta} {config[work_dir]}/bins/
+        checkm2 predict --input {config[work_dir]}/bins/ --output-directory  {config[work_dir]}/checkM2 --force -x .fasta
+        touch {output.finish}
+        """
+
 rule map_reads_to_assembly:
     input:
         fa = f"{config['work_dir']}/{config['prefix']}.final.fa",
-        fq = config["hifi_bam"]
+        fq = config["hifi_bam"],
+        checkm_finish = f"{config['work_dir']}/{config['prefix']}.checkm.finish"
     output:
         bam = temp(f"{config['work_dir']}/{config['prefix']}.align.bam"),
         bai=f"{config['work_dir']}/{config['prefix']}.align.bam.bai"

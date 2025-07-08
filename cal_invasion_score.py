@@ -7,6 +7,7 @@ import re
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
+import random
 
 from derep_motifs import MotifFilter, uniq_similar_motifs
 from get_kmer_freq import kmer_freq_sim_bin_worker
@@ -308,10 +309,12 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
     print (f"### Processed bins for {plasmid_name}, total {len(data)} results.")
     ## convert the data to a df, and sort by final_score
     data = pd.DataFrame(data)
+    final_score_list = []
     if len(data) > 0:
         data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
         ## host column the first, final_score the second, invasion_score the third, confidence the forth, total_sites the fifth
         data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
+        final_score_list = data['final_score'].tolist()
         data = data[data['final_score'] > 0]
         # data = report_gc(data, host_dir, bin_ctg_dict)
         print (data.head(5))
@@ -323,7 +326,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
     with open(motif_data_file, 'w') as f:
         for index, rows in data.iterrows():
             print (rows.to_dict(), motif_data_dict[rows['host']], file = f)
-    return 1
+    return final_score_list
 
 def report_gc_bk(data, host_dir, bin_ctg_dict):
     """
@@ -443,7 +446,7 @@ def load_coverage(host_dir):
         cov_dict[contig] = mean_depth
     return cov_dict
 
-def summary_host(host_dir, bin_ctg_dict, threads):
+def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, n_iter = 10000):
     data = []
     for file in os.listdir(host_dir):
         if file.endswith(".host_prediction.csv"):
@@ -458,13 +461,20 @@ def summary_host(host_dir, bin_ctg_dict, threads):
             if len(df) > 0:
                 # df.insert(0, 'MGE', plasmid_name)
                 data.append(df.iloc[0])
-                
-                
+
+    ## randomly select n_iter values from all_final_score_list
+    num = int(min(n_iter, 0.8 *  len(all_final_score_list)))
+    selected_scores = random.sample(all_final_score_list, num)
+    print (sorted(selected_scores, reverse=True))
+
     data = pd.DataFrame(data)
     ## sort by final_score
     if len(data) > 0:
         data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
         data = report_gc(data, host_dir, bin_ctg_dict, threads)
+    ## add pvalue for final_score
+    data['pvalue'] = data['final_score'].apply(lambda x: sum(1 for score in selected_scores if score >= x) / len(selected_scores))
+    data['pvalue'] = data['pvalue'].round(4)
     ## output the data to a csv file
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)
@@ -548,6 +558,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
     #         finish_code = future.result()
     #         result.append(finish_code)
     i = 0
+    all_final_score_list = []
     for plasmid_name in MGE_dict:
         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
         # if MGE_motif_num == 0:  # to speed up
@@ -555,7 +566,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
         #     continue
         print (f"Processing {i}-th/{len(MGE_dict)} {plasmid_name} with {MGE_motif_num} original motifs.")
 
-        for_each_plasmid(
+        final_score_list = for_each_plasmid(
             bin_df_dict = bin_df_dict,
             bin_motif_dict = bin_motif_dict,
             plasmid_name = plasmid_name,
@@ -567,9 +578,10 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
             min_frac = min_frac,
         )
         i += 1
+        all_final_score_list += final_score_list
 
 
-    summary_host(host_dir, bin_ctg_dict, threads)
+    summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list)
 
 def batch_MGE_invade_single(plasmid_file, profile_dir, host_dir, bin_file=None, min_frac = 0.5):
 
