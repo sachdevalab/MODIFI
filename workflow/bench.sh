@@ -969,7 +969,10 @@ sbatch  --partition standard --wrap " python main.py \
   --job-name=infant2
 
 
-sbatch --partition standard --wrap "snakemake --config  hifi_bam=/groups/diamond/sequences/2023/RuReacBro_20230708_Comb_RF_ALL_LR/PACBIO_DATA/RuReacBro_20230708_11_72h_200ppm_r1_LR.hifi_reads.bam prefix=RuReacBro_20230708_11_72h_20 work_dir=/home/shuaiw/borg/assembly/cow -j 64"
+sbatch --partition standard --wrap "snakemake --config  hifi_bam=/home/shuaiw/borg/paper/aws/cow/RuReacBro_20230708_11_72h_200ppm_r1_LR.hifi_reads.bam \
+  prefix=RuReacBro_20230708_11_72h_200ppm_r1_LR \
+  work_dir=/home/shuaiw/borg/assembly/cow/RuReacBro_20230708_11_72h_200ppm_r1_LR -j 64" \
+  --job-name=cow
 
 sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylation/data/borg/bench/pipeline_zymo.time python main.py \
   --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec7 \
@@ -986,3 +989,5 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list\
   --threads 64  " \
   --job-name=pipeline
+
+sbatch --partition standard --wrap "snakemake -s annotation.smk" --job-name=annotation

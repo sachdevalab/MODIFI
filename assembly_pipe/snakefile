@@ -66,25 +66,11 @@ rule gfa_to_fasta:
             -o {output.fasta} -s {config[prefix]}
         """
 
-rule checkM:
-    input:
-        fasta=f"{config['work_dir']}/{config['prefix']}.final.fa"
-    output:
-        checkm=f"{config['work_dir']}/{config['prefix']}.checkm.tsv",
-        finish=f"{config['work_dir']}/{config['prefix']}.checkm.finish"
-    threads: config["threads"]
-    shell:
-        """ 
-        python split_ctgs.py {input.fasta} {config[work_dir]}/bins/
-        checkm2 predict --input {config[work_dir]}/bins/ --output-directory  {config[work_dir]}/checkM2 --force -x .fasta
-        touch {output.finish}
-        """
-
 rule map_reads_to_assembly:
     input:
         fa = f"{config['work_dir']}/{config['prefix']}.final.fa",
-        fq = config["hifi_bam"],
-        checkm_finish = f"{config['work_dir']}/{config['prefix']}.checkm.finish"
+        bam = config["hifi_bam"],
+        # checkm_finish = f"{config['work_dir']}/{config['prefix']}.checkm.finish"
     output:
         bam = temp(f"{config['work_dir']}/{config['prefix']}.align.bam"),
         bai=f"{config['work_dir']}/{config['prefix']}.align.bam.bai"
@@ -92,7 +78,7 @@ rule map_reads_to_assembly:
     shell:
         """
         samtools faidx {input.fa}
-        ~/smrtlink/pbmm2 align --preset CCS -j {threads} {input.fa} {input.fq} {config[work_dir]}/{config[prefix]}.raw.bam
+        ~/smrtlink/pbmm2 align --preset CCS -j {threads} {input.fa} {input.bam} {config[work_dir]}/{config[prefix]}.raw.bam
         samtools sort -T {config[work_dir]}/{config[prefix]} -@ {threads} -o {output.bam} {config[work_dir]}/{config[prefix]}.raw.bam
         rm {config[work_dir]}/{config[prefix]}.raw.bam
 
@@ -115,7 +101,7 @@ rule call_methylation:
           --whole_ref {input.fa} \
           --read_type hifi \
           --min_len 1000 \
-          --max_NM 3000 \
+          --max_NM 3 \
           --min_cov 1 \
           --min_frac 0.4 \
           --min_score 30 \

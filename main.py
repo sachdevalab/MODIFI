@@ -72,7 +72,8 @@ def record_resource_usage(step_name, func, *args, **kwargs):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description="Run methylation-based MGE-host linkage discovery pipeline."
+        description="Run methylation-based MGE-host linkage discovery pipeline.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
     parser.add_argument("--whole_bam", type=str, required=True,
