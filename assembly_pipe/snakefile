@@ -7,7 +7,7 @@ host_ref = "/home/shuaiw/borg/paper/host_refs/all_hosts.fa"
 
 rule all:
     input:
-        final_fa = f"{config['work_dir']}/{config['prefix']}.final.fa",
+        final_fa = f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
         bam_index = f"{config['work_dir']}/{config['prefix']}.align.bam.bai",
         methyl_time = f"{config['work_dir']}/{config['prefix']}.methyl.time"
 
@@ -16,17 +16,20 @@ rule bam_to_fastq_gz:
         bam=config["hifi_bam"]
     output:
         fastq_gz=f"{config['work_dir']}/{config['prefix']}.hifi.fastq.gz"
+    params:
+        prefix  = config["prefix"],
     threads: config["threads"]
     shell:
         """
         mkdir -p {config[work_dir]}
-        samtools fastq {input.bam} | gzip -c > {output.fastq_gz}
+        /home/shuaiw/smrtlink/bam2fastq {input.bam} -j {threads} -o {params.prefix}
+        mv {params.prefix}.fastq.gz {output.fastq_gz}
         """
         ### transform bam to fastq, bam2fastq  /home/shuaiw/smrtlink/bam2fastq
 
 rule trim_reads_bbduk:
     input:
-        fastq_gz=f"{config['work_dir']}/{config['prefix']}.hifi.fastq.gz"
+        fastq_gz=f"{config['work_dir']}/{config['prefix']}.hifi.fastq.gz",
     output:
         trimmed=f"{config['work_dir']}/{config['prefix']}.hifi.qc.fq.gz"
     threads: config["threads"]
@@ -46,7 +49,7 @@ rule remove_host:
         fastq=f"{config['work_dir']}/{config['prefix']}.hifi.qc.fq.gz"
     output:
         bam=temp(f"{config['work_dir']}/{config['prefix']}.minimap2.human.sort.bam"),
-        # human_reads=f"{config['work_dir']}/{config['prefix']}-human-mapped-reads.fastq",
+        human_reads=f"{config['work_dir']}/{config['prefix']}-human-mapped-reads.fastq",
         # stats=f"{config['work_dir']}/{config['prefix']}-human-stats.tsv",
         filtered_fastq=f"{config['work_dir']}/{config['prefix']}.hifi.qc.HR.fq.gz"
     params:
@@ -57,8 +60,6 @@ rule remove_host:
         minimap2 -t {threads} -ax map-hifi {params.ref} {input.fastq} | \
             samtools view -b -T {params.ref} -F 4 | \
             sambam > {output.bam}
-        # samtools fastq {output.bam} > {output.human_reads}
-        # seqkit stats --all {output.human_reads} -o {output.stats}
         samtools view {output.bam} | cut -f 1 | sort | uniq > {output.human_reads}
         filterbyname.sh in={input.fastq} out={output.filtered_fastq} names={output.human_reads} include=f
         """
@@ -68,13 +69,12 @@ rule assemble_hifiasm:
         fq=f"{config['work_dir']}/{config['prefix']}.hifi.qc.HR.fq.gz"
     output:
         gfa=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.gfa",
-        # log=f"{config['work_dir']}/{config['prefix']}.hifiasm.log"
     log: f"{config['work_dir']}/{config['prefix']}.hifiasm.log"
     threads: config["threads"]
     shell:
         """
         hifiasm_meta -o {config[work_dir]}/{config[prefix]}.hifiasm \
-            -t {threads} {input.fq} > {output.log}
+            -t {threads} {input.fq} > {log} 
         """
 
 rule gfa_to_fasta:
@@ -83,7 +83,6 @@ rule gfa_to_fasta:
     output:
         fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa"
     shell:
-        # You can toggle either version of awk
         # Rohan's version:
         """
         awk '$1==\"S\" {{printf \">%s\\n%s\\n\", $2, $3}}' {input.gfa} > {config[work_dir]}/{config[prefix]}.p_ctg.fa

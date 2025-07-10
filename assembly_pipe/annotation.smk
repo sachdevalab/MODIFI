@@ -96,6 +96,17 @@ rule vibrant:
         """
 
 ## plasX to call plasmids
+rule plasx:
+    input:
+        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+    output:
+        plasx_done=f"{config['work_dir']}/plasx.done"
+    threads: config["threads"]
+    shell:
+        """
+        plasx predict -i {input.fasta} -o {config[work_dir]}/plasx/ -t {threads}
+        touch {output.plasx_done}
+        """
 ## use pyrodigal-gv set threads
 rule prodigal_gv:
     input:
