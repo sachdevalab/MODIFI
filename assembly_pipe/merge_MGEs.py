@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 from Bio import SeqIO
+import sys
 
 class mge_obj:
 
@@ -83,8 +84,10 @@ def get_mge_union(all_mge, all_mge_file):
 
 
 if __name__ == "__main__":
-    workdir = "/home/shuaiw/borg/assembly/96plex/96plex_p5_2"
-    prefix = "96plex_p5"
+    # workdir = "/home/shuaiw/borg/assembly/96plex/96plex_p5_2"
+    # prefix = "96plex_p5"
+    workdir = sys.argv[1]
+    prefix = sys.argv[2]
 
     genomad_plasmid = f"{workdir}/Genomad/{prefix}.final_summary/{prefix}.final_plasmid_summary.tsv"
     genomad_virus = f"{workdir}/Genomad/{prefix}.final_summary/{prefix}.final_virus_summary.tsv"

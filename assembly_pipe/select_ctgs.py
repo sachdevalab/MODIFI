@@ -12,6 +12,7 @@ from scipy.spatial.distance import pdist, squareform, cosine
 from sklearn.metrics.pairwise import cosine_similarity
 
 from Bio.Seq import Seq
+import sys
 
 
 def get_circular_ctgs(fai, min_len = 1000000):
@@ -42,20 +43,31 @@ def get_high_quality_ctgs(checkM_report):
     print (f"Total {len(high_quality_ctgs)} high quality contigs found.")
     return high_quality_ctgs
 
-def get_best_ctg(fai, checkM_report, min_len = 1000000):
+def get_best_ctg(fai, checkM_report, high_quality_file, min_len = 1000000):
     high_quality_ctgs = get_high_quality_ctgs(checkM_report)
     circular_ctgs = get_circular_ctgs(fai, min_len)
     selected_ctgs = list(set(high_quality_ctgs) | set(circular_ctgs))
     print (f"Total {len(selected_ctgs)} contigs selected.")
-    return selected_ctgs
+    # return selected_ctgs
+    f = open(high_quality_file, "w")
+    for ctgs in selected_ctgs:
+        f.write(f"{ctgs}\t{ctgs}\n")
+    f.close()
 
-    
+
 if __name__ == "__main__":
     # Example usage
-    fai = "/home/shuaiw/borg/assembly/96plex/96plex_p5_2/96plex_p5.final.fa.fai"
-    checkM_report = "/home/shuaiw/borg/assembly/96plex/96plex_p5_2/checkM2/quality_report.tsv"
-    selected_ctgs = get_best_ctg(fai, checkM_report, min_len=1000000)
-    print(selected_ctgs)
+    # workdir = "/home/shuaiw/borg/assembly/96plex/96plex_p5_2"
+    # prefix = "96plex_p5"
+
+    workdir = sys.argv[1]
+    prefix = sys.argv[2]
+
+    fai = f"{workdir}/{prefix}.final.fa.fai"
+    checkM_report = f"{workdir}/checkM2/quality_report.tsv"
+    high_quality_file = f"{workdir}/checkM2/high_quality_ctgs.tab"
+    selected_ctgs = get_best_ctg(fai, checkM_report, high_quality_file, min_len=1000000)
+    # print(selected_ctgs)
 
 
 

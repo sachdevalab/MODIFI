@@ -13,6 +13,7 @@ rule all:
         faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
         dram_finish = f"{config['work_dir']}/dram2/dram.finish",
         prokka_finish = f"{config['work_dir']}/prokka/prokka.finish",
+        ctg_mge = f"{config['work_dir']}/ctg_mge.done",
 
 rule checkM:
     input:
@@ -155,6 +156,21 @@ rule prokka:
             --cpus {threads} --force \
             --proteins {input.faa} {input.fasta}
         touch {output.prokka_finish}
+        """
+
+rule get_ctg_mge:
+    input:
+        prokka_finish = f"{config['work_dir']}/prokka/prokka.finish"
+    output:
+        finish = f"{config['work_dir']}/ctg_mge.done"
+    params:
+        output_dir = config['work_dir'],
+        prefix = config["prefix"]
+    shell:
+        """
+        python merge_MGEs.py {params.output_dir} {params.prefix}
+        python select_ctgs.py {params.output_dir}/{params.prefix}
+        touch {output.finish}
         """
 
 

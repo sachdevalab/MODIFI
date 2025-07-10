@@ -974,6 +974,11 @@ sbatch --partition standard --wrap "snakemake --config  hifi_bam=/home/shuaiw/bo
   work_dir=/home/shuaiw/borg/assembly/cow/RuReacBro_20230708_11_72h_200ppm_r1_LR -j 64" \
   --job-name=cow
 
+sbatch --partition standard --wrap "snakemake -s annotation.smk --config hifi_bam=/home/shuaiw/borg/paper/aws/cow/RuReacBro_20230708_11_72h_200ppm_r1_LR.hifi_reads.bam \
+  prefix=RuReacBro_20230708_11_72h_200ppm_r1_LR \
+  work_dir=/home/shuaiw/borg/assembly/cow/RuReacBro_20230708_11_72h_200ppm_r1_LR -j 64" \
+  --job-name=cow_anno
+
 sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylation/data/borg/bench/pipeline_zymo.time python main.py \
   --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec7 \
   --whole_bam xx \
