@@ -3,6 +3,8 @@
 # Configuration
 configfile: "config.yaml"
 
+host_ref = "/home/shuaiw/borg/paper/host_refs/all_hosts.fa"
+
 rule all:
     input:
         final_fa = f"{config['work_dir']}/{config['prefix']}.final.fa",
@@ -26,7 +28,7 @@ rule trim_reads_bbduk:
         fastq_gz=f"{config['work_dir']}/{config['prefix']}.hifi.fastq.gz"
     output:
         trimmed=f"{config['work_dir']}/{config['prefix']}.hifi.qc.fq.gz"
-    threads: 5
+    threads: config["threads"]
     shell:
         """
         /shared/software/bbmap/39.01/bbduk.sh \
@@ -38,9 +40,30 @@ rule trim_reads_bbduk:
             threads={threads}
         """
 
+rule remove_host:
+    input:
+        fastq=f"{config['work_dir']}/{config['prefix']}.hifi.qc.fq.gz"
+    output:
+        bam=temp(f"{config['work_dir']}/{config['prefix']}.minimap2.human.sort.bam"),
+        human_reads=f"{config['work_dir']}/{config['prefix']}-human-mapped-reads.fastq",
+        stats=f"{config['work_dir']}/{config['prefix']}-human-stats.tsv",
+        filtered_fastq=f"{config['work_dir']}/{config['prefix']}.hifi.qc.HR.fq.gz"
+    params:
+        ref=host_ref
+    threads: config["threads"]
+    shell:
+        """
+        minimap2 -t {threads} -ax map-hifi {params.ref} {input.fastq} | \
+            samtools view -b -T {params.ref} -F 4 | \
+            sambam > {output.bam}
+        samtools fastq {output.bam} > {output.human_reads}
+        seqkit stats --all {output.human_reads} -o {output.stats}
+        filterbyname.sh in={input.fastq} out={output.filtered_fastq} names={output.human_reads} include=f
+        """
+
 rule assemble_hifiasm:
     input:
-        fq=f"{config['work_dir']}/{config['prefix']}.hifi.qc.fq.gz"
+        fq=f"{config['work_dir']}/{config['prefix']}.hifi.qc.HR.fq.gz"
     output:
         gfa=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.gfa",
         log=f"{config['work_dir']}/{config['prefix']}.hifiasm.log"

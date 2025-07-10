@@ -11,7 +11,7 @@ rule all:
         virsorter2=f"{config['work_dir']}/virsorter2.done",
         vibrantr=f"{config['work_dir']}/vibrant.done",
         faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
-        dram_finish = f"{config['work_dir']}/dram/dram.finish",
+        dram_finish = f"{config['work_dir']}/dram2/dram.finish",
         prokka_finish = f"{config['work_dir']}/prokka/prokka.finish",
 
 rule checkM:
@@ -93,7 +93,7 @@ rule vibrant:
         touch {output.vibrantr}
         """
 
-rule prodigal-gv:
+rule prodigal_gv:
     input:
         vibrantr=f"{config['work_dir']}/vibrant.done",
         fasta=f"{config['work_dir']}/{config['prefix']}.final.fa"
@@ -103,7 +103,7 @@ rule prodigal-gv:
     threads: config["threads"]
     shell:
         """
-        prodigal-gv -p meta -i {input.fasta} -a {output.faa} -t {threads} -q
+        prodigal-gv -p meta -i {input.fasta} -a {output.faa} -q
         touch {output.finish}
         """
 
@@ -112,17 +112,18 @@ rule dram:
         faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
 
     output:
-        f"{config['work_dir']}/dram/annotations.tsv",
-        dram_finish = f"{config['work_dir']}/dram/dram.finish"
+        f"{config['work_dir']}/dram2/annotations.tsv",
+        dram_finish = f"{config['work_dir']}/dram2/dram.finish"
 
     params:
-        output_dir =  f"{config['work_dir']}/dram",
+        output_dir =  f"{config['work_dir']}/dram2",
 
     threads:
         config["threads"]
 
     shell:
         """
+        rm -r {params.output_dir}
         DRAM.py annotate_genes \
         -i {input.faa} \
         -o {params.output_dir} \
@@ -136,7 +137,7 @@ rule prokka:
     input:
         faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
         fasta = f"{config['work_dir']}/{config['prefix']}.final.fa",
-        dram_finish = f"{config['work_dir']}/dram/dram.finish",
+        dram_finish = f"{config['work_dir']}/dram2/dram.finish",
     output:
         faa = f"{config['work_dir']}/tr_spacer_hit_filtered/prokka/tr.faa",
         prokka_finish = f"{config['work_dir']}/prokka/prokka.finish"
