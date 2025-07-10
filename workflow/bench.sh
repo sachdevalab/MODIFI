@@ -996,3 +996,9 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   --job-name=pipeline
 
 sbatch --partition standard --wrap "snakemake -s annotation.smk" --job-name=annotation
+
+sbatch --partition standard --wrap "snakemake --config \
+  hifi_bam=/groups/banfield/projects/multienv/methylation/data/sra/aws/ERR12723528/ERR12723528.ccs.bam \
+  prefix=ERR12723528_mice \
+  work_dir=/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice" \
+  --job-name=mice

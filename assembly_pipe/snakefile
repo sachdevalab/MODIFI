@@ -18,12 +18,13 @@ rule bam_to_fastq_gz:
         fastq_gz=f"{config['work_dir']}/{config['prefix']}.hifi.fastq.gz"
     params:
         prefix  = config["prefix"],
+        work_dir = config["work_dir"]
     threads: config["threads"]
     shell:
         """
         mkdir -p {config[work_dir]}
-        /home/shuaiw/smrtlink/bam2fastq {input.bam} -j {threads} -o {params.prefix}
-        mv {params.prefix}.fastq.gz {output.fastq_gz}
+        /home/shuaiw/smrtlink/bam2fastq {input.bam} -j {threads} -o {params.work_dir}/{params.prefix}
+        mv {params.work_dir}/{params.prefix}.fastq.gz {output.fastq_gz}
         """
         ### transform bam to fastq, bam2fastq  /home/shuaiw/smrtlink/bam2fastq
 
