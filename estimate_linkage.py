@@ -377,11 +377,14 @@ def report_gc(data, host_dir, bin_ctg_dict, threads):
         result = future.result()
         if result is not None:
             results.append(result)
-    for result in results:
-        MGE_gc, host_gc, tetra_sim = result
-        data.at[index, 'MGE_gc'] = MGE_gc
-        data.at[index, 'host_gc'] = host_gc
-        data.at[index, 'cos_sim'] = tetra_sim
+    for idx, result in enumerate(results):
+        MGE, MGE_gc, host_gc, tetra_sim = result
+        # print(MGE_gc, host_gc, tetra_sim)
+        # Use MGE as index to update the DataFrame
+        if MGE in data['MGE'].values:
+            data.loc[data['MGE'] == MGE, 'MGE_gc'] = MGE_gc
+            data.loc[data['MGE'] == MGE, 'host_gc'] = host_gc
+            data.loc[data['MGE'] == MGE, 'cos_sim'] = tetra_sim
     data = data[['MGE', 'host', 'final_score', 'linkage_score', 'confidence', 'motif_confidence', 'total_sites',\
                   'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
     return data
@@ -465,7 +468,7 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, n_iter =
     ## randomly select n_iter values from all_final_score_list
     num = int(min(n_iter, 0.8 *  len(all_final_score_list)))
     selected_scores = random.sample(all_final_score_list, num)
-    print (sorted(selected_scores, reverse=True))
+    # print (sorted(selected_scores, reverse=True))
 
     data = pd.DataFrame(data)
     ## sort by final_score
@@ -475,6 +478,7 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, n_iter =
     ## add pvalue for final_score
     data['pvalue'] = data['final_score'].apply(lambda x: sum(1 for score in selected_scores if score >= x) / len(selected_scores))
     data['pvalue'] = data['pvalue'].round(4)
+    # print (data["MGE_gc"])
     ## resort the columns
     data = data[['MGE', 'host', 'final_score', 'pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
                  'MGE_cov', 'host_cov', 'linkage_score', 'host_motif_num', 'confidence', 

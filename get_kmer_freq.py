@@ -194,7 +194,7 @@ def kmer_freq_sim_bin_worker(bin_name1, bin_name2, bin_ctg_dict, work_dir):
     kmer_freq = Calc_kmer_freq()
     cos_sim = kmer_freq.get_bin_sim(seq_list_1, seq_list_2)
 
-    return round(bin_1_gc, 2), round(bin_2_gc, 2), round(cos_sim, 2)
+    return bin_name1, round(bin_1_gc, 2), round(bin_2_gc, 2), round(cos_sim, 2)
 
 if __name__ == "__main__":
     work_dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec4/"

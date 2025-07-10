@@ -17,7 +17,7 @@ rule all:
 
 rule checkM:
     input:
-        fasta=f"{config['work_dir']}/{config['prefix']}.final.fa"
+        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
     output:
         checkm=f"{config['work_dir']}/checkM2/quality_report.tsv",
         finish=f"{config['work_dir']}/{config['prefix']}.checkm.finish"
@@ -50,7 +50,7 @@ rule GTDB:
 
 rule genomad:
     input:
-        fasta=f"{config['work_dir']}/{config['prefix']}.final.fa",
+        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
         gtdb_finish=f"{config['work_dir']}/GTDB/gtdbtk.done"
     output:
         genomad_finish=f"{config['work_dir']}/genomad.done"
@@ -67,7 +67,7 @@ rule genomad:
 
 rule virsorter2:
     input:
-        fasta=f"{config['work_dir']}/{config['prefix']}.final.fa",
+        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
         genomad_finish=f"{config['work_dir']}/genomad.done"
 
     output:
@@ -84,7 +84,7 @@ rule virsorter2:
 
 rule vibrant:
     input:
-        fasta=f"{config['work_dir']}/{config['prefix']}.final.fa",
+        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
         virsorter2=f"{config['work_dir']}/virsorter2.done"
     output:
         vibrantr=f"{config['work_dir']}/vibrant.done"
@@ -95,17 +95,19 @@ rule vibrant:
         touch {output.vibrantr}
         """
 
+## plasX to call plasmids
+## use pyrodigal-gv set threads
 rule prodigal_gv:
     input:
         vibrantr=f"{config['work_dir']}/vibrant.done",
-        fasta=f"{config['work_dir']}/{config['prefix']}.final.fa"
+        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
     output:
         faa=f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
         finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish"
     threads: config["threads"]
     shell:
         """
-        prodigal-gv -p meta -i {input.fasta} -a {output.faa} -q
+        prodigal-gv -p meta -m -i {input.fasta} -a {output.faa} -q
         touch {output.finish}
         """
 
@@ -134,11 +136,11 @@ rule dram:
         touch {output.dram_finish}
         """
 
-
+#### how to do rRNA and tRNA from rohan
 rule prokka:
     input:
         faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
-        fasta = f"{config['work_dir']}/{config['prefix']}.final.fa",
+        fasta = f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
         dram_finish = f"{config['work_dir']}/dram2/dram.finish",
     output:
         faa = f"{config['work_dir']}/tr_spacer_hit_filtered/prokka/tr.faa",
