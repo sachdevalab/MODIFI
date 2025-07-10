@@ -18,7 +18,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 
 from bin import bin_contigs_to_fastas
-from cal_invasion_score import batch_MGE_invade
+
 
 # sys.setrecursionlimit(20000)
 

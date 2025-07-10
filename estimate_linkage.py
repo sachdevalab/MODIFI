@@ -38,7 +38,7 @@ def count_uniq_motif(valid_motif_list):
     # print ("num", num, valid_motif_list)
     return num
 
-def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_sites=5000):
+def linkage_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_sites=5000):
     """
     Adds confidence weighting based on motif site counts.
     """
@@ -82,9 +82,9 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
         scores.append(motif_score * log(weight))
         weights.append(log(weight))
     if not scores:
-        return {'invasion_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
+        return {'linkage_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
 
-    invasion_score = sum(scores) / sum(weights)
+    linkage_score = sum(scores) / sum(weights)
 
     # Confidence scaling (logarithmic)
     confidence = log(1 + total_sites) / log(1 + max_sites)
@@ -99,10 +99,10 @@ def invasion_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_
     motif_confidence = log(1+valid_motif_num)/log(1+3)   
     if motif_confidence > 1:
         motif_confidence = 1
-    final_score = invasion_score * confidence * motif_confidence * restriction_signal
+    final_score = linkage_score * confidence * motif_confidence * restriction_signal
 
     return {
-        'invasion_score': round(invasion_score, 4),
+        'linkage_score': round(linkage_score, 4),
         'confidence': round(confidence, 4),
         'final_score': round(final_score, 4),
         'total_sites': total_sites,
@@ -124,12 +124,12 @@ def linkage_score_from_model(motif_data):
         host_data_list.append((h_meth, h_total))
         MGE_data_list.append((p_meth, p_total))
     if len(host_data_list) == 0 or len(MGE_data_list) == 0:
-        return {'invasion_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
+        return {'linkage_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
     else:
         print ("host_data_list", host_data_list)
         print ("MGE_data_list", MGE_data_list)
         p_same = compute_p_same_room(host_data_list, MGE_data_list)
-        return {'invasion_score': 0.0, 'confidence': 0.0, 'final_score': p_same, 'total_sites': 0,
+        return {'linkage_score': 0.0, 'confidence': 0.0, 'final_score': p_same, 'total_sites': 0,
         'motif_confidence': round(1, 4),
         'host_motif_num': len(motif_data)}
 
@@ -223,7 +223,7 @@ def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name):
     motif_data = filter_motifs(bin_motif, motif_data)
     motif_filter = MotifFilter(motif_data)
     motif_data = motif_filter.filter()
-    result = invasion_score_from_counts(motif_data, min_frac, 0.5)
+    result = linkage_score_from_counts(motif_data, min_frac, 0.5)
     return result, motif_data, bin_name
 
 def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir,cov_dict, bin_cov_dict, threads, min_frac = 0.5):
@@ -295,7 +295,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
     #     motif_data = motif_filter.filter()
 
         
-    #     result = invasion_score_from_counts(motif_data, min_frac, 0.5)
+    #     result = linkage_score_from_counts(motif_data, min_frac, 0.5)
     #     # result = linkage_score_from_model(motif_data)
     #     result['host'] = bin_name
     #     result['host_cov'] = bin_cov_dict[bin_name]
@@ -312,8 +312,8 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
     final_score_list = []
     if len(data) > 0:
         data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
-        ## host column the first, final_score the second, invasion_score the third, confidence the forth, total_sites the fifth
-        data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
+        ## host column the first, final_score the second, linkage_score the third, confidence the forth, total_sites the fifth
+        data = data[['MGE', 'host', 'final_score', 'linkage_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
         final_score_list = data['final_score'].tolist()
         data = data[data['final_score'] > 0]
         # data = report_gc(data, host_dir, bin_ctg_dict)
@@ -347,7 +347,7 @@ def report_gc_bk(data, host_dir, bin_ctg_dict):
         data.at[index, 'host_gc'] = host_gc
         data.at[index, 'cos_sim'] = tetra_sim
     ## rearrange the columns
-    data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
+    data = data[['MGE', 'host', 'final_score', 'linkage_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
     return data
 
 def report_gc(data, host_dir, bin_ctg_dict, threads):
@@ -382,7 +382,7 @@ def report_gc(data, host_dir, bin_ctg_dict, threads):
         data.at[index, 'MGE_gc'] = MGE_gc
         data.at[index, 'host_gc'] = host_gc
         data.at[index, 'cos_sim'] = tetra_sim
-    data = data[['MGE', 'host', 'final_score', 'invasion_score', 'confidence', 'motif_confidence', 'total_sites',\
+    data = data[['MGE', 'host', 'final_score', 'linkage_score', 'confidence', 'motif_confidence', 'total_sites',\
                   'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
     return data
 
@@ -475,6 +475,10 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, n_iter =
     ## add pvalue for final_score
     data['pvalue'] = data['final_score'].apply(lambda x: sum(1 for score in selected_scores if score >= x) / len(selected_scores))
     data['pvalue'] = data['pvalue'].round(4)
+    ## resort the columns
+    data = data[['MGE', 'host', 'final_score', 'pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
+                 'MGE_cov', 'host_cov', 'linkage_score', 'host_motif_num', 'confidence', 
+                 'motif_confidence', 'total_sites', 'motif_info']]
     ## output the data to a csv file
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)
@@ -782,13 +786,13 @@ if __name__ == "__main__":
     motif_data = filter_motifs(host_motif, motif_data)
     print (motif_data)
 
-    result = invasion_score_from_counts(motif_data, min_frac)
+    result = linkage_score_from_counts(motif_data, min_frac)
     print(result)"
     """
 
-# python cal_invasion_score.py --work_dir /home/shuaiw/borg/bench/zymo_new_ref --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_genomad/merged2_summary/merged2_plasmid_summary.tsv
-# python cal_invasion_score.py  --work_dir /home/shuaiw/borg/all_test_ccs3 --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt
-# python cal_invasion_score.py  --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt
-# python cal_invasion_score.py  --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_plasmid_summary.tsv
-# python cal_invasion_score.py --work_dir /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30 --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list
+# python cal_linkage_score.py --work_dir /home/shuaiw/borg/bench/zymo_new_ref --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2_genomad/merged2_summary/merged2_plasmid_summary.tsv
+# python cal_linkage_score.py  --work_dir /home/shuaiw/borg/all_test_ccs3 --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt
+# python cal_linkage_score.py  --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt
+# python cal_linkage_score.py  --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_plasmid_summary.tsv
+# python cal_linkage_score.py --work_dir /home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30 --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list
 

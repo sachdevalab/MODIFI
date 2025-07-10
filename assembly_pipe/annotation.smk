@@ -32,14 +32,15 @@ rule checkM:
 rule GTDB:
     input:
         finish=f"{config['work_dir']}/{config['prefix']}.checkm.finish",
-        bin_dir=f"{config['work_dir']}/bins/"
+    params:
+        bin_dir=f"{config['work_dir']}/bins/",
     output:
         gtdb_finish=f"{config['work_dir']}/GTDB/gtdbtk.done"
     threads: config["threads"]
     shell:
         """
         gtdbtk classify_wf \
-          --genome_dir {input.bin_dir} \
+          --genome_dir {params.bin_dir} \
           --out_dir {config[work_dir]}/GTDB \
           --skip_ani_screen \
           --cpus {threads} \

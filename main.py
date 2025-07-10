@@ -22,7 +22,7 @@ from segment_genome import process_depth_and_gff
 from collect_motifs import collect_motifs
 from motif_profile import motif_profile_worker
 from merge_profile import merge_profile_worker
-from cal_invasion_score import batch_MGE_invade
+from estimate_linkage import batch_MGE_invade
 from analyze_RM import RM_main
 
 
