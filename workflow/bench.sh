@@ -1000,5 +1000,17 @@ sbatch --partition standard --wrap "snakemake -s annotation.smk" --job-name=anno
 sbatch --partition standard --wrap "snakemake --config \
   hifi_bam=/groups/banfield/projects/multienv/methylation/data/sra/aws/ERR12723528/ERR12723528.ccs.bam \
   prefix=ERR12723528_mice \
-  work_dir=/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice" \
+  work_dir=/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice --rerun-incomplete" \
   --job-name=mice
+
+sbatch --partition standard --wrap "snakemake -s annotation.smk --config \
+  hifi_bam=/groups/banfield/projects/multienv/methylation/data/sra/aws/ERR12723528/ERR12723528.ccs.bam \
+  prefix=ERR12723528_mice \
+  work_dir=/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice" \
+  --job-name=mice_anno
+
+sbatch --partition standard --wrap "snakemake -s annotation.smk  --config \
+  hifi_bam=/groups/banfield/projects/multienv/methylation/data/sra/aws/ocean/pbio-2857.29455.bc1003_BAK8A_OA--bc1003_BAK8A_OA.hifi_reads.bc1003_BAK8A_OA.ccs.bam \
+  prefix=ocean\
+  work_dir=/home/shuaiw/borg/assembly/ocean/ocean" \
+  --job-name=ocean

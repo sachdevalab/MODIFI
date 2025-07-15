@@ -14,6 +14,7 @@ rule all:
         dram_finish = f"{config['work_dir']}/dram2/dram.finish",
         prokka_finish = f"{config['work_dir']}/prokka/prokka.finish",
         ctg_mge = f"{config['work_dir']}/ctg_mge.done",
+        finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish",
 
 rule checkM:
     input:
@@ -96,17 +97,17 @@ rule vibrant:
         """
 
 ## plasX to call plasmids
-rule plasx:
-    input:
-        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
-    output:
-        plasx_done=f"{config['work_dir']}/plasx.done"
-    threads: config["threads"]
-    shell:
-        """
-        plasx predict -i {input.fasta} -o {config[work_dir]}/plasx/ -t {threads}
-        touch {output.plasx_done}
-        """
+# rule plasx:
+#     input:
+#         fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+#     output:
+#         plasx_done=f"{config['work_dir']}/plasx.done"
+#     threads: config["threads"]
+#     shell:
+#         """
+#         plasx predict -i {input.fasta} -o {config[work_dir]}/plasx/ -t {threads}
+#         touch {output.plasx_done}
+#         """
 ## use pyrodigal-gv set threads
 rule prodigal_gv:
     input:
@@ -118,7 +119,7 @@ rule prodigal_gv:
     threads: config["threads"]
     shell:
         """
-        prodigal-gv -p meta -m -i {input.fasta} -a {output.faa} -q
+        pyrodigal-gv -p meta -m -i {input.fasta} -a {output.faa} -j {threads}
         touch {output.finish}
         """
 
@@ -183,7 +184,6 @@ rule get_ctg_mge:
     shell:
         """
         python merge_MGEs.py {params.output_dir} {params.prefix}
-        python select_ctgs.py {params.output_dir}/{params.prefix}
         touch {output.finish}
         """
 

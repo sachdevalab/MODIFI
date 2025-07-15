@@ -23,6 +23,7 @@ rule bam_to_fastq_gz:
     shell:
         """
         mkdir -p {config[work_dir]}
+        /home/shuaiw/smrtlink/pbindex {input.bam}
         /home/shuaiw/smrtlink/bam2fastq {input.bam} -j {threads} -o {params.work_dir}/{params.prefix}
         mv {params.work_dir}/{params.prefix}.fastq.gz {output.fastq_gz}
         """
@@ -74,7 +75,7 @@ rule assemble_hifiasm:
     threads: config["threads"]
     shell:
         """
-        hifiasm_meta -o {config[work_dir]}/{config[prefix]}.hifiasm \
+        hifiasm_meta --no-binning -o {config[work_dir]}/{config[prefix]}.hifiasm \
             -t {threads} {input.fq} > {log} 
         """
 
