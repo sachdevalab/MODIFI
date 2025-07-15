@@ -344,8 +344,7 @@ def host_linkage_eva():
             FP += 1
         total += 1
     print (recall, total, "recall", recall/total, report_num, "FP", FP/report_num)
-
-def assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff=0):
+def assess_linkage_bk(result_dir, cutoff, plasmid_host_dict, depth_cutoff=0):
     guess_num = 0
     correct_num = 0
     
@@ -368,7 +367,39 @@ def assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff=0):
             # print (plasmid, "no host prediction")
             continue
         if best_score > cutoff:
+        
             # print (plasmid, "best host", best_host, "score", best_score, cutoff)
+            guess_num += 1
+            if best_host in plasmid_host_dict[plasmid][2]:
+                correct_num += 1
+    if guess_num == 0:
+        precision = 0
+    else:
+        precision = correct_num / guess_num
+    recall = correct_num / len(plasmid_host_dict)
+    print (correct_num, "correct_num", guess_num, "guess_num", recall, "recall", precision, "precision", len(plasmid_host_dict))
+    return (recall, precision)
+
+def assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff=0):
+    guess_num = 0
+    correct_num = 0
+
+    summary_file = os.path.join(result_dir, '../', "host_summary.csv")
+    df = pd.read_csv(summary_file)
+    for index, row in df.iterrows():
+        plasmid = row['MGE']
+        best_host = row['host']
+        best_score = float(row['final_score'])
+        best_MGE_cov = float(row['MGE_cov'])
+        best_host_cov = float(row['host_cov'])
+        pvalue = float(row['pvalue'])
+        if best_MGE_cov < depth_cutoff or best_host_cov < depth_cutoff:
+            # print (plasmid, "no host prediction")
+            continue
+        if plasmid not in plasmid_host_dict:
+            continue
+        if pvalue < 0.05:
+        # if best_score > 0.15:
             guess_num += 1
             if best_host in plasmid_host_dict[plasmid][2]:
                 correct_num += 1
@@ -525,8 +556,8 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-# cal_AUC()
-cal_AUC_depth()
+cal_AUC()
+# cal_AUC_depth()
 # assess_motif()
 # host_linkage_eva()
 # for_zymo()

@@ -195,7 +195,9 @@ rule get_ctg_mge:
     input:
         prokka_finish = f"{config['work_dir']}/prokka/prokka.finish"
     output:
-        finish = f"{config['work_dir']}/ctg_mge.done"
+        finish = f"{config['work_dir']}/ctg_mge.done",
+        mge_file = f"{config['work_dir']}/all_mge.tsv",
+        host_file = f"{config['work_dir']}/all_host_ctgs.tsv"
     params:
         output_dir = config['work_dir'],
         prefix = config["prefix"]
