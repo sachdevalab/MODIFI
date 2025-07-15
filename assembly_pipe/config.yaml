@@ -1,7 +1,8 @@
 hifi_bam: /home/shuaiw/borg/paper/linkage/m64004_210929_143746.p05.bam
 prefix: 96plex_p5
-work_dir: /home/shuaiw/borg/assembly/96plex/96plex_p5_2
+work_dir: /home/shuaiw/borg/assembly/96plex/96plex_p5_4
 threads: 1000
+host_ref: /home/shuaiw/borg/paper/host_refs/all_hosts.fa
 
 # hifi_bam: /home/shuaiw/borg/m84039_230624_013044_s3.hifi_reads.bc2021.bam
 # prefix: soil_s3_2021

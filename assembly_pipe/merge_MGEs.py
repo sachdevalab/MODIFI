@@ -193,7 +193,7 @@ def get_mge_union(all_mge_file, classification_dict, vibrant_virus, virsorter2_v
         mge.methods = methods
         classification = classification_dict.get(mge.name, "no_info")
         data.append({
-            "name": mge.name,
+            "seq_name": mge.name,
             "type": mge.type,
             "length": mge.length,
             "methods": ",".join(mge.methods),

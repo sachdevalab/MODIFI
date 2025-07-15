@@ -3,7 +3,7 @@
 # Configuration
 configfile: "config.yaml"
 
-rule all:
+rule all_annotation:
     input:
         checkm=f"{config['work_dir']}/checkM2/quality_report.tsv",
         gtdb_finish=f"{config['work_dir']}/GTDB/gtdbtk.done",
@@ -15,6 +15,7 @@ rule all:
         prokka_finish = f"{config['work_dir']}/prokka/prokka.finish",
         ctg_mge = f"{config['work_dir']}/ctg_mge.done",
         finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish",
+        checkv_finish=f"{config['work_dir']}/checkV.done",
 
 rule checkM:
     input:
@@ -30,9 +31,26 @@ rule checkM:
         touch {output.finish}
         """
 
+rule checkV:
+    input:
+        checkm=f"{config['work_dir']}/checkM2/quality_report.tsv",
+        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+    output:
+        checkv_finish=f"{config['work_dir']}/checkV.done"
+    threads: config["threads"]
+    shell:
+        """
+        checkv end_to_end \
+            {input.fasta} \
+            {config[work_dir]}/checkV \
+            -t {threads} \
+            --remove_tmp
+        touch {output.finish}
+        """
+
 rule GTDB:
     input:
-        finish=f"{config['work_dir']}/{config['prefix']}.checkm.finish",
+        checkv_finish=f"{config['work_dir']}/checkV.done",
     params:
         bin_dir=f"{config['work_dir']}/bins/",
     output:

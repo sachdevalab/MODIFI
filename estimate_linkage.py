@@ -586,7 +586,8 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
             min_frac = min_frac,
         )
         i += 1
-        all_final_score_list += final_score_list
+        if final_score_list is not None:
+            all_final_score_list += final_score_list
 
 
     summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list)
