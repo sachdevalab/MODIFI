@@ -16,6 +16,7 @@ rule all_annotation:
         ctg_mge = f"{config['work_dir']}/ctg_mge.done",
         finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish",
         checkv_finish=f"{config['work_dir']}/checkV.done",
+        anvi_done=f"{config['work_dir']}/anvi.done",
 
 rule checkM:
     input:
@@ -45,7 +46,7 @@ rule checkV:
             {config[work_dir]}/checkV \
             -t {threads} \
             --remove_tmp
-        touch {output.finish}
+        touch {output.checkv_finish}
         """
 
 rule GTDB:
@@ -115,20 +116,33 @@ rule vibrant:
         """
 
 ## plasX to call plasmids
-# rule plasx:
-#     input:
-#         fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
-#     output:
-#         plasx_done=f"{config['work_dir']}/plasx.done"
-#     threads: config["threads"]
-#     shell:
-#         """
-#         plasx predict -i {input.fasta} -o {config[work_dir]}/plasx/ -t {threads}
-#         touch {output.plasx_done}
-#         """
+rule anvi:
+    input:
+        vibrantr=f"{config['work_dir']}/vibrant.done",
+        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+    output:
+        anvi_done=f"{config['work_dir']}/anvi.done"
+    params:
+        prefix=f"{config['work_dir']}/{config['prefix']}",
+    threads: config["threads"]
+    shell:
+        """
+        anvi-gen-contigs-database -L 0 -T {threads} --project-name {params.prefix} -f {input.fasta} -o {params.prefix}.db
+
+        anvi-export-gene-calls --gene-caller prodigal -c {params.prefix}.db -o {params.prefix}-gene-calls.txt
+
+        anvi-run-ncbi-cogs -T {threads} --cog-version COG14 --cog-data-dir /home/shuaiw/borg/paper/anvio_db/COG_2014 -c {params.prefix}.db
+
+        anvi-run-pfams -T {threads} --pfam-data-dir /home/shuaiw/borg/paper/anvio_db/Pfam_v32 -c {params.prefix}.db
+
+        anvi-export-functions --annotation-sources COG14_FUNCTION,Pfam -c {params.prefix}.db -o {params.prefix}-cogs-and-pfams.txt
+
+        touch {output.anvi_done}
+        """
 ## use pyrodigal-gv set threads
 rule prodigal_gv:
     input:
+        anvi_done=f"{config['work_dir']}/anvi.done",
         vibrantr=f"{config['work_dir']}/vibrant.done",
         fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
     output:

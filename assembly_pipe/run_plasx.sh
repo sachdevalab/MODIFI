@@ -13,11 +13,13 @@ contigs=~/borg/assembly/96plex/96plex_p5_3/96plex_p5.hifiasm.p_ctg.rename.fa
 
 # anvi-export-functions --annotation-sources COG14_FUNCTION,Pfam -c $PREFIX.db -o $PREFIX-cogs-and-pfams.txt
 
+# conda activate /home/sdiamond/miniconda3/envs/plasx
+
 /home/sdiamond/miniconda3/envs/plasx/bin/plasx search_de_novo_families \
     -g $PREFIX-gene-calls.txt \
     -o $PREFIX-de-novo-families.txt \
     --threads $THREADS \
-    --overwrite
+    --overwrite 
 
 /home/sdiamond/miniconda3/envs/plasx/bin/plasx predict -a $PREFIX-cogs-and-pfams.txt $PREFIX-de-novo-families.txt \
     -g $PREFIX-gene-calls.txt \

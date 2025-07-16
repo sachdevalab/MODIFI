@@ -5,7 +5,7 @@ def subsample(out_dir, full_bam, run_cmd):
     f = open(run_cmd, "w")
     for p in ["10", "20", "30", "50", "05"]:
         prefix = f"m64004_210929_143746.p{p}"
-        out_bam = os.path.join(out_dir, f"m64004_210929_143746.p{p}.bam")
+        out_bam = os.path.join(out_dir, "..", f"m64004_210929_143746.p{p}.bam")
         cmd = f"""
             samtools view -s 42.{p} -b {full_bam} > {out_bam}
             /home/shuaiw//smrtlink/pbindex {out_bam}
@@ -19,12 +19,11 @@ def subsample(out_dir, full_bam, run_cmd):
             --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
             --read_type hifi \
             --min_len 1000 \
-            --max_NM 3000 \
+            --max_NM 3 \
             --min_cov 1 \
             --min_frac 0.4 \
             --min_score 30 \
             --min_sites 30 \
-            --run_steps host \
             --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list
         """
         print (run, file = f)
@@ -32,7 +31,7 @@ def subsample(out_dir, full_bam, run_cmd):
 
 def pure_main():
     full_bam = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.align.ccs.bam"
-    out_dir = "/home/shuaiw/borg/paper/linkage"
+    out_dir = "/home/shuaiw/borg/paper/linkage/pure"
     run_cmd = "run_dp.sh"
     subsample(out_dir, full_bam, run_cmd)
 
@@ -81,10 +80,10 @@ def meta_subsample(out_dir, raw_96, soil):
     f.close()
 
 
-soil = "/home/shuaiw/borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam"
-raw_96 = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam"
-out_dir = "/home/shuaiw/borg/paper/linkage/meta2"
-meta_subsample(out_dir, raw_96, soil)
+# soil = "/home/shuaiw/borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam"
+# raw_96 = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam"
+# out_dir = "/home/shuaiw/borg/paper/linkage/meta2"
+# meta_subsample(out_dir, raw_96, soil)
 
-# pure_main()
+pure_main()
 
