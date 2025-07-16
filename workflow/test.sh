@@ -167,7 +167,7 @@ whole_ref=/home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffo
  work_dir=/home/shuaiw/borg/allison/NANO_2_INF1340011_4G1_NM3 read_type=ccs min_len=5000 max_NM=3 min_cov=5"\
   --job-name=a2
 
-python cal_invasion_score.py --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_more --plasmid_file /groups/diamond/projects/animal/rumen/RuReacBro20203/assembly/RuReacBro_20230708_11_72h_200ppm_r1_LR/genomad/circular_elements_summary/circular_elements_plasmid_summary.tsv
+python cal_invasion_score.py --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_more --mge_file /groups/diamond/projects/animal/rumen/RuReacBro20203/assembly/RuReacBro_20230708_11_72h_200ppm_r1_LR/genomad/circular_elements_summary/circular_elements_plasmid_summary.tsv
 
     sbatch --partition standard --wrap "/usr/bin/time -v -o all_ccs_1k.time snakemake \
 --config whole_bam=/home/shuaiw/methylation/data/borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam \
@@ -206,7 +206,7 @@ whole_ref=/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_
   --job-name=all_dp0
 
 
-python ../cal_invasion_score.py --work_dir /home/shuaiw/borg/bench/all_ccs_1k --plasmid_file /home/shuaiw/borg/contigs/borg_pure.txt --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab
+python ../cal_invasion_score.py --work_dir /home/shuaiw/borg/bench/all_ccs_1k --mge_file /home/shuaiw/borg/contigs/borg_pure.txt --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab
 
   snakemake --config whole_bam=/home/shuaiw/methylation/data/borg/b_contigs/11.align.bam\
  whole_ref=/home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa\

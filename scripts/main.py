@@ -108,8 +108,8 @@ def parse_arguments():
                         help="Minimum number of methylated sites per motif.")
     parser.add_argument("--min_score", type=int, default=30,
                         help="Minimum score for modification calling.")
-    parser.add_argument("--mge_file", type=str, default="NA",
-                        help="MGE list, can be output of Genomad, with at least one column with header: seq_name.")
+    parser.add_argument("--plasmid_file", type=str, default="NA",
+                        help="Optional plasmid FASTA file (set to 'NA' if not used).")
     parser.add_argument("--bin_file", type=str, required=False, default=None,
                         help="Path to the binning file containing contig-to-bin mappings.")
     parser.add_argument("--threads", type=int, default=64,
@@ -374,6 +374,7 @@ def run_merge_profile(args, paras):
             total_profile = paras["total_profile"], 
             min_frac = args.min_frac, 
             whole_ref = args.whole_ref, 
+            plasmid_file = args.plasmid_file,
             bin_file = args.bin_file,
             threads = args.threads,
             bin_flag = args.binning,
@@ -408,8 +409,8 @@ def depth_analysis(paras, ctg_depth_dict):
 
 def predict_host_worker(args, paras):
     os.makedirs(paras["hosts"], exist_ok = True)
-    if args.mge_file != 'NA' and os.path.exists(args.mge_file):
-        batch_MGE_invade(args.mge_file, paras["profiles"], paras["hosts"], args.whole_ref, bin_file=args.bin_file, min_frac=0.5, threads=args.threads, min_ctg_cov = args.min_ctg_cov)
+    if args.plasmid_file != 'NA' and os.path.exists(args.plasmid_file):
+        batch_MGE_invade(args.plasmid_file, paras["profiles"], paras["hosts"], args.whole_ref, bin_file=args.bin_file, min_frac=0.5, threads=args.threads, min_ctg_cov = args.min_ctg_cov)
 
 def get_paras(args):
     """

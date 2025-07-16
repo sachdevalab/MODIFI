@@ -257,7 +257,7 @@ sbatch  --partition standard --wrap "snakemake --config \
   whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
   work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3 \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
-  plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list" \
+  mge_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list" \
   --job-name=recover    
 
 ## test set new motif critera's impact on the result
@@ -266,7 +266,7 @@ sbatch  --partition standard --wrap "snakemake --config \
   whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
   work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3 \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=50 clean=False \
-  plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list" \
+  mge_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list" \
   --job-name=recover    
 
 
@@ -314,7 +314,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengf
   whole_ref=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_200ppm_r1_LR_scaffold.fa \
   work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_new_long \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
-  plasmid_file=/groups/diamond/projects/animal/rumen/RuReacBro20203/assembly/RuReacBro_20230708_11_72h_200ppm_r1_LR/genomad/circular_elements_summary/circular_elements_plasmid_summary.tsv \
+  mge_file=/groups/diamond/projects/animal/rumen/RuReacBro20203/assembly/RuReacBro_20230708_11_72h_200ppm_r1_LR/genomad/circular_elements_summary/circular_elements_plasmid_summary.tsv \
   --rerun-incomplete"\
   --job-name=pf
 
@@ -329,7 +329,7 @@ python /home/shuaiw/Methy/motif_profile.py /home/shuaiw/methylation/data/borg/be
   whole_ref=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
   work_dir=/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3 \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=50 clean=False \
-  plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list" \
+  mge_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list" \
   --job-name=recover    
 
 sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylation/data/borg/bench/pipeline_zymo.time python main.py \
@@ -343,7 +343,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list  " \
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list  " \
   --job-name=pipeline
 
    sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20.new.time snakemake --config \
@@ -351,7 +351,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   whole_ref=/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
   work_dir=/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.1 min_score=30 min_sites=10 clean=False \
-  plasmid_file=/home/shuaiw/borg/pengfan/contigs/MGE.list"\
+  mge_file=/home/shuaiw/borg/pengfan/contigs/MGE.list"\
   --job-name=pf2
 
 python main.py \
@@ -365,7 +365,7 @@ python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --run_steps merge \
   --threads 20 
@@ -375,7 +375,7 @@ python cal_invasion_score.py \
   --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab\
   --min_frac 0.4 \
   --threads 10 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list
 
 python cal_invasion_score.py \
   --work_dir /home/shuaiw/methylation/data/borg/pengfan/RuReacBro_20230708_11_72h_20_bin\
@@ -387,7 +387,7 @@ python cal_invasion_score.py \
   whole_ref=/home/shuaiw/borg/contigs/soil_zymo.fa \
   work_dir=/home/shuaiw/borg/bench/soil_zymo/run \
   read_type=ccs min_len=1000 max_NM=3000 min_cov=1 min_frac=0.4 min_score=30 min_sites=30 clean=False \
-  plasmid_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"\
+  mge_file=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"\
   --job-name=soil
 
  sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/bench/soil_zymo/run/run.time python main.py \
@@ -401,7 +401,7 @@ python cal_invasion_score.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
   --run_steps profile merge host \
   --threads 64 "\
   --job-name=soil
@@ -418,7 +418,7 @@ python cal_invasion_score.py \
   --min_score 30 \
   --min_sites 30 \
   --run_steps host \
-  --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
   --threads 64 "\
   --job-name=soil3
 
@@ -434,7 +434,7 @@ python cal_invasion_score.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
   --run_steps profile merge host\
   --threads 64 "\
   --job-name=soil2
@@ -501,7 +501,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list\
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list\
   --threads 64  " \
   --job-name=pipeline
 
@@ -527,7 +527,7 @@ sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --en
   --min_sites 30 \
   --run_steps profile \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
-  --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --threads 64 "\
   --job-name=soil
 
@@ -543,7 +543,7 @@ sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --en
   --min_score 30 \
   --min_sites 30 \
   --run_steps host \
-  --plasmid_file  /home/shuaiw/borg/paper/ocean/genomad/ocean_summary/MGE.tsv \
+  --mge_file  /home/shuaiw/borg/paper/ocean/genomad/ocean_summary/MGE.tsv \
   --threads 64 "\
   --job-name=ocean
 
@@ -559,7 +559,7 @@ sbatch --partition standard --wrap " genomad end-to-end --relaxed --cleanup --en
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file  /home/shuaiw/borg/allison/NANO_2_INF1330004_3PB_genomad/NANO_2_INF1330004_3PB_HR_HIFIASM_META_scaffold_min1000_summary/all_summary.tsv \
+  --mge_file  /home/shuaiw/borg/allison/NANO_2_INF1330004_3PB_genomad/NANO_2_INF1330004_3PB_HR_HIFIASM_META_scaffold_min1000_summary/all_summary.tsv \
   --threads 64 "\
   --job-name=infant
 
@@ -599,7 +599,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
   --run_steps host \
@@ -618,7 +618,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
   --run_steps host \
   --threads 64 "\
@@ -635,7 +635,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
   --threads 64 "\
   --job-name=m84039_230626_221130_s1_2026
@@ -652,7 +652,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_score 30 \
   --min_sites 30 \
   --clean \
-  --plasmid_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
   --threads 64 "\
   --job-name=m84039_230624_013044_s3.hifi_reads.bc2021
@@ -669,7 +669,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_score 30 \
   --min_sites 30 \
   --clean \
-  --plasmid_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
   --threads 64 "\
   --job-name=m84039_230624_013044_s3.hifi_reads.bc2023
@@ -686,7 +686,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_score 30 \
   --min_sites 30 \
   --clean \
-  --plasmid_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
   --threads 64 "\
   --job-name=m84039_230626_214113_s4.hifi_reads.bc2022
@@ -703,7 +703,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_score 30 \
   --min_sites 30 \
   --clean \
-  --plasmid_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
   --threads 64 "\
   --job-name=m84039_230626_214113_s4.hifi_reads.bc2024
@@ -722,7 +722,7 @@ sbatch --partition standard --job-name=pf3 --wrap "python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
   --run_steps host \
@@ -739,7 +739,7 @@ sbatch --partition standard --job-name=pf4 --wrap "python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
   --run_steps host \
@@ -756,7 +756,7 @@ sbatch --partition standard --job-name=pf5 --wrap "python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
   --run_steps host \
@@ -773,7 +773,7 @@ sbatch --partition standard --job-name=pf6 --wrap "python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
   --run_steps host \
@@ -790,7 +790,7 @@ sbatch --partition standard --job-name=pf7 --wrap "python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
   --run_steps host \
@@ -853,7 +853,7 @@ sbatch --job-name=drep_job_1325 \
   --min_score 30 \
   --min_sites 30 \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
-  --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --threads 64 "\
   --job-name=soil
 
@@ -869,7 +869,7 @@ sbatch --job-name=drep_job_1325 \
   --min_ctg_cov 20 \
   --run_steps merge host anno \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
-  --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --threads 64 "\
   --job-name=soil_subreads2
 
@@ -883,7 +883,7 @@ sbatch --job-name=drep_job_1325 \
   --min_score 30 \
   --min_sites 30 \
   --bin_file /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab \
-  --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --threads 64 "\
   --job-name=soil_subreads
 
@@ -898,7 +898,7 @@ python main.py \
   --min_score 30 \
   --min_sites 30 \
   --run_steps host \
-  --plasmid_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
+  --mge_file  /home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/all.summary \
   --threads 20
 
 
@@ -913,7 +913,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --run_steps host \
   --threads 20"\
@@ -930,7 +930,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file  /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --threads 64"\
   --job-name=new_pf
@@ -947,7 +947,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --threads 64"\
   --job-name=new_pf
 
@@ -964,7 +964,7 @@ sbatch  --partition standard --wrap " python main.py \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
-  --plasmid_file  /home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_genomad/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffold_min1000_summary/all_summary.tsv \
+  --mge_file  /home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_genomad/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffold_min1000_summary/all_summary.tsv \
   --threads 64 "\
   --job-name=infant2
 
@@ -991,7 +991,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   --min_score 30 \
   --min_sites 30 \
   --run_steps host \
-  --plasmid_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list\
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list\
   --threads 64  " \
   --job-name=pipeline
 
@@ -1015,4 +1015,4 @@ sbatch --partition standard --wrap "snakemake -s annotation.smk  --config \
   work_dir=/home/shuaiw/borg/assembly/ocean/ocean" \
   --job-name=ocean
 
-python main.py   --work_dir /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice_methylation   --whole_bam xx   --whole_ref  /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice.hifiasm.p_ctg.rename.fa   --read_type hifi   --min_len 1000   --max_NM 3000   --min_cov 1   --min_frac 0.4   --min_score 30   --min_sites 30   --run_steps host   --plasmid_file /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/all_mge.tsv  --threads 10
+python main.py   --work_dir /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice_methylation   --whole_bam xx   --whole_ref  /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice.hifiasm.p_ctg.rename.fa   --read_type hifi   --min_len 1000   --max_NM 3000   --min_cov 1   --min_frac 0.4   --min_score 30   --min_sites 30   --run_steps host   --mge_file /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/all_mge.tsv  --threads 10

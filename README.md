@@ -3,6 +3,7 @@
 ## env requirement
 ```
 conda activate /home/shuaiw/miniconda3/envs/methy3
+add motifMaker
 ```
 ## usage
 

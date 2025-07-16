@@ -33,6 +33,6 @@ rule call_host:
           --min_score 30 \
           --min_sites 30 \
           --run_steps host \
-          --plasmid_file {input.mge_file} \
+          --mge_file {input.mge_file} \
           --threads {threads} 
         """
