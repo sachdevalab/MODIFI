@@ -315,7 +315,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
         ## host column the first, final_score the second, linkage_score the third, confidence the forth, total_sites the fifth
         data = data[['MGE', 'host', 'final_score', 'linkage_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
         final_score_list = data['final_score'].tolist()
-        data = data[data['final_score'] > 0]
+        # data = data[data['final_score'] > 0]
         # data = report_gc(data, host_dir, bin_ctg_dict)
         print (data.head(5))
         ## output the data to a csv file
@@ -355,6 +355,7 @@ def report_gc(data, host_dir, bin_ctg_dict, threads):
     report GC for MGE and host
     also report the cosine similarity for MGE and host tetranuceleotide frequency
     """
+    print (f"report_gc for {len(data)} MGE-host pairs.")
     work_dir = os.path.join(host_dir, "../")
     ## add new columns for MGE_gc, host_gc, cos_sim
     data['MGE_gc'] = 0.0
@@ -466,7 +467,8 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, n_iter =
                 data.append(df.iloc[0])
 
     ## randomly select n_iter values from all_final_score_list
-    num = int(min(n_iter, 0.8 *  len(all_final_score_list)))
+    print (f"{len(all_final_score_list)} final scores in all_final_score_list used as background.")
+    num = int(min(n_iter, 1 *  len(all_final_score_list)))
     selected_scores = random.sample(all_final_score_list, num)
     # print (sorted(selected_scores, reverse=True))
 

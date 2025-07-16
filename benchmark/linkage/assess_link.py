@@ -419,8 +419,6 @@ def get_depth(result_dir):
 
 def cal_AUC(): 
     fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
-    plasmid_anno_file = fai + ".plasmid"
-    plasmid_list = fai + ".plasmid.list"
     plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/hosts/"
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3/hosts/"

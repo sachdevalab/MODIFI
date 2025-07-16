@@ -188,8 +188,8 @@ def kmer_freq_sim_bin_worker(bin_name1, bin_name2, bin_ctg_dict, work_dir):
         bin_2_len += seq_len
         ben_2_gc += gc_count
     bin_2_gc = ben_2_gc / bin_2_len
-    print(f"Bin {bin_name1} GC content: {bin_1_gc}")
-    print(f"Bin {bin_name2} GC content: {bin_2_gc}")
+    # print(f"Bin {bin_name1} GC content: {bin_1_gc}")
+    # print(f"Bin {bin_name2} GC content: {bin_2_gc}")
 
     kmer_freq = Calc_kmer_freq()
     cos_sim = kmer_freq.get_bin_sim(seq_list_1, seq_list_2)

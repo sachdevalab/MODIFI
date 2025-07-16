@@ -1016,3 +1016,4 @@ sbatch --partition standard --wrap "snakemake -s annotation.smk  --config \
   --job-name=ocean
 
 python main.py   --work_dir /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice_methylation   --whole_bam xx   --whole_ref  /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice.hifiasm.p_ctg.rename.fa   --read_type hifi   --min_len 1000   --max_NM 3000   --min_cov 1   --min_frac 0.4   --min_score 30   --min_sites 30   --run_steps host   --mge_file /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/all_mge.tsv  --threads 10
+
