@@ -10,7 +10,7 @@ def read_list(bam_list, cmd_file):
         for line in f:
             hifi_bam = line.strip()
             prefix = hifi_bam.split("/")[-1].split(".")[0]
-            work_dir = os.path.join("/home/shuaiw/borg/paper", prefix)
+            work_dir = os.path.join("/home/shuaiw/borg/paper/run", prefix)
             cmd = f"""
             #### number {i}
             sbatch --partition standard --wrap "snakemake --config \\

@@ -106,7 +106,7 @@ def read_virsorter2(virsorter2):
         type="virus"
         length=row['length']
         field = seqname.split("||")
-        if field[1] == "full":
+        if re.search("_partial", field[1]):
             continue
         mge_name = field[0]
         mge = mge_obj(
