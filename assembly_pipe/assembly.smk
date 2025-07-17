@@ -9,7 +9,8 @@ rule all_assembly:
     input:
         final_fa = f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
         bam_index = f"{config['work_dir']}/{config['prefix']}.align.bam.bai",
-        methyl_time = f"{config['work_dir']}/{config['prefix']}.methyl.time"
+        methyl_time = f"{config['work_dir']}/{config['prefix']}.methyl.time",
+        methy_finish = f"{config['work_dir']}/methylation.finish",
 
 rule bam_to_fastq_gz:
     input:
@@ -118,7 +119,9 @@ rule call_methylation:
         bam=f"{config['work_dir']}/{config['prefix']}.align.bam",
         fa=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
     output:
-        time=f"{config['work_dir']}/{config['prefix']}.methyl.time"
+        time=f"{config['work_dir']}/{config['prefix']}.methyl.time",
+        summary=f"{config['work_dir']}/{config['prefix']}_methylation/summary.csv",
+        methy_finish = f"{config['work_dir']}/methylation.finish"
     threads: config["threads"]
     shell:
         """
@@ -134,4 +137,6 @@ rule call_methylation:
           --min_score 30 \
           --min_sites 30 \
           --threads {threads} 
+        touch {output.methy_finish}
+
         """

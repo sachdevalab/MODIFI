@@ -2,6 +2,7 @@ import pandas as pd
 import re
 from Bio import SeqIO
 import sys
+import os
 
 
 def get_circular_ctgs(fai):
@@ -69,12 +70,19 @@ def classify(classification):
 
 def get_bacteria_archea(gtdb_ar53, gtdb_bac120):
     classification_dict = {}
-    df_ar53 = pd.read_csv(gtdb_ar53, sep="\t")
-    for index, row in df_ar53.iterrows():
-        classification_dict[row['user_genome']] = classify(row['classification'])
-    df_bac120 = pd.read_csv(gtdb_bac120, sep="\t")
-    for index, row in df_bac120.iterrows():
-        classification_dict[row['user_genome']] = classify(row['classification'])
+    ## check if the files exist
+    if os.path.exists(gtdb_ar53):
+        df_ar53 = pd.read_csv(gtdb_ar53, sep="\t")
+        for index, row in df_ar53.iterrows():
+            classification_dict[row['user_genome']] = classify(row['classification'])
+    else:
+        print(f"Warning: {gtdb_ar53} does not exist. Skipping GTDB AR53 classification.")
+    if os.path.exists(gtdb_bac120):
+        df_bac120 = pd.read_csv(gtdb_bac120, sep="\t")
+        for index, row in df_bac120.iterrows():
+            classification_dict[row['user_genome']] = classify(row['classification'])
+    else:
+        print(f"Warning: {gtdb_bac120} does not exist. Skipping GTDB BAC120 classification.")
     # print(classification_dict)
     return classification_dict
 

@@ -477,14 +477,14 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, n_iter =
     if len(data) > 0:
         data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
         data = report_gc(data, host_dir, bin_ctg_dict, threads)
-    ## add pvalue for final_score
-    data['pvalue'] = data['final_score'].apply(lambda x: sum(1 for score in selected_scores if score >= x) / len(selected_scores))
-    data['pvalue'] = data['pvalue'].round(4)
-    # print (data["MGE_gc"])
-    ## resort the columns
-    data = data[['MGE', 'host', 'final_score', 'pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
-                 'MGE_cov', 'host_cov', 'linkage_score', 'host_motif_num', 'confidence', 
-                 'motif_confidence', 'total_sites', 'motif_info']]
+        ## add pvalue for final_score
+        data['pvalue'] = data['final_score'].apply(lambda x: sum(1 for score in selected_scores if score >= x) / len(selected_scores))
+        data['pvalue'] = data['pvalue'].round(4)
+        # print (data["MGE_gc"])
+        ## resort the columns
+        data = data[['MGE', 'host', 'final_score', 'pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
+                    'MGE_cov', 'host_cov', 'linkage_score', 'host_motif_num', 'confidence', 
+                    'motif_confidence', 'total_sites', 'motif_info']]
     ## output the data to a csv file
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)

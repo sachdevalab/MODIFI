@@ -187,7 +187,8 @@ rule prokka:
         fasta = f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
         dram_finish = f"{config['work_dir']}/dram2/dram.finish",
     output:
-        faa = f"{config['work_dir']}/tr_spacer_hit_filtered/prokka/tr.faa",
+        faa = f"{config['work_dir']}/prokka/{config['prefix']}.faa",
+        tsv = f"{config['work_dir']}/prokka/{config['prefix']}.tsv",
         prokka_finish = f"{config['work_dir']}/prokka/prokka.finish"
 
     params:
