@@ -237,7 +237,7 @@ def compare_ipd_parallel(args, paras):
 
             yield finish_code
 
-def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, min_score):
+def depth_worker(bam, fasta, gff, seg_ref, seg_gff,):
     ## run samtools depth
     depth_file = f"{bam}.depth"
     cmd = [
@@ -250,6 +250,55 @@ def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, mi
 
     mean_depth = process_depth_and_gff(depth_file, fasta, gff, seg_ref, seg_gff,
                         depth_threshold=DEPTH_THRESHOLD, max_gap=MAX_GAP)
+    return mean_depth
+
+def depth_parallel(args, paras):
+    logger.info ("segment by depth in parallel...")
+
+    with ProcessPoolExecutor(max_workers=args.threads) as executor:
+        futures = []
+
+        for gff in os.listdir(paras["gffs"]):
+            if not gff.endswith(".gff"):
+                continue
+            if gff.endswith(".reprocess.gff"):
+                continue
+            # logger.info ("####", paras["gffs"], gff)
+            ctg_name = gff.replace(".gff", "")
+            bam = os.path.join(paras["bam_dir"], f"{ctg_name}.bam")
+            gff = os.path.join(paras["gffs"], gff)
+            seg_ref = os.path.join(paras["segs"], f"{ctg_name}.seg.fa")
+            seg_gff = os.path.join(paras["segs"], f"{ctg_name}.seg.gff")
+            fasta = os.path.join(paras["ctg_dir"], f"{ctg_name}.fa")
+            motifs = os.path.join(paras["motifs"], f"{ctg_name}.motifs.csv")
+
+            future = executor.submit(
+                depth_worker,
+                bam=bam,
+                fasta=fasta,
+                gff=gff,
+                seg_ref=seg_ref,
+                seg_gff=seg_gff,
+            )
+            futures.append(future)
+
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            mean_depth = future.result()
+
+
+def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, min_score):
+    ## run samtools depth
+    # depth_file = f"{bam}.depth"
+    # cmd = [
+    #     "samtools", "depth", "-aa", bam
+    # ]
+
+    # with open(depth_file, "w") as depth_output:
+    #     # logger.info(f"Running command: {' '.join(cmd)}")
+    #     subprocess.run(cmd, stdout=depth_output, stderr=subprocess.DEVNULL, check=True)
+
+    # mean_depth = process_depth_and_gff(depth_file, fasta, gff, seg_ref, seg_gff,
+    #                     depth_threshold=DEPTH_THRESHOLD, max_gap=MAX_GAP)
 
     cmd = [
         motif_maker_bin,
@@ -263,7 +312,7 @@ def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, mi
     # logger.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
-    return ctg_name, mean_depth
+    return ctg_name, 0
 
 def motif_parallel(args, paras):
     logger.info ("Detect motif in parallel...")
@@ -546,6 +595,14 @@ if __name__ == "__main__":
         )
 
     if "motif" in args.run_steps:
+        ## first depth
+        logger.info("segment contigs in parallel...")
+        record_resource_usage(
+            "segment contigs by depth",
+            depth_parallel,
+            args, paras
+        )
+        logger.info("Identifying motifs in parallel...")
         ctg_depth_dict = record_resource_usage(
             "Motif identification",
             motif_parallel,

@@ -98,7 +98,8 @@ rule virsorter2:
         virsorter run all \
             --seqfile {input.fasta} \
             -w  {config[work_dir]}/virsorter2/ \
-            -j {threads}
+            -j {threads} \
+            --tmpdir {config[work_dir]}/tmp/ \
         touch {output.virsorter2}
         """
 
