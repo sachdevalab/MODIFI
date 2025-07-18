@@ -99,7 +99,7 @@ rule virsorter2:
             --seqfile {input.fasta} \
             -w  {config[work_dir]}/virsorter2/ \
             -j {threads} \
-            --tmpdir {config[work_dir]}/tmp/ \
+            --tmpdir {config[work_dir]}/tmp/ 
         touch {output.virsorter2}
         """
 
