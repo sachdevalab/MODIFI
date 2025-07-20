@@ -315,7 +315,7 @@
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/ocean/pbio-2857.29455.bc1003_BAK8A_OA--bc1003_BAK8A_OA.hifi_reads.bc1003_BAK8A_OA.ccs.bam \
                 prefix=pbio-2857 \
-                work_dir=/home/shuaiw/borg/paper/run/pbio-2857" \
+                work_dir=/home/shuaiw/borg/paper/run/pbio-2857 --rerun-incomplete" \
                 --job-name=pbio-2857
             
 

@@ -6,6 +6,7 @@ __pycache__/
 # slurm logs
 slurm-*
 tmp/
+tmp*
 *.time
 *pdf
 nohup.out

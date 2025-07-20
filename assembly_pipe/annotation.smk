@@ -223,10 +223,5 @@ rule get_ctg_mge:
         touch {output.finish}
         """
 
-
-
-
-
-
-## genomad PlasFlow  VirSorter / VirSorter2 VIBRANT
-
+### motif enrichment analysis
+# /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py

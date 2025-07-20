@@ -102,6 +102,8 @@ def parse_arguments():
     parser.add_argument("--kmer_num_db", type=str, default=None,
                         help="Path to optional k-mer count database.")
     parser.add_argument("--clean", action="store_true", dest="clean", help="Enable cleaning step")
+    parser.add_argument("--segment", action="store_true", dest="segment", 
+                        help="Enable segmentation of the contigs by depth, increase recall for low-depth contigs, but cost more time.")
     parser.add_argument("--min_frac", type=float, default=0.5,
                         help="Minimum methylation fraction to retain a motif.")
     parser.add_argument("--min_sites", type=int, default=100,

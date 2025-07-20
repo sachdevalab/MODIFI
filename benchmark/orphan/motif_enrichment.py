@@ -186,11 +186,8 @@ if __name__ == "__main__":
     # genome_gff = "/home/shuaiw/borg/pengfan/contigs/protein/Final_Genomes_qc_rmcirc_prodigal_complete.gff"
     # methy_dir = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/"
 
-    # genome_gff = "/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/prokka/ERR12723528_mice.gff"
-    # methy_dir = "/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice_methylation/"
-
-    genome_gff = sys.argv[1]
-    methy_dir = sys.argv[2]
+    genome_gff = "/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/prokka/ERR12723528_mice.gff"
+    methy_dir = "/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice_methylation/"
 
     data = []
     i = 0
