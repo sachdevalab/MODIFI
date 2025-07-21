@@ -63,7 +63,7 @@
                 --job-name=ERR12723529
             
 
-            #### number 9
+            #### number 9   too less data
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/ERR5621427/ERR5621427.ccs.bam \
                 prefix=ERR5621427 \
@@ -397,4 +397,7 @@
                 prefix=SRR23446540 \
                 work_dir=/home/shuaiw/borg/paper/run/SRR23446540" \
                 --job-name=SRR23446540
+
+
+sbatch --partition standard --wrap "snakemake -s methylation.smk --config                 hifi_bam=/home/shuaiw/borg/paper/aws/ocean/pbio-2857.29455.bc1003_BAK8A_OA--bc1003_BAK8A_OA.hifi_reads.bc1003_BAK8A_OA.ccs.bam                 prefix=pbio-2857                 work_dir=/home/shuaiw/borg/paper/run/pbio-2857 --rerun-incomplete" --job-name=pbio-2857
             

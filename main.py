@@ -331,8 +331,12 @@ def motif_parallel(args, paras):
             ctg_name = gff.replace(".gff", "")
             bam = os.path.join(paras["bam_dir"], f"{ctg_name}.bam")
             gff = os.path.join(paras["gffs"], gff)
-            seg_ref = os.path.join(paras["segs"], f"{ctg_name}.seg.fa")
-            seg_gff = os.path.join(paras["segs"], f"{ctg_name}.seg.gff")
+            if args.segment: ## enable segment
+                seg_ref = os.path.join(paras["segs"], f"{ctg_name}.seg.fa")
+                seg_gff = os.path.join(paras["segs"], f"{ctg_name}.seg.gff")
+            else:
+                seg_ref = os.path.join(paras["ctg_dir"], f"{ctg_name}.fa")
+                seg_gff = os.path.join(paras["gffs"], f"{ctg_name}.gff")
             fasta = os.path.join(paras["ctg_dir"], f"{ctg_name}.fa")
             motifs = os.path.join(paras["motifs"], f"{ctg_name}.motifs.csv")
 
@@ -504,7 +508,8 @@ def get_paras(args):
     if args.visu_ipd:
         os.makedirs(paras["figs"], exist_ok=True)
     os.makedirs(paras["motifs"], exist_ok=True)
-    os.makedirs(paras["segs"], exist_ok=True)
+    if args.segment:
+        os.makedirs(paras["segs"], exist_ok=True)
     if args.binning:
         os.makedirs(paras["bins"], exist_ok=True)
     os.makedirs(paras["profiles"], exist_ok=True)
@@ -598,12 +603,13 @@ if __name__ == "__main__":
 
     if "motif" in args.run_steps:
         ## first depth
-        logger.info("segment contigs in parallel...")
-        record_resource_usage(
-            "segment contigs by depth",
-            depth_parallel,
-            args, paras
-        )
+        if args.segment:
+            logger.info("segment contigs in parallel...")
+            record_resource_usage(
+                "segment contigs by depth",
+                depth_parallel,
+                args, paras
+            )
         logger.info("Identifying motifs in parallel...")
         ctg_depth_dict = record_resource_usage(
             "Motif identification",
