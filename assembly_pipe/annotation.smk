@@ -19,6 +19,7 @@ rule all_annotation:
         anvi_done=f"{config['work_dir']}/anvi.done",
         drep_clu_file = f"{config['work_dir']}/dRep_out/data_tables/Cdb.csv",
         drep_finish = f"{config['work_dir']}/dRep.finish",
+        enrichment_finish = f"{config['work_dir']}/motif_enrichment.done",
 
 rule checkM:
     input:
@@ -225,10 +226,36 @@ rule get_ctg_mge:
         touch {output.mge_finish}
         """
 
+rule call_host:
+    input:
+        bam=f"{config['work_dir']}/{config['prefix']}.align.bam",
+        fa=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+        mge_file = f"{config['work_dir']}/all_mge.tsv",
+    output:
+        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation/host_summary.csv"
+    threads: config["threads"]
+    shell:
+        """
+        python /home/shuaiw/Methy/main.py \
+          --work_dir {config[work_dir]}/{config[prefix]}_methylation \
+          --whole_bam {input.bam} \
+          --whole_ref {input.fa} \
+          --read_type hifi \
+          --min_len 1000 \
+          --max_NM 3 \
+          --min_cov 1 \
+          --min_frac 0.4 \
+          --min_score 30 \
+          --min_sites 30 \
+          --run_steps host \
+          --mge_file {input.mge_file} \
+          --threads {threads} 
+        """
+
 
 rule drep:
     input:
-        mge_finish = f"{config['work_dir']}/ctg_mge.done",
+        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation/host_summary.csv",
     output:
         drep_clu_file = f"{config['work_dir']}/dRep_out/data_tables/Cdb.csv",
         drep_finish = f"{config['work_dir']}/dRep.finish",
@@ -248,6 +275,23 @@ rule drep:
         -sa 0.95 \
         -nc 0.7 {config[work_dir]}/dRep_out
         touch {output.drep_finish}
+        """
+
+rule enrichment:
+    input:
+        drep_finish = f"{config['work_dir']}/dRep.finish",
+        genome_gff = f"{config['work_dir']}/prokka/{config['prefix']}.gff",
+        
+    output:
+        enrichment_finish = f"{config['work_dir']}/motif_enrichment.done"
+    params:
+        methy_dir = f"{config['work_dir']}/{config['prefix']}_methylation"
+    shell:
+        """
+        python /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py \
+            {input.genome_gff} \
+            {params.methy_dir}
+        touch {output.enrichment_finish}
         """
 
 

@@ -489,7 +489,7 @@ def cal_AUC_depth():
         prefix = f"m64004_210929_143746.p{p}"
         result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta", prefix, "hosts")
         if p == "100":
-            result_dir = "/home/shuaiw/borg/bench/soil_zymo/run3/hosts_mge/"
+            result_dir = "/home/shuaiw/borg/bench/soil_zymo/run4/hosts/"
         frac = frac_dict[p]
         for depth_cutoff in [5]:
             recall, precision = assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff)
@@ -574,8 +574,8 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-cal_AUC()
-# cal_AUC_depth()
+# cal_AUC()
+cal_AUC_depth()
 # assess_motif()
 # host_linkage_eva()
 # for_zymo()

@@ -2,10 +2,10 @@ configfile: "config.yaml"
 
 include: "assembly.smk"
 include: "annotation.smk"
-include: "host.smk"
+# include: "host.smk"
 
 rule all:
     input:
         rules.all_assembly.input,
         rules.all_annotation.input,
-        rules.all_host.input,
+        # rules.all_host.input,
