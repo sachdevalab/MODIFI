@@ -464,37 +464,42 @@ def count_all_motif_num():
     plt.ylabel('Number of Motifs')
     plt.savefig("../../tmp/results/motif_num_distribution_all_samples.png", dpi=300, bbox_inches='tight')
 
-# fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
-# ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
-# best_ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.circular.contigs.fa"
-# best_ctg_dir = "/home/shuaiw/methylation/data/borg/contigs/circular/"
-# profile_file = "/home/shuaiw/borg/bench/soil/run1/motif_profile.csv"
-# anno_file = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_RM.rm.genes.tsv"
-# bin_file = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab"
-# gtdb_file = "/home/shuaiw/borg/contigs/GTDB/gtdbtk.all.summary.tsv"
 
-# work_dir = "/home/shuaiw/borg/bench/soil/run1/"
-# fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
-# prefix = "soil"
+if __name__ == "__main__":
+    # count_all_motif_num()
+    jaccard()
 
-# work_dir = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2"
-# fai = "/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa.fai"
-# prefix = "cow"
+    # fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
+    # ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
+    # best_ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.circular.contigs.fa"
+    # best_ctg_dir = "/home/shuaiw/methylation/data/borg/contigs/circular/"
+    # profile_file = "/home/shuaiw/borg/bench/soil/run1/motif_profile.csv"
+    # anno_file = "/home/shuaiw/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_RM.rm.genes.tsv"
+    # bin_file = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.bin.tab"
+    # gtdb_file = "/home/shuaiw/borg/contigs/GTDB/gtdbtk.all.summary.tsv"
 
-# work_dir = "/home/shuaiw/borg/paper/infant/NANO_2_INF1340011_4PB"
-# fai = "/home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffold_min1000.fa.fai"
-# prefix = "infant"
-# prefix = "SRR23446540"
-# work_dir = f"/home/shuaiw/borg/paper/run/{prefix}/{prefix}_methylation"
-# fai = f"/home/shuaiw/borg/paper/run/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
-# all_host_file = f"/home/shuaiw/borg/paper/run/{prefix}/all_host_ctgs.tsv"
+    # work_dir = "/home/shuaiw/borg/bench/soil/run1/"
+    # fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
+    # prefix = "soil"
+
+    # work_dir = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2"
+    # fai = "/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa.fai"
+    # prefix = "cow"
+
+    # work_dir = "/home/shuaiw/borg/paper/infant/NANO_2_INF1340011_4PB"
+    # fai = "/home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffold_min1000.fa.fai"
+    # prefix = "infant"
+    # prefix = "SRR23446540"
+    # work_dir = f"/home/shuaiw/borg/paper/run/{prefix}/{prefix}_methylation"
+    # fai = f"/home/shuaiw/borg/paper/run/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
+    # all_host_file = f"/home/shuaiw/borg/paper/run/{prefix}/all_host_ctgs.tsv"
 
 
-jaccard()
-# plot_MT_motif()
-# out_best_ctgs2(ref, best_ref, best_ctgs, best_ctg_dir)  ## split ctgs
+    # jaccard()
+    # plot_MT_motif()
+    # out_best_ctgs2(ref, best_ref, best_ctgs, best_ctg_dir)  ## split ctgs
 
 
-# out_best_ctgs(ref, best_ref, best_ctgs)
-# plot_heatmap(profile_file)
-# plot_strain_heatmap(profile_file)
+    # out_best_ctgs(ref, best_ref, best_ctgs)
+    # plot_heatmap(profile_file)
+    # plot_strain_heatmap(profile_file)
