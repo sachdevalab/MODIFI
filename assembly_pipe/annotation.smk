@@ -280,16 +280,15 @@ rule drep:
 rule enrichment:
     input:
         drep_finish = f"{config['work_dir']}/dRep.finish",
-        genome_gff = f"{config['work_dir']}/prokka/{config['prefix']}.gff",
-        
     output:
         enrichment_finish = f"{config['work_dir']}/motif_enrichment.done"
     params:
-        methy_dir = f"{config['work_dir']}/{config['prefix']}_methylation"
+        methy_dir = f"{config['work_dir']}/{config['prefix']}_methylation",
+        genome_gff = f"{config['work_dir']}/prokka/{config['prefix']}.gff",
     shell:
         """
         python /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py \
-            {input.genome_gff} \
+            {params.genome_gff} \
             {params.methy_dir}
         touch {output.enrichment_finish}
         """
