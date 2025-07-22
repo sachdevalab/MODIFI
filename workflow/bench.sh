@@ -1016,3 +1016,17 @@ sbatch --partition standard --wrap "snakemake -s annotation.smk  --config \
 
 python main.py   --work_dir /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice_methylation   --whole_bam xx   --whole_ref  /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice.hifiasm.p_ctg.rename.fa   --read_type hifi   --min_len 1000   --max_NM 3000   --min_cov 1   --min_frac 0.4   --min_score 30   --min_sites 30   --run_steps host   --mge_file /home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/all_mge.tsv  --threads 10
 
+sbatch  --partition standard --wrap "python main.py \
+  --work_dir /home/shuaiw/borg/paper/linkage/m64004_210929_143746.p100 \
+  --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.align.ccs.bam \
+  --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list\
+  --threads 64  " \
+  --job-name=pipeline

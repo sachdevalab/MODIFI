@@ -5,7 +5,7 @@ library(cowplot)
 library(tidyverse) 
 
 
-pdf(file="../../tmp/results/96plex_subsample.pdf", width=9, height=4, onefile=FALSE)
+pdf(file="../../tmp/results/96plex_subsample.pdf", width=10, height=4, onefile=FALSE)
 
 # Read the CSV file
 df <- read_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex.csv")
@@ -27,22 +27,22 @@ df2 <- df2 %>%
 p1 <- ggplot(df, aes(x = proportion, y = recall)) +
   geom_line() +
   geom_point(size = 2) +
-  theme_minimal() +
-  labs(x = "Proportion", y = "Recall")
+  theme_bw() +
+  labs(x = "Subsample Rate (%)", y = "Recall")
 
 p2 <- ggplot(df, aes(x = proportion, y = precision)) +
   geom_line() +
   ## add point
   geom_point(size = 2) +
-  theme_minimal() +
-  labs(x = "Proportion", y = "Precision")
+  theme_bw() +
+  labs(x = "Subsample Rate (%)", y = "Precision")
 
 df2$proportion <- as.factor(df2$proportion)
 ## add a boxplot for df2, x=proportion, y=depth
 p3 <- ggplot(df2, aes(x = proportion, y = depth )) +
   geom_boxplot() +
-  theme_minimal() +
-  labs(x = "Proportion", y = "Depth") +
+  theme_bw() +
+  labs(x = "Subsample Rate (%)", y = "Depth") +
   ylim(0, 100) 
 ## print mean and median depth for each proportion
 df2 %>%
@@ -54,9 +54,9 @@ df2 %>%
 
 # Combine plots without legends
 prow <- plot_grid(
-  p3 + theme(legend.position = "none"),
   p1 + theme(legend.position = "none"),
   p2 + theme(legend.position = "none"),
+  p3 + theme(legend.position = "none"),
   align = 'vh',
   hjust = -1,
   nrow = 1

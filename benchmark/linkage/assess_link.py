@@ -416,6 +416,20 @@ def get_depth(result_dir):
     df = pd.read_csv(depth_file)
     return df
 
+def get_depth_meta(result_dir):
+    depth_file = os.path.join(result_dir, "../mean_depth.csv")
+    df = pd.read_csv(depth_file)
+    ## store 96plex contigs
+    fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
+    contig_list = []
+    with open(fai, 'r') as f:
+        for line in f:
+            contig = line.strip().split("\t")[0]
+            contig_list.append(contig)
+    df = df[df['contig'].isin(contig_list)]
+    # print (df)
+    return df
+
 
 def cal_AUC(): 
     fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
@@ -461,7 +475,7 @@ def cal_AUC_depth():
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.1_cov1_s30/hosts/"
     cutoff = 0.45
     data = []
-    dp_df_all = []
+    dp_df_all = pd.DataFrame()
 
     frac_dict = {
         "05": 1.72,
@@ -477,17 +491,23 @@ def cal_AUC_depth():
         if p == "100":
             result_dir = "/home/shuaiw/borg/bench/soil_zymo/run3/hosts_mge/"
         frac = frac_dict[p]
-        for depth_cutoff in [0, 5, 10]:
+        for depth_cutoff in [5]:
             recall, precision = assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff)
             print (p, recall, precision, "depth_cutoff", depth_cutoff)
 
             data.append([p, recall, precision, 1-precision, depth_cutoff, frac])
+        dp_df = get_depth_meta(result_dir)
+        ## add fraction column to dp_df
+        dp_df['fraction'] = frac
+        dp_df_all = pd.concat([dp_df_all, dp_df])
     ## plot the AUC curve
 
     
     df = pd.DataFrame(data, columns=['proportion', 'recall', 'precision', 'FPR', 'depth_cutoff', 'fraction'])
     print (df)
     df.to_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex.csv", index = False)
+    # covert dp_df_all to one df
+    dp_df_all.to_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex_meta_depth.csv", index = False)
 
 
 def assess_motif(dir):
@@ -554,8 +574,8 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-# cal_AUC()
-cal_AUC_depth()
+cal_AUC()
+# cal_AUC_depth()
 # assess_motif()
 # host_linkage_eva()
 # for_zymo()
