@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 import sys
 import argparse
-from adjustText import adjust_text
+# from adjustText import adjust_text
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
@@ -22,10 +22,10 @@ from bin import bin_contigs_to_fastas
 
 # sys.setrecursionlimit(20000)
 
-try:
-    import fastcluster
-except ImportError:
-    print("fastcluster not installed. Using scipy for clustering.")
+# try:
+#     import fastcluster
+# except ImportError:
+#     print("fastcluster not installed. Using scipy for clustering.")
 
 def load_contigs():
     host_file = '/home/shuaiw/Methy/borg_test/borg.csv'
@@ -369,7 +369,7 @@ def TSE(df, cluster_fig):
         texts = []
         for i, label in enumerate(df.columns):
             texts.append(scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=7))
-        adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
+        # adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
     plt.savefig(cluster_fig)
 
 def PCA_plot(df, pca_fig):
@@ -414,7 +414,7 @@ def PCA_plot(df, pca_fig):
             # print (i, label)
             if i < len(X_embedded):
                 texts.append(scatter_plot.text(X_embedded[i, 0], X_embedded[i, 1], label, fontsize=7))
-        adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
+        # adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
     plt.savefig(pca_fig)
 
 def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_frac, whole_ref, bin_file=None, threads=1, bin_flag = False):

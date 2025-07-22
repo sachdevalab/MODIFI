@@ -216,9 +216,15 @@ def read_drep_cluster(drep_clu_file):
     return multiple_strain_ctg, ctg_phylum
 
 def jaccard():
-    drep_clu_file = "/home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out/data_tables/Cdb.csv"
-    profile_file = "/home/shuaiw/borg/bench/soil/run1/motif_profile.csv"
-    depth_file = "/home/shuaiw/borg/bench/soil/run1/mean_depth.csv"
+    # drep_clu_file = "/home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out/data_tables/Cdb.csv"
+    # profile_file = "/home/shuaiw/borg/bench/soil/run1/motif_profile.csv"
+    # depth_file = "/home/shuaiw/borg/bench/soil/run1/mean_depth.csv"
+
+    prefix = "ERR12723529"
+    work_dir = "/home/shuaiw/borg/paper/run"
+    drep_clu_file = os.path.join(work_dir, prefix, "dRep_out", "data_tables", "Cdb.csv")
+    profile_file = os.path.join(work_dir, prefix, f"{prefix}_methylation", "motif_profile.csv")
+    depth_file = os.path.join(work_dir, prefix, f"{prefix}_methylation", "mean_depth.csv")
 
     multiple_strain_ctg, ctg_phylum = read_drep_cluster(drep_clu_file)
     ## read motif profile file

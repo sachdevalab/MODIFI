@@ -14,7 +14,7 @@ matplotlib.use('Agg')  # MUST come before importing pyplot
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.ticker import MaxNLocator
-import regex as re
+# import regex as re
 
 IUPAC_CODES = {
     'A': 'A',
