@@ -40,7 +40,7 @@ p2 <- ggplot(df, aes(x = proportion, y = precision)) +
 df2$proportion <- as.factor(df2$proportion)
 ## add a boxplot for df2, x=proportion, y=depth
 p3 <- ggplot(df2, aes(x = proportion, y = depth )) +
-  geom_boxplot() +
+  geom_boxplot(outlier.shape = NA) +
   theme_bw() +
   labs(x = "Subsample Rate (%)", y = "Depth") +
   ylim(0, 100) 
