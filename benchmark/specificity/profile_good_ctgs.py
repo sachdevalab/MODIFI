@@ -28,7 +28,7 @@ def get_best_ctg(depth_file, fai, min_len = 1000000):
             if ctg[-1] == "C" and length >= min_len and ctg in good_depth:
                 best_ctgs.append(ctg)
     print (f"Total {len(best_ctgs)} contigs with length >= {min_len} found.")
-    return best_ctgs
+    return best_ctgs, good_depth
 
 def get_drep_motifs():
     drep_motifs = "/home/shuaiw/borg/bench/soil/run1/test.motifs_drep.csv"
@@ -194,8 +194,8 @@ def get_ctg_sim2():
     # print (drep_sim_dict)
     return drep_sim_dict
 
-def read_drep_cluster():
-    drep_clu_file = "/home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out/data_tables/Cdb.csv"
+def read_drep_cluster(drep_clu_file):
+    
     drep_clu_dict = {}
     df = pd.read_csv(drep_clu_file)
     for index, row in df.iterrows():
@@ -214,6 +214,53 @@ def read_drep_cluster():
             ctg_phylum[ctg] = clu
     print ("multiple_strain_ctg", multiple_strain_ctg)
     return multiple_strain_ctg, ctg_phylum
+
+def jaccard():
+    drep_clu_file = "/home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out/data_tables/Cdb.csv"
+    profile_file = "/home/shuaiw/borg/bench/soil/run1/motif_profile.csv"
+    depth_file = "/home/shuaiw/borg/bench/soil/run1/mean_depth.csv"
+
+    multiple_strain_ctg, ctg_phylum = read_drep_cluster(drep_clu_file)
+    ## read motif profile file
+    profiles = pd.read_csv(profile_file, index_col=0)
+    ## binary it by 0.5
+    profiles_bin = (profiles >= 0.5).astype(int)
+    profiles_bin = profiles_bin.T
+    ## calculate Jaccard similarity in the same cluster and different clusters
+    jaccard_similarities = []
+    ctg_list = list(multiple_strain_ctg.keys())
+    # print (profiles_bin)
+    for i in range(len(ctg_list)):
+        for j in range(i + 1, len(ctg_list)):
+            ctg1 = ctg_list[i]
+            ctg2 = ctg_list[j]
+            ## skip if ctg1 not in profiles_bin or ctg2 not in profiles_bin
+            if ctg1 not in profiles_bin.index or ctg2 not in profiles_bin.index:
+                continue
+            if ctg1 == ctg2:
+                continue
+            # print (profiles_bin.loc[ctg1])
+            intersection = np.sum((profiles_bin.loc[ctg1] & profiles_bin.loc[ctg2]).astype(int))
+            union = np.sum((profiles_bin.loc[ctg1] | profiles_bin.loc[ctg2]).astype(int))
+            if union == 0:
+                continue
+            jaccard_similarity = intersection / union if union > 0 else 0
+            if multiple_strain_ctg[ctg1] != multiple_strain_ctg[ctg2]:
+                # Calculate Jaccard similarity
+                jaccard_similarities.append([jaccard_similarity, "diff"])
+            else:
+                jaccard_similarities.append([jaccard_similarity, "same"])
+    print (f"Total {len(jaccard_similarities)} Jaccard similarities calculated.")
+    ## plot the Jaccard similarities
+    df_jaccard = pd.DataFrame(jaccard_similarities, columns=['jaccard_similarity', 'cluster_type'])
+    plt.figure(figsize=(7, 6))
+    sns.boxplot(data=df_jaccard, x='cluster_type', y='jaccard_similarity', palette='Set2')
+    plt.title('Jaccard Similarity of Motifs in Multiple Strain Clusters')
+    plt.xlabel('Cluster Type')
+    plt.ylabel('Jaccard Similarity')
+    plt.savefig("../../tmp/results/jaccard_similarity.png", dpi=300, bbox_inches='tight')
+    plt.clf()   
+    
 
 def get_phylum(best_ctgs):
     import re
@@ -277,6 +324,7 @@ def count_motifs(depth_file, best_ctgs, work_dir, prefix):
     ## read depth file
     depth_df = pd.read_csv(depth_file)
     good_depth = {}
+    data = []
     for index, row in depth_df.iterrows():
         if row['depth'] >= 10:
             good_depth[row['contig']] = row['depth']
@@ -297,22 +345,24 @@ def count_motifs(depth_file, best_ctgs, work_dir, prefix):
             if unique_motifs_num > 0:
                 has_motif_ctg_num += 1
             motif_num_list.append(unique_motifs_num)
+            data.append([prefix,unique_motifs_num ])
         else:
             print(f"No motifs found for {ctg}.")
-    print (f"Total {has_motif_ctg_num} contigs with motifs found in the best contigs with depth >= 10.")
-    print (has_motif_ctg_num/ len(best_depth_ctg) * 100, "% of the best contigs with depth >= 10 have motifs.")
-    ## print mean and median of motif numbers
-    print(f"Mean motif number: {np.mean(motif_num_list)}")
-    print(f"Median motif number: {np.median(motif_num_list)}")
-    print(f"Max motif number: {np.max(motif_num_list)}")
-    print(f"Min motif number: {np.min(motif_num_list)}")
-    ## plot the distribution of motif numbers
-    plt.figure(figsize=(10, 6))
-    plt.hist(motif_num_list, bins=50, color='blue', alpha=0.7)
-    plt.title('Distribution of Motif Numbers in Best Contigs')
-    plt.xlabel('Number of Motifs')
-    plt.ylabel('Frequency')
-    plt.savefig(os.path.join("../../tmp/results", f"motif_num_distribution_{prefix}.png"), dpi=300, bbox_inches='tight')
+    # print (f"Total {has_motif_ctg_num} contigs with motifs found in the best contigs with depth >= 10.")
+    # print (has_motif_ctg_num/ len(best_depth_ctg) * 100, "% of the best contigs with depth >= 10 have motifs.")
+    # ## print mean and median of motif numbers
+    # print(f"Mean motif number: {np.mean(motif_num_list)}")
+    # print(f"Median motif number: {np.median(motif_num_list)}")
+    # print(f"Max motif number: {np.max(motif_num_list)}")
+    # print(f"Min motif number: {np.min(motif_num_list)}")
+    # ## plot the distribution of motif numbers
+    # plt.figure(figsize=(10, 6))
+    # plt.hist(motif_num_list, bins=50, color='blue', alpha=0.7)
+    # plt.title('Distribution of Motif Numbers in Best Contigs')
+    # plt.xlabel('Number of Motifs')
+    # plt.ylabel('Frequency')
+    # plt.savefig(os.path.join("../../tmp/results", f"motif_num_distribution_{prefix}.png"), dpi=300, bbox_inches='tight')
+    return data
 
 def count_MT_num(anno_file):
     
@@ -365,6 +415,55 @@ def plot_MT_motif():
     plt.ylabel('Number of Motifs')
     plt.savefig(os.path.join("../../tmp/results", "MT_motif_num_distribution.png"), dpi=300, bbox_inches='tight')
 
+def read_all_host(all_host_file, good_depth):
+    """
+    Read all host contigs from a file.
+    """
+    all_host_ctgs = {}
+    with open(all_host_file, "r") as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            ctg, ctg, domain = line.strip().split("\t")
+            if ctg not in good_depth:
+                continue
+            all_host_ctgs[ctg] = domain
+    return all_host_ctgs
+
+def count_all_motif_num():
+    all_data = []
+    all_dir = "/home/shuaiw/borg/paper/run/"
+    for my_dir in os.listdir(all_dir):
+        prefix = my_dir
+        print (f"Processing {prefix}...")
+        work_dir = f"/home/shuaiw/borg/paper/run/{prefix}/{prefix}_methylation"
+        fai = f"/home/shuaiw/borg/paper/run/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
+        all_host_file = f"/home/shuaiw/borg/paper/run/{prefix}/all_host_ctgs.tsv"
+        ## skip if all_host_file does not exist
+        if not os.path.exists(all_host_file):
+            print(f"Skipping {prefix} as all_host_file does not exist.")
+            continue
+        depth_file = os.path.join(work_dir, "mean_depth.csv")
+        best_ctgs, good_depth = get_best_ctg(depth_file, fai)
+        best_ctgs = read_all_host(all_host_file, good_depth)
+        print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
+        sample_data = count_motifs(depth_file, best_ctgs, work_dir, prefix)
+        if not sample_data:
+            print(f"No motifs found for {prefix}.")
+            continue
+        all_data += sample_data
+
+    ## convert to df
+    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num'])
+    ## plot boxplot where sample is on x-axis and motif_num is on y-axis
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(data=df_all_data, x='sample', y='motif_num')
+    plt.xticks(rotation=90)
+    plt.title('Distribution of Motif Numbers Across Samples')
+    plt.xlabel('Sample')
+    plt.ylabel('Number of Motifs')
+    plt.savefig("../../tmp/results/motif_num_distribution_all_samples.png", dpi=300, bbox_inches='tight')
+
 # fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
 # ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
 # best_ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.circular.contigs.fa"
@@ -382,14 +481,16 @@ def plot_MT_motif():
 # fai = "/home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa.fai"
 # prefix = "cow"
 
-work_dir = "/home/shuaiw/borg/paper/infant/NANO_2_INF1340011_4PB"
-fai = "/home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffold_min1000.fa.fai"
-prefix = "infant"
+# work_dir = "/home/shuaiw/borg/paper/infant/NANO_2_INF1340011_4PB"
+# fai = "/home/shuaiw/borg/allison/NANO_2_INF1340011_4PB_HR_HIFIASM_META_scaffold_min1000.fa.fai"
+# prefix = "infant"
+# prefix = "SRR23446540"
+# work_dir = f"/home/shuaiw/borg/paper/run/{prefix}/{prefix}_methylation"
+# fai = f"/home/shuaiw/borg/paper/run/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
+# all_host_file = f"/home/shuaiw/borg/paper/run/{prefix}/all_host_ctgs.tsv"
 
-depth_file = os.path.join(work_dir, "mean_depth.csv")
-best_ctgs = get_best_ctg(depth_file, fai)
-count_motifs(depth_file, best_ctgs, work_dir, prefix)
 
+jaccard()
 # plot_MT_motif()
 # out_best_ctgs2(ref, best_ref, best_ctgs, best_ctg_dir)  ## split ctgs
 

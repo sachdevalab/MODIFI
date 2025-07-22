@@ -100,7 +100,7 @@ rule map_reads_to_assembly:
         bam = config["hifi_bam"],
         # checkm_finish = f"{config['work_dir']}/{config['prefix']}.checkm.finish"
     output:
-        align_bam = temp(f"{config['work_dir']}/{config['prefix']}.align.bam"),
+        align_bam = f"{config['work_dir']}/{config['prefix']}.align.bam",
         bai=f"{config['work_dir']}/{config['prefix']}.align.bam.bai"
     threads: config["threads"]
     shell:
@@ -136,7 +136,7 @@ rule call_methylation:
           --min_frac 0.4 \
           --min_score 30 \
           --min_sites 30 \
+          --annotate_rm \
           --threads {threads} 
         touch {output.methy_finish}
-
         """

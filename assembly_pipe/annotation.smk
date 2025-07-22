@@ -17,6 +17,8 @@ rule all_annotation:
         finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish",
         checkv_finish=f"{config['work_dir']}/checkV.done",
         anvi_done=f"{config['work_dir']}/anvi.done",
+        drep_clu_file = f"{config['work_dir']}/dRep_out/data_tables/Cdb.csv",
+        drep_finish = f"{config['work_dir']}/dRep.finish",
 
 rule checkM:
     input:
@@ -211,7 +213,7 @@ rule get_ctg_mge:
     input:
         prokka_finish = f"{config['work_dir']}/prokka/prokka.finish"
     output:
-        finish = f"{config['work_dir']}/ctg_mge.done",
+        mge_finish = f"{config['work_dir']}/ctg_mge.done",
         mge_file = f"{config['work_dir']}/all_mge.tsv",
         host_file = f"{config['work_dir']}/all_host_ctgs.tsv"
     params:
@@ -220,8 +222,34 @@ rule get_ctg_mge:
     shell:
         """
         python merge_MGEs.py {params.output_dir} {params.prefix}
-        touch {output.finish}
+        touch {output.mge_finish}
         """
+
+
+rule drep:
+    input:
+        mge_finish = f"{config['work_dir']}/ctg_mge.done",
+    output:
+        drep_clu_file = f"{config['work_dir']}/dRep_out/data_tables/Cdb.csv",
+        drep_finish = f"{config['work_dir']}/dRep.finish",
+    params:
+        genome_list = f"{config['work_dir']}/genome.list",
+    threads: config["threads"]
+    shell:
+        """
+        ls {config[work_dir]}/bins/*.fasta > {params.genome_list}
+        dRep dereplicate \
+        -p {threads} \
+        -g {params.genome_list} \
+        -comp 50 \
+        -con 10 \
+        --S_algorithm skani \
+        -ms 10000 \
+        -sa 0.95 \
+        -nc 0.7 {config[work_dir]}/dRep_out
+        touch {output.drep_finish}
+        """
+
 
 ### motif enrichment analysis
 # /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py

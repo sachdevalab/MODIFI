@@ -424,7 +424,7 @@ python cal_invasion_score.py \
 
 
  sbatch  --partition standard --wrap "python main.py \
-  --work_dir /home/shuaiw/borg/bench/soil_zymo/run2 \
+  --work_dir /home/shuaiw/borg/bench/soil_zymo/run3 \
   --whole_bam /home/shuaiw/borg/bench/soil_zymo/soil_zymo.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
   --read_type hifi \
@@ -435,7 +435,6 @@ python cal_invasion_score.py \
   --min_score 30 \
   --min_sites 30 \
   --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
-  --run_steps profile merge host\
   --threads 64 "\
   --job-name=soil2
 

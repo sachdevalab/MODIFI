@@ -456,7 +456,7 @@ def cal_AUC_depth():
     plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/hosts/"
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3/hosts/"
-    result_dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec4/hosts/"
+    # result_dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec4/hosts/"
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/hosts/"
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.1_cov1_s30/hosts/"
     cutoff = 0.45
@@ -554,8 +554,8 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-cal_AUC()
-# cal_AUC_depth()
+# cal_AUC()
+cal_AUC_depth()
 # assess_motif()
 # host_linkage_eva()
 # for_zymo()
