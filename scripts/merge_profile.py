@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 import sys
 import argparse
-# from adjustText import adjust_text
+from adjustText import adjust_text
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
