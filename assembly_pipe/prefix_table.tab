@@ -1,3 +1,4 @@
+m64004_210929_143746	96plex	/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam
 RuReacBro_20230708_11_72h_200ppm_r1_LR	cow_bioreactor_1	/home/shuaiw/borg/paper/aws/cow_bioreactor/RuReacBro_20230708_11_72h_200ppm_r1_LR.hifi_reads.bam
 RuReacBro_20230708_26_72h_NC_r4_LR	cow_bioreactor_2	/home/shuaiw/borg/paper/aws/cow_bioreactor/RuReacBro_20230708_26_72h_NC_r4_LR.hifi_reads.bam
 XSDIA_20240410_R84050_PL8707-001_1-1-A01_bc2007-bc2007	cow_bioreactor_3	/home/shuaiw/borg/paper/aws/cow_bioreactor/XSDIA_20240410_R84050_PL8707-001_1-1-A01_bc2007-bc2007.hifi_reads.bam

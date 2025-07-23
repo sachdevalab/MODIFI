@@ -43,7 +43,7 @@ p3 <- ggplot(df2, aes(x = proportion, y = depth )) +
   geom_boxplot(outlier.shape = NA) +
   theme_bw() +
   labs(x = "Subsample Rate (%)", y = "Depth") +
-  ylim(0, 100) 
+  ylim(0, 220) 
 ## print mean and median depth for each proportion
 df2 %>%
   group_by(proportion) %>%

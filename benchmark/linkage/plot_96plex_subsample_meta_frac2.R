@@ -6,7 +6,7 @@ library(tidyverse)
 
 
 # Read the CSV file
-df <- read_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex.csv")
+df <- read_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex_meta.csv")
 df_dp <- read_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex_meta_depth.csv")
 df
 df$recall
@@ -44,7 +44,7 @@ p3 <- ggplot(df_dp, aes(x = fraction, y = depth)) +
   geom_boxplot(outlier.shape = NA) +
   theme_bw() +
   labs(x = "96plex fraction (%)", y = "Depth") +
-  ylim(0, 150)
+  ylim(0, 220)
 
 
 # # Combine plots without legends

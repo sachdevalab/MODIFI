@@ -408,7 +408,8 @@ def assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff=0):
     else:
         precision = correct_num / guess_num
     recall = correct_num / len(plasmid_host_dict)
-    print (correct_num, "correct_num", guess_num, "guess_num", recall, "recall", precision, "precision", len(plasmid_host_dict))
+    print ("all", len(plasmid_host_dict), "correct_num", correct_num, "guess_num", guess_num,\
+            "recall", recall, "precision", precision, "len", len(plasmid_host_dict))
     return (recall, precision)
 
 def get_depth(result_dir):
@@ -430,10 +431,24 @@ def get_depth_meta(result_dir):
     # print (df)
     return df
 
+def get_new_host(plasmid_list):
+    plasmid_host_dict = {}
+    df = pd.read_csv(plasmid_list)
+    for index, row in df.iterrows():
+        plasmid = row['seq_name']
+        host_str = row['host']
+
+        plasmid_host_dict[plasmid] = ['', '', host_str.split(";")]
+    return plasmid_host_dict
+
 
 def cal_AUC(): 
     fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
-    plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
+    plasmid_list_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"
+    # plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
+    # print (plasmid_host_dict)
+    plasmid_host_dict = get_new_host(plasmid_list_file)
+    print (len(plasmid_host_dict), "plasmid host dict")
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/hosts/"
     # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3/hosts/"
     result_dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec4/hosts/"
@@ -443,7 +458,7 @@ def cal_AUC():
     data = []
     dp_df_all = []
 
-    for p in ["10", "20", "30", "50", "05"]:
+    for p in ["10", "20", "30", "50", "05", "100"]:
         prefix = f"m64004_210929_143746.p{p}"
         result_dir = os.path.join("/home/shuaiw/borg/paper/linkage", prefix, "hosts")
         recall, precision = assess_linkage(result_dir, cutoff, plasmid_host_dict)
@@ -505,7 +520,7 @@ def cal_AUC_depth():
     
     df = pd.DataFrame(data, columns=['proportion', 'recall', 'precision', 'FPR', 'depth_cutoff', 'fraction'])
     print (df)
-    df.to_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex.csv", index = False)
+    df.to_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex_meta.csv", index = False)
     # covert dp_df_all to one df
     dp_df_all.to_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex_meta_depth.csv", index = False)
 

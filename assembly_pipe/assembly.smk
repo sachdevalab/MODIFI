@@ -101,7 +101,8 @@ rule map_reads_to_assembly:
         # checkm_finish = f"{config['work_dir']}/{config['prefix']}.checkm.finish"
     output:
         align_bam = f"{config['work_dir']}/{config['prefix']}.align.bam",
-        bai=f"{config['work_dir']}/{config['prefix']}.align.bam.bai"
+        bai=f"{config['work_dir']}/{config['prefix']}.align.bam.bai",
+        read_count = f"{config['work_dir']}/{config['prefix']}.align.count.csv",
     threads: config["threads"]
     shell:
         """
@@ -112,6 +113,7 @@ rule map_reads_to_assembly:
 
         samtools index {output.align_bam}
         /home/shuaiw/smrtlink/pbindex {output.align_bam}
+        python /home/shuaiw/Methy/assembly_pipe/count_assembly.py {config[prefix]} {config[work_dir]} {input.bam}
         """
 
 rule call_methylation:
