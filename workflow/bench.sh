@@ -1030,3 +1030,29 @@ sbatch  --partition standard --wrap "python main.py \
   --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list\
   --threads 64  " \
   --job-name=pipeline
+
+
+sbatch  --partition standard --wrap "python main.py \
+  --work_dir /home/shuaiw/borg/paper/run/ERR5621427/methy3 \
+  --whole_bam /home/shuaiw/borg/paper/run/ERR5621427/ERR5621427.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run/ERR5621427/ERR5621427.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000 \
+  --min_cov 1 \
+  --min_ctg_cov 0 \
+  --segment \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --threads 64  " \
+  --job-name=pipeline
+
+
+
+  sbatch --partition standard --wrap "snakemake --config \
+      hifi_bam=/home/shuaiw/borg/paper/aws/sludge.merge3.bam \
+      prefix=sludge_merge3 \
+      work_dir=/home/shuaiw/borg/paper/run/sludge_merge3" \
+      --job-name=sludge_merge3
+

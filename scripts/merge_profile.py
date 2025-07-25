@@ -459,6 +459,9 @@ def merge_profile_worker(work_dir, heat_map, profile_list, total_profile, min_fr
 
     else:
         print ("no motif identified")
+        ## construct an empty summary file
+        with open(summary_file, "w") as f:
+            print ("No motif identified after filtering", file=f)
         ## construct an  empty figure
         plt.figure()
         plt.text(0.5, 0.5, 'No motif identified', horizontalalignment='center', verticalalignment='center')
