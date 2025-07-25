@@ -10,15 +10,14 @@ rule all_annotation:
         genomad_finish=f"{config['work_dir']}/genomad.done",
         virsorter2=f"{config['work_dir']}/virsorter2.done",
         vibrantr=f"{config['work_dir']}/vibrant.done",
-        faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
-        dram_finish = f"{config['work_dir']}/dram2/dram.finish",
-        prokka_finish = f"{config['work_dir']}/prokka/prokka.finish",
         ctg_mge = f"{config['work_dir']}/ctg_mge.done",
-        finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish",
         checkv_finish=f"{config['work_dir']}/checkV.done",
-        anvi_done=f"{config['work_dir']}/anvi.done",
-        drep_clu_file = f"{config['work_dir']}/dRep_out/data_tables/Cdb.csv",
+        # anvi_done=f"{config['work_dir']}/anvi.done",
+        # dram_finish = f"{config['work_dir']}/dram2/dram.finish",
+        # prokka_finish = f"{config['work_dir']}/prokka/prokka.finish",
+        # finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish",
         drep_finish = f"{config['work_dir']}/dRep.finish",
+        drep_99_finish = f"{config['work_dir']}/dRep_99.finish",
         enrichment_finish = f"{config['work_dir']}/motif_enrichment.done",
 
 rule checkM:
@@ -119,100 +118,12 @@ rule vibrant:
         touch {output.vibrantr}
         """
 
-## plasX to call plasmids
-rule anvi:
-    input:
-        vibrantr=f"{config['work_dir']}/vibrant.done",
-        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
-    output:
-        anvi_done=f"{config['work_dir']}/anvi.done"
-    params:
-        prefix=f"{config['work_dir']}/{config['prefix']}",
-    threads: config["threads"]
-    shell:
-        """
-        anvi-gen-contigs-database -L 0 -T {threads} --project-name {params.prefix} -f {input.fasta} -o {params.prefix}.db
 
-        anvi-export-gene-calls --gene-caller prodigal -c {params.prefix}.db -o {params.prefix}-gene-calls.txt
-
-        anvi-run-ncbi-cogs -T {threads} --cog-version COG14 --cog-data-dir /home/shuaiw/borg/paper/anvio_db/COG_2014 -c {params.prefix}.db
-
-        anvi-run-pfams -T {threads} --pfam-data-dir /home/shuaiw/borg/paper/anvio_db/Pfam_v32 -c {params.prefix}.db
-
-        anvi-export-functions --annotation-sources COG14_FUNCTION,Pfam -c {params.prefix}.db -o {params.prefix}-cogs-and-pfams.txt
-
-        touch {output.anvi_done}
-        """
-## use pyrodigal-gv set threads
-rule prodigal_gv:
-    input:
-        anvi_done=f"{config['work_dir']}/anvi.done",
-        vibrantr=f"{config['work_dir']}/vibrant.done",
-        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
-    output:
-        faa=f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
-        finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish"
-    threads: config["threads"]
-    shell:
-        """
-        pyrodigal-gv -p meta -m -i {input.fasta} -a {output.faa} -j {threads}
-        touch {output.finish}
-        """
-
-rule dram:
-    input:
-        faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
-
-    output:
-        f"{config['work_dir']}/dram2/annotations.tsv",
-        dram_finish = f"{config['work_dir']}/dram2/dram.finish"
-
-    params:
-        output_dir =  f"{config['work_dir']}/dram2",
-
-    threads:
-        config["threads"]
-
-    shell:
-        """
-        rm -r {params.output_dir}
-        DRAM.py annotate_genes \
-        -i {input.faa} \
-        -o {params.output_dir} \
-        --threads {threads} \
-
-        touch {output.dram_finish}
-        """
-
-#### how to do rRNA and tRNA from rohan
-rule prokka:
-    input:
-        faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
-        fasta = f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
-        dram_finish = f"{config['work_dir']}/dram2/dram.finish",
-    output:
-        faa = f"{config['work_dir']}/prokka/{config['prefix']}.faa",
-        tsv = f"{config['work_dir']}/prokka/{config['prefix']}.tsv",
-        prokka_finish = f"{config['work_dir']}/prokka/prokka.finish"
-
-    params:
-        output_dir = f"{config['work_dir']}/prokka",
-        prefix = config["prefix"],
-
-    threads:
-        config["threads"]
-
-    shell:
-        """
-        prokka --outdir {params.output_dir} --prefix {params.prefix} \
-            --cpus {threads} --force \
-            --proteins {input.faa} {input.fasta}
-        touch {output.prokka_finish}
-        """
 
 rule get_ctg_mge:
     input:
-        prokka_finish = f"{config['work_dir']}/prokka/prokka.finish"
+        # prokka_finish = f"{config['work_dir']}/prokka/prokka.finish",
+        vibrantr=f"{config['work_dir']}/vibrant.done"
     output:
         mge_finish = f"{config['work_dir']}/ctg_mge.done",
         mge_file = f"{config['work_dir']}/all_mge.tsv",
@@ -277,9 +188,35 @@ rule drep:
         touch {output.drep_finish}
         """
 
+rule dRep_99:
+    input:
+        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation/host_summary.csv",
+        drep_finish = f"{config['work_dir']}/dRep.finish",
+    output:
+        drep_clu_file = f"{config['work_dir']}/dRep_out_99/data_tables/Cdb.csv",
+        drep_99_finish = f"{config['work_dir']}/dRep_99.finish",
+    params:
+        genome_list = f"{config['work_dir']}/genome.list",
+    threads: config["threads"]
+    shell:
+        """
+        ls {config[work_dir]}/bins/*.fasta > {params.genome_list}
+        dRep dereplicate \
+        -p {threads} \
+        -g {params.genome_list} \
+        -comp 50 \
+        -con 10 \
+        --S_algorithm skani \
+        -ms 10000 \
+        -sa 0.99 \
+        -nc 0.7 {config[work_dir]}/dRep_out_99
+        touch {output.drep_99_finish}
+        """
+
 rule enrichment:
     input:
         drep_finish = f"{config['work_dir']}/dRep.finish",
+        drep_99_finish = f"{config['work_dir']}/dRep_99.finish",
     output:
         enrichment_finish = f"{config['work_dir']}/motif_enrichment.done"
     params:
@@ -294,5 +231,93 @@ rule enrichment:
         """
 
 
-### motif enrichment analysis
-# /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py
+## plasX to call plasmids
+# rule anvi:
+#     input:
+#         vibrantr=f"{config['work_dir']}/vibrant.done",
+#         fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+#     output:
+#         anvi_done=f"{config['work_dir']}/anvi.done"
+#     params:
+#         prefix=f"{config['work_dir']}/{config['prefix']}",
+#     threads: config["threads"]
+#     shell:
+#         """
+#         anvi-gen-contigs-database -L 0 -T {threads} --project-name {params.prefix} -f {input.fasta} -o {params.prefix}.db
+
+#         anvi-export-gene-calls --gene-caller prodigal -c {params.prefix}.db -o {params.prefix}-gene-calls.txt
+
+#         anvi-run-ncbi-cogs -T {threads} --cog-version COG14 --cog-data-dir /home/shuaiw/borg/paper/anvio_db/COG_2014 -c {params.prefix}.db
+
+#         anvi-run-pfams -T {threads} --pfam-data-dir /home/shuaiw/borg/paper/anvio_db/Pfam_v32 -c {params.prefix}.db
+
+#         anvi-export-functions --annotation-sources COG14_FUNCTION,Pfam -c {params.prefix}.db -o {params.prefix}-cogs-and-pfams.txt
+
+#         touch {output.anvi_done}
+#         """
+# ## use pyrodigal-gv set threads
+# rule prodigal_gv:
+#     input:
+#         anvi_done=f"{config['work_dir']}/anvi.done",
+#         vibrantr=f"{config['work_dir']}/vibrant.done",
+#         fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+#     output:
+#         faa=f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
+#         finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish"
+#     threads: config["threads"]
+#     shell:
+#         """
+#         pyrodigal-gv -p meta -m -i {input.fasta} -a {output.faa} -j {threads}
+#         touch {output.finish}
+#         """
+
+# rule dram:
+#     input:
+#         faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
+
+#     output:
+#         f"{config['work_dir']}/dram2/annotations.tsv",
+#         dram_finish = f"{config['work_dir']}/dram2/dram.finish"
+
+#     params:
+#         output_dir =  f"{config['work_dir']}/dram2",
+
+#     threads:
+#         config["threads"]
+
+#     shell:
+#         """
+#         rm -r {params.output_dir}
+#         DRAM.py annotate_genes \
+#         -i {input.faa} \
+#         -o {params.output_dir} \
+#         --threads {threads} \
+
+#         touch {output.dram_finish}
+#         """
+
+# #### how to do rRNA and tRNA from rohan
+# rule prokka:
+#     input:
+#         faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
+#         fasta = f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+#         dram_finish = f"{config['work_dir']}/dram2/dram.finish",
+#     output:
+#         faa = f"{config['work_dir']}/prokka/{config['prefix']}.faa",
+#         tsv = f"{config['work_dir']}/prokka/{config['prefix']}.tsv",
+#         prokka_finish = f"{config['work_dir']}/prokka/prokka.finish"
+
+#     params:
+#         output_dir = f"{config['work_dir']}/prokka",
+#         prefix = config["prefix"],
+
+#     threads:
+#         config["threads"]
+
+#     shell:
+#         """
+#         prokka --outdir {params.output_dir} --prefix {params.prefix} \
+#             --cpus {threads} --force \
+#             --proteins {input.faa} {input.fasta}
+#         touch {output.prokka_finish}
+#         """
