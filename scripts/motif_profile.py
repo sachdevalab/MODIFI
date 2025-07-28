@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from Bio.SeqUtils import nt_search
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -47,12 +49,6 @@ def read_ref(ref):
 
 def motif_to_regex(motif):
     return ''.join(IUPAC_CODES.get(base.upper(), base) for base in motif)
-
-
-# def find_motifs_regex(sequence, motif):
-#     # Convert motif to regex pattern
-#     pattern = re.compile(motif)
-#     return [match.start() for match in pattern.finditer(sequence)]
 
 def find_motifs_regex(sequence, motif):
     ## accept degeneratory codes

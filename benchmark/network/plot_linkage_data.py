@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 from networkx.algorithms import bipartite
 
-def get_edge(host_sum_file, gml, plasmid_types={}, virus_types={}, bin2anno_dict={}, cutoff=0.45):
+def get_edge(host_sum_file, MGE_type_dict, bin2anno_dict):
     """
     Get the edge data from the host summary file.
     """
@@ -15,26 +15,15 @@ def get_edge(host_sum_file, gml, plasmid_types={}, virus_types={}, bin2anno_dict
     G = nx.Graph()
     ## get node file
     for index, row in host_sum.iterrows():
-        if row['final_score'] < cutoff:
+        if row["pvalue"] >= 0.05:
             continue
-        if row['MGE'] in plasmid_types:
-            G.add_node(row['MGE'], label=row['MGE'], type="Plasmid")
-        elif row['MGE'] in virus_types:
-            G.add_node(row['MGE'], label=row['MGE'], type="Virus")
-        else:
-            G.add_node(row['MGE'], label=row['MGE'], type="Virus")
+        if row['MGE'] in MGE_type_dict:
+            G.add_node(row['MGE'], label=row['MGE'], type=MGE_type_dict[row['MGE']])
         if row['host'] in bin2anno_dict:
-
             G.add_node(row['host'], label=row['host'], type=bin2anno_dict[row['host']])
-        else:
-            G.add_node(row['host'], label=row['host'], type="Unknown")
 
-        if row['both_link'] == 1:
-            G.add_edge(row['MGE'], row['host'], weight=row['final_score'], type='share')
-        elif row['both_link'] == 0:
-            G.add_edge(row['MGE'], row['host'], weight=row['final_score'], type='unique')
+        G.add_edge(row['MGE'], row['host'], weight=row['final_score'], type='share')
     plot(G)
-    nx.write_gml(G, gml)
 
 def plot(G):
     import matplotlib.patches as mpatches
@@ -49,9 +38,10 @@ def plot(G):
 
 
     # Separate nodes by type
-    virus_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'Virus']
-    plasmid_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'Plasmid']
-    host_nodes = [n for n, d in G.nodes(data=True) if d.get('type') not in ['Virus', 'Plasmid', 'MGE']]
+    virus_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'virus']
+    plasmid_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'plasmid']
+    novel_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'novel']
+    host_nodes = [n for n, d in G.nodes(data=True) if d.get('type') not in ['virus', 'plasmid', 'novel']]
 
 
     # ## use bipartite layout, where hosts are on one side and MGEs on the other
@@ -64,7 +54,7 @@ def plot(G):
     #     pos[node] = (2, i * 0.1)
 
     # Assume virus_nodes + plasmid_nodes are one set, host_nodes are the other
-    top_nodes = virus_nodes + plasmid_nodes
+    top_nodes = virus_nodes + plasmid_nodes + novel_nodes
     pos = nx.bipartite_layout(G, top_nodes)  
 
     # Assign a color to each host type (phylum)
@@ -102,6 +92,7 @@ def plot(G):
     # Draw nodes: viruses and plasmids as squares, hosts as circles colored by type
     nx.draw_networkx_nodes(G, pos, nodelist=virus_nodes, node_shape='s', node_color='red', label='Virus', node_size=100)
     nx.draw_networkx_nodes(G, pos, nodelist=plasmid_nodes, node_shape='s', node_color='blue', label='Plasmid', node_size=100)
+    nx.draw_networkx_nodes(G, pos, nodelist=novel_nodes, node_shape='s', node_color='orange', label='Novel', node_size=100)
     nx.draw_networkx_nodes(G, pos, nodelist=host_nodes, node_shape='o', node_color=host_colors, label='Host', node_size=100)
 
     # Do not show labels
@@ -117,24 +108,20 @@ def plot(G):
 
     plt.title("Network of Host-MGE Interactions")
     plt.tight_layout(pad=3.0)
-    plt.savefig("../../tmp/results/network_plot.png", dpi=300, bbox_inches='tight')
+    plt.savefig("../../tmp/results/network_test_plot.png", dpi=300, bbox_inches='tight')
     plt.close()
     
-def get_MGE_type(plasmid_sum, virus_sum):
+def get_MGE_type(mge_file):
     """
     Get the MGE type from the plasmid and virus summary files.
     """
     plasmid_types = {}
-    virus_types = {}
-    plasmid_sum = pd.read_csv(plasmid_sum, sep='\t')
-    virus_sum = pd.read_csv(virus_sum, sep='\t')
+    plasmid_sum = pd.read_csv(mge_file, sep='\t')
 
     for index, row in plasmid_sum.iterrows():
-        plasmid_types[row['seq_name']] = 'plasmid'
-    for index, row in virus_sum.iterrows():
-        virus_types[row['seq_name']] = 'virus'
+        plasmid_types[row['seq_name']] = row["type"]
 
-    return plasmid_types, virus_types
+    return plasmid_types
 
 def read_gtdb(gatk):
     """
@@ -153,44 +140,23 @@ def read_gtdb(gatk):
             bin2anno_dict[row['user_genome']] = phylum
     return bin2anno_dict
 
-def classify_cow_MGE():
-    MGE_type_file = "/home/shuaiw/borg/pengfan/contigs/All_Circular_Elements_genomad_summary.tsv"
-    plasmid_types={}
-    virus_types={}
-    for line in open(MGE_type_file, "r"):
-        if line.startswith("#"):
-            continue
-        line = line.strip().split("\t")
-        if len(line) < 3:
-            continue
-        MGE_name = line[0]
-        MGE_type = line[-1]
-        if MGE_type == "plasmid":
-            plasmid_types[MGE_name] = MGE_type
-        elif MGE_type == "virus":
-            virus_types[MGE_name] = MGE_type
-    return plasmid_types, virus_types
-
-def compare_methy_hic():
-    host_sum_file = "/home/shuaiw/methylation/data/borg/pengfan/total_summary_compare.csv"
-    gml = "/home/shuaiw/borg/paper/network/RuReacBro_20230708_11_72h_20_bin.gml"
-    gatk = "/home/shuaiw/borg/pengfan/contigs/gatk_all.summary.tsv"
-    bin2anno_dict = read_gtdb(gatk)
-    plasmid_types, virus_types = classify_cow_MGE()
-    get_edge(host_sum_file=host_sum_file, gml=gml, plasmid_types=plasmid_types, virus_types=virus_types, bin2anno_dict=bin2anno_dict, cutoff=0.45)
-
 if __name__ == "__main__":  
-    # host_sum_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin/host_summary.csv"
-    # gexf = "/home/shuaiw/borg/paper/network/RuReacBro_20230708_11_72h_20_bin.gexf"
-    compare_methy_hic()
-    # host_sum_file = "/home/shuaiw/borg/bench/soil/run1/host_summary.csv"
-    # gexf = "/home/shuaiw/borg/paper/network/soil_run1_bin.gexf"
-    # plasmid_sum = "/home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_plasmid_summary.tsv"
-    # virus_sum = "/home/shuaiw/methylation/data/borg/contigs/genomad/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_summary/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs_virus_summary.tsv"
-    # gatk = "/home/shuaiw/methylation/data/borg/contigs/GTDB/gtdbtk.all.summary.tsv"
-    # plasmid_types, virus_types = get_MGE_type(plasmid_sum, virus_sum)
-    # bin2anno_dict = read_gtdb(gatk)
-    # get_edge(plasmid_types, virus_types, bin2anno_dict)  
-
-    # host_sum_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/host_summary.csv"
-    # host_sum_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin/host_summary.csv"
+    prefix = "infant_1"
+    work_dir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
+    mge_file = os.path.join(work_dir, "all_mge.tsv")
+    gtdk_bac_file = os.path.join(work_dir, "GTDB/gtdbtk.bac120.summary.tsv")
+    gtdk_arc_file = os.path.join(work_dir, "GTDB/gtdbtk.ar122.summary.tsv")
+    gtdk_all_file = os.path.join(work_dir, "GTDB/gtdbtk.all.summary.tsv")
+    host_summary_file = os.path.join(work_dir, f"{prefix}_methylation/host_summary.csv")
+    if os.path.exists(gtdk_arc_file):
+        ## merge gtdk_bac_file and gtdk_arc_file to gtdk_all_file
+        os.system(
+            f"cat {gtdk_bac_file} {gtdk_arc_file} > {gtdk_all_file}"
+        )
+    else:
+        os.system(
+            f"cp {gtdk_bac_file} {gtdk_all_file}"
+        )
+    bin2anno_dict = read_gtdb(gtdk_all_file)
+    MGE_type_dict = get_MGE_type(mge_file)
+    get_edge(host_summary_file, MGE_type_dict, bin2anno_dict)

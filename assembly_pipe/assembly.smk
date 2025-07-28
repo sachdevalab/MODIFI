@@ -125,9 +125,11 @@ rule call_methylation:
         summary=f"{config['work_dir']}/{config['prefix']}_methylation/summary.csv",
         methy_finish = f"{config['work_dir']}/methylation.finish"
     threads: config["threads"]
+    # conda: "methy3"
     shell:
         """
-        /usr/bin/time -v -o {output.time} python /home/shuaiw/Methy/main.py \
+        which python
+        /usr/bin/time -v -o {output.time} /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/Methy/main.py \
           --work_dir {config[work_dir]}/{config[prefix]}_methylation \
           --whole_bam {input.bam} \
           --whole_ref {input.fa} \
