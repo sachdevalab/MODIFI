@@ -147,7 +147,7 @@ rule call_host:
     threads: config["threads"]
     shell:
         """
-        python /home/shuaiw/Methy/main.py \
+        /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/Methy/main.py \
           --work_dir {config[work_dir]}/{config[prefix]}_methylation \
           --whole_bam {input.bam} \
           --whole_ref {input.fa} \
