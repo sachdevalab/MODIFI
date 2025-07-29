@@ -27,7 +27,7 @@ def read_list(bam_list, cmd_file, prefix_table):
             sbatch --partition standard --wrap "snakemake --config \\
                 hifi_bam={hifi_bam} \\
                 prefix={prefix} \\
-                work_dir={work_dir}" \\
+                work_dir={work_dir} -j 64" \\
                 --job-name={prefix}
             """
             print (cmd.strip())

@@ -233,11 +233,27 @@ if __name__ == "__main__":
     all_mge_file = f"{workdir}/all_mge.tsv"
 
 
-
-    vibrant_virus = read_vibrant(virbrant)
-    virsorter2_virus = read_virsorter2(virsorter2)
-    genomad_virus = read_genomad(genomad_virus, mge_type="virus")
-    genomad_plasmid = read_genomad(genomad_plasmid, mge_type="plasmid")
+    if os.path.exists(virbrant):
+        vibrant_virus = read_vibrant(virbrant)
+    else:
+        print(f"Warning: {virbrant} does not exist. Skipping VIBRANT classification.")
+        vibrant_virus = {}
+    if os.path.exists(virsorter2):
+        virsorter2_virus = read_virsorter2(virsorter2)
+    else:
+        print(f"Warning: {virsorter2} does not exist. Skipping VirSorter2 classification.")
+        virsorter2_virus = {}
+    if os.path.exists(genomad_plasmid):
+        genomad_plasmid = read_genomad(genomad_plasmid, mge_type="plasmid")
+    else:
+        print(f"Warning: {genomad_plasmid} does not exist. Skipping Genomad plasmid classification.")
+        genomad_plasmid = {}
+    if os.path.exists(genomad_virus):
+        genomad_virus = read_genomad(genomad_virus, mge_type="virus")
+    else:
+        print(f"Warning: {genomad_virus} does not exist. Skipping Genomad virus classification.")
+        genomad_virus = {}
+        
     novel_dict = get_novel_elements(novel_elements)
 
     get_mge_union(all_mge_file, classification_dict, vibrant_virus, virsorter2_virus, genomad_virus, genomad_plasmid, novel_dict)

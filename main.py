@@ -288,7 +288,7 @@ def depth_parallel(args, paras):
             mean_depth = future.result()
 
 
-def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, min_score):
+def motif_worker(ctg_name, seg_ref, seg_gff, motif, min_score, each_thread=1):
     ## run samtools depth
     # depth_file = f"{bam}.depth"
     # cmd = [
@@ -301,23 +301,29 @@ def motif_worker(ctg_name, bam, fasta, gff, seg_ref, seg_gff, motif, threads, mi
 
     # mean_depth = process_depth_and_gff(depth_file, fasta, gff, seg_ref, seg_gff,
     #                     depth_threshold=DEPTH_THRESHOLD, max_gap=MAX_GAP)
-
     cmd = [
         motif_maker_bin,
         "find",
         "-f", seg_ref,
         "-g", seg_gff,
         "-o", motif,
-        "-j", str(1),
+        "-j", str(each_thread),
         "-m", str(min_score),
     ]
     # logger.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
-
     return ctg_name, 0
 
 def motif_parallel(args, paras):
-    logger.info ("Detect motif in parallel...")
+    logger.info(f"Detect motif in parallel (memory-aware)... Using {args.threads} threads.")
+
+    MAX_MEMORY_USAGE_RATIO = 0.9  # Don't exceed 90% of total memory
+    CHECK_INTERVAL = 1  # seconds between memory checks
+
+    def memory_safe():
+        mem = psutil.virtual_memory()
+        return mem.available / mem.total > (1 - MAX_MEMORY_USAGE_RATIO)
+    
     ctg_depth_dict = {}
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         futures = []
@@ -340,16 +346,17 @@ def motif_parallel(args, paras):
             fasta = os.path.join(paras["ctg_dir"], f"{ctg_name}.fa")
             motifs = os.path.join(paras["motifs"], f"{ctg_name}.motifs.csv")
 
+            # Memory-aware submission
+            while not memory_safe():
+                logger.debug("Waiting for memory to free up...")
+                time.sleep(CHECK_INTERVAL)
+
             future = executor.submit(
                 motif_worker,
                 ctg_name = ctg_name,
-                bam=bam,
-                fasta=fasta,
-                gff=gff,
                 seg_ref=seg_ref,
                 seg_gff=seg_gff,
                 motif = motifs,
-                threads = args.threads,
                 min_score = args.min_score,
             )
             futures.append(future)

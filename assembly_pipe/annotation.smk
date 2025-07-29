@@ -8,8 +8,8 @@ rule all_annotation:
         checkm=f"{config['work_dir']}/checkM2/quality_report.tsv",
         gtdb_finish=f"{config['work_dir']}/GTDB/gtdbtk.done",
         genomad_finish=f"{config['work_dir']}/genomad.done",
-        virsorter2=f"{config['work_dir']}/virsorter2.done",
-        vibrantr=f"{config['work_dir']}/vibrant.done",
+        # virsorter2=f"{config['work_dir']}/virsorter2.done",
+        # vibrantr=f"{config['work_dir']}/vibrant.done",
         ctg_mge = f"{config['work_dir']}/ctg_mge.done",
         checkv_finish=f"{config['work_dir']}/checkV.done",
         # anvi_done=f"{config['work_dir']}/anvi.done",
@@ -87,43 +87,44 @@ rule genomad:
         touch {output.genomad_finish}
         """
 
-rule virsorter2:
-    input:
-        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
-        genomad_finish=f"{config['work_dir']}/genomad.done"
+# rule virsorter2:
+#     input:
+#         fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+#         genomad_finish=f"{config['work_dir']}/genomad.done"
 
-    output:
-        virsorter2=f"{config['work_dir']}/virsorter2.done"
-    threads: config["threads"]
-    shell:
-        """
-        virsorter run all \
-            --seqfile {input.fasta} \
-            -w  {config[work_dir]}/virsorter2/ \
-            -j {threads} \
-            --tmpdir {config[work_dir]}/tmp/ 
-        touch {output.virsorter2}
-        """
+#     output:
+#         virsorter2=f"{config['work_dir']}/virsorter2.done"
+#     threads: config["threads"]
+#     shell:
+#         """
+#         virsorter run all \
+#             --seqfile {input.fasta} \
+#             -w  {config[work_dir]}/virsorter2/ \
+#             -j {threads} \
+#             --tmpdir {config[work_dir]}/tmp/ 
+#         touch {output.virsorter2}
+#         """
 
-rule vibrant:
-    input:
-        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
-        virsorter2=f"{config['work_dir']}/virsorter2.done"
-    output:
-        vibrantr=f"{config['work_dir']}/vibrant.done"
-    threads: config["threads"]
-    shell:
-        """
-        VIBRANT_run.py -i {input.fasta} -folder {config[work_dir]}/vibrant/ -t {threads} 
-        touch {output.vibrantr}
-        """
+# rule vibrant:
+#     input:
+#         fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+#         virsorter2=f"{config['work_dir']}/virsorter2.done"
+#     output:
+#         vibrantr=f"{config['work_dir']}/vibrant.done"
+#     threads: config["threads"]
+#     shell:
+#         """
+#         VIBRANT_run.py -i {input.fasta} -folder {config[work_dir]}/vibrant/ -t {threads} 
+#         touch {output.vibrantr}
+#         """
 
 
 
 rule get_ctg_mge:
     input:
         # prokka_finish = f"{config['work_dir']}/prokka/prokka.finish",
-        vibrantr=f"{config['work_dir']}/vibrant.done"
+        # vibrantr=f"{config['work_dir']}/vibrant.done",
+        genomad_finish=f"{config['work_dir']}/genomad.done"
     output:
         mge_finish = f"{config['work_dir']}/ctg_mge.done",
         mge_file = f"{config['work_dir']}/all_mge.tsv",

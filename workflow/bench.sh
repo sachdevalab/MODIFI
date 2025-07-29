@@ -1048,6 +1048,21 @@ sbatch  --partition standard --wrap "python main.py \
   --threads 64  " \
   --job-name=pipeline
 
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/ocean_1/ocean_1_methylation \
+  --whole_bam /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3 \
+  --min_cov 1 \
+  --run_steps motif profile merge\
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --threads 64  " \
+  --job-name=ocean_test
+
 
 
   sbatch --partition standard --wrap "snakemake --config \
