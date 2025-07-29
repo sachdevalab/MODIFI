@@ -330,9 +330,9 @@
             #### number 42
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2021.bam \
-                prefix=soil_s3_2 \
-                work_dir=/home/shuaiw/borg/paper/run2/soil_s3_2" \
-                --job-name=soil_s3_2
+                prefix=soil_s3_1 \
+                work_dir=/home/shuaiw/borg/paper/run2/soil_s3_1" \
+                --job-name=soil_s3_1
             
 
             #### number 43
@@ -346,9 +346,9 @@
             #### number 44
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2022.bam \
-                prefix=soil_s4_2 \
-                work_dir=/home/shuaiw/borg/paper/run2/soil_s4_2" \
-                --job-name=soil_s4_2
+                prefix=soil_s4_1 \
+                work_dir=/home/shuaiw/borg/paper/run2/soil_s4_1" \
+                --job-name=soil_s4_1
             
 
             #### number 45
@@ -362,9 +362,9 @@
             #### number 46
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2025.bam \
-                prefix=soil_s1_2 \
-                work_dir=/home/shuaiw/borg/paper/run2/soil_s1_2" \
-                --job-name=soil_s1_2
+                prefix=soil_s1_1 \
+                work_dir=/home/shuaiw/borg/paper/run2/soil_s1_1" \
+                --job-name=soil_s1_1
             
 
             #### number 47
@@ -378,9 +378,9 @@
             #### number 48
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam \
-                prefix=soil_1 \
-                work_dir=/home/shuaiw/borg/paper/run2/soil_1" \
-                --job-name=soil_1
+                prefix=XRSBK_20221007_S64018_PL100268287-1_C01_ccs \
+                work_dir=/home/shuaiw/borg/paper/run2/XRSBK_20221007_S64018_PL100268287-1_C01_ccs" \
+                --job-name=XRSBK_20221007_S64018_PL100268287-1_C01_ccs
             
 
             #### number 49

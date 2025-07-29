@@ -1,4 +1,5 @@
 import os
+import re
 
 def read_list(bam_list, cmd_file, prefix_table):
     """
@@ -11,7 +12,10 @@ def read_list(bam_list, cmd_file, prefix_table):
     with open(bam_list, 'r') as f:
         for line in f:
             hifi_bam = line.strip()
-            prefix = hifi_bam.split("/")[-1].split(".")[0]
+            field = hifi_bam.split("/")[-1].split(".")
+            prefix = field[0]
+            if re.search("soil", hifi_bam):
+                prefix = f"{field[0]}_{field[-2]}"
             ## replace prefix with the one in the prefix table
             if prefix in prefix_dict:
                 prefix = prefix_dict[prefix]

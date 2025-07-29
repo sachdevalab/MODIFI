@@ -18,7 +18,7 @@ rule all_annotation:
         # finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish",
         drep_finish = f"{config['work_dir']}/dRep.finish",
         drep_99_finish = f"{config['work_dir']}/dRep_99.finish",
-        enrichment_finish = f"{config['work_dir']}/motif_enrichment.done",
+        # enrichment_finish = f"{config['work_dir']}/motif_enrichment.done",
 
 rule checkM:
     input:
@@ -213,22 +213,22 @@ rule dRep_99:
         touch {output.drep_99_finish}
         """
 
-rule enrichment:
-    input:
-        drep_finish = f"{config['work_dir']}/dRep.finish",
-        drep_99_finish = f"{config['work_dir']}/dRep_99.finish",
-    output:
-        enrichment_finish = f"{config['work_dir']}/motif_enrichment.done"
-    params:
-        methy_dir = f"{config['work_dir']}/{config['prefix']}_methylation",
-        genome_gff = f"{config['work_dir']}/prokka/{config['prefix']}.gff",
-    shell:
-        """
-        python /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py \
-            {params.genome_gff} \
-            {params.methy_dir}
-        touch {output.enrichment_finish}
-        """
+# rule enrichment:
+#     input:
+#         drep_finish = f"{config['work_dir']}/dRep.finish",
+#         drep_99_finish = f"{config['work_dir']}/dRep_99.finish",
+#     output:
+#         enrichment_finish = f"{config['work_dir']}/motif_enrichment.done"
+#     params:
+#         methy_dir = f"{config['work_dir']}/{config['prefix']}_methylation",
+#         genome_gff = f"{config['work_dir']}/prokka/{config['prefix']}.gff",
+#     shell:
+#         """
+#         /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py \
+#             {params.genome_gff} \
+#             {params.methy_dir}
+#         touch {output.enrichment_finish}
+#         """
 
 
 ## plasX to call plasmids

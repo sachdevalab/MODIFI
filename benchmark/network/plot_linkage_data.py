@@ -4,6 +4,8 @@ import re
 import os
 import matplotlib.pyplot as plt
 from networkx.algorithms import bipartite
+import plotly.graph_objects as go
+
 
 def get_edge(host_sum_file, MGE_type_dict, bin2anno_dict):
     """
@@ -23,7 +25,8 @@ def get_edge(host_sum_file, MGE_type_dict, bin2anno_dict):
             G.add_node(row['host'], label=row['host'], type=bin2anno_dict[row['host']])
 
         G.add_edge(row['MGE'], row['host'], weight=row['final_score'], type='share')
-    plot(G)
+    return G
+    
 
 def plot(G):
     import matplotlib.patches as mpatches
@@ -31,10 +34,7 @@ def plot(G):
     print(f"Number of nodes: {G.number_of_nodes()}")
     print(f"Number of edges: {G.number_of_edges()}")
     # Use a large canvas
-    plt.figure(figsize=(16, 12))  # Increased canvas size
-
-    # pos = nx.spring_layout(G, k=0.15, iterations=20)
-    # pos = nx.kamada_kawai_layout(G)
+    plt.figure(figsize=(10, 8))  # Increased canvas size
 
 
     # Separate nodes by type
@@ -44,14 +44,6 @@ def plot(G):
     host_nodes = [n for n, d in G.nodes(data=True) if d.get('type') not in ['virus', 'plasmid', 'novel']]
 
 
-    # ## use bipartite layout, where hosts are on one side and MGEs on the other
-    # pos = {}
-    # # Assign positions for virus and plasmid nodes
-    # for i, node in enumerate(virus_nodes + plasmid_nodes):
-    #     pos[node] = (0, i * 0.1)
-    # # Assign positions for host nodes
-    # for i, node in enumerate(host_nodes):
-    #     pos[node] = (2, i * 0.1)
 
     # Assume virus_nodes + plasmid_nodes are one set, host_nodes are the other
     top_nodes = virus_nodes + plasmid_nodes + novel_nodes
@@ -66,7 +58,7 @@ def plot(G):
     # Draw edges
     # nx.draw_networkx_edges(G, pos, edge_color='gray', alpha=0.5)
     edge_type_to_color = {
-        'share': 'green',
+        'share': 'gray',
         'unique': 'gray',
         'transduction': 'purple',
         # add more types and colors as needed
@@ -84,7 +76,7 @@ def plot(G):
             edgelist=edges,
             edge_color=edge_type_to_color.get(etype, 'gray'),
             alpha=0.7,
-            width=2,
+            width=1,
             label=etype
         )
 
@@ -92,7 +84,7 @@ def plot(G):
     # Draw nodes: viruses and plasmids as squares, hosts as circles colored by type
     nx.draw_networkx_nodes(G, pos, nodelist=virus_nodes, node_shape='s', node_color='red', label='Virus', node_size=100)
     nx.draw_networkx_nodes(G, pos, nodelist=plasmid_nodes, node_shape='s', node_color='blue', label='Plasmid', node_size=100)
-    nx.draw_networkx_nodes(G, pos, nodelist=novel_nodes, node_shape='s', node_color='orange', label='Novel', node_size=100)
+    nx.draw_networkx_nodes(G, pos, nodelist=novel_nodes, node_shape='s', node_color='black', label='Novel', node_size=100)
     nx.draw_networkx_nodes(G, pos, nodelist=host_nodes, node_shape='o', node_color=host_colors, label='Host', node_size=100)
 
     # Do not show labels
@@ -110,7 +102,8 @@ def plot(G):
     plt.tight_layout(pad=3.0)
     plt.savefig("../../tmp/results/network_test_plot.png", dpi=300, bbox_inches='tight')
     plt.close()
-    
+
+
 def get_MGE_type(mge_file):
     """
     Get the MGE type from the plasmid and virus summary files.
@@ -141,22 +134,28 @@ def read_gtdb(gatk):
     return bin2anno_dict
 
 if __name__ == "__main__":  
-    prefix = "infant_1"
-    work_dir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
-    mge_file = os.path.join(work_dir, "all_mge.tsv")
-    gtdk_bac_file = os.path.join(work_dir, "GTDB/gtdbtk.bac120.summary.tsv")
-    gtdk_arc_file = os.path.join(work_dir, "GTDB/gtdbtk.ar122.summary.tsv")
-    gtdk_all_file = os.path.join(work_dir, "GTDB/gtdbtk.all.summary.tsv")
-    host_summary_file = os.path.join(work_dir, f"{prefix}_methylation/host_summary.csv")
-    if os.path.exists(gtdk_arc_file):
-        ## merge gtdk_bac_file and gtdk_arc_file to gtdk_all_file
-        os.system(
-            f"cat {gtdk_bac_file} {gtdk_arc_file} > {gtdk_all_file}"
-        )
-    else:
-        os.system(
-            f"cp {gtdk_bac_file} {gtdk_all_file}"
-        )
-    bin2anno_dict = read_gtdb(gtdk_all_file)
-    MGE_type_dict = get_MGE_type(mge_file)
-    get_edge(host_summary_file, MGE_type_dict, bin2anno_dict)
+    prefix = "96plex"
+    ## the merged graph 
+    whole_G = nx.Graph()
+    for prefix in ["96plex", "infant_1", "SRR23446539_sugarcane","ERR12723528_mice"]:
+        print(f"Processing {prefix}...")
+        work_dir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
+        mge_file = os.path.join(work_dir, "all_mge.tsv")
+        gtdk_bac_file = os.path.join(work_dir, "GTDB/gtdbtk.bac120.summary.tsv")
+        gtdk_arc_file = os.path.join(work_dir, "GTDB/gtdbtk.ar122.summary.tsv")
+        gtdk_all_file = os.path.join(work_dir, "GTDB/gtdbtk.all.summary.tsv")
+        host_summary_file = os.path.join(work_dir, f"{prefix}_methylation/host_summary.csv")
+        if os.path.exists(gtdk_arc_file):
+            ## merge gtdk_bac_file and gtdk_arc_file to gtdk_all_file
+            os.system(
+                f"cat {gtdk_bac_file} {gtdk_arc_file} > {gtdk_all_file}"
+            )
+        else:
+            os.system(
+                f"cp {gtdk_bac_file} {gtdk_all_file}"
+            )
+        bin2anno_dict = read_gtdb(gtdk_all_file)
+        MGE_type_dict = get_MGE_type(mge_file)
+        G= get_edge(host_summary_file, MGE_type_dict, bin2anno_dict)
+        whole_G = nx.compose(whole_G, G)
+    plot(whole_G)
