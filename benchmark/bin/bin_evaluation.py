@@ -30,8 +30,16 @@ def read_report(report):
     plt.close()
 
     print (len(df))
-    high_quality_bins = len(df[(df["completeness"] > 99) & (df["contamination"] < 1)])
+    high_quality_bins = len(df[(df["completeness"] >= 90) & (df["contamination"] <= 5)])
     print ("Number of high quality bins: ", high_quality_bins,high_quality_bins/len(df)) 
+    ## count the number of bins with medium quality bins
+    medium_quality_bins = len(df[(df["completeness"] >= 50) & (df["contamination"] <= 10)])
+    print ("Number of medium quality bins: ", medium_quality_bins,medium_quality_bins/len(df)) 
+
+    ## count the number of bins with low quality bins
+    low_quality_bins = len(df[(df["completeness"] < 50)])
+    print ("Number of low quality bins: ", low_quality_bins,low_quality_bins/len(df))
+
     ## count the number of bins with completeness < 30
     df["completeness"] = df["completeness"].astype(float)
     df["contamination"] = df["contamination"].astype(float)
@@ -42,5 +50,7 @@ def read_report(report):
     print("Number of bins with contamination > 20: ", len(df2))
 
 # report = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_break/checkM2/quality_report.tsv"
-report = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_break/checkM_metabat/quality_report.tsv"
+# report = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_break/checkM_metabat/quality_report.tsv"
+# report = "/home/shuaiw/borg/bench/soil/run2/checkm_methy/quality_report.tsv"
+report = "/home/shuaiw/borg/bench/soil/run2/checkm_metabat/quality_report.tsv"
 read_report(report)

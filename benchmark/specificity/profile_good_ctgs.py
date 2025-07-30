@@ -438,13 +438,13 @@ def read_all_host(all_host_file, good_depth):
 
 def count_all_motif_num():
     all_data = []
-    all_dir = "/home/shuaiw/borg/paper/run/"
+    all_dir = "/home/shuaiw/borg/paper/run2/"
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
         print (f"Processing {prefix}...")
-        work_dir = f"/home/shuaiw/borg/paper/run/{prefix}/{prefix}_methylation"
-        fai = f"/home/shuaiw/borg/paper/run/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
-        all_host_file = f"/home/shuaiw/borg/paper/run/{prefix}/all_host_ctgs.tsv"
+        work_dir = f"{all_dir}/{prefix}/{prefix}_methylation"
+        fai = f"{all_dir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
+        all_host_file = f"{all_dir}/{prefix}/all_host_ctgs.tsv"
         ## skip if all_host_file does not exist
         if not os.path.exists(all_host_file):
             print(f"Skipping {prefix} as all_host_file does not exist.")
@@ -463,7 +463,7 @@ def count_all_motif_num():
     df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num'])
     ## plot boxplot where sample is on x-axis and motif_num is on y-axis
     plt.figure(figsize=(10, 6))
-    sns.boxplot(data=df_all_data, x='sample', y='motif_num')
+    sns.boxplot(data=df_all_data, x='sample', y='motif_num', palette='Set2')
     plt.xticks(rotation=90)
     plt.title('Distribution of Motif Numbers Across Samples')
     plt.xlabel('Sample')
@@ -472,8 +472,8 @@ def count_all_motif_num():
 
 
 if __name__ == "__main__":
-    # count_all_motif_num()
-    jaccard()
+    count_all_motif_num()
+    # jaccard()
 
     # fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
     # ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"

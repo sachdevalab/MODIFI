@@ -14,7 +14,7 @@ def read_list(bam_list, cmd_file, prefix_table):
             hifi_bam = line.strip()
             field = hifi_bam.split("/")[-1].split(".")
             prefix = field[0]
-            if re.search("soil", hifi_bam):
+            if re.search("soil", hifi_bam) and prefix != "XRSBK_20221007_S64018_PL100268287-1_C01":
                 prefix = f"{field[0]}_{field[-2]}"
             ## replace prefix with the one in the prefix table
             if prefix in prefix_dict:

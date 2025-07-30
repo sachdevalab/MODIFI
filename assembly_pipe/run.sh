@@ -378,9 +378,9 @@
             #### number 48
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam \
-                prefix=XRSBK_20221007_S64018_PL100268287-1_C01_ccs \
-                work_dir=/home/shuaiw/borg/paper/run2/XRSBK_20221007_S64018_PL100268287-1_C01_ccs -j 64" \
-                --job-name=XRSBK_20221007_S64018_PL100268287-1_C01_ccs
+                prefix=soil_1 \
+                work_dir=/home/shuaiw/borg/paper/run2/soil_1 -j 64" \
+                --job-name=soil_1
             
 
             #### number 49
