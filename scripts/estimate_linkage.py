@@ -11,7 +11,7 @@ import random
 
 from derep_motifs import MotifFilter, uniq_similar_motifs
 from get_kmer_freq import kmer_freq_sim_bin_worker
-from linkage_model import compute_p_same_room
+# from linkage_model import compute_p_same_room
 
 # IGNORE_MOTIFS = [
 #     "GATC",
@@ -706,10 +706,17 @@ def load_ctg_motifs_parallele(profile_dir, threads=4):
             futures.append(future)
 
     results = []
+    processed_count = 0
     for future in tqdm(as_completed(futures), total=len(futures)):
         result = future.result()
         if result is not None:
             results.append(result)
+
+        processed_count += 1
+        # Log every 100 contigs
+        if processed_count % 100 == 0:
+            print(f"Processed {processed_count}/{len(futures)} contigs, found {len(results)} valid results")
+
 
     # Combine results into dictionaries
     ctg_single_dict = {}
