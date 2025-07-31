@@ -176,7 +176,7 @@ rule drep:
     threads: config["threads"]
     shell:
         """
-        ls {config[work_dir]}/bins/*.fasta > {params.genome_list}
+        find {config[work_dir]}/bins/ -name "*.fasta" > {params.genome_list}
         dRep dereplicate \
         -p {threads} \
         -g {params.genome_list} \
@@ -201,7 +201,7 @@ rule dRep_99:
     threads: config["threads"]
     shell:
         """
-        ls {config[work_dir]}/bins/*.fasta > {params.genome_list}
+        find {config[work_dir]}/bins/ -name "*.fasta" > {params.genome_list}
         dRep dereplicate \
         -p {threads} \
         -g {params.genome_list} \
