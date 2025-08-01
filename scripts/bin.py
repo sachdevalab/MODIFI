@@ -18,6 +18,7 @@ import numpy as np
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 import umap
+from sklearn.cluster import AgglomerativeClustering
 
 
 
@@ -140,6 +141,39 @@ def JC_hierarchical_clustering(df, cutoff=0.45):
     cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
     return cluster_result
 
+## use AgglomerativeClustering
+
+def Agglomerative_clustering(df, cutoff=0.8):
+    matrix = df.to_numpy()
+    ## Trabspose the matrix
+    matrix = matrix.T
+
+    ## zero values are set to small random pseudovalues in the (−0.2, +0.2)
+    # mask = matrix == 0
+    # matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
+
+    matrix = (matrix > 0.5).astype(int) 
+
+    clustering = AgglomerativeClustering(
+        metric='jaccard', 
+        linkage='average', 
+        distance_threshold=cutoff,
+        n_clusters=None
+    ).fit(matrix)
+    
+    n_clusters = len(set(clustering.labels_))
+    print (n_clusters, "clusters detected in Agglomerative clustering.")
+
+    data = []
+    for i in range(n_clusters):
+        # print ("cluster", i)
+        for j in range(len(clustering.labels_)):
+            if clustering.labels_[j] == i:
+                # print (df.columns[j])
+                data.append([df.columns[j], i])
+    cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
+    return cluster_result
+
 def hierarchical_clustering(df, cutoff=1.6):
     matrix = df.to_numpy()
     ## Trabspose the matrix
@@ -249,7 +283,7 @@ if __name__ == "__main__":
     # bin_contigs_to_fastas(cluster_csv, fasta_path, output_prefix)
 
     whole_ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
-    bin_dir = "/home/shuaiw/borg/bench/soil/run2/test_bin/"
+    bin_dir = "/home/shuaiw/borg/bench/soil/run2/test_bin_agg_0.8/"
     profile_file =  "/home/shuaiw/borg/bench/soil/run2/motif_profile.csv"
     min_frac = 0.4
 
@@ -267,6 +301,8 @@ if __name__ == "__main__":
     print ("filtered shape", profiles.shape)
     print (profiles)
     # cluster_df = TSE(profiles)
-    cluster_df = JC_hierarchical_clustering(profiles)
+    # cluster_df = JC_hierarchical_clustering(profiles)
+    cluster_df = Agglomerative_clustering(profiles)
     bin_contigs_to_fastas_df(cluster_df, whole_ref, output_prefix)
+    os.system(f"checkm2 predict --input {bin_dir} --output-directory {bin_dir}/checkm_methy --force -x .fasta --threads 20")
 
