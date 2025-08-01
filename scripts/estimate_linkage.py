@@ -110,29 +110,6 @@ def linkage_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_s
         'host_motif_num': len(motif_data)
     }
 
-
-def linkage_score_from_model(motif_data):
-    host_data_list = []
-    MGE_data_list = []
-
-    for m in motif_data:
-        h_total = m['host_total']
-        h_meth = m['host_meth']
-        p_total = m['plasmid_total']
-        p_meth = m['plasmid_meth']
-
-        host_data_list.append((h_meth, h_total))
-        MGE_data_list.append((p_meth, p_total))
-    if len(host_data_list) == 0 or len(MGE_data_list) == 0:
-        return {'linkage_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
-    else:
-        print ("host_data_list", host_data_list)
-        print ("MGE_data_list", MGE_data_list)
-        p_same = compute_p_same_room(host_data_list, MGE_data_list)
-        return {'linkage_score': 0.0, 'confidence': 0.0, 'final_score': p_same, 'total_sites': 0,
-        'motif_confidence': round(1, 4),
-        'host_motif_num': len(motif_data)}
-
 def extract_motif_data(host_df, plasmid_df, min_frac = 0.5, min_detect = 100):
     motif_data = pd.merge(host_df, plasmid_df, on = ['motifString', 'centerPos'], suffixes=('_host', '_plasmid'))
     # print ("<<<<<", motif_data)
@@ -227,6 +204,7 @@ def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name):
     return result, motif_data, bin_name
 
 def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir,cov_dict, bin_cov_dict, threads, min_frac = 0.5):
+    import gc
     plasmid_profile = f"{profile_dir}/{plasmid_name}.motifs.profile.csv"
     # cov_dict = load_coverage(host_dir)
     if plasmid_name not in cov_dict:
@@ -239,32 +217,65 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
         return
     plasmid_df = pd.read_csv(plasmid_profile)
 
+    # Get all valid bins to process
+    valid_bins = []
+    for bin_name in bin_cov_dict:
+        bin_df = bin_df_dict[bin_name]
+        if len(bin_df) > 0:
+            valid_bins.append(bin_name)
+    
+    total_bins = len(valid_bins)
+    if total_bins == 0:
+        print(f"No valid bins found for plasmid {plasmid_name}")
+        return []
+    
+    print(f"Processing {total_bins} bins for plasmid {plasmid_name}")
+    
+    all_result = []
+    batch_size = 100  # Process bins in batches
+    effective_threads = min(threads, 64)  # Limit threads for bin processing
+    
+    for i in range(0, total_bins, batch_size):
+        batch_bins = valid_bins[i:i + batch_size]
+        batch_num = i // batch_size + 1
+        total_batches = (total_bins + batch_size - 1) // batch_size
+        
+        print(f"Processing bin batch {batch_num}/{total_batches} ({len(batch_bins)} bins) for plasmid {plasmid_name}")
 
-    with ProcessPoolExecutor(max_workers=threads) as executor:
-        futures = []
-        for bin_name in bin_cov_dict:
-            bin_df = bin_df_dict[bin_name]
-            if len(bin_df) == 0:
-                continue
-            bin_motif = bin_motif_dict[bin_name]
+        with ProcessPoolExecutor(max_workers=effective_threads) as executor:
+            batch_futures = []
+            for bin_name in batch_bins:
+                bin_df = bin_df_dict[bin_name]
+                bin_motif = bin_motif_dict[bin_name]
 
-            future = executor.submit(
-                bin_worker,
-                bin_df = bin_df,
-                plasmid_df = plasmid_df,
-                bin_motif = bin_motif,
-                min_frac = min_frac,
-                bin_name = bin_name,
-            )
-            futures.append(future)
-            # if len(futures) > 10:
-            #     break
-            if len(futures) % 100 == 0:
-                print (f"Submitted {len(futures)} futures for plasmid {plasmid_name}.")
-        all_result = []
-        for future in tqdm(as_completed(futures), total=len(futures)):
-            finish_code = future.result()
-            all_result.append(finish_code)
+                future = executor.submit(
+                    bin_worker,
+                    bin_df = bin_df,
+                    plasmid_df = plasmid_df,
+                    bin_motif = bin_motif,
+                    min_frac = min_frac,
+                    bin_name = bin_name,
+                )
+                batch_futures.append(future)
+
+            # Process batch results
+            batch_results = []
+            for future in tqdm(as_completed(batch_futures), 
+                             total=len(batch_futures), 
+                             desc=f"Plasmid {plasmid_name} Batch {batch_num}"):
+                try:
+                    result = future.result(timeout=60)  # 60-second timeout per bin
+                    batch_results.append(result)
+                except Exception as e:
+                    print(f"Error processing bin in batch {batch_num}: {e}")
+        
+        # Add batch results to main results
+        all_result.extend(batch_results)
+        
+        # Force garbage collection between batches
+        gc.collect()
+        
+        print(f"Bin batch {batch_num} completed for plasmid {plasmid_name}. Total results so far: {len(all_result)}")
 
     data = []
     motif_data_dict = {}
@@ -281,30 +292,6 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
         motif_data_dict[result['host']] = motif_data
         data.append(result)
         i += 1
-
-
-    # for bin_name in bin_cov_dict:
-    #     bin_df = bin_df_dict[bin_name]
-    #     if len(bin_df) == 0:
-    #         continue
-    #     bin_motif = bin_motif_dict[bin_name]
-
-    #     motif_data = extract_motif_data(bin_df, plasmid_df, min_frac)
-    #     motif_data = filter_motifs(bin_motif, motif_data)
-    #     motif_filter = MotifFilter(motif_data)
-    #     motif_data = motif_filter.filter()
-
-        
-    #     result = linkage_score_from_counts(motif_data, min_frac, 0.5)
-    #     # result = linkage_score_from_model(motif_data)
-    #     result['host'] = bin_name
-    #     result['host_cov'] = bin_cov_dict[bin_name]
-    #     result['MGE_cov'] = MGE_cov
-    #     result['MGE'] = plasmid_name
-    #     result['motif_info'] = summary_motif_info(motif_data)
-    #     motif_data_dict[bin_name] = motif_data
-    #     i += 1
-    #     data.append(result)
 
     print (f"### Processed bins for {plasmid_name}, total {len(data)} results.")
     ## convert the data to a df, and sort by final_score
@@ -327,28 +314,6 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
         for index, rows in data.iterrows():
             print (rows.to_dict(), motif_data_dict[rows['host']], file = f)
     return final_score_list
-
-def report_gc_bk(data, host_dir, bin_ctg_dict):
-    """
-    report GC for MGE and host
-    also report the cosine similarity for MGE and host tetranuceleotide frequency
-    """
-    work_dir = os.path.join(host_dir, "../")
-    ## add new columns for MGE_gc, host_gc, cos_sim
-    data['MGE_gc'] = 0.0
-    data['host_gc'] = 0.0
-    data['cos_sim'] = 0.0
-    for index, row in data.iterrows():
-        if row['MGE'] not in bin_ctg_dict:
-            bin_ctg_dict[row['MGE']] = [row['MGE']]
-        MGE_gc, host_gc, tetra_sim = kmer_freq_sim_bin_worker(row['MGE'], row['host'], bin_ctg_dict, work_dir)
-        ## add new columns for MGE_gc, host_gc, cos_sim
-        data.at[index, 'MGE_gc'] = MGE_gc
-        data.at[index, 'host_gc'] = host_gc
-        data.at[index, 'cos_sim'] = tetra_sim
-    ## rearrange the columns
-    data = data[['MGE', 'host', 'final_score', 'linkage_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
-    return data
 
 def report_gc(data, host_dir, bin_ctg_dict, threads):
     """
@@ -543,30 +508,6 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
     print ("threads number for linkage prediction: ", threads)
     print ("MGE number: ", len(MGE_dict))
 
-    # with ProcessPoolExecutor(max_workers=threads) as executor:
-    #     futures = []
-    #     for plasmid_name in MGE_dict:
-    #         MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-    #         # if MGE_motif_num == 0:  # to speed up
-    #         #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
-    #         #     continue
-    #         print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
-    #         future = executor.submit(
-    #             for_each_plasmid,
-    #             bin_df_dict = bin_df_dict,
-    #             bin_motif_dict = bin_motif_dict,
-    #             plasmid_name = plasmid_name,
-    #             profile_dir = profile_dir,
-    #             host_dir = host_dir,
-    #             cov_dict = cov_dict,
-    #             bin_cov_dict = bin_cov_dict,
-    #             min_frac = min_frac,
-    #         )
-    #         futures.append(future)
-    #     result = []
-    #     for future in tqdm(as_completed(futures), total=len(futures)):
-    #         finish_code = future.result()
-    #         result.append(finish_code)
     i = 0
     all_final_score_list = []
     for plasmid_name in MGE_dict:
@@ -594,27 +535,6 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
 
     summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list)
 
-def batch_MGE_invade_single(plasmid_file, profile_dir, host_dir, bin_file=None, min_frac = 0.5):
-
-    MGE_dict = read_genomad(plasmid_file)
-    cov_dict = load_coverage(host_dir)
-    ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs(profile_dir, MGE_dict)
-    if bin_file is not None:
-        if not os.path.exists(bin_file):
-            print (f"{bin_file} does not exist.")
-        ctg_bin_dict, bin_ctg_dict = load_bin(bin_file)
-    else:
-        ctg_bin_dict, bin_ctg_dict = ctg_single_dict, single_ctg_dict
-    print (f"Loading is done, {len(bin_ctg_dict)} bins.")
-    for plasmid_name in MGE_dict:
-        MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
-        if MGE_motif_num == 0:
-            print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
-            continue
-        print (f"Processing {plasmid_name} with {MGE_motif_num} original motifs.")
-        for_each_plasmid(bin_ctg_dict, ctg_profile_dict, ctg_motif_dict, plasmid_name, profile_dir, host_dir, cov_dict, min_frac, {})
-    summary_host(host_dir, bin_ctg_dict)
-
 def load_bin(bin_file):
     bin_df = pd.read_csv(bin_file, sep= "\t", header = 0)
     ## add header for the bin_df
@@ -630,93 +550,105 @@ def load_bin(bin_file):
         bin_ctg_dict[bin_id].append(contig)
     return ctg_bin_dict, bin_ctg_dict
 
-def load_ctg_motifs_single(profile_dir, MGE_dict):
-    ctg_single_dict = {}
-    single_ctg_dict = defaultdict(list)
-    ctg_profile_dict = {}
-    ctg_motif_dict = {}
-    ## enumerage the files in the profile_dir
-    i = 0
-    for file in os.listdir(profile_dir):
-        if file.endswith(".motifs.profile.csv"):
-            ## extract the host name
-            ctg_name = file.split(".motifs.profile.csv")[0]
-            host_motif = os.path.join(profile_dir,"../motifs", f"{ctg_name}.motifs.csv")
-            host_profile = os.path.join(profile_dir, file)
-
-            # if ctg_name != "E_coli_H10407_1":
-            #     continue
-            
-            if ctg_name in MGE_dict: ## skip other MGEs, only focus on chromosomal host
-                continue
-            
-            if not os.path.exists(host_motif):
-                print (f"load_ctg_motifs_single host_motif {host_motif} does not exist.")
-                continue
-            motif_df = pd.read_csv(host_motif)
-            ctg_motif_dict[ctg_name] = motif_df
-            
-            ## check if the host profile and host_motif exists
-            if not os.path.exists(host_profile):
-                print (f"host_profile {host_profile} does not exist.")
-                continue
-
-            host_df = pd.read_csv(host_profile)
-
-            ctg_single_dict[ctg_name] = ctg_name
-            single_ctg_dict[ctg_name].append(ctg_name)
-            ctg_profile_dict[ctg_name] = host_df
-
-            if i % 1000 == 0:
-                print (f"load_ctg_motifs_single Loading {i} files...")
-            i += 1
-    return ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict
-
 def process_file_with_args(args):
     file, profile_dir = args
-    if file.endswith(".motifs.profile.csv"):
-        ctg_name = file.split(".motifs.profile.csv")[0]
-        host_motif = os.path.join(profile_dir, "../motifs", f"{ctg_name}.motifs.csv")
-        if not os.path.exists(host_motif):
-            print(f"process_file_with_args host_motif {host_motif} does not exist.")
-            return None
-        motif_df = pd.read_csv(host_motif)
-        host_profile = os.path.join(profile_dir, file)
-        if not os.path.exists(host_profile):
-            print(f"host_profile {host_profile} does not exist.")
-            return None
-        host_df = pd.read_csv(host_profile)
-        return {
-            "ctg_name": ctg_name,
-            "motif_df": motif_df,
-            "host_df": host_df
-        }
+    try:
+        if file.endswith(".motifs.profile.csv"):
+            ctg_name = file.split(".motifs.profile.csv")[0]
+            host_motif = os.path.join(profile_dir, "../motifs", f"{ctg_name}.motifs.csv")
+            if not os.path.exists(host_motif):
+                print(f"process_file_with_args host_motif {host_motif} does not exist.")
+                return None
+            
+            host_profile = os.path.join(profile_dir, file)
+            if not os.path.exists(host_profile):
+                print(f"host_profile {host_profile} does not exist.")
+                return None
+            
+            # Use faster CSV reading with engine='c'
+            motif_df = pd.read_csv(host_motif, engine='c')
+            host_df = pd.read_csv(host_profile, engine='c')
+            
+            return {
+                "ctg_name": ctg_name,
+                "motif_df": motif_df,
+                "host_df": host_df
+            }
+    except Exception as e:
+        print(f"Error processing file {file}: {e}")
+        return None
     return None
 
 def load_ctg_motifs_parallele(profile_dir, threads=4):
-    print (f"load_ctg_motifs from {profile_dir}...")
-    # Use ProcessPoolExecutor to process files in parallel
-    with ProcessPoolExecutor(max_workers=threads) as executor:
-        futures = []
-        for file in os.listdir(profile_dir):
-            future = executor.submit(
-                process_file_with_args,
-                (file,profile_dir)
-            )
-            futures.append(future)
-
+    import gc
+    print(f"load_ctg_motifs from {profile_dir}...")
+    
+    # Get all files to process
+    all_files = [file for file in os.listdir(profile_dir) if file.endswith(".motifs.profile.csv")]
+    total_files = len(all_files)
+    
+    if total_files == 0:
+        print("No motif profile files found.")
+        return {}, defaultdict(list), {}, {}
+    
+    print(f"Found {total_files} files to process")
+    
+    # Initialize result containers
     results = []
     processed_count = 0
-    for future in tqdm(as_completed(futures), total=len(futures)):
-        result = future.result()
-        if result is not None:
-            results.append(result)
+    
+    # Process files in batches to avoid memory issues
+    batch_size = 100
+    
+    # Use fewer workers for better memory management
+    effective_threads = min(threads, 64)
+    
+    for i in range(0, total_files, batch_size):
+        batch_files = all_files[i:i + batch_size]
+        batch_num = i // batch_size + 1
+        total_batches = (total_files + batch_size - 1) // batch_size
+        
+        print(f"Processing batch {batch_num}/{total_batches} ({len(batch_files)} files)")
+        
+        # Process current batch
+        with ProcessPoolExecutor(max_workers=effective_threads) as executor:
+            # Create futures for current batch only
+            batch_futures = []
+            for file in batch_files:
+                future = executor.submit(
+                    process_file_with_args,
+                    (file, profile_dir)
+                )
+                batch_futures.append(future)
+            
+            # Process results as they complete
+            batch_results = []
+            for future in tqdm(as_completed(batch_futures), 
+                             total=len(batch_futures), 
+                             desc=f"Batch {batch_num}"):
+                try:
+                    result = future.result(timeout=30)  # 30-second timeout per file
+                    if result is not None:
+                        batch_results.append(result)
+                except Exception as e:
+                    print(f"Error processing file in batch {batch_num}: {e}")
+                
+                processed_count += 1
+                
+                # Log progress every 50 files
+                if processed_count % 50 == 0:
+                    print(f"Processed {processed_count}/{total_files} files, "
+                          f"found {len(results) + len(batch_results)} valid results")
+        
+        # Add batch results to main results
+        results.extend(batch_results)
+        
+        # Force garbage collection between batches to free memory
+        gc.collect()
+        
+        print(f"Batch {batch_num} completed. Total valid results so far: {len(results)}")
 
-        processed_count += 1
-        # Log every 100 contigs
-        if processed_count % 100 == 0:
-            print(f"Processed {processed_count}/{len(futures)} contigs, found {len(results)} valid results")
-
+    print(f"All batches completed. Processing {len(results)} valid results into dictionaries...")
 
     # Combine results into dictionaries
     ctg_single_dict = {}
@@ -730,7 +662,8 @@ def load_ctg_motifs_parallele(profile_dir, threads=4):
         single_ctg_dict[ctg_name].append(ctg_name)
         ctg_profile_dict[ctg_name] = result["host_df"]
         ctg_motif_dict[ctg_name] = result["motif_df"]
-    print ("load_ctg_motifs done.")
+    
+    print(f"load_ctg_motifs done. Processed {len(results)} contigs successfully.")
     return ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict
 
 if __name__ == "__main__":
