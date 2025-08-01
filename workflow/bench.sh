@@ -1087,3 +1087,5 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
       work_dir=/home/shuaiw/borg/paper/run/sludge_merge3" \
       --job-name=sludge_merge3
 
+snakemake -s annotation.smk --config                 hifi_bam=/home/shuaiw/borg/paper/aws/cow/RuReacBro_20230708_Comb_RF_LR.hifi_reads.bam                 prefix=cow_1                 work_dir=/home/shuaiw/borg/paper/run2/cow_1 -j 64
+
