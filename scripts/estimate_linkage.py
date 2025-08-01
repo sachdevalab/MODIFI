@@ -13,32 +13,10 @@ from derep_motifs import MotifFilter, uniq_similar_motifs
 from get_kmer_freq import kmer_freq_sim_bin_worker
 # from linkage_model import compute_p_same_room
 
-# IGNORE_MOTIFS = [
-#     "GATC",
-#     "CCWGG",
-# ]
 
-IGNORE_MOTIFS = [
-]
+MIN_DETECT=100
 
-def count_uniq_motif(valid_motif_list):
-    ## RGATC 3 and GCGATC 4 all have GATC 2, so only count the unique motifs
-    num = 0
-    has_GATC = False
-    for motif_info in valid_motif_list:
-        ## if it has GATC and get the location of the match
-    
-        match = re.search('GATC', motif_info["motif"])
-        if match and motif_info["centerPos"] == match.start() + 2:  ## subset of GATC
-            if not has_GATC:  ## count once for GATC
-                num += 1
-                has_GATC = True
-        else:
-            num += 1
-    # print ("num", num, valid_motif_list)
-    return num
-
-def linkage_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_sites=5000):
+def linkage_score_from_counts(motif_data, max_sites=5000):
     """
     Adds confidence weighting based on motif site counts.
     """
@@ -110,15 +88,36 @@ def linkage_score_from_counts(motif_data, min_frac=0.5, neutral_score=1.0, max_s
         'host_motif_num': len(motif_data)
     }
 
-def extract_motif_data(host_df, plasmid_df, min_frac = 0.5, min_detect = 100):
-    motif_data = pd.merge(host_df, plasmid_df, on = ['motifString', 'centerPos'], suffixes=('_host', '_plasmid'))
-    # print ("<<<<<", motif_data)
-    motif_data = motif_data[(motif_data['motif_modified_ratio_host'] > min_frac) & (motif_data['motif_modified_num_host'] > min_detect)]
-    motif_data = motif_data[['motifString', 'centerPos', 'motif_loci_num_host', 'motif_modified_num_host', 'motif_loci_num_plasmid', 'motif_modified_num_plasmid']]
+def extract_motif_data(host_df, plasmid_df, min_frac = 0.5):
+    # Early exit if either DataFrame is empty
+    if host_df.empty or plasmid_df.empty:
+        return []
+    
+    # Use merge with inner join (default) for better performance
+    motif_data = pd.merge(host_df, plasmid_df, on=['motifString', 'centerPos'], 
+                         suffixes=('_host', '_plasmid'), how='inner')
+    
+    # Early exit if no common motifs
+    if motif_data.empty:
+        return []
+    
+    # Combine filtering operations into single query for better performance
+    motif_data = motif_data.query(
+        f'motif_modified_ratio_host > {min_frac} and motif_modified_num_host > {MIN_DETECT}'
+    )
+    
+    # Early exit if no motifs pass filtering
+    if motif_data.empty:
+        return []
+    
+    # Select columns and rename in one operation
+    motif_data = motif_data[['motifString', 'centerPos', 'motif_loci_num_host', 
+                           'motif_modified_num_host', 'motif_loci_num_plasmid', 
+                           'motif_modified_num_plasmid']]
     motif_data.columns = ['motif', 'centerPos', 'host_total', 'host_meth', 'plasmid_total', 'plasmid_meth']
-    # print (motif_data)
-    motif_data = motif_data.to_dict('records')
-    return motif_data
+    
+    # Convert to records - this is the most efficient way
+    return motif_data.to_dict('records')
 
 def merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict):
     """
@@ -148,7 +147,7 @@ def merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict):
             bin_df = merge_df[['motifString', 'centerPos', 'motif_loci_num', 'motif_modified_num', 'motif_modified_ratio']]
         return bin_df
 
-def merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict):
+def merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict, min_frac):
     ctg_list = bin_ctg_dict[bin_name]
     if len(ctg_list) == 1:
         if ctg_list[0] not in ctg_motif_dict:
@@ -163,15 +162,39 @@ def merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict):
             df = ctg_motif_dict[ctg_name]
             if not df.empty:
                 motif_df = pd.concat([motif_df, df], axis=0)
-        motif_df = motif_df.drop_duplicates()
-        return motif_df
+        
+        # If no motif data found, return empty DataFrame
+        if motif_df.empty:
+            return motif_df
+            
+        aggregated_motif = motif_df.groupby(['motifString', 'centerPos']).agg({
+            'nGenome': 'sum',
+            'nDetected': 'sum'
+        }).reset_index()
+        
+        # Recalculate the modified ratio
+        aggregated_motif['fraction'] = (
+            aggregated_motif['nDetected'] / 
+            aggregated_motif['nGenome'].replace(0, 1)
+        )
+        ## only retain the motifs with fraction >= min_frac and nDetected >= MIN_DETECT
+        aggregated_motif = aggregated_motif[
+            (aggregated_motif['fraction'] > min_frac) & 
+            (aggregated_motif['nDetected'] > MIN_DETECT)
+        ]
+        
+        return aggregated_motif
 
-def merge_bin_motif(bin_cov_dict, bin_ctg_dict, ctg_motif_dict, ctg_profile_dict):
+
+def merge_bin_motif(bin_cov_dict, bin_ctg_dict, ctg_motif_dict, ctg_profile_dict, min_frac):
     bin_df_dict = {}
     bin_motif_dict = {}
     for bin_name in bin_cov_dict:
         bin_df = merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict)
-        bin_motif = merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict)
+        bin_motif = merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict, min_frac)
+        if len(bin_df) == 0 and len(bin_motif) == 0:
+            print(f"Bin {bin_name} has no methylation profile or motif data.")
+            continue
         bin_df_dict[bin_name] = bin_df
         bin_motif_dict[bin_name] = bin_motif
     return bin_df_dict, bin_motif_dict
@@ -200,7 +223,7 @@ def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name):
     motif_data = filter_motifs(bin_motif, motif_data)
     motif_filter = MotifFilter(motif_data)
     motif_data = motif_filter.filter()
-    result = linkage_score_from_counts(motif_data, min_frac, 0.5)
+    result = linkage_score_from_counts(motif_data)
     return result, motif_data, bin_name
 
 def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir,cov_dict, bin_cov_dict, threads, min_frac = 0.5):
@@ -214,16 +237,16 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
     ## check if the plasmid profile exists
     if not os.path.exists(plasmid_profile):
         print (f"plasmid_profile {plasmid_profile} does not exist.")
-        return
+        return []
     plasmid_df = pd.read_csv(plasmid_profile)
 
-    # Get all valid bins to process
-    valid_bins = []
-    for bin_name in bin_cov_dict:
-        bin_df = bin_df_dict[bin_name]
-        if len(bin_df) > 0:
-            valid_bins.append(bin_name)
-    
+    # # Get all valid bins to process
+    # valid_bins = []
+    # for bin_name in bin_cov_dict:
+    #     bin_df = bin_df_dict[bin_name]
+    #     if len(bin_df) > 0:
+    #         valid_bins.append(bin_name)
+    valid_bins = list(bin_df_dict.keys())
     total_bins = len(valid_bins)
     if total_bins == 0:
         print(f"No valid bins found for plasmid {plasmid_name}")
@@ -232,7 +255,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
     print(f"Processing {total_bins} bins for plasmid {plasmid_name}")
     
     all_result = []
-    batch_size = 100  # Process bins in batches
+    batch_size = 1000  # Process bins in batches
     effective_threads = min(threads, 64)  # Limit threads for bin processing
     
     for i in range(0, total_bins, batch_size):
@@ -370,28 +393,21 @@ def read_genomad(genomad_file):
     return MGE_dict
 
 def filter_motifs(host_motif, motif_data):
-    # host_motifs = pd.read_csv(host_motif)
-    host_motifs = host_motif
-    ## filter motifs in motif data, only keep the motifs in host_motifs by examing the motifString and centerPos
-    motif_tag_dict = {}
-    for index, row in host_motifs.iterrows():
-        motif_tga = row['motifString'] + "_tga_" + str(row['centerPos'])
-        motif_tag_dict[motif_tga] = 1
-    new_motif_data = []
-
-    for m in motif_data:
-        ## remove the ignored motifs
-        # ignore_flag = False
-        # for ignore_motif in IGNORE_MOTIFS:
-        #     if ignore_motif in m['motif']:
-        #         ignore_flag = True
-        #         break
-        # if ignore_flag:
-        #     continue
-
-        tag = m['motif'] + "_tga_" + str(m['centerPos'])
-        if tag in motif_tag_dict:
-            new_motif_data.append(m)
+    # Early exit if no data
+    if host_motif.empty or not motif_data:
+        return []
+    
+    # Use vectorized operations instead of iterrows() - much faster
+    # Create tags using vectorized string operations
+    host_motif_tags = (host_motif['motifString'] + "_tga_" + host_motif['centerPos'].astype(str)).tolist()
+    motif_tag_set = set(host_motif_tags)  # Use set for O(1) lookup instead of dict
+    
+    # Filter motifs using list comprehension - faster than loop + append
+    new_motif_data = [
+        m for m in motif_data 
+        if (m['motif'] + "_tga_" + str(m['centerPos'])) in motif_tag_set
+    ]
+    
     return new_motif_data
 
 def count_MGE_with_motif(plasmid_name, profile_dir):
@@ -504,18 +520,23 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
     bin_cov_dict = get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref, MGE_dict)  ## estimate the coverage for each bin, and remove bins with cov < min_ctg_cov
     print (f"Estimated {len(bin_cov_dict)} bins with coverage >= {min_ctg_cov}.")
     
-    bin_df_dict, bin_motif_dict = merge_bin_motif(bin_cov_dict, bin_ctg_dict, ctg_motif_dict, ctg_profile_dict)
+    bin_df_dict, bin_motif_dict = merge_bin_motif(bin_cov_dict, bin_ctg_dict, ctg_motif_dict, ctg_profile_dict, min_frac)
+    print (f"Loaded {len(bin_df_dict)} bins with methylation profile and motifs.")
+    
     print ("threads number for linkage prediction: ", threads)
+    ## remove the MGE with cov < min_ctg_cov
+    MGE_dict = {k: v for k, v in MGE_dict.items() if k in cov_dict and cov_dict[k] >= min_ctg_cov}
     print ("MGE number: ", len(MGE_dict))
 
     i = 0
     all_final_score_list = []
     for plasmid_name in MGE_dict:
-        MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
+        # MGE_motif_num = count_MGE_with_motif(plasmid_name, profile_dir)
         # if MGE_motif_num == 0:  # to speed up
         #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
         #     continue
-        print (f"Processing {i}-th/{len(MGE_dict)} {plasmid_name} with {MGE_motif_num} original motifs.")
+        # print (f"Processing {i}-th/{len(MGE_dict)} {plasmid_name} with {MGE_motif_num} original motifs.")
+        print (f"Processing {i}-th/{len(MGE_dict)} {plasmid_name}.")
 
         final_score_list = for_each_plasmid(
             bin_df_dict = bin_df_dict,
@@ -629,6 +650,9 @@ def load_ctg_motifs_parallele(profile_dir, threads=4):
                 try:
                     result = future.result(timeout=30)  # 30-second timeout per file
                     if result is not None:
+                        if result["motif_df"].empty or result["host_df"].empty:
+                            # print(f"Skipping empty result for {result['ctg_name']}")
+                            continue
                         batch_results.append(result)
                 except Exception as e:
                     print(f"Error processing file in batch {batch_num}: {e}")
@@ -733,7 +757,7 @@ if __name__ == "__main__":
     motif_data = filter_motifs(host_motif, motif_data)
     print (motif_data)
 
-    result = linkage_score_from_counts(motif_data, min_frac)
+    result = linkage_score_from_counts(motif_data)
     print(result)"
     """
 

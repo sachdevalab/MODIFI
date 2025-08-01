@@ -990,7 +990,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   --min_score 30 \
   --min_sites 30 \
   --run_steps host \
-  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list\
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv\
   --threads 64  " \
   --job-name=pipeline
 
