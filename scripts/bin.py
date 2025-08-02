@@ -18,6 +18,7 @@ import numpy as np
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 import umap
+from sklearn.cluster import AgglomerativeClustering
 
 
 
@@ -140,6 +141,116 @@ def JC_hierarchical_clustering(df, cutoff=0.45):
     cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
     return cluster_result
 
+## use AgglomerativeClustering
+
+def Agglomerative_clustering(df, cutoff=0.8):
+    matrix = df.to_numpy()
+    ## Trabspose the matrix
+    matrix = matrix.T
+
+    ## zero values are set to small random pseudovalues in the (−0.2, +0.2)
+    # mask = matrix == 0
+    # matrix[mask] = np.random.uniform(-0.2, 0.2, mask.sum())
+
+    matrix = (matrix > 0.5).astype(int) 
+
+    clustering = AgglomerativeClustering(
+        metric='jaccard', 
+        linkage='average', 
+        distance_threshold=cutoff,
+        n_clusters=None
+    ).fit(matrix)
+    
+    n_clusters = len(set(clustering.labels_))
+    print (n_clusters, "clusters detected in Agglomerative clustering.")
+
+    data = []
+    for i in range(n_clusters):
+        # print ("cluster", i)
+        for j in range(len(clustering.labels_)):
+            if clustering.labels_[j] == i:
+                # print (df.columns[j])
+                data.append([df.columns[j], i])
+    cluster_result = pd.DataFrame(data, columns = ['contigs', 'cluster'])
+    return cluster_result
+
+## use infomap for clustering, first build the network from the matrix using networkx
+def infomap_clustering(df, min_similarity=0.3):
+    import networkx as nx
+    from infomap import Infomap
+    from scipy.spatial.distance import pdist, squareform
+    from scipy.spatial.distance import jaccard
+
+    matrix = df.to_numpy()
+    ## Transpose the matrix
+    matrix = matrix.T
+
+    # Convert to binary matrix
+    matrix = (matrix > 0.5).astype(int) 
+    
+    # Build graph with Jaccard similarity as edge weights
+    G = nx.Graph()
+    
+    # Add nodes (contigs)
+    contigs = df.columns.tolist()
+    G.add_nodes_from(range(len(contigs)))
+    
+    # Calculate Jaccard similarity between all pairs of contigs
+    print("Building similarity graph...")
+    n_contigs = matrix.shape[0]
+    
+    for i in range(n_contigs):
+        for j in range(i + 1, n_contigs):
+            # Calculate Jaccard similarity
+            intersection = np.sum(matrix[i] & matrix[j])
+            union = np.sum(matrix[i] | matrix[j])
+            
+            if union > 0:
+                jaccard_sim = intersection / union
+                
+                # Only add edge if similarity is above threshold
+                if jaccard_sim >= min_similarity:
+                    G.add_edge(i, j, weight=jaccard_sim)
+    
+    print(f"Graph built with {G.number_of_nodes()} nodes and {G.number_of_edges()} edges")
+    
+    # Run Infomap clustering
+    im = Infomap()
+    
+    # Add all nodes first (important for isolated nodes)
+    for node in range(len(contigs)):
+        im.addNode(node)
+    
+    # Add edges to Infomap
+    for edge in G.edges(data=True):
+        im.addLink(edge[0], edge[1], edge[2]['weight'])
+    
+    # Run clustering
+    im.run()
+    
+    # Extract cluster assignments using the correct Infomap API
+    cluster_assignments = []
+    
+    # Get the modules (clusters) from Infomap
+    # The correct way is to iterate through the tree structure
+    for node in im.tree:
+        if node.is_leaf:
+            cluster_assignments.append((node.node_id, node.module_id))
+    
+    # Sort by node_id to maintain order
+    cluster_assignments.sort(key=lambda x: x[0])
+    
+    # Create the result dataframe
+    cluster_result = pd.DataFrame({
+        'contigs': [contigs[node_id] for node_id, _ in cluster_assignments],
+        'cluster': [module_id for _, module_id in cluster_assignments]
+    })
+    
+    n_clusters = len(set(cluster_result['cluster']))
+    print(n_clusters, "clusters detected in Infomap clustering.")
+    
+    return cluster_result
+
 def hierarchical_clustering(df, cutoff=1.6):
     matrix = df.to_numpy()
     ## Trabspose the matrix
@@ -249,7 +360,7 @@ if __name__ == "__main__":
     # bin_contigs_to_fastas(cluster_csv, fasta_path, output_prefix)
 
     whole_ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
-    bin_dir = "/home/shuaiw/borg/bench/soil/run2/test_bin/"
+    bin_dir = "/home/shuaiw/borg/bench/soil/run2/test_bin_infomap/"
     profile_file =  "/home/shuaiw/borg/bench/soil/run2/motif_profile.csv"
     min_frac = 0.4
 
@@ -267,6 +378,9 @@ if __name__ == "__main__":
     print ("filtered shape", profiles.shape)
     print (profiles)
     # cluster_df = TSE(profiles)
-    cluster_df = JC_hierarchical_clustering(profiles)
+    # cluster_df = JC_hierarchical_clustering(profiles)
+    # cluster_df = Agglomerative_clustering(profiles)
+    cluster_df = infomap_clustering(profiles, min_similarity=0.3)
     bin_contigs_to_fastas_df(cluster_df, whole_ref, output_prefix)
+    os.system(f"checkm2 predict --input {bin_dir} --output-directory {bin_dir}/checkm_methy --force -x .fasta --threads 20")
 
