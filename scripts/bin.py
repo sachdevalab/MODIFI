@@ -209,8 +209,8 @@ def infomap_clustering(df, min_similarity=0.3):
                 jaccard_sim = intersection / union
                 
                 # Only add edge if similarity is above threshold
-                if jaccard_sim >= min_similarity:
-                    G.add_edge(i, j, weight=jaccard_sim)
+                # if jaccard_sim >= min_similarity:
+                G.add_edge(i, j, weight=jaccard_sim)
     
     print(f"Graph built with {G.number_of_nodes()} nodes and {G.number_of_edges()} edges")
     

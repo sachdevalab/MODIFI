@@ -153,7 +153,8 @@ def plot_quality_categories(df1, df2):
 # report = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_break/checkM2/quality_report.tsv"
 # report = "/home/shuaiw/methylation/data/borg/bench/zymo_new_ref_break/checkM_metabat/quality_report.tsv"
 # our_report = "/home/shuaiw/borg/bench/soil/run2/checkm_methy/quality_report.tsv"
-our_report = "/home/shuaiw/borg/bench/soil/run2/test_bin_agg_0.8/checkm_methy/quality_report.tsv"
+our_report = "/home/shuaiw/borg/bench/soil/run2/test_bin_infomap/checkm_methy/quality_report.tsv"
+# our_report = "/home/shuaiw/borg/bench/soil/run2/test_bin_agg_0.8/checkm_methy/quality_report.tsv"
 metabat_report = "/home/shuaiw/borg/bench/soil/run2/checkm_metabat/quality_report.tsv"
 our_df = read_report(our_report)
 metabat_df = read_report(metabat_report)
