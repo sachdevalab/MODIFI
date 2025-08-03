@@ -444,6 +444,11 @@ def count_all_motif_num():
         print (f"Processing {prefix}...")
         work_dir = f"{all_dir}/{prefix}/{prefix}_methylation"
         fai = f"{all_dir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
+        if not os.path.exists(fai):
+            print(f"Skipping {prefix} as fai file does not exist.")
+            continue
+        N50, genome_size = count_N50_size(fai)
+        print(f"{prefix}: N50 size: {N50}, Genome size: {genome_size}")
         all_host_file = f"{all_dir}/{prefix}/all_host_ctgs.tsv"
         ## skip if all_host_file does not exist
         if not os.path.exists(all_host_file):
@@ -452,7 +457,7 @@ def count_all_motif_num():
         depth_file = os.path.join(work_dir, "mean_depth.csv")
         best_ctgs, good_depth = get_best_ctg(depth_file, fai)
         best_ctgs = read_all_host(all_host_file, good_depth)
-        print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
+        # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
         sample_data = count_motifs(depth_file, best_ctgs, work_dir, prefix)
         if not sample_data:
             print(f"No motifs found for {prefix}.")
@@ -462,7 +467,7 @@ def count_all_motif_num():
     ## convert to df
     df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num'])
     ## plot boxplot where sample is on x-axis and motif_num is on y-axis
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(14, 6))
     sns.boxplot(data=df_all_data, x='sample', y='motif_num', palette='Set2')
     plt.xticks(rotation=90)
     plt.title('Distribution of Motif Numbers Across Samples')
@@ -470,6 +475,29 @@ def count_all_motif_num():
     plt.ylabel('Number of Motifs')
     plt.savefig("../../tmp/results/motif_num_distribution_all_samples.png", dpi=300, bbox_inches='tight')
 
+def count_N50_size(fai):
+    """
+    Count N50 size from a fasta index file.
+    """
+    total_length = 0
+    contig_lengths = []
+    with open(fai, "r") as f:
+        for line in f:
+            ctg, length, _, _, _ = line.strip().split("\t")
+            length = int(length)
+            contig_lengths.append(length)
+            total_length += length
+    contig_lengths.sort(reverse=True)
+    
+    n50_size = 0
+    half_length = total_length / 2
+    current_length = 0
+    for length in contig_lengths:
+        current_length += length
+        if current_length >= half_length:
+            n50_size = length
+            break
+    return n50_size, total_length
 
 if __name__ == "__main__":
     count_all_motif_num()
