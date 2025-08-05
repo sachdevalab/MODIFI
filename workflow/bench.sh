@@ -1101,7 +1101,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --min_score 30 \
   --min_sites 30 \
   --mge_file /home/shuaiw/borg/paper/run2/cow_1/all_mge.tsv \
-  --threads 64  " \
+  --threads 64   --run_steps host" \
   --job-name=cow_test
 
 
@@ -1117,5 +1117,67 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --min_score 30 \
   --min_sites 30 \
   --mge_file /home/shuaiw/borg/paper/run2/ocean_1/all_mge.tsv \
-  --threads 64  " \
+  --threads 64  --run_steps profile merge host" \
   --job-name=ocean_test
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation2 \
+  --whole_bam /home/shuaiw/borg/paper/run2/soil_1/soil_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/soil_1/soil_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/soil_1/all_mge.tsv \
+  --threads 64" \
+  --job-name=soil_test
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1_methylation2 \
+  --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_1/all_mge.tsv \
+  --threads 64" \
+  --job-name=bioreactor_1_test
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/infant_1/infant_1_methylation2 \
+  --whole_bam /home/shuaiw/borg/paper/run2/infant_1/infant_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/infant_1/infant_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/infant_1/all_mge.tsv \
+  --threads 64" \
+  --job-name=infant_1_test
+
+
+python main.py \
+  --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec7 \
+  --whole_bam xx \
+  --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --run_steps host \
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv\
+  --threads 64 

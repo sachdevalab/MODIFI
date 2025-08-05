@@ -14,7 +14,6 @@ from get_kmer_freq import kmer_freq_sim_bin_worker
 # from linkage_model import compute_p_same_room
 
 
-MIN_DETECT=100
 
 def linkage_score_from_counts(motif_data, max_sites=5000):
     """
@@ -88,7 +87,7 @@ def linkage_score_from_counts(motif_data, max_sites=5000):
         'host_motif_num': len(motif_data)
     }
 
-def extract_motif_data(host_df, plasmid_df, min_frac = 0.5):
+def extract_motif_data(host_df, plasmid_df, min_frac = 0.5, min_detect = 100):
     # Early exit if either DataFrame is empty
     if host_df.empty or plasmid_df.empty:
         return []
@@ -100,12 +99,10 @@ def extract_motif_data(host_df, plasmid_df, min_frac = 0.5):
     # Early exit if no common motifs
     if motif_data.empty:
         return []
-    
     # Combine filtering operations into single query for better performance
     motif_data = motif_data.query(
-        f'motif_modified_ratio_host > {min_frac} and motif_modified_num_host > {MIN_DETECT}'
+        f'motif_modified_ratio_host > {min_frac} and motif_modified_num_host > {min_detect}'
     )
-    
     # Early exit if no motifs pass filtering
     if motif_data.empty:
         return []
@@ -218,15 +215,16 @@ def summary_motif_info(motif_data):
     motif_info = ";".join(motif_info)
     return motif_info
 
-def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name):
-    motif_data = extract_motif_data(bin_df, plasmid_df, min_frac)
+def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name, min_detect):
+    motif_data = extract_motif_data(bin_df, plasmid_df, min_frac, min_detect)
     motif_data = filter_motifs(bin_motif, motif_data)
-    motif_filter = MotifFilter(motif_data)
-    motif_data = motif_filter.filter()
+    # motif_filter = MotifFilter(motif_data)
+    # motif_data = motif_filter.filter()
+
     result = linkage_score_from_counts(motif_data)
     return result, motif_data, bin_name
 
-def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir,cov_dict, bin_cov_dict, threads, min_frac = 0.5):
+def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir, cov_dict, bin_cov_dict, threads, min_frac = 0.5, min_detect = 100):
     import gc
     plasmid_profile = f"{profile_dir}/{plasmid_name}.motifs.profile.csv"
     # cov_dict = load_coverage(host_dir)
@@ -278,6 +276,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
                     bin_motif = bin_motif,
                     min_frac = min_frac,
                     bin_name = bin_name,
+                    min_detect = min_detect,
                 )
                 batch_futures.append(future)
 
@@ -503,8 +502,7 @@ def get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref, MGE_dict):
         #     bin_cov = 'NA'
     return bin_cov_dict
 
-def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=None, min_frac = 0.5, threads = 1, min_ctg_cov = 5):
-
+def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=None, min_frac = 0.5, threads = 1, min_ctg_cov = 5, min_detect = 100):
     MGE_dict = read_genomad(plasmid_file)
     cov_dict = load_coverage(host_dir)
     ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs_parallele(profile_dir, threads)
@@ -548,6 +546,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
             bin_cov_dict = bin_cov_dict,
             threads = threads,
             min_frac = min_frac,
+            min_detect = min_detect,
         )
         i += 1
         if final_score_list is not None:
@@ -606,6 +605,7 @@ def load_ctg_motifs_parallele(profile_dir, threads=4):
     
     # Get all files to process
     all_files = [file for file in os.listdir(profile_dir) if file.endswith(".motifs.profile.csv")]
+    # all_files = ["cow_1_3388_L.motifs.profile.csv"]
     total_files = len(all_files)
     
     if total_files == 0:

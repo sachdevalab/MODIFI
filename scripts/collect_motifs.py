@@ -5,6 +5,8 @@ Given the folder motifs/, enumerage all the motifs and collect them into a singl
 import os
 import sys
 import pandas as pd
+from Bio.Seq import Seq  # BioPython is used for reverse complement functionality
+
 
 from derep_motifs import MotifFilter, uniq_similar_motifs
 
@@ -40,7 +42,12 @@ def collect_motifs(folder, all_motif, MIN_FRAC, MIN_detect):
     motifs.to_csv(all_motif, index=False)
     print ("no of motifs from all contigs:", len(motifs))
 
-    drep_motifs(motifs, all_motif)
+    # drep_motifs(motifs, all_motif)
+    print ("skip drep motifs")
+    drep_motif_file = all_motif.replace(".csv", "_drep.csv")
+    motifs.to_csv(drep_motif_file, index=False)
+
+
 
 
 def drep_motifs(motifs, all_motif):
@@ -55,7 +62,7 @@ def drep_motifs(motifs, all_motif):
             'indentifier': row['indentifier'],
         })
     motif_filter = MotifFilter(motif_data)
-    motif_data = motif_filter.filter()
+    motif_data,final_similarity_groups = motif_filter.filter()
     # print (len(motif_data))
     ## filter the motifs with identifier exsits in motif_data
     retained_motifs = {}
@@ -64,6 +71,14 @@ def drep_motifs(motifs, all_motif):
     motifs = motifs[motifs['indentifier'].isin(retained_motifs.keys())]
     print (len(motifs), "motifs after dereplication")
     motifs.to_csv(drep_motif_file, index=False)
+    ## print the final similarity groups
+    print("Final similarity groups:")
+    for group in final_similarity_groups:
+        print(group)
+
+def test_drep_motifs():
+    motifs = pd.read_csv(all_motif)
+    drep_motifs(motifs, "/home/shuaiw/borg/paper/run2/cow_1/cow_1_methylation2/test.all.motifs.drep.csv")
 
 
 if __name__ == "__main__":
@@ -77,3 +92,4 @@ if __name__ == "__main__":
     MIN_FRAC = float(sys.argv[3])
     MIN_detect = int(sys.argv[4])
     collect_motifs(folder, all_motif, MIN_FRAC, MIN_detect)
+    # test_drep_motifs()

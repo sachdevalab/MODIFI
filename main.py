@@ -471,7 +471,7 @@ def depth_analysis(paras, ctg_depth_dict):
 def predict_host_worker(args, paras):
     os.makedirs(paras["hosts"], exist_ok = True)
     if args.mge_file != 'NA' and os.path.exists(args.mge_file):
-        batch_MGE_invade(args.mge_file, paras["profiles"], paras["hosts"], args.whole_ref, bin_file=args.bin_file, min_frac=0.5, threads=args.threads, min_ctg_cov = args.min_ctg_cov)
+        batch_MGE_invade(args.mge_file, paras["profiles"], paras["hosts"], args.whole_ref, bin_file=args.bin_file, min_frac=0.5, threads=args.threads, min_ctg_cov = args.min_ctg_cov, min_detect = args.min_sites)
 
 def get_paras(args):
     """
