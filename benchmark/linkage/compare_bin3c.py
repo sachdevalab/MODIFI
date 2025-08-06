@@ -116,10 +116,11 @@ def read_contact_values(contact_value_file):
     return contact_values
 
 
-
-bin3c_cluster = "/home/shuaiw/borg/paper/run2/cow_bioreactor_1/hic/bin3c_clust/clustering.mcl"
-host_sum = "/home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1_methylation/host_summary.csv"
-contact_value_file = "/home/shuaiw/borg/paper/run2/cow_bioreactor_1/hic/bin3c/contact_values.txt"
+prefix="cow_bioreactor_1"
+# prefix="cow_1"
+bin3c_cluster = f"/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c_clust/clustering.mcl"
+host_sum = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation2/host_summary.csv"
+contact_value_file = f"/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c/contact_values.txt"
 
 our_linkages = assess_linage(bin3c_cluster, host_sum)
 contact_values = read_contact_values(contact_value_file)
@@ -160,5 +161,5 @@ plt.ylabel('Contact Values')
 plt.yscale('log')
 plt.title('Comparison of Contact Values for Our Linkages vs Random Pairs')
 plt.grid(True)
-plt.savefig('/home/shuaiw/borg/paper/run2/cow_bioreactor_1/hic/bin3c/contact_values_comparison.pdf', dpi=300, bbox_inches='tight')
-plt.show()  
+plt.savefig(f'/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c/contact_values_comparison.pdf', dpi=300, bbox_inches='tight')
+plt.show()

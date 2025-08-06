@@ -19,28 +19,28 @@ rule all_mge:
 
 
 # plasX to call plasmids
-# rule anvi:
-#     input:
-#         fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
-#     output:
-#         anvi_done=f"{config['work_dir']}/anvi.done"
-#     params:
-#         prefix=f"{config['work_dir']}/{config['prefix']}",
-#     threads: config["threads"]
-#     shell:
-#         """
-#         anvi-gen-contigs-database -L 0 -T {threads} --project-name {params.prefix} -f {input.fasta} -o {params.prefix}.db
+rule anvi:
+    input:
+        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+    output:
+        anvi_done=f"{config['work_dir']}/anvi.done"
+    params:
+        prefix=f"{config['work_dir']}/{config['prefix']}",
+    threads: config["threads"]
+    shell:
+        """
+        anvi-gen-contigs-database -L 0 -T {threads} --project-name {params.prefix} -f {input.fasta} -o {params.prefix}.db
 
-#         anvi-export-gene-calls --gene-caller prodigal -c {params.prefix}.db -o {params.prefix}-gene-calls.txt
+        anvi-export-gene-calls --gene-caller prodigal -c {params.prefix}.db -o {params.prefix}-gene-calls.txt
 
-#         anvi-run-ncbi-cogs -T {threads} --cog-version COG14 --cog-data-dir /home/shuaiw/borg/paper/anvio_db/COG_2014 -c {params.prefix}.db
+        anvi-run-ncbi-cogs -T {threads} --cog-version COG14 --cog-data-dir /home/shuaiw/borg/paper/anvio_db/COG_2014 -c {params.prefix}.db
 
-#         anvi-run-pfams -T {threads} --pfam-data-dir /home/shuaiw/borg/paper/anvio_db/Pfam_v32 -c {params.prefix}.db
+        anvi-run-pfams -T {threads} --pfam-data-dir /home/shuaiw/borg/paper/anvio_db/Pfam_v32 -c {params.prefix}.db
 
-#         anvi-export-functions --annotation-sources COG14_FUNCTION,Pfam -c {params.prefix}.db -o {params.prefix}-cogs-and-pfams.txt
+        anvi-export-functions --annotation-sources COG14_FUNCTION,Pfam -c {params.prefix}.db -o {params.prefix}-cogs-and-pfams.txt
 
-#         touch {output.anvi_done}
-#         """
+        touch {output.anvi_done}
+        """
 
 rule plasX:
     input:
@@ -117,8 +117,35 @@ rule prodigal_gv:
         touch {output.prodigal_gv_finish}
         """
 
+#### how to do rRNA and tRNA from rohan
+rule prokka:
+    input:
+        faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
+        fasta = f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+        prodigal_gv_finish=f"{config['work_dir']}/prodigal/{config['prefix']}.prodigal.finish"
+    output:
+        faa = f"{config['work_dir']}/prokka/{config['prefix']}.faa",
+        tsv = f"{config['work_dir']}/prokka/{config['prefix']}.tsv",
+        prokka_finish = f"{config['work_dir']}/prokka/prokka.finish"
+
+    params:
+        output_dir = f"{config['work_dir']}/prokka",
+        prefix = config["prefix"],
+
+    threads:
+        config["threads"]
+
+    shell:
+        """
+        prokka --outdir {params.output_dir} --prefix {params.prefix} \
+            --cpus {threads} --force \
+            --proteins {input.faa} {input.fasta}
+        touch {output.prokka_finish}
+        """
+
 rule dram:
     input:
+        prokka_finish = f"{config['work_dir']}/prokka/prokka.finish",
         faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
 
     output:
@@ -142,28 +169,3 @@ rule dram:
         touch {output.dram_finish}
         """
 
-#### how to do rRNA and tRNA from rohan
-rule prokka:
-    input:
-        faa = f"{config['work_dir']}/prodigal/{config['prefix']}.faa",
-        fasta = f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
-        dram_finish = f"{config['work_dir']}/dram2/dram.finish",
-    output:
-        faa = f"{config['work_dir']}/prokka/{config['prefix']}.faa",
-        tsv = f"{config['work_dir']}/prokka/{config['prefix']}.tsv",
-        prokka_finish = f"{config['work_dir']}/prokka/prokka.finish"
-
-    params:
-        output_dir = f"{config['work_dir']}/prokka",
-        prefix = config["prefix"],
-
-    threads:
-        config["threads"]
-
-    shell:
-        """
-        prokka --outdir {params.output_dir} --prefix {params.prefix} \
-            --cpus {threads} --force \
-            --proteins {input.faa} {input.fasta}
-        touch {output.prokka_finish}
-        """

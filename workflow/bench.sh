@@ -1132,7 +1132,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --min_score 30 \
   --min_sites 30 \
   --mge_file /home/shuaiw/borg/paper/run2/soil_1/all_mge.tsv \
-  --threads 64" \
+  --threads 64 --run_steps host" \
   --job-name=soil_test
 
 
@@ -1148,11 +1148,11 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --min_score 30 \
   --min_sites 30 \
   --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_1/all_mge.tsv \
-  --threads 64" \
+  --threads 64 --run_steps host" \
   --job-name=bioreactor_1_test
 
 sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
-  --work_dir /home/shuaiw/borg/paper/run2/infant_1/infant_1_methylation2 \
+  --work_dir /home/shuaiw/borg/paper/run2/infant_1/infant_1_methylation3 \
   --whole_bam /home/shuaiw/borg/paper/run2/infant_1/infant_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/infant_1/infant_1.hifiasm.p_ctg.rename.fa \
   --read_type hifi \
@@ -1165,6 +1165,52 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --mge_file /home/shuaiw/borg/paper/run2/infant_1/all_mge.tsv \
   --threads 64" \
   --job-name=infant_1_test
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation2 \
+  --whole_bam /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/soil_s1_1/all_mge.tsv \
+  --threads 64" \
+  --job-name=soil_s1_1_test
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/soil_s3_1/soil_s3_1_methylation2 \
+  --whole_bam /home/shuaiw/borg/paper/run2/soil_s3_1/soil_s3_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/soil_s3_1/soil_s3_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/soil_s3_1/all_mge.tsv \
+  --threads 64" \
+  --job-name=soil_s3_1_test
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1_methylation2 \
+  --whole_bam /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/soil_s4_1/all_mge.tsv \
+  --threads 64" \
+  --job-name=soil_s4_1_test
 
 
 python main.py \
@@ -1181,3 +1227,9 @@ python main.py \
   --run_steps host \
   --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv\
   --threads 64 
+
+
+snakemake  -s find_MGE.smk \ 
+  --config  hifi_bam=/home/shuaiw/borg/paper/aws/infant/NANO_4_INF1340021_5G1_pacbio.bam \
+  prefix=infant_28 \
+  work_dir=/home/shuaiw/borg/paper/run2/infant_28 -j 64 --use-conda
