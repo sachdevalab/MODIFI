@@ -373,8 +373,8 @@ def report_gc(data, host_dir, bin_ctg_dict, threads):
             data.loc[data['MGE'] == MGE, 'MGE_gc'] = MGE_gc
             data.loc[data['MGE'] == MGE, 'host_gc'] = host_gc
             data.loc[data['MGE'] == MGE, 'cos_sim'] = tetra_sim
-    data = data[['MGE', 'host', 'final_score', 'linkage_score', 'confidence', 'motif_confidence', 'total_sites',\
-                  'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
+    # data = data[['MGE', 'host', 'final_score', 'linkage_score', 'confidence', 'motif_confidence', 'total_sites',\
+    #               'host_motif_num', 'MGE_gc', 'host_gc', 'cos_sim', 'MGE_cov', 'host_cov','motif_info']]
     return data
 
 def read_genomad(genomad_file):
@@ -430,7 +430,7 @@ def load_coverage(host_dir):
         cov_dict[contig] = mean_depth
     return cov_dict
 
-def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, n_iter = 10000):
+def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, MGE_dict, n_iter = 10000):
     data = []
     for file in os.listdir(host_dir):
         if file.endswith(".host_prediction.csv"):
@@ -444,7 +444,16 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, n_iter =
             ## add new column for plasmid_name at the start
             if len(df) > 0:
                 # df.insert(0, 'MGE', plasmid_name)
-                data.append(df.iloc[0])
+                best_host = df.iloc[0].copy()  # Make a copy to avoid SettingWithCopyWarning
+                if best_host['MGE'] not in MGE_dict:
+                    print (f"{best_host['MGE']} not in MGE_dict, skip.")
+                    continue
+
+                if best_host['MGE'] in MGE_dict and 'length' in MGE_dict[best_host['MGE']]:
+                    best_host['MGE_len'] = MGE_dict[best_host['MGE']]['length']
+                else:
+                    best_host['MGE_len'] = 0
+                data.append(best_host)  # Append the modified copy
 
     ## randomly select n_iter values from all_final_score_list
     print (f"{len(all_final_score_list)} final scores in all_final_score_list used as background.")
@@ -453,6 +462,7 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, n_iter =
     # print (sorted(selected_scores, reverse=True))
 
     data = pd.DataFrame(data)
+
     ## sort by final_score
     if len(data) > 0:
         data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
@@ -462,9 +472,9 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, n_iter =
         data['pvalue'] = data['pvalue'].round(4)
         # print (data["MGE_gc"])
         ## resort the columns
-        data = data[['MGE', 'host', 'final_score', 'pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
+        data = data[['MGE', 'MGE_len', 'host', 'final_score', 'pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
                     'MGE_cov', 'host_cov', 'linkage_score', 'host_motif_num', 'confidence', 
-                    'motif_confidence', 'total_sites', 'motif_info']]
+                    'motif_confidence',  'total_sites', 'motif_info']]
     ## output the data to a csv file
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)
@@ -553,7 +563,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
             all_final_score_list += final_score_list
 
 
-    summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list)
+    summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list,MGE_dict)
 
 def load_bin(bin_file):
     bin_df = pd.read_csv(bin_file, sep= "\t", header = 0)
