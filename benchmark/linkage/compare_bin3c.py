@@ -11,7 +11,7 @@ import seaborn as sns
 from matplotlib_venn import venn2
 
 
-def read_our(host_sum, ctg2bin_dict={}, score_cutoff = 0.5):
+def read_our(host_sum, ctg2bin_dict={}, score_cutoff = 0.6):
     df = pd.read_csv(host_sum)
     df = df[df['final_score'] > score_cutoff]
     ## only keep df with pvalue < 0.05
@@ -89,7 +89,7 @@ def assess_linage(bin3c_cluster, host_sum):
             print (
                 f"bin3c_cluster_list: {mge_bin3c_cluster}")
 
-    print (f"consistent num: {consistent_num}, inconsistent num: {inconsistent_num}")
+    print (f"consistent num: {consistent_num}, inconsistent num: {inconsistent_num}", f"rate: {consistent_num / (consistent_num + inconsistent_num) if (consistent_num + inconsistent_num) > 0 else 0}")
     return our_linkages
 
 

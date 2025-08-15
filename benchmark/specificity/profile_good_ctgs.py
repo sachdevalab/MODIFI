@@ -194,7 +194,7 @@ def get_ctg_sim2():
     # print (drep_sim_dict)
     return drep_sim_dict
 
-def read_drep_cluster(drep_clu_file):
+def read_drep_cluster(drep_clu_file, best_ctgs):
     
     drep_clu_dict = {}
     df = pd.read_csv(drep_clu_file)
@@ -203,17 +203,25 @@ def read_drep_cluster(drep_clu_file):
     ## count the number of contigs in each cluster
     clu_count = {}
     for ctg, clu in drep_clu_dict.items():
+        if ctg not in best_ctgs:
+            continue
         if clu not in clu_count:
             clu_count[clu] = 0
         clu_count[clu] += 1
     multiple_strain_ctg = {}
     ctg_phylum = {}
+    clu_set = set()
     for ctg, clu in drep_clu_dict.items():
+        if clu not in clu_count:
+            continue
         if clu_count[clu] > 1:
             multiple_strain_ctg[ctg] = clu
             ctg_phylum[ctg] = clu
+            clu_set.add(clu)
     print ("multiple_strain_ctg", multiple_strain_ctg)
-    return multiple_strain_ctg, ctg_phylum
+    return multiple_strain_ctg, ctg_phylum, len(clu_set)
+
+
 
 def jaccard():
     # drep_clu_file = "/home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out/data_tables/Cdb.csv"
@@ -265,6 +273,91 @@ def jaccard():
     plt.xlabel('Cluster Type')
     plt.ylabel('Jaccard Similarity')
     plt.savefig("../../tmp/results/jaccard_similarity.png", dpi=300, bbox_inches='tight')
+    plt.clf()   
+
+def jaccard_batch():
+    all_dir = "/home/shuaiw/borg/paper/run2/"
+    jaccard_similarities = []
+    for my_dir in os.listdir(all_dir):
+        prefix = my_dir
+        print (f"Processing {prefix}...")
+        # work_dir = f"{all_dir}/{prefix}/{prefix}_methylation2"
+
+        # prefix = "ERR12723529"
+        work_dir = "/home/shuaiw/borg/paper/run2"
+        # drep_clu_file = os.path.join(work_dir, prefix, "dRep_out_99", "data_tables", "Cdb.csv")
+        drep_clu_file = os.path.join(work_dir, prefix, "dRep_out", "data_tables", "Cdb.csv")
+        profile_file = os.path.join(work_dir, prefix, f"{prefix}_methylation2", "motif_profile.csv")
+        depth_file = os.path.join(work_dir, prefix, f"{prefix}_methylation2", "mean_depth.csv")
+        fai = os.path.join(work_dir, prefix, f"{prefix}.hifiasm.p_ctg.rename.fa.fai")
+        all_host_file = f"{all_dir}/{prefix}/all_host_ctgs.tsv" 
+        ## skip if all_host_file does not exist
+        if not os.path.exists(all_host_file):
+            print(f"Skipping {prefix} as all_host_file does not exist.")
+            continue
+        if not os.path.exists(fai):
+            continue
+        best_ctgs, good_depth = get_best_ctg(depth_file, fai)
+        best_ctgs = read_all_host(all_host_file, good_depth)
+        ## read length of each ctg in a dict
+
+        ## skip if not exist
+        if not os.path.exists(drep_clu_file) or not os.path.exists(profile_file):
+            print(f"Skipping {prefix} due to missing files.")
+            continue
+
+        multiple_strain_ctg, ctg_phylum, clu_num = read_drep_cluster(drep_clu_file, best_ctgs)
+        if clu_num < 2:
+            continue
+        ## read motif profile file
+        profiles = pd.read_csv(profile_file, index_col=0)
+        ## binary it by 0.5
+        profiles_bin = (profiles >= 0.4).astype(int)
+        profiles_bin = profiles_bin.T
+        
+        # ctg_list = list(multiple_strain_ctg.keys())
+        ctg_list = list(ctg_phylum.keys())
+        # print (profiles_bin)
+        for i in range(len(ctg_list)):
+            for j in range(i + 1, len(ctg_list)):
+                ctg1 = ctg_list[i]
+                ctg2 = ctg_list[j]
+                ## skip if ctg1 not in profiles_bin or ctg2 not in profiles_bin
+                if ctg1 not in profiles_bin.index or ctg2 not in profiles_bin.index:
+                    continue
+                if ctg1 == ctg2:
+                    continue
+                # print (profiles_bin.loc[ctg1])
+                intersection = np.sum((profiles_bin.loc[ctg1] & profiles_bin.loc[ctg2]).astype(int))
+                union = np.sum((profiles_bin.loc[ctg1] | profiles_bin.loc[ctg2]).astype(int))
+                if union == 0:
+                    continue
+                jaccard_similarity = intersection / union if union > 0 else 0
+                if ctg1 in multiple_strain_ctg:
+                    cluster1 = multiple_strain_ctg[ctg1]
+                else:
+                    cluster1 = ctg1
+                if ctg2 in multiple_strain_ctg:
+                    cluster2 = multiple_strain_ctg[ctg2]
+                else:
+                    cluster2 = ctg2
+
+                if cluster1 != cluster2:
+                    # Calculate Jaccard similarity
+                    jaccard_similarities.append([jaccard_similarity, "diff", prefix])
+                else:
+                    jaccard_similarities.append([jaccard_similarity, "same", prefix])
+        # if len(jaccard_similarities) > 5:
+        #     break
+    print (f"Total {len(jaccard_similarities)} Jaccard similarities calculated.")
+    ## plot the Jaccard similarities
+    df_jaccard = pd.DataFrame(jaccard_similarities, columns=['jaccard_similarity', 'cluster_type', 'sample'])
+    plt.figure(figsize=(8, 6))
+    sns.boxplot(data=df_jaccard, hue='cluster_type', x='sample', y='jaccard_similarity', palette='Set2')
+    plt.xticks(rotation=90)
+    plt.title('Jaccard Similarity of Motifs in Multiple Strain Clusters')
+    plt.ylabel('Jaccard Similarity')
+    plt.savefig("../../tmp/results/jaccard_similarity_batch.pdf", dpi=300, bbox_inches='tight')
     plt.clf()   
     
 
@@ -326,7 +419,7 @@ def get_unique_motifs(df_motif):
             unique_motifs.append(row['motifString'])
     return len(unique_motifs)
 
-def count_motifs(depth_file, best_ctgs, work_dir, prefix):
+def count_motifs(depth_file, best_ctgs, work_dir, prefix, environment):
     ## read depth file
     depth_df = pd.read_csv(depth_file)
     good_depth = {}
@@ -351,7 +444,7 @@ def count_motifs(depth_file, best_ctgs, work_dir, prefix):
             if unique_motifs_num > 0:
                 has_motif_ctg_num += 1
             motif_num_list.append(unique_motifs_num)
-            data.append([prefix,unique_motifs_num ])
+            data.append([prefix, unique_motifs_num, environment])
         else:
             print(f"No motifs found for {ctg}.")
     # print (f"Total {has_motif_ctg_num} contigs with motifs found in the best contigs with depth >= 10.")
@@ -438,12 +531,14 @@ def read_all_host(all_host_file, good_depth):
 
 def count_all_motif_num():
     all_data = []
+    genome_data = []
     all_dir = "/home/shuaiw/borg/paper/run2/"
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
         print (f"Processing {prefix}...")
-        work_dir = f"{all_dir}/{prefix}/{prefix}_methylation"
+        work_dir = f"{all_dir}/{prefix}/{prefix}_methylation2"
         fai = f"{all_dir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
+
         if not os.path.exists(fai):
             print(f"Skipping {prefix} as fai file does not exist.")
             continue
@@ -458,22 +553,53 @@ def count_all_motif_num():
         best_ctgs, good_depth = get_best_ctg(depth_file, fai)
         best_ctgs = read_all_host(all_host_file, good_depth)
         # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
-        sample_data = count_motifs(depth_file, best_ctgs, work_dir, prefix)
+        sample_data = count_motifs(depth_file, best_ctgs, work_dir, prefix, sample_env_dict[prefix])
         if not sample_data:
             print(f"No motifs found for {prefix}.")
             continue
+        genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix]])
         all_data += sample_data
-
+        # break
+    # print (all_data)
     ## convert to df
-    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num'])
+    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment'])
+    df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment'])
+    ### sort by sample
+    df_all_data = df_all_data.sort_values(by='sample')
     ## plot boxplot where sample is on x-axis and motif_num is on y-axis
     plt.figure(figsize=(14, 6))
-    sns.boxplot(data=df_all_data, x='sample', y='motif_num', palette='Set2')
+    sns.boxplot(data=df_all_data, x='sample', y='motif_num', hue='environment', palette='Set2')
     plt.xticks(rotation=90)
     plt.title('Distribution of Motif Numbers Across Samples')
     plt.xlabel('Sample')
     plt.ylabel('Number of Motifs')
+    plt.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.savefig("../../tmp/results/motif_num_distribution_all_samples.png", dpi=300, bbox_inches='tight')
+    ### plot bar plot for genome size and N50 in separate subplots, using log scale for y-axis
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 12))
+    df_genome_data = df_genome_data.sort_values(by='sample')
+    df_genome_data.set_index('sample', inplace=True)
+    
+    # N50 subplot
+    sns.barplot(x=df_genome_data.index, y='N50', hue='environment', data=df_genome_data.reset_index(), ax=ax1, palette='Set2')
+    ax1.set_yscale('log')
+    ax1.set_title('N50 Across Samples')
+    ax1.set_xlabel('Sample')
+    ax1.set_ylabel('N50 Size (log scale)')
+    ax1.tick_params(axis='x', rotation=90)
+    ax1.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    # Genome size subplot
+    sns.barplot(x=df_genome_data.index, y='genome_size', hue='environment', data=df_genome_data.reset_index(), ax=ax2, palette='Set2')
+    ax2.set_yscale('log')
+    ax2.set_title('Genome Size Across Samples')
+    ax2.set_xlabel('Sample')
+    ax2.set_ylabel('Genome Size (log scale)')
+    ax2.tick_params(axis='x', rotation=90)
+    ax2.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.tight_layout()
+    plt.savefig("../../tmp/results/genome_size_N50_all_samples.png", dpi=300, bbox_inches='tight')
 
 def count_N50_size(fai):
     """
@@ -499,9 +625,24 @@ def count_N50_size(fai):
             break
     return n50_size, total_length
 
+def read_metadata(meta_file):
+    sample_env_dict = {}
+    with open(meta_file, "r") as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            parts = line.strip().split()
+            sample = parts[1]
+            env = parts[3]
+            sample_env_dict[sample] = env
+    return sample_env_dict
+
 if __name__ == "__main__":
+    meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
+    sample_env_dict = read_metadata(meta_file)
     count_all_motif_num()
     # jaccard()
+    # jaccard_batch()
 
     # fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
     # ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"
