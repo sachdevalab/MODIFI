@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib_venn import venn2
+from scipy.stats import ttest_ind
 
 
 def read_our(host_sum, ctg2bin_dict={}, score_cutoff = 0.6):
@@ -116,8 +117,8 @@ def read_contact_values(contact_value_file):
     return contact_values
 
 
-prefix="cow_bioreactor_1"
-# prefix="cow_1"
+# prefix="cow_bioreactor_1"
+prefix="cow_1"
 bin3c_cluster = f"/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c_clust/clustering.mcl"
 host_sum = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation2/host_summary.csv"
 contact_value_file = f"/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c/contact_values.txt"
@@ -154,12 +155,15 @@ for i in range(1000):
 
 # print (f"random contact values: {random_contact_values}")
 ## plot box plot to compare our linkages and random contact values
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(5, 5))
 sns.boxplot(data=[our_linkage_contact, random_contact_values], palette=["#FF6347", "#4682B4"])
 plt.xticks([0, 1], ['Our Linkages', 'Random Contact Values'])
 plt.ylabel('Contact Values')
 plt.yscale('log')
-plt.title('Comparison of Contact Values for Our Linkages vs Random Pairs')
+plt.title(prefix)
 plt.grid(True)
+
+
+
 plt.savefig(f'/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c/contact_values_comparison.pdf', dpi=300, bbox_inches='tight')
 plt.show()

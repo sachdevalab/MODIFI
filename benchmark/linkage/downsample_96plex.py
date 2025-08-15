@@ -25,7 +25,7 @@ def subsample(out_dir, full_bam, run_cmd):
             --min_score 30 \\
             --min_sites 30 \\
             --run_steps host \\
-            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list
+            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv
         """
         print (run, file = f)
     f.close()
@@ -74,7 +74,8 @@ def meta_subsample(out_dir, raw_96, soil):
             --min_frac 0.4 \\
             --min_score 30 \\
             --min_sites 30 \\
-            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \\
+            --run_steps host \\
+            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \\
             --threads 64 "\\
             --job-name=p{p}
         """
@@ -85,7 +86,7 @@ def meta_subsample(out_dir, raw_96, soil):
 soil = "/home/shuaiw/borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam"
 raw_96 = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam"
 out_dir = "/home/shuaiw/borg/paper/linkage/meta"
-meta_subsample(out_dir, raw_96, soil)
+# meta_subsample(out_dir, raw_96, soil)
 
-# pure_main()
+pure_main()
 

@@ -13,7 +13,8 @@
             --min_frac 0.4 \
             --min_score 30 \
             --min_sites 30 \
-            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+            --run_steps host \
+            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
             --threads 64 "\
             --job-name=p10
         
@@ -29,7 +30,8 @@
             --min_frac 0.4 \
             --min_score 30 \
             --min_sites 30 \
-            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+            --run_steps host \
+            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
             --threads 64 "\
             --job-name=p20
         
@@ -45,7 +47,8 @@
             --min_frac 0.4 \
             --min_score 30 \
             --min_sites 30 \
-            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+            --run_steps host \
+            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
             --threads 64 "\
             --job-name=p30
         
@@ -61,7 +64,8 @@
             --min_frac 0.4 \
             --min_score 30 \
             --min_sites 30 \
-            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+            --run_steps host \
+            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
             --threads 64 "\
             --job-name=p50
         
@@ -77,7 +81,8 @@
             --min_frac 0.4 \
             --min_score 30 \
             --min_sites 30 \
-            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list \
+            --run_steps host \
+            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
             --threads 64 "\
             --job-name=p05
         
