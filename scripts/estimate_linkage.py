@@ -478,6 +478,21 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, MGE_dict
     ## output the data to a csv file
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)
+    filter_linkage(data, host_dir)
+
+def filter_linkage(data, host_dir, small_mge_dp = 10):
+    filter_host_summary = os.path.join(host_dir, "../", "host_summary.filter.csv")
+    data = data[data['pvalue'] < 0.05]
+    data = data[data['final_score'] > 0.5]
+    ## if MGE_len < 5000, the min depth should be 10 for both host and MGE
+    filtered_data = []
+    for index, row in data.iterrows():
+        if row['MGE_len'] < 5000:
+            if row['MGE_cov'] < small_mge_dp or row['host_cov'] < small_mge_dp:
+                continue
+        filtered_data.append(row)
+    filtered_data = pd.DataFrame(filtered_data)
+    filtered_data.to_csv(filter_host_summary, index = False)
 
 def get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref, MGE_dict):
     whole_ref_fai = whole_ref + ".fai"
