@@ -9,6 +9,7 @@ def read_list(bam_list, cmd_file, prefix_table):
     w = open(cmd_file, 'w')
     m = open("run_methy2.sh", 'w')
     anno = open("run_anno.sh", 'w')
+    borg = open("run_borg.sh", 'w')
     # h = open(prefix_table, 'w')
     i = 1
     with open(bam_list, 'r') as f:
@@ -45,6 +46,12 @@ def read_list(bam_list, cmd_file, prefix_table):
             """
             print (cmd, file=anno)
 
+            borg_cmd = f"""
+            python find_borg.py  /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
+                /home/shuaiw/borg/paper/run2/{prefix}/borg/ 
+            """
+            print (borg_cmd, file=borg)
+
             methy2_dir = os.path.join(work_dir, f"{prefix}_methylation2")
             if os.path.exists(methy2_dir):
                 continue
@@ -71,6 +78,7 @@ def read_list(bam_list, cmd_file, prefix_table):
             i += 1
     w.close()
     m.close()
+    borg.close()
     # h.close()
 
 def read_prefix_table(prefix_table):

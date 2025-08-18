@@ -132,12 +132,25 @@ for mge in our_linkages:
     if mge not in contact_values:
         print(f"{mge} not found in contact values")
         continue
+    # Find the bin_name with highest contact value for contact_values[mge], excluding itself
+    max_contact = 0
+    max_bin_name = mge
+    for a in contact_values[mge]:
+        if a == mge:
+            continue
+        if contact_values[mge][a] >= max_contact:
+            max_contact = contact_values[mge][a]
+            max_bin_name = a
+    ## sort contact_values[mge] by value, and return a tuple
+    sorted_contact_values = sorted(contact_values[mge].items(), key=lambda x: x[1], reverse=True)
+
     if bin_name not in contact_values[mge]:
+        contact_values[mge][bin_name] = 0
         print(f"{bin_name} not found in contact values for {mge}")
-        our_linkage_contact.append(0)
-        continue
+    # print (contact_values[mge], max_bin_name)
     our_linkage_contact.append(contact_values[mge][bin_name])
-    print (f"{mge} contact value with {bin_name}: {contact_values[mge][bin_name]}")
+    print (f"{mge} contact value with {bin_name}: {contact_values[mge][bin_name]}, highest contact value {max_bin_name} of {contact_values[mge][max_bin_name]}")
+    print (sorted_contact_values, "\n\n")
 
 print (f"our linkages contact values: {our_linkage_contact}")
 ## also collect the contact values for 1000 random seq pairs

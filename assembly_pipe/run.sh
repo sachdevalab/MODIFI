@@ -319,7 +319,7 @@
                 --job-name=infant_28
             
 
-            #### number 2
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/ocean/pbio-2857.29455.bc1003_BAK8A_OA--bc1003_BAK8A_OA.hifi_reads.bc1003_BAK8A_OA.ccs.bam \
                 prefix=ocean_1 \
@@ -327,7 +327,7 @@
                 --job-name=ocean_1
             
 
-            #### number 2
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2021.bam \
                 prefix=soil_s3_1 \
@@ -335,7 +335,7 @@
                 --job-name=soil_s3_1
             
 
-            #### number 2
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2023.bam \
                 prefix=soil_s3_2 \
@@ -343,7 +343,7 @@
                 --job-name=soil_s3_2
             
 
-            #### number 3
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2022.bam \
                 prefix=soil_s4_1 \
@@ -351,7 +351,7 @@
                 --job-name=soil_s4_1
             
 
-            #### number 3
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2024.bam \
                 prefix=soil_s4_2 \
@@ -359,7 +359,7 @@
                 --job-name=soil_s4_2
             
 
-            #### number 4
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2025.bam \
                 prefix=soil_s1_1 \
@@ -367,7 +367,7 @@
                 --job-name=soil_s1_1
             
 
-            #### number 4
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2026.bam \
                 prefix=soil_s1_2 \
@@ -375,7 +375,7 @@
                 --job-name=soil_s1_2
             
 
-            #### number 5
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam \
                 prefix=soil_1 \
@@ -383,7 +383,7 @@
                 --job-name=soil_1
             
 
-            #### number 5
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/SRR14074352/SRR14074352.ccs.bam \
                 prefix=SRR14074352_human \
@@ -391,7 +391,7 @@
                 --job-name=SRR14074352_human
             
 
-            #### number 6
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/SRR23446539/SRR23446539.ccs.bam \
                 prefix=SRR23446539_sugarcane \
@@ -399,7 +399,7 @@
                 --job-name=SRR23446539_sugarcane
             
 
-            #### number 7
+            #### number 1
             sbatch --partition standard --wrap "snakemake --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/SRR23446540/SRR23446540.ccs.bam \
                 prefix=SRR23446540_sugarcane \
