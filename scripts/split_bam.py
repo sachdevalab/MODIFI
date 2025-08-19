@@ -70,6 +70,18 @@ def calculate_identity(read):
     identity = match_bases / aligned_bases if aligned_bases > 0 else 0
     return identity
 
+def test_read(read, max_NM, q):
+    if read.is_unmapped:
+        return False
+    if read.mapping_quality < q:
+        return False
+    if not read.has_tag('NM'):
+        print (f"Read {read.query_name} has no NM tag")
+        return False
+    if read.get_tag("NM") > max_NM:
+        return False
+    return True
+
 def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_depth=500, min_dp=0):
     print (f"Processing {contig} {ref}")
 
@@ -83,9 +95,8 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q
     read_number = 0
     total_bases = 0
     for read in samfile.fetch(contig):
-        if read.is_unmapped:
-            continue
-        if read.mapping_quality < q:
+        passed = test_read(read, max_NM, q)
+        if not passed:
             continue
         read_number += 1
         total_bases += read.query_alignment_length
@@ -108,20 +119,13 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q
     valid_num = 0
     for read in samfile.fetch(contig):
         read.reference_id = 0
-        ### calculate the alignment identity
-        if read.is_unmapped:
-            continue
-        ## set mapping quality cutoff
-        if read.mapping_quality < q:
-            continue
+
         ## downsample the reads
         if np.random.rand() > downsample_rate:
             continue
-
-        if not read.has_tag('NM'):
-            print (f"Read {read.query_name} has no NM tag")
-            continue
-        if read.get_tag("NM") > max_NM:
+        
+        passed = test_read(read, max_NM, q)
+        if not passed:
             continue
 
         contig_samfile.write(read)

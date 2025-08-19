@@ -1270,14 +1270,14 @@ sbatch  --partition standard --wrap "prefix=soil_s1_2 && python /home/shuaiw/Met
   --job-name=soil_1
 
   sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage//m64004_210929_143746.p100.time python /home/shuaiw/Methy/main.py \
-            --work_dir /home/shuaiw/borg/paper/linkage//m64004_210929_143746.p100_1000 \
+            --work_dir /home/shuaiw/borg/paper/linkage//m64004_210929_143746.p100 \
             --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.align.bam \
             --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
             --read_type hifi \
             --min_len 1000 \
-            --max_NM 1000 \
+            --max_NM 3 \
             --min_cov 1 \
-            --min_frac 0.4 \
+            --min_frac 0.3 \
             --min_score 30 \
             --min_sites 30 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv"  --job-name=p100
@@ -1292,3 +1292,15 @@ gtdbtk classify_wf \
   --skip_ani_screen \
   --cpus 20 \
   -x fa"
+
+sbatch --partition standard --wrap "snakemake --config \
+    hifi_bam=/home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.raw.p30.soil.merge.bam \
+    prefix=meta_p30 \
+    work_dir=/home/shuaiw/borg/paper/test/meta_p30NM3000 max_NM=3000 -j 64" \
+    --job-name=meta_p30
+
+sbatch --partition standard --wrap "snakemake --config \
+  hifi_bam=/home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.raw.p50.soil.merge.bam \
+  prefix=meta_p50 \
+  work_dir=/home/shuaiw/borg/paper/test/meta_p50_NM3000 max_NM=3000 -j 64" \
+  --job-name=meta_p50
