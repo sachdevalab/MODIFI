@@ -53,8 +53,8 @@ def read_list(bam_list, cmd_file, prefix_table):
             print (borg_cmd, file=borg)
 
             methy2_dir = os.path.join(work_dir, f"{prefix}_methylation2")
-            if os.path.exists(methy2_dir):
-                continue
+            # if os.path.exists(methy2_dir):
+            #     continue
             methy_cmd = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \\
                 --work_dir /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation2 \\
@@ -67,6 +67,7 @@ def read_list(bam_list, cmd_file, prefix_table):
                 --min_frac 0.4 \\
                 --min_score 30 \\
                 --min_sites 30 \\
+                --run_steps host \\
                 --mge_file /home/shuaiw/borg/paper/run2/{prefix}/all_mge.tsv \\
                 --threads 64" \\
                 --job-name={prefix}_test

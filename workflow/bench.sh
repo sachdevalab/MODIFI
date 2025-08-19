@@ -1194,6 +1194,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --min_score 30 \
   --min_sites 30 \
   --mge_file /home/shuaiw/borg/paper/run2/soil_s3_1/all_mge.tsv \
+  --run_steps host \
   --threads 64" \
   --job-name=soil_s3_1_test
 
@@ -1247,6 +1248,47 @@ sbatch  --partition standard \
       --min_frac 0.4 \
       --min_score 30 \
       --min_sites 30 \
+      --run_steps host \
       --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
       --threads 64 " \
  --job-name=p05
+
+sbatch  --partition standard --wrap "prefix=soil_s1_2 && python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/${prefix}/${prefix}_methylation2 \
+  --whole_bam /home/shuaiw/borg/paper/run2/${prefix}/${prefix}.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/${prefix}/${prefix}.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/${prefix}/borg/borg_contigs_summary.tsv \
+  --run_steps host \
+  --threads 64" \
+  --job-name=soil_1
+
+  sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage//m64004_210929_143746.p100.time python /home/shuaiw/Methy/main.py \
+            --work_dir /home/shuaiw/borg/paper/linkage//m64004_210929_143746.p100_1000 \
+            --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.align.bam \
+            --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+            --read_type hifi \
+            --min_len 1000 \
+            --max_NM 1000 \
+            --min_cov 1 \
+            --min_frac 0.4 \
+            --min_score 30 \
+            --min_sites 30 \
+            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv"  --job-name=p100
+
+##metap100
+python main.py   --work_dir /home/shuaiw/borg/bench/soil_zymo/run4   --whole_bam /home/shuaiw/borg/bench/soil_zymo/soil_zymo.align.ccs.bam   --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa   --read_type hifi   --min_len 1000   --max_NM 3000   --min_cov 1   --min_frac 0.4   --min_score 30   --min_sites 30   --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv   --threads 20 --run_steps host
+
+
+gtdbtk classify_wf \
+  --genome_dir ./test \
+  --out_dir ./test_gtdb \
+  --skip_ani_screen \
+  --cpus 20 \
+  -x fa"

@@ -155,9 +155,9 @@ def identify_borg_contigs(df_alignments, output_file):
             continue
         borg_contigs.append(target_name)
         contig_summary.append({
-            'seq_name': target_name,
+            'borg_ref': target_name,
             'type': 'BORG',
-            'borg_ref': best_alignment['query_name'],
+            'seq_name': best_alignment['query_name'],
             'identity': round(best_alignment['identity'], 3),
             'query_coverage': round(best_alignment['query_coverage'], 3),
             'target_coverage': round(best_alignment['target_coverage'], 3),

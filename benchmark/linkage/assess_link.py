@@ -384,7 +384,7 @@ def assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff=0):
     guess_num = 0
     correct_num = 0
 
-    summary_file = os.path.join(result_dir, '../', "host_summary.csv")
+    summary_file = os.path.join(result_dir, '../', "host_summary.filter.csv")
     df = pd.read_csv(summary_file)
     for index, row in df.iterrows():
         plasmid = row['MGE']

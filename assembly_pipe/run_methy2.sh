@@ -1,0 +1,765 @@
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/96plex/96plex_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/96plex/96plex.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/96plex/96plex.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/96plex/all_mge.tsv \
+                --threads 64" \
+                --job-name=96plex_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_1/all_mge.tsv \
+                --threads 64" \
+                --job-name=cow_bioreactor_1_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_2/cow_bioreactor_2_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_2/cow_bioreactor_2.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_2/cow_bioreactor_2.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_2/all_mge.tsv \
+                --threads 64" \
+                --job-name=cow_bioreactor_2_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_3/cow_bioreactor_3_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_3/cow_bioreactor_3.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_3/cow_bioreactor_3.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_3/all_mge.tsv \
+                --threads 64" \
+                --job-name=cow_bioreactor_3_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_4/cow_bioreactor_4_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_4/cow_bioreactor_4.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_4/cow_bioreactor_4.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_4/all_mge.tsv \
+                --threads 64" \
+                --job-name=cow_bioreactor_4_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_5/cow_bioreactor_5_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_5/cow_bioreactor_5.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_5/cow_bioreactor_5.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_5/all_mge.tsv \
+                --threads 64" \
+                --job-name=cow_bioreactor_5_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/cow_1/cow_1_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/cow_1/cow_1.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/cow_1/cow_1.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/cow_1/all_mge.tsv \
+                --threads 64" \
+                --job-name=cow_1_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/ERR12723528_mice/ERR12723528_mice_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/ERR12723528_mice/ERR12723528_mice.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/ERR12723528_mice/ERR12723528_mice.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/ERR12723528_mice/all_mge.tsv \
+                --threads 64" \
+                --job-name=ERR12723528_mice_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/ERR12723529_mice/ERR12723529_mice_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/ERR12723529_mice/ERR12723529_mice.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/ERR12723529_mice/ERR12723529_mice.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/ERR12723529_mice/all_mge.tsv \
+                --threads 64" \
+                --job-name=ERR12723529_mice_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/ERR5621427_sludge/ERR5621427_sludge_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/ERR5621427_sludge/ERR5621427_sludge.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/ERR5621427_sludge/ERR5621427_sludge.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/ERR5621427_sludge/all_mge.tsv \
+                --threads 64" \
+                --job-name=ERR5621427_sludge_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/ERR5621429_sludge/ERR5621429_sludge_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/ERR5621429_sludge/ERR5621429_sludge.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/ERR5621429_sludge/ERR5621429_sludge.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/ERR5621429_sludge/all_mge.tsv \
+                --threads 64" \
+                --job-name=ERR5621429_sludge_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/ERR5621430_sludge/ERR5621430_sludge_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/ERR5621430_sludge/ERR5621430_sludge.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/ERR5621430_sludge/ERR5621430_sludge.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/ERR5621430_sludge/all_mge.tsv \
+                --threads 64" \
+                --job-name=ERR5621430_sludge_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_1/infant_1_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_1/infant_1.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_1/infant_1.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_1/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_1_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_2/infant_2_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_2/infant_2.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_2/infant_2.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_2/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_2_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_3/infant_3_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_3/infant_3.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_3/infant_3.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_3/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_3_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_4/infant_4_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_4/infant_4.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_4/infant_4.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_4/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_4_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_5/infant_5_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_5/infant_5.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_5/infant_5.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_5/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_5_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_6/infant_6_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_6/infant_6.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_6/infant_6.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_6/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_6_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_7/infant_7_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_7/infant_7.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_7/infant_7.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_7/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_7_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_8/infant_8_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_8/infant_8.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_8/infant_8.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_8/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_8_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_9/infant_9_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_9/infant_9.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_9/infant_9.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_9/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_9_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_10/infant_10_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_10/infant_10.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_10/infant_10.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_10/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_10_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_11/infant_11_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_11/infant_11.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_11/infant_11.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_11/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_11_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_12/infant_12_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_12/infant_12.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_12/infant_12.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_12/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_12_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_13/infant_13_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_13/infant_13.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_13/infant_13.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_13/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_13_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_14/infant_14_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_14/infant_14.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_14/infant_14.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_14/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_14_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_15/infant_15_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_15/infant_15.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_15/infant_15.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_15/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_15_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_16/infant_16_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_16/infant_16.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_16/infant_16.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_16/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_16_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_17/infant_17_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_17/infant_17.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_17/infant_17.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_17/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_17_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_18/infant_18_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_18/infant_18.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_18/infant_18.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_18/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_18_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_19/infant_19_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_19/infant_19.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_19/infant_19.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_19/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_19_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_20/infant_20_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_20/infant_20.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_20/infant_20.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_20/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_20_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_21/infant_21_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_21/infant_21.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_21/infant_21.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_21/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_21_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_22/infant_22_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_22/infant_22.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_22/infant_22.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_22/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_22_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_23/infant_23_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_23/infant_23.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_23/infant_23.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_23/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_23_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_24/infant_24_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_24/infant_24.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_24/infant_24.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_24/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_24_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_25/infant_25_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_25/infant_25.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_25/infant_25.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_25/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_25_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_26/infant_26_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_26/infant_26.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_26/infant_26.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_26/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_26_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_27/infant_27_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_27/infant_27.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_27/infant_27.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_27/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_27_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/infant_28/infant_28_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/infant_28/infant_28.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/infant_28/infant_28.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/infant_28/all_mge.tsv \
+                --threads 64" \
+                --job-name=infant_28_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/ocean_1/ocean_1_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/ocean_1/all_mge.tsv \
+                --threads 64" \
+                --job-name=ocean_1_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/soil_s3_1/soil_s3_1_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/soil_s3_1/soil_s3_1.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/soil_s3_1/soil_s3_1.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/soil_s3_1/all_mge.tsv \
+                --threads 64" \
+                --job-name=soil_s3_1_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/soil_s3_2/soil_s3_2_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/soil_s3_2/soil_s3_2.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/soil_s3_2/soil_s3_2.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/soil_s3_2/all_mge.tsv \
+                --threads 64" \
+                --job-name=soil_s3_2_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/soil_s4_1/all_mge.tsv \
+                --threads 64" \
+                --job-name=soil_s4_1_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/soil_s4_2/soil_s4_2_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/soil_s4_2/soil_s4_2.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/soil_s4_2/soil_s4_2.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/soil_s4_2/all_mge.tsv \
+                --threads 64" \
+                --job-name=soil_s4_2_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/soil_s1_1/all_mge.tsv \
+                --threads 64" \
+                --job-name=soil_s1_1_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/soil_s1_2/soil_s1_2_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/soil_s1_2/soil_s1_2.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/soil_s1_2/soil_s1_2.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/soil_s1_2/all_mge.tsv \
+                --threads 64" \
+                --job-name=soil_s1_2_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/soil_1/soil_1.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/soil_1/soil_1.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/soil_1/all_mge.tsv \
+                --threads 64" \
+                --job-name=soil_1_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/SRR14074352_human/SRR14074352_human_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/SRR14074352_human/SRR14074352_human.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/SRR14074352_human/SRR14074352_human.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/SRR14074352_human/all_mge.tsv \
+                --threads 64" \
+                --job-name=SRR14074352_human_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/SRR23446539_sugarcane/SRR23446539_sugarcane_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/SRR23446539_sugarcane/SRR23446539_sugarcane.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/SRR23446539_sugarcane/SRR23446539_sugarcane.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/SRR23446539_sugarcane/all_mge.tsv \
+                --threads 64" \
+                --job-name=SRR23446539_sugarcane_test
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+                --work_dir /home/shuaiw/borg/paper/run2/SRR23446540_sugarcane/SRR23446540_sugarcane_methylation2 \
+                --whole_bam /home/shuaiw/borg/paper/run2/SRR23446540_sugarcane/SRR23446540_sugarcane.align.bam \
+                --whole_ref /home/shuaiw/borg/paper/run2/SRR23446540_sugarcane/SRR23446540_sugarcane.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --max_NM 30000000 \
+                --min_cov 1 \
+                --min_frac 0.4 \
+                --min_score 30 \
+                --min_sites 30 \
+                --run_steps host \
+                --mge_file /home/shuaiw/borg/paper/run2/SRR23446540_sugarcane/all_mge.tsv \
+                --threads 64" \
+                --job-name=SRR23446540_sugarcane_test

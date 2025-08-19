@@ -3,7 +3,7 @@ import os
 
 def subsample(out_dir, full_bam, run_cmd):
     f = open(run_cmd, "w")
-    for p in ["10", "20", "30", "50", "05"]:
+    for p in ["100", "10", "20", "30", "50", "05"]:
         prefix = f"m64004_210929_143746.p{p}"
         out_bam = os.path.join(f"/home/shuaiw/borg/paper/linkage/m64004_210929_143746.p{p}.bam")
         cmd = f"""
