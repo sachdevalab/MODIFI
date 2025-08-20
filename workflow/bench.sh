@@ -1121,18 +1121,18 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --job-name=ocean_test
 
 sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
-  --work_dir /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation2 \
+  --work_dir /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3 \
   --whole_bam /home/shuaiw/borg/paper/run2/soil_1/soil_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/soil_1/soil_1.hifiasm.p_ctg.rename.fa \
   --read_type hifi \
   --min_len 1000 \
-  --max_NM 30000000 \
+  --max_NM 3 \
   --min_cov 1 \
   --min_frac 0.4 \
   --min_score 30 \
   --min_sites 30 \
   --mge_file /home/shuaiw/borg/paper/run2/soil_1/all_mge.tsv \
-  --threads 64 --run_steps host" \
+  --threads 64 --run_steps split" \
   --job-name=soil_test
 
 
@@ -1214,20 +1214,6 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --job-name=soil_s4_1_test
 
 
-python main.py \
-  --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec7 \
-  --whole_bam xx \
-  --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
-  --read_type hifi \
-  --min_len 1000 \
-  --max_NM 3000 \
-  --min_cov 1 \
-  --min_frac 0.4 \
-  --min_score 30 \
-  --min_sites 30 \
-  --run_steps host \
-  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv\
-  --threads 64 
 
 
 snakemake  -s find_MGE.smk \ 
@@ -1304,3 +1290,18 @@ sbatch --partition standard --wrap "snakemake --config \
   prefix=meta_p50 \
   work_dir=/home/shuaiw/borg/paper/test/meta_p50_NM3000 max_NM=3000 -j 64" \
   --job-name=meta_p50
+
+sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylation/data/borg/bench/pipeline_zymo.time python main.py \
+  --work_dir /home/shuaiw/methylation/data/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec5 \
+  --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.5pct.bam \
+  --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 3000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv" \
+  --job-name=pipeline
+  

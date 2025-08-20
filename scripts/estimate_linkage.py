@@ -380,86 +380,15 @@ def report_gc(data, host_dir, bin_ctg_dict, threads):
 def read_genomad(genomad_file):
     MGE_dict = {}
     print (f"Reading {genomad_file}...")
-    
-    try:
-        # First, try to read with tab separator
-        genomad = pd.read_csv(genomad_file, sep="\t")
-        print(f"Successfully read file with {len(genomad)} rows and columns: {list(genomad.columns)}")
-        
-    except pd.errors.ParserError as e:
-        print(f"Parser error with tab separator: {e}")
-        print("Trying to read with flexible parsing...")
-        
-        try:
-            # Try reading with error handling for bad lines
-            genomad = pd.read_csv(genomad_file, sep="\t", on_bad_lines='skip')
-            print(f"Read file with bad lines skipped: {len(genomad)} rows, columns: {list(genomad.columns)}")
-            
-        except Exception as e2:
-            print(f"Failed with bad line skipping: {e2}")
-            print("Trying manual line-by-line parsing...")
-            
-            # Manual parsing as fallback
-            data = []
-            with open(genomad_file, 'r') as f:
-                header = None
-                for line_num, line in enumerate(f, 1):
-                    line = line.strip()
-                    if not line or line.startswith('#'):
-                        continue
-                    
-                    fields = line.split('\t')
-                    
-                    if header is None:
-                        header = fields
-                        print(f"Header detected: {header}")
-                        continue
-                    
-                    # Handle inconsistent field counts
-                    if len(fields) != len(header):
-                        print(f"Warning: Line {line_num} has {len(fields)} fields, expected {len(header)}. Skipping.")
-                        continue
-                    
-                    data.append(fields)
-            
-            if not data:
-                print("No valid data found in file")
-                return {}
-            
-            genomad = pd.DataFrame(data, columns=header)
-            print(f"Manual parsing successful: {len(genomad)} rows")
-    
-    except Exception as e:
-        print(f"Error reading file {genomad_file}: {e}")
-        return {}
-    
-    # Check if required columns exist
-    if 'seq_name' not in genomad.columns:
-        print(f"Available columns: {list(genomad.columns)}")
-        # Try to find alternative column names
-        possible_name_cols = [col for col in genomad.columns if 'name' in col.lower() or 'id' in col.lower()]
-        if possible_name_cols:
-            seq_col = possible_name_cols[0]
-            print(f"Using column '{seq_col}' as sequence name")
-            genomad = genomad.rename(columns={seq_col: 'seq_name'})
-        else:
-            seq_col = genomad.columns[0]
-            print(f"Using first column '{seq_col}' as sequence name")
-            genomad = genomad.rename(columns={seq_col: 'seq_name'})
-    
-    # Process the data
+    genomad = pd.read_csv(genomad_file, sep = "\t")
     for i, row in genomad.iterrows():
-        seq_name = str(row['seq_name']).strip()
         
-        if pd.isna(seq_name) or seq_name == '' or seq_name == 'seq_name':
+        if re.search('\|provirus', row['seq_name']):
             continue
-            
-        if re.search(r'\|provirus', seq_name):
+        if row['seq_name'] == 'seq_name':
             continue
-            
-        MGE_dict[seq_name] = row
-    
-    print(f"Successfully loaded {len(MGE_dict)} MGE entries")
+        # print (row['seq_name'])
+        MGE_dict[row['seq_name']] = row
     return MGE_dict
 
 def filter_motifs(host_motif, motif_data):

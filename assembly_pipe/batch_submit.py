@@ -10,6 +10,7 @@ def read_list(bam_list, cmd_file, prefix_table):
     m = open("run_methy2.sh", 'w')
     anno = open("run_anno.sh", 'w')
     borg = open("run_borg.sh", 'w')
+    orphan = open("run_orphan.sh", 'w')
     # h = open(prefix_table, 'w')
     i = 1
     with open(bam_list, 'r') as f:
@@ -73,13 +74,21 @@ def read_list(bam_list, cmd_file, prefix_table):
                 --job-name={prefix}_test
             """
             print (methy_cmd.strip(), file=m)
-            
+
+            orphan_cmd = f"""
+            /home/shuaiw/miniconda3/envs/methy3/bin/python \\
+                /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py \\
+                    /home/shuaiw/borg/paper/run2/{prefix}/prokka/ocean_1.gff \\
+                    /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation2
+            """
+            print (orphan_cmd.strip(), file=orphan)
 
             # print (f"{prefix}\t{prefix}\t{hifi_bam}", file=h)
             i += 1
     w.close()
     m.close()
     borg.close()
+    orphan.close()
     # h.close()
 
 def read_prefix_table(prefix_table):
