@@ -11,6 +11,7 @@ def read_list(bam_list, cmd_file, prefix_table):
     anno = open("run_anno.sh", 'w')
     borg = open("run_borg.sh", 'w')
     orphan = open("run_orphan.sh", 'w')
+    drep = open("run_drep.sh", 'w')
     # h = open(prefix_table, 'w')
     i = 1
     with open(bam_list, 'r') as f:
@@ -83,12 +84,23 @@ def read_list(bam_list, cmd_file, prefix_table):
             """
             print (orphan_cmd.strip(), file=orphan)
 
+            cmd = f"""
+            #### number {i}
+            sbatch --partition standard --wrap "snakemake -s drep.smk --config \\
+                hifi_bam={hifi_bam} \\
+                prefix={prefix} \\
+                work_dir={work_dir} -j 64" \\
+                --job-name={prefix}
+            """
+            print (cmd, file=drep)
+
             # print (f"{prefix}\t{prefix}\t{hifi_bam}", file=h)
             i += 1
     w.close()
     m.close()
     borg.close()
     orphan.close()
+    drep.close()
     # h.close()
 
 def read_prefix_table(prefix_table):
