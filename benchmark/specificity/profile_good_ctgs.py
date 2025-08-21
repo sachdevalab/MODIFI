@@ -530,6 +530,53 @@ def read_all_host(all_host_file, good_depth):
             all_host_ctgs[ctg] = domain
     return all_host_ctgs
 
+def read_mapping(map_sum):
+    """
+    map_read_count,raw_read_count,ratio
+    985092,1043059,0.9444259624815087
+    """
+    if not os.path.exists(map_sum):
+        return 0
+    ## get the ratio
+    f = open(map_sum, "r")
+    for line in f:
+        if line.startswith("#"):
+            continue
+        map_read_count, raw_read_count, ratio = line.strip().split(",")
+        print(f"Map read count: {map_read_count}, Raw read count: {raw_read_count}, Ratio: {ratio}")
+    f.close()
+    return float(ratio)
+
+def read_host(host_sum_file):
+    line_num = sum(1 for line in open(host_sum_file) if line.strip())
+    if line_num < 2:
+        print(f"Host summary file {host_sum_file} is empty or has only header.")
+        return 0
+    # Read the host summary file
+    host_sum = pd.read_csv(host_sum_file)
+    linkage_num = 0
+    for index, row in host_sum.iterrows():
+        if row["pvalue"] >= 0.05:
+            continue
+        if row['final_score'] <= 0.6:
+            continue
+        linkage_num += 1
+    return linkage_num
+
+def read_orphan(orphan_file):
+    regulate_motif_num = 0
+    if not os.path.exists(orphan_file):
+        return regulate_motif_num
+    df = pd.read_csv(orphan_file)
+    regulate_motif_set = set()
+    for index, row in df.iterrows():
+        if row["significant"] != True:
+            continue
+        motif_tag = f"{row['motif']}_{row['exact_pos']}"
+        regulate_motif_set.add(motif_tag)
+    regulate_motif_num = len(regulate_motif_set)
+    return regulate_motif_num
+
 def count_all_motif_num():
     all_data = []
     genome_data = []
@@ -539,18 +586,31 @@ def count_all_motif_num():
         print (f"Processing {prefix}...")
         work_dir = f"{all_dir}/{prefix}/{prefix}_methylation2"
         fai = f"{all_dir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
+        map_sum = f"{all_dir}/{prefix}/{prefix}.align.count.csv"
+        all_host_file = f"{all_dir}/{prefix}/all_host_ctgs.tsv"
+        depth_file = os.path.join(work_dir, "mean_depth.csv")
+        host_sum_file = os.path.join(work_dir, "host_summary.csv")
+        orphan_file = os.path.join(work_dir, "regulatory_motif_enrichment.csv")
+
+        
 
         if not os.path.exists(fai):
             print(f"Skipping {prefix} as fai file does not exist.")
             continue
+
+        map_ratio = read_mapping(map_sum)
+        linkage_num =  read_host(host_sum_file)
+        regulate_motif_num = read_orphan(orphan_file)
         N50, genome_size = count_N50_size(fai)
         print(f"{prefix}: N50 size: {N50}, Genome size: {genome_size}")
-        all_host_file = f"{all_dir}/{prefix}/all_host_ctgs.tsv"
+
+        genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix], map_ratio, linkage_num, regulate_motif_num])
+
         ## skip if all_host_file does not exist
         if not os.path.exists(all_host_file):
             print(f"Skipping {prefix} as all_host_file does not exist.")
             continue
-        depth_file = os.path.join(work_dir, "mean_depth.csv")
+        
         best_ctgs, good_depth = get_best_ctg(depth_file, fai)
         best_ctgs = read_all_host(all_host_file, good_depth)
         # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
@@ -558,13 +618,15 @@ def count_all_motif_num():
         if not sample_data:
             print(f"No motifs found for {prefix}.")
             continue
-        genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix]])
         all_data += sample_data
-        # break
-    # print (all_data)
-    ## convert to df
+
     df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment'])
-    df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment'])
+    df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num'])
+    # plot_motif(df_all_data)
+    # plot_genome(df_genome_data)
+    plot_meta(df_genome_data)
+
+def plot_motif(df_all_data):
     ### sort by sample
     df_all_data = df_all_data.sort_values(by='sample')
     ## plot boxplot where sample is on x-axis and motif_num is on y-axis
@@ -576,6 +638,39 @@ def count_all_motif_num():
     plt.ylabel('Number of Motifs')
     plt.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.savefig("../../tmp/results/motif_num_distribution_all_samples.png", dpi=300, bbox_inches='tight')
+
+def plot_meta(df_genome_data):
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(16, 12))
+    df_genome_data = df_genome_data.sort_values(by='sample')
+    df_genome_data.set_index('sample', inplace=True)
+
+    sns.barplot(x=df_genome_data.index, y='map_ratio', hue='environment', data=df_genome_data.reset_index(), ax=ax1, palette='Set2')
+    ax1.set_title('Mapping Ratio Across Samples')
+    ax1.set_xlabel('Sample')
+    ax1.set_ylabel('Mapping Ratio ')
+    ax1.tick_params(axis='x', rotation=90)
+
+    sns.barplot(x=df_genome_data.index, y='linkage_num', hue='environment', data=df_genome_data.reset_index(), ax=ax2, palette='Set2')
+    ax2.set_title('Linkage Number Across Samples')
+    ax2.set_xlabel('Sample')
+    ax2.set_ylabel('Linkage Number ')
+    ax2.tick_params(axis='x', rotation=90)
+
+    sns.barplot(x=df_genome_data.index, y='regulate_motif_num', hue='environment', data=df_genome_data.reset_index(), ax=ax3, palette='Set2')
+    ax3.set_title('Regulatory Motif Number Across Samples')
+    ax3.set_xlabel('Sample')
+    ax3.set_ylabel('Regulatory Motif Number ')
+    ax3.tick_params(axis='x', rotation=90)
+
+    ax1.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+    # Remove legend for ax2 and ax3
+    ax2.legend_.remove()
+    ax3.legend_.remove()
+    plt.tight_layout()
+    plt.savefig("../../tmp/results/meta_all_samples.png", dpi=300, bbox_inches='tight')  
+
+
+def plot_genome(df_genome_data):
     ### plot bar plot for genome size and N50 in separate subplots, using log scale for y-axis
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 12))
     df_genome_data = df_genome_data.sort_values(by='sample')
@@ -641,9 +736,9 @@ def read_metadata(meta_file):
 if __name__ == "__main__":
     meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
     sample_env_dict = read_metadata(meta_file)
-    # count_all_motif_num()
+    count_all_motif_num()
     # jaccard()
-    jaccard_batch()
+    # jaccard_batch()
 
     # fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
     # ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"

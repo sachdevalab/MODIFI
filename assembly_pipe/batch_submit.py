@@ -27,6 +27,9 @@ def read_list(bam_list, cmd_file, prefix_table):
             else:
                 print(f"Warning: {prefix} not found in prefix table, using original prefix.")
             work_dir = os.path.join("/home/shuaiw/borg/paper/run2", prefix)
+
+            prokka = f"{work_dir}/prokka/{prefix}.gff"
+
             cmd = f"""
             #### number {i}
             sbatch --partition standard --wrap "snakemake --config \\
@@ -46,7 +49,8 @@ def read_list(bam_list, cmd_file, prefix_table):
                 work_dir={work_dir} -j 64 --use-conda" \\
                 --job-name={prefix} 
             """
-            print (cmd, file=anno)
+            if not os.path.exists(prokka):
+                print (cmd, file=anno)
 
             borg_cmd = f"""
             python find_borg.py  /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
@@ -82,7 +86,8 @@ def read_list(bam_list, cmd_file, prefix_table):
                     /home/shuaiw/borg/paper/run2/{prefix}/prokka/{prefix}.gff \\
                     /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation2
             """
-            print (orphan_cmd.strip(), file=orphan)
+            if not os.path.exists(prokka):
+                print (orphan_cmd.strip(), file=orphan)
 
             cmd = f"""
             #### number {i}

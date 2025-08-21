@@ -77,5 +77,3 @@ if __name__ == "__main__":
     align_bam = os.path.join(work_dir, f"{prefix}.align.bam")
     align_count = os.path.join(work_dir, f"{prefix}.align.count.csv")
     count_reads(align_bam, ccs_bam, align_count)
-
-    ## samtools stats
