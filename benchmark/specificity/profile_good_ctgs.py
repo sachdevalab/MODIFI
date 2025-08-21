@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.manifold import TSNE
 from scipy.spatial.distance import pdist, squareform, cosine
 from sklearn.metrics.pairwise import cosine_similarity
+import re
 
 from Bio.Seq import Seq
 
@@ -17,18 +18,21 @@ def get_best_ctg(depth_file, fai, min_len = 1000000):
     """
     depth_df = pd.read_csv(depth_file)
     good_depth = {}
+    length_dict = {}
     for index, row in depth_df.iterrows():
+
         if row['depth'] >= 10:
             good_depth[row['contig']] = row['depth']
-    best_ctgs = []
+    best_ctgs = {}
     with open(fai, "r") as f:
         for line in f:
             ctg, length, _, _, _ = line.strip().split("\t")
             length = int(length)
+            length_dict[ctg] = length
             if ctg[-1] == "C" and length >= min_len and ctg in good_depth:
-                best_ctgs.append(ctg)
-    print (f"Total {len(best_ctgs)} contigs with length >= {min_len} found.")
-    return best_ctgs, good_depth
+                best_ctgs[ctg] = length
+    # print (f"Total {len(best_ctgs)} contigs with length >= {min_len} found.")
+    return good_depth, length_dict
 
 def get_drep_motifs():
     drep_motifs = "/home/shuaiw/borg/bench/soil/run1/test.motifs_drep.csv"
@@ -577,8 +581,33 @@ def read_orphan(orphan_file):
     regulate_motif_num = len(regulate_motif_set)
     return regulate_motif_num
 
+def count_modified_base(work_dir, prefix, best_ctgs, length_dict, env, score_cutoff = 30):
+    base_data = []
+    for ctg in best_ctgs:
+        length = length_dict[ctg]
+        gff = f"{work_dir}/gffs/{ctg}.reprocess.gff"
+        modified_num = 0
+        modified_motif_num = 0
+        if os.path.exists(gff):
+            for line in open(gff, "r"):
+                if line.startswith("#"):
+                    continue
+                fields = line.strip().split("\t")
+                if int(fields[5]) < score_cutoff:
+                    continue
+                modified_num += 1
+                if re.search(";motif=", fields[8]):
+                    modified_motif_num += 1
+        modified_ratio = modified_num / length
+        modified_motif_ratio = modified_motif_num/ length
+        motif_ratio =  modified_motif_num / modified_num if modified_num > 0 else 0
+        base_data.append([prefix, ctg, length, modified_num, modified_motif_num, modified_ratio, modified_motif_ratio, motif_ratio, env])
+    return base_data
+
+
 def count_all_motif_num():
     all_data = []
+    all_base_data = []
     genome_data = []
     all_dir = "/home/shuaiw/borg/paper/run2/"
     for my_dir in os.listdir(all_dir):
@@ -597,6 +626,10 @@ def count_all_motif_num():
         if not os.path.exists(fai):
             print(f"Skipping {prefix} as fai file does not exist.")
             continue
+        ## skip if all_host_file does not exist
+        if not os.path.exists(all_host_file):
+            print(f"Skipping {prefix} as all_host_file does not exist.")
+            continue
 
         map_ratio = read_mapping(map_sum)
         linkage_num =  read_host(host_sum_file)
@@ -604,27 +637,25 @@ def count_all_motif_num():
         N50, genome_size = count_N50_size(fai)
         print(f"{prefix}: N50 size: {N50}, Genome size: {genome_size}")
 
-        genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix], map_ratio, linkage_num, regulate_motif_num])
-
-        ## skip if all_host_file does not exist
-        if not os.path.exists(all_host_file):
-            print(f"Skipping {prefix} as all_host_file does not exist.")
-            continue
-        
-        best_ctgs, good_depth = get_best_ctg(depth_file, fai)
+        good_depth, length_dict = get_best_ctg(depth_file, fai)
         best_ctgs = read_all_host(all_host_file, good_depth)
-        # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
-        sample_data = count_motifs(depth_file, best_ctgs, work_dir, prefix, sample_env_dict[prefix])
-        if not sample_data:
-            print(f"No motifs found for {prefix}.")
-            continue
-        all_data += sample_data
+        print ("best ctgs num:", len(best_ctgs))
 
+        genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix], map_ratio, linkage_num, \
+                            regulate_motif_num, len(best_ctgs)])
+
+        # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
+        all_data += count_motifs(depth_file, best_ctgs, work_dir, prefix, sample_env_dict[prefix])
+        all_base_data += count_modified_base(work_dir, prefix, best_ctgs, length_dict, sample_env_dict[prefix])
+        # break
+    print ("start plot...")
     df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment'])
-    df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num'])
+    df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
+    df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
     # plot_motif(df_all_data)
     # plot_genome(df_genome_data)
-    plot_meta(df_genome_data)
+    # plot_meta(df_genome_data)
+    plot_base(df_all_base_data)
 
 def plot_motif(df_all_data):
     ### sort by sample
@@ -638,6 +669,38 @@ def plot_motif(df_all_data):
     plt.ylabel('Number of Motifs')
     plt.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.savefig("../../tmp/results/motif_num_distribution_all_samples.png", dpi=300, bbox_inches='tight')
+
+def plot_base(df_all_base_data):
+    ### sort by sample
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(15, 12))
+    df_all_base_data = df_all_base_data.sort_values(by='sample')
+    ## plot boxplot where sample is on x-axis and modified_ratio is on y-axis
+    sns.boxplot(data=df_all_base_data, x='sample', y='modified_ratio', hue='environment', palette='Set2', ax=ax1)
+    ax1.set_title('Distribution of Modified Ratios Across Samples')
+    ax1.set_xlabel('Sample')
+    ax1.set_ylabel('Modified Ratio')
+    ax1.tick_params(axis='x', rotation=90)
+    ax1.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    ## plot boxplot where sample is on x-axis and modified_motif_ratio is on y-axis
+    sns.boxplot(data=df_all_base_data, x='sample', y='modified_motif_ratio', hue='environment', palette='Set2', ax=ax2)
+    ax2.set_title('Distribution of Modified Motif Ratios Across Samples')
+    ax2.set_xlabel('Sample')
+    ax2.set_ylabel('Modified Motif Ratio')
+    ax2.tick_params(axis='x', rotation=90)
+    ax2.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    ## plot boxplot where sample is on x-axis and motif_ratio is on y-axis
+    sns.boxplot(data=df_all_base_data, x='sample', y='motif_ratio', hue='environment', palette='Set2', ax=ax3)
+    ax3.set_title('Distribution of Motif Ratios Across Samples')
+    ax3.set_xlabel('Sample')
+    ax3.set_ylabel('Motif Ratio')
+    ax3.tick_params(axis='x', rotation=90)
+    ax3.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    plt.tight_layout()
+    plt.savefig("../../tmp/results/base_count_all_samples.png", dpi=300, bbox_inches='tight')
+
 
 def plot_meta(df_genome_data):
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(16, 12))
@@ -672,7 +735,7 @@ def plot_meta(df_genome_data):
 
 def plot_genome(df_genome_data):
     ### plot bar plot for genome size and N50 in separate subplots, using log scale for y-axis
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 12))
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(20, 12))
     df_genome_data = df_genome_data.sort_values(by='sample')
     df_genome_data.set_index('sample', inplace=True)
     
@@ -693,6 +756,13 @@ def plot_genome(df_genome_data):
     ax2.set_ylabel('Genome Size (log scale)')
     ax2.tick_params(axis='x', rotation=90)
     ax2.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    sns.barplot(x=df_genome_data.index, y='best_ctg_num', hue='environment', data=df_genome_data.reset_index(), ax=ax3, palette='Set2')
+    ax3.set_title('Best Contig Number Across Samples')
+    ax3.set_xlabel('Sample')
+    ax3.set_ylabel('Best Contig Number')
+    ax3.tick_params(axis='x', rotation=90)
+    ax3.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
     
     plt.tight_layout()
     plt.savefig("../../tmp/results/genome_size_N50_all_samples.png", dpi=300, bbox_inches='tight')
