@@ -286,7 +286,8 @@ def jaccard_batch():
         # prefix = "ERR12723529"
         work_dir = "/home/shuaiw/borg/paper/run2"
         # drep_clu_file = os.path.join(work_dir, prefix, "dRep_out_99", "data_tables", "Cdb.csv")
-        drep_clu_file = os.path.join(work_dir, prefix, "dRep_out", "data_tables", "Cdb.csv")
+        # drep_clu_file = os.path.join(work_dir, prefix, "dRep_out", "data_tables", "Cdb.csv")
+        drep_clu_file = os.path.join(work_dir, prefix, "dRep_out_97", "data_tables", "Cdb.csv")
         profile_file = os.path.join(work_dir, prefix, f"{prefix}_methylation2", "motif_profile.csv")
         depth_file = os.path.join(work_dir, prefix, f"{prefix}_methylation2", "mean_depth.csv")
         fai = os.path.join(work_dir, prefix, f"{prefix}.hifiasm.p_ctg.rename.fa.fai")
@@ -640,9 +641,9 @@ def read_metadata(meta_file):
 if __name__ == "__main__":
     meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
     sample_env_dict = read_metadata(meta_file)
-    count_all_motif_num()
+    # count_all_motif_num()
     # jaccard()
-    # jaccard_batch()
+    jaccard_batch()
 
     # fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
     # ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"

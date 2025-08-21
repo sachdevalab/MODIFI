@@ -79,7 +79,7 @@ def read_list(bam_list, cmd_file, prefix_table):
             orphan_cmd = f"""
             /home/shuaiw/miniconda3/envs/methy3/bin/python \\
                 /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py \\
-                    /home/shuaiw/borg/paper/run2/{prefix}/prokka/ocean_1.gff \\
+                    /home/shuaiw/borg/paper/run2/{prefix}/prokka/{prefix}.gff \\
                     /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation2
             """
             print (orphan_cmd.strip(), file=orphan)

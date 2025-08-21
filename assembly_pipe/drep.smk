@@ -5,7 +5,7 @@ configfile: "config.yaml"
 
 rule all:
     input:
-        drep_97_finish = f"{config['work_dir']}/dRep97.finish",
+        drep_97_finish = f"{config['work_dir']}/dRep_97.finish",
 
 rule dRep_97:
     input: f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa"

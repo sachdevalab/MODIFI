@@ -23,6 +23,10 @@ def get_edge(host_sum_file, MGE_type_dict, bin2anno_dict, gc_data, environment, 
             continue
         gc_data.append([row['MGE_gc'], row['host_gc'], row['cos_sim'], row['MGE_cov'], row['host_cov'], environment, prefix])
         both_nodes = 0
+        if row['host'] not in bin2anno_dict:
+            continue
+        if bin2anno_dict[row['host']] == "Unclassified":
+            continue
         if row['MGE'] in MGE_type_dict:
             G.add_node(row['MGE'], label=row['MGE'], type=MGE_type_dict[row['MGE']])
             both_nodes += 1
@@ -302,6 +306,7 @@ if __name__ == "__main__":
                 f"cp {gtdk_bac_file} {gtdk_all_file}"
             )
         bin2anno_dict = read_gtdb(gtdk_all_file)
+        # print (bin2anno_dict)
         MGE_type_dict = get_MGE_type(mge_file)
         G, gc_data = get_edge(host_summary_file, MGE_type_dict, bin2anno_dict, gc_data, sample_env_dict[prefix], prefix)
         whole_G = nx.compose(whole_G, G)
@@ -311,7 +316,7 @@ if __name__ == "__main__":
     print("Top 10 nodes by degree:")
     for node, degree in top_nodes:
         print(f"{node}: {degree}")
-    # plot_network(whole_G)
+    plot_network(whole_G)
 
     gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
     plot_gc(gc_df)
