@@ -449,7 +449,7 @@ def count_motifs(depth_file, best_ctgs, work_dir, prefix, environment):
             if unique_motifs_num > 0:
                 has_motif_ctg_num += 1
             motif_num_list.append(unique_motifs_num)
-            data.append([prefix, unique_motifs_num, environment])
+            data.append([prefix, unique_motifs_num, environment,ctg])
         else:
             print(f"No motifs found for {ctg}.")
     # print (f"Total {has_motif_ctg_num} contigs with motifs found in the best contigs with depth >= 10.")
@@ -649,13 +649,81 @@ def count_all_motif_num():
         all_base_data += count_modified_base(work_dir, prefix, best_ctgs, length_dict, sample_env_dict[prefix])
         # break
     print ("start plot...")
-    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment'])
+    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig'])
     df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
     df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
     # plot_motif(df_all_data)
     # plot_genome(df_genome_data)
     # plot_meta(df_genome_data)
-    plot_base(df_all_base_data)
+    # plot_base(df_all_base_data)
+    ## save genome data
+    df_genome_data.to_csv("../../tmp/results2/genome_data_all_samples.csv", index = False)
+    df_all_base_data.to_csv("../../tmp/results2/base_count_all_samples.csv", index=False)
+    df_all_data.to_csv("../../tmp/results2/motif_num_all_samples.csv", index=False)
+    
+
+def get_stastics():
+    df_genome_data = pd.read_csv("../../tmp/results2/genome_data_all_samples.csv")
+    df_all_base_data = pd.read_csv("../../tmp/results2/base_count_all_samples.csv")
+    df_all_data = pd.read_csv("../../tmp/results2/motif_num_all_samples.csv")
+    ## exclude 96plex environment for df_genome_data, df_all_base_data, df_all_data
+    df_genome_data = df_genome_data[df_genome_data['environment'] != '96plex']
+    df_all_base_data = df_all_base_data[df_all_base_data['environment'] != '96plex']
+    df_all_data = df_all_data[df_all_data['environment'] != '96plex']
+
+    ## count sample number for each environment in df_genome_data
+    env_groups = df_genome_data.groupby('environment')
+    print ("Sample number for each environment:")
+    for env, group in env_groups:
+        total_samples_env = group.shape[0]
+        print (f"Environment: {env}, Total samples: {total_samples_env}")
+    print ("*************************")
+
+    print ("Genome data summary:")
+    ## count how many samples proportion have map_ratio > 0.5 and samples proportion have map_ratio > 0.7
+    total_samples = df_genome_data.shape[0]
+    map_ratio_50 = df_genome_data[df_genome_data['map_ratio'] > 0.5].shape[0]
+    map_ratio_70 = df_genome_data[df_genome_data['map_ratio'] > 0.7].shape[0]
+    print (f"Total samples: {total_samples}, Samples with map_ratio > 0.5: {map_ratio_50} ({map_ratio_50/total_samples*100:.2f}%), Samples with map_ratio > 0.7: {map_ratio_70} ({map_ratio_70/total_samples*100:.2f}%)")
+
+    ## get proportion with motif_num > 0 in df_all_data
+    total_ctgs = df_all_data.shape[0]
+    ctgs_with_motif = df_all_data[df_all_data['motif_num'] > 0].shape[0]
+    print (f"Total contigs: {total_ctgs}, Contigs with motif_num > 0: {ctgs_with_motif} ({ctgs_with_motif/total_ctgs*100:.2f}%)")
+    ## count the average motif_num for all contigs
+    avg_motif_num = df_all_data['motif_num'].mean()
+    print (f"Average motif_num for all contigs: {avg_motif_num:.2f}") 
+    ## count the proportion with motif_num > 0 for each environment
+    env_groups = df_all_data.groupby('environment')
+    for env, group in env_groups:
+        total_ctgs_env = group.shape[0]
+        ctgs_with_motif_env = group[group['motif_num'] > 0].shape[0]
+        ## also print the average motif_num for each environment
+        avg_motif_num_env = group['motif_num'].mean()
+        print (f"Environment: {env}, Total contigs: {total_ctgs_env}, Contigs with motif_num > 0: {ctgs_with_motif_env}({ctgs_with_motif_env/total_ctgs_env*100:.2f}%), Average motif_num: {avg_motif_num_env:.2f}")
+    print ("*************************")
+    ## count average regulate_motif_num for each environment
+    env_groups = df_genome_data.groupby('environment')
+    for env, group in env_groups:
+        total_samples_env = group.shape[0]
+        avg_regulate_motif_num_env = group['regulate_motif_num'].mean()
+        print (f"Environment: {env}, Total samples: {total_samples_env}, Average regulate_motif_num: {avg_regulate_motif_num_env:.2f}")
+    ## count the proportion of infant sample has regulate_motif_num > 0
+    infant_group = df_genome_data[df_genome_data['environment'] == 'infant']
+    total_infant_samples = infant_group.shape[0]
+    infant_samples_with_regulate_motif = infant_group[infant_group['regulate_motif_num'] > 0].shape[0]
+    print (f"Infant samples: {total_infant_samples}, Infant samples with regulate_motif_num > 0: {infant_samples_with_regulate_motif} ({infant_samples_with_regulate_motif/total_infant_samples*100:.2f}%)")
+    print ("*************************")
+    ### count the average  modified_ratio for each environment
+    env_groups = df_all_base_data.groupby('environment')
+    for env, group in env_groups:
+        total_ctgs_env = group.shape[0]
+        avg_modified_ratio_env = group['modified_ratio'].mean()
+        avg_modified_motif_ratio_env = group['modified_motif_ratio'].mean()
+        avg_motif_ratio_env = group['motif_ratio'].mean()
+        print (f"Environment: {env}, Total contigs: {total_ctgs_env}, Average modified_ratio: {avg_modified_ratio_env:.4f}, Average modified_motif_ratio: {avg_modified_motif_ratio_env:.4f}, Average motif_ratio: {avg_motif_ratio_env:.4f}")
+    print ("*************************")
+
 
 def plot_motif(df_all_data):
     ### sort by sample
@@ -699,7 +767,9 @@ def plot_base(df_all_base_data):
     ax3.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
 
     plt.tight_layout()
-    plt.savefig("../../tmp/results/base_count_all_samples.png", dpi=300, bbox_inches='tight')
+    plt.savefig("../../tmp/results2/base_count_all_samples.png", dpi=300, bbox_inches='tight')
+    ### save the dataframe
+    
 
 
 def plot_meta(df_genome_data):
@@ -806,7 +876,8 @@ def read_metadata(meta_file):
 if __name__ == "__main__":
     meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
     sample_env_dict = read_metadata(meta_file)
-    count_all_motif_num()
+    # count_all_motif_num()
+    get_stastics()
     # jaccard()
     # jaccard_batch()
 

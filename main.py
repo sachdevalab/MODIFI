@@ -85,15 +85,15 @@ def parse_arguments():
                         help="Reference FASTA file for contigs.")
     parser.add_argument("--work_dir", type=str, required=True,
                         help="Working directory for all output files.")
-    parser.add_argument("--maxAlignments", type=int, default=100000,
-                        help="Maximum number of alignments to process.")
+    # parser.add_argument("--maxAlignments", type=int, default=100000,
+    #                     help="Maximum number of alignments to process.")
     parser.add_argument("--read_type", choices=["subreads", "hifi"], default="subreads",
                         help="Type of reads in BAM file.")
     parser.add_argument("--max_NM", type=int, default=None,
                         help="Maximum number of mismatches allowed (None to disable).")
-    parser.add_argument("--min_len", type=int, default=50000,
+    parser.add_argument("--min_len", type=int, default=1000,
                         help="Minimum contig length to process.")
-    parser.add_argument("--min_cov", type=int, default=3,
+    parser.add_argument("--min_cov", type=int, default=1,
                         help="Minimum read coverage required to retain a base.")
     parser.add_argument("--min_ctg_cov", type=int, default=5,
                         help="Minimum read coverage required to retain a contig.")
@@ -104,9 +104,9 @@ def parse_arguments():
     parser.add_argument("--clean", action="store_true", dest="clean", help="Enable cleaning step")
     parser.add_argument("--segment", action="store_true", dest="segment", 
                         help="Enable segmentation of the contigs by depth, increase recall for low-depth contigs, but cost more time.")
-    parser.add_argument("--min_frac", type=float, default=0.5,
+    parser.add_argument("--min_frac", type=float, default=0.4,
                         help="Minimum methylation fraction to retain a motif.")
-    parser.add_argument("--min_sites", type=int, default=100,
+    parser.add_argument("--min_sites", type=int, default=30,
                         help="Minimum number of methylated sites per motif.")
     parser.add_argument("--min_score", type=int, default=30,
                         help="Minimum score for modification calling.")
@@ -530,9 +530,9 @@ if __name__ == "__main__":
 
     if args.max_NM is None:
         if args.read_type == "hifi":
-            args.max_NM = 200
+            args.max_NM = 20000000
         else:
-            args.max_NM = 1000
+            args.max_NM = 10000000
 
     logger.info("🔬 Running MGE-host linkage pipeline with the following parameters:")
 

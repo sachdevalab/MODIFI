@@ -107,6 +107,80 @@ def plot_network(G):
     plt.savefig("../../tmp/results/network_test_plot.png", dpi=300, bbox_inches='tight')
     plt.close()
 
+def plot_network2(G):
+    import matplotlib.patches as mpatches
+    import random
+    
+    plt.figure(1, figsize=(12, 10))
+    
+    # layout graphs with positions using graphviz neato
+    pos = nx.nx_agraph.graphviz_layout(G, prog="neato")
+    
+    # Separate nodes by type
+    virus_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'virus']
+    plasmid_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'plasmid']
+    novel_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'novel']
+    host_nodes = [n for n, d in G.nodes(data=True) if d.get('type') not in ['virus', 'plasmid', 'novel']]
+    
+    # Draw edges first (so they appear behind nodes)
+    nx.draw_networkx_edges(G, pos, edge_color='gray', alpha=0.8, width=0.5)
+    
+    # Define colors for each node type
+    node_size = 50
+    
+    # Assign a color to each host type (phylum)
+    host_types = list(set([G.nodes[n]['type'] for n in host_nodes]))
+    color_map = plt.get_cmap('tab20')
+    host_type_to_color = {t: color_map(i % 20) for i, t in enumerate(host_types)}
+    host_colors = [host_type_to_color[G.nodes[n]['type']] for n in host_nodes]
+    
+    # Draw different node types with different shapes and colors
+    if host_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=host_nodes, node_shape='s',  # square
+                              node_color=host_colors, node_size=node_size, alpha=0.8, label='Host')
+    
+    if plasmid_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=plasmid_nodes, node_shape='o',  # circle
+                              node_color='green', node_size=node_size, alpha=0.8, label='Plasmid')
+    
+    if virus_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=virus_nodes, node_shape='h',  # hexagon
+                              node_color='red', node_size=node_size, alpha=0.8, label='Virus')
+    
+    if novel_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=novel_nodes, node_shape='^',  # triangle
+                              node_color='orange', node_size=node_size, alpha=0.8, label='Novel')
+    
+    # Create legend
+    legend_elements = []
+    if plasmid_nodes:
+        legend_elements.append(mpatches.Patch(color='green', label=f'Plasmid ({len(plasmid_nodes)})'))
+    if virus_nodes:
+        legend_elements.append(mpatches.Patch(color='red', label=f'Virus ({len(virus_nodes)})'))
+    if novel_nodes:
+        legend_elements.append(mpatches.Patch(color='orange', label=f'Novel ({len(novel_nodes)})'))
+    
+    # Add host type legend (limit to top 10 to avoid clutter)
+    if host_nodes:
+        sorted_host_types = sorted(host_types, key=lambda t: sum(1 for n in host_nodes if G.nodes[n]['type'] == t), reverse=True)
+        for i, t in enumerate(sorted_host_types[:10]):  # Show only top 10 host types
+            count = sum(1 for n in host_nodes if G.nodes[n]['type'] == t)
+            legend_elements.append(mpatches.Patch(color=host_type_to_color[t], label=f'{t} ({count})'))
+        
+        if len(sorted_host_types) > 10:
+            legend_elements.append(mpatches.Patch(color='lightgray', label=f'... +{len(sorted_host_types)-10} more host types'))
+    
+    if legend_elements:
+        plt.legend(handles=legend_elements, bbox_to_anchor=(1.05, 1), loc='upper left', 
+                  borderaxespad=0., fontsize=10)
+    
+    plt.title(f"Host-MGE Network\nNodes: {G.number_of_nodes()}, Edges: {G.number_of_edges()}", 
+              fontsize=14, pad=20)
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig("../../tmp/results/network_test_plot2.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
 def plot(G):
     import matplotlib.patches as mpatches
 
@@ -262,6 +336,9 @@ def plot_gc(df):
     plt.savefig('../../tmp/results/mge_host_gc_content.pdf')
     plt.close()
 
+
+
+
 if __name__ == "__main__":  
     meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
     sample_env_dict = read_metadata(meta_file)
@@ -316,7 +393,8 @@ if __name__ == "__main__":
     print("Top 10 nodes by degree:")
     for node, degree in top_nodes:
         print(f"{node}: {degree}")
-    plot_network(whole_G)
 
-    gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
-    plot_gc(gc_df)
+    plot_network2(whole_G)
+
+    # gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
+    # plot_gc(gc_df)
