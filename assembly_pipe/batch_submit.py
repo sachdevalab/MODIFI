@@ -12,6 +12,7 @@ def read_list(bam_list, cmd_file, prefix_table):
     borg = open("run_borg.sh", 'w')
     orphan = open("run_orphan.sh", 'w')
     drep = open("run_drep.sh", 'w')
+    spacer = open("run_spacer.sh", 'w')
     # h = open(prefix_table, 'w')
     i = 1
     with open(bam_list, 'r') as f:
@@ -52,6 +53,13 @@ def read_list(bam_list, cmd_file, prefix_table):
             if not os.path.exists(prokka):
                 print (cmd, file=anno)
 
+            spacer_cmd = f"""
+            python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \\
+                {prefix} \\
+                 /home/shuaiw/borg/paper/run2/{prefix}/
+            """
+            print (spacer_cmd, file=spacer)
+
             borg_cmd = f"""
             python find_borg.py  /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
                 /home/shuaiw/borg/paper/run2/{prefix}/borg/ 
@@ -73,10 +81,10 @@ def read_list(bam_list, cmd_file, prefix_table):
                 --min_frac 0.4 \\
                 --min_score 30 \\
                 --min_sites 30 \\
-                --run_steps host \\
+                --run_steps split \\
                 --mge_file /home/shuaiw/borg/paper/run2/{prefix}/all_mge.tsv \\
                 --threads 64" \\
-                --job-name={prefix}_test
+                --job-name=split_{prefix}
             """
             print (methy_cmd.strip(), file=m)
 
@@ -106,6 +114,7 @@ def read_list(bam_list, cmd_file, prefix_table):
     borg.close()
     orphan.close()
     drep.close()
+    spacer.close()
     # h.close()
 
 def read_prefix_table(prefix_table):

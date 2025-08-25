@@ -51,7 +51,7 @@ rule call_methylation:
           --min_frac 0.4 \
           --min_score 30 \
           --min_sites 30 \
-          --run_steps motif profile merge \
+          --run_steps split \
           --threads {threads} 
         touch {output.methy_finish}
 
