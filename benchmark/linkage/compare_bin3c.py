@@ -116,67 +116,67 @@ def read_contact_values(contact_value_file):
             contact_values[seq2][seq1] = count
     return contact_values
 
+if __name__ == "__main__":
+    # prefix="cow_bioreactor_1"
+    prefix="cow_1"
+    bin3c_cluster = f"/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c_clust/clustering.mcl"
+    host_sum = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation2/host_summary.csv"
+    contact_value_file = f"/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c/contact_values.txt"
 
-# prefix="cow_bioreactor_1"
-prefix="cow_1"
-bin3c_cluster = f"/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c_clust/clustering.mcl"
-host_sum = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation2/host_summary.csv"
-contact_value_file = f"/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c/contact_values.txt"
-
-our_linkages = assess_linage(bin3c_cluster, host_sum)
-contact_values = read_contact_values(contact_value_file)
-## get the contact values for our linkages
-our_linkage_contact = []
-for mge in our_linkages:
-    bin_name = our_linkages[mge][0]
-    if mge not in contact_values:
-        print(f"{mge} not found in contact values")
-        continue
-    # Find the bin_name with highest contact value for contact_values[mge], excluding itself
-    max_contact = 0
-    max_bin_name = mge
-    for a in contact_values[mge]:
-        if a == mge:
+    our_linkages = assess_linage(bin3c_cluster, host_sum)
+    contact_values = read_contact_values(contact_value_file)
+    ## get the contact values for our linkages
+    our_linkage_contact = []
+    for mge in our_linkages:
+        bin_name = our_linkages[mge][0]
+        if mge not in contact_values:
+            print(f"{mge} not found in contact values")
             continue
-        if contact_values[mge][a] >= max_contact:
-            max_contact = contact_values[mge][a]
-            max_bin_name = a
-    ## sort contact_values[mge] by value, and return a tuple
-    sorted_contact_values = sorted(contact_values[mge].items(), key=lambda x: x[1], reverse=True)
+        # Find the bin_name with highest contact value for contact_values[mge], excluding itself
+        max_contact = 0
+        max_bin_name = mge
+        for a in contact_values[mge]:
+            if a == mge:
+                continue
+            if contact_values[mge][a] >= max_contact:
+                max_contact = contact_values[mge][a]
+                max_bin_name = a
+        ## sort contact_values[mge] by value, and return a tuple
+        sorted_contact_values = sorted(contact_values[mge].items(), key=lambda x: x[1], reverse=True)
 
-    if bin_name not in contact_values[mge]:
-        contact_values[mge][bin_name] = 0
-        print(f"{bin_name} not found in contact values for {mge}")
-    # print (contact_values[mge], max_bin_name)
-    our_linkage_contact.append(contact_values[mge][bin_name])
-    print (f"{mge} contact value with {bin_name}: {contact_values[mge][bin_name]}, highest contact value {max_bin_name} of {contact_values[mge][max_bin_name]}")
-    print (sorted_contact_values, "\n\n")
+        if bin_name not in contact_values[mge]:
+            contact_values[mge][bin_name] = 0
+            print(f"{bin_name} not found in contact values for {mge}")
+        # print (contact_values[mge], max_bin_name)
+        our_linkage_contact.append(contact_values[mge][bin_name])
+        print (f"{mge} contact value with {bin_name}: {contact_values[mge][bin_name]}, highest contact value {max_bin_name} of {contact_values[mge][max_bin_name]}")
+        print (sorted_contact_values, "\n\n")
 
-print (f"our linkages contact values: {our_linkage_contact}")
-## also collect the contact values for 1000 random seq pairs
-random_contact_values = []
-for i in range(1000):
-    seq1 = np.random.choice(list(contact_values.keys()))
-    seq2 = np.random.choice(list(contact_values.keys()))
-    if seq1 == seq2:
-        continue
-    if seq2 not in contact_values[seq1]:
-        random_contact_values.append(0)
-        continue
-    random_contact_values.append(contact_values[seq1][seq2])
-    print (f"random contact value between {seq1} and {seq2}: {contact_values[seq1][seq2]}")
+    print (f"our linkages contact values: {our_linkage_contact}")
+    ## also collect the contact values for 1000 random seq pairs
+    random_contact_values = []
+    for i in range(1000):
+        seq1 = np.random.choice(list(contact_values.keys()))
+        seq2 = np.random.choice(list(contact_values.keys()))
+        if seq1 == seq2:
+            continue
+        if seq2 not in contact_values[seq1]:
+            random_contact_values.append(0)
+            continue
+        random_contact_values.append(contact_values[seq1][seq2])
+        print (f"random contact value between {seq1} and {seq2}: {contact_values[seq1][seq2]}")
 
-# print (f"random contact values: {random_contact_values}")
-## plot box plot to compare our linkages and random contact values
-plt.figure(figsize=(5, 5))
-sns.boxplot(data=[our_linkage_contact, random_contact_values], palette=["#FF6347", "#4682B4"])
-plt.xticks([0, 1], ['Our Linkages', 'Random Contact Values'])
-plt.ylabel('Contact Values')
-plt.yscale('log')
-plt.title(prefix)
-plt.grid(True)
+    # print (f"random contact values: {random_contact_values}")
+    ## plot box plot to compare our linkages and random contact values
+    plt.figure(figsize=(5, 5))
+    sns.boxplot(data=[our_linkage_contact, random_contact_values], palette=["#FF6347", "#4682B4"])
+    plt.xticks([0, 1], ['Our Linkages', 'Random Contact Values'])
+    plt.ylabel('Contact Values')
+    plt.yscale('log')
+    plt.title(prefix)
+    plt.grid(True)
 
 
 
-plt.savefig(f'/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c/contact_values_comparison.pdf', dpi=300, bbox_inches='tight')
-plt.show()
+    plt.savefig(f'/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c/contact_values_comparison.pdf', dpi=300, bbox_inches='tight')
+    plt.show()
