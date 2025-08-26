@@ -54,9 +54,14 @@ def read_list(bam_list, cmd_file, prefix_table):
                 print (cmd, file=anno)
 
             spacer_cmd = f"""
-            python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \\
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \\
                 {prefix} \\
                  /home/shuaiw/borg/paper/run2/{prefix}/
+            """
+            spacer_cmd = f"""
+            python merge_MGEs.py \\
+            /home/shuaiw/borg/paper/run2/{prefix}/ \\
+            {prefix} 
             """
             print (spacer_cmd, file=spacer)
 

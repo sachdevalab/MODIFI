@@ -105,6 +105,10 @@ def filter_hit(raw_hit, spacer_linkage, mge_ids):
         pd.DataFrame: Filtered hits DataFrame.
     """
     import pandas as pd
+    ## check if raw_hit is empty
+    if not os.path.exists(raw_hit) or os.path.getsize(raw_hit) == 0:
+        print(f"[⚠️] Raw hits file is empty or not found: {raw_hit}")
+        return pd.DataFrame(columns=["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"])
     df = pd.read_csv(raw_hit, sep="\t", header=None)
     df.columns = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"]
     # filter by length > 20 and pident > 95

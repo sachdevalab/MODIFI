@@ -652,10 +652,10 @@ def count_all_motif_num():
     df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig'])
     df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
     df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
-    # plot_motif(df_all_data)
-    # plot_genome(df_genome_data)
-    # plot_meta(df_genome_data)
-    # plot_base(df_all_base_data)
+    plot_motif(df_all_data)
+    plot_genome(df_genome_data)
+    plot_meta(df_genome_data)
+    plot_base(df_all_base_data)
     ## save genome data
     df_genome_data.to_csv("../../tmp/results2/genome_data_all_samples.csv", index = False)
     df_all_base_data.to_csv("../../tmp/results2/base_count_all_samples.csv", index=False)
@@ -876,7 +876,7 @@ def read_metadata(meta_file):
 if __name__ == "__main__":
     meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
     sample_env_dict = read_metadata(meta_file)
-    # count_all_motif_num()
+    count_all_motif_num()
     get_stastics()
     # jaccard()
     # jaccard_batch()
