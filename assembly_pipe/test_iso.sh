@@ -1,0 +1,1 @@
+ snakemake  -s isolation.smk --config                 hifi_bam=/home/shuaiw/borg/bench/soil_zymo/run4/E_coli_H10407.bam                 prefix=test2                 work_dir=/home/shuaiw/borg/paper/isolation/test2 -j 64

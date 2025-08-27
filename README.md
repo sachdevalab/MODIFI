@@ -117,6 +117,8 @@ options:
 |motif_heatmap.pdf| Visualization of motif profile|
 |motif_cluster.pdf|Visualization of contig clusters|
 
+## kmer database
+stored in control namses as control/control_db.up7.down3.mean.dat and control/control_db.up7.down3.num.dat
 
 ## some notes
 https://github.com/PacificBiosciences/pbcore/issues/127

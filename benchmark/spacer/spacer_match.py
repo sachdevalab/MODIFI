@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 
 
-def run_blastn_spacer_search(mge_fasta, outdir, spacer_fasta, min_id=0.95, threads=24):
+def run_blastn_spacer_search(mge_fasta, outdir, spacer_fasta, raw_hit, min_id=0.95, threads=24):
     """
     Run BLASTN to find MGE targets of CRISPR spacers.
     
@@ -25,7 +25,7 @@ def run_blastn_spacer_search(mge_fasta, outdir, spacer_fasta, min_id=0.95, threa
     outdir.mkdir(parents=True, exist_ok=True)
 
     mgename = mge_fasta.stem
-    hits_file = outdir / f"{mgename}_spacer_hits.tsv"
+    hits_file = raw_hit
     blast_db_prefix = outdir / f"{mgename}_blastdb"
 
     # Step 1: Create BLAST database
@@ -111,9 +111,16 @@ def filter_hit(raw_hit, spacer_linkage, mge_ids):
         return pd.DataFrame(columns=["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"])
     df = pd.read_csv(raw_hit, sep="\t", header=None)
     df.columns = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"]
+    
     # filter by length > 20 and pident > 95
     if "qseqid" not in df.columns:
         raise ValueError("Column 'qseqid' not found in BLAST hits file.")
+    ## make sure the alignment length of qseqid is same as the length of qseqid
+    new_df = pd.DataFrame()
+    for index, row in df.iterrows():
+        if row['length'] != row['qend'] - row['qstart'] + 1:
+            new_df = new_df.append(row)
+    df = new_df
     # Extract contig name from qseqid
     df['qseqid_ctg'] = df['qseqid'].str.split('_CRISPR_').str[0]
     # Remove hits where spacer contig is in MGE set
@@ -130,23 +137,25 @@ def filter_hit(raw_hit, spacer_linkage, mge_ids):
 # prefix = "96plex"
 # outdir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
 
+if __name__ == "__main__":
+    prefix = sys.argv[1]
+    outdir = sys.argv[2]
 
-prefix = sys.argv[1]
-outdir = sys.argv[2]
+    reference_fasta = f"{outdir}/{prefix}.hifiasm.p_ctg.rename.fa"
+    spacer_outdir = f"{outdir}/spacer/"
+    mge_file = f"{outdir}/all_mge.tsv"
+    mge_fatsa = f"{outdir}/{prefix}_mge.fa"
+    raw_hit = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits2.tsv"
+    spacer_linkage = f"{spacer_outdir}/{prefix}_spacer_linkage2.tsv"
+    spacer_fasta = "/home/shuaiw/borg/paper/run2/all_spacer.fa"
 
-reference_fasta = f"{outdir}/{prefix}.hifiasm.p_ctg.rename.fa"
-spacer_outdir = f"{outdir}/spacer/"
-mge_file = f"{outdir}/all_mge.tsv"
-mge_fatsa = f"{outdir}/{prefix}_mge.fa"
-raw_hit = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits.tsv"
-spacer_linkage = f"{spacer_outdir}/{prefix}_spacer_linkage.tsv"
+    # reference_fasta = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa"
+    # prefix = "96plex"
+    # outdir = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/spacer/"
 
-# reference_fasta = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa"
-# prefix = "96plex"
-# outdir = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/spacer/"
-
-spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
-predict_spacer(reference_fasta, spacer_outdir, prefix)
-mge_ids = get_mge_fa(reference_fasta, mge_file, mge_fatsa)
-run_blastn_spacer_search(mge_fasta=mge_fatsa, outdir=spacer_outdir, spacer_fasta=spacer_fasta, min_id=0.95, threads=24)
-filter_hit(raw_hit, spacer_linkage, mge_ids)
+    # spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
+    # predict_spacer(reference_fasta, spacer_outdir, prefix)
+    
+    mge_ids = get_mge_fa(reference_fasta, mge_file, mge_fatsa)
+    run_blastn_spacer_search(mge_fasta=mge_fatsa, outdir=spacer_outdir, spacer_fasta=spacer_fasta, raw_hit=raw_hit, min_id=0.95, threads=24)
+    filter_hit(raw_hit, spacer_linkage, mge_ids)
