@@ -14,7 +14,7 @@ MAX_DEPTH = 500
 
 pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
 
-def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3,min_dp=0):
+def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3, min_dp=0, min_iden=0.97):
     # Ensure the output directory exists
     os.makedirs(split_bam_dir, exist_ok=True)
     bam_dir = os.path.join(split_bam_dir, "bams")
@@ -32,7 +32,7 @@ def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3
         contig_bam = os.path.join(bam_dir, contig + ".bam")
         print (f"Processing {contig} {contig_bam}")
         ref = os.path.join(contig_dir, contig + ".fa")
-        args.append((contig, contig_len, ref, contig_bam, bam, whole_ref, max_NM, MAP_Q, MAX_DEPTH,min_dp))
+        args.append((contig, contig_len, ref, contig_bam, bam, whole_ref, max_NM, MAP_Q, MAX_DEPTH, min_dp, min_iden))
         i += 1
     # samfile.close()
     ctg_depth_dict = {}
@@ -60,17 +60,72 @@ def count_cigar(read, long_cutoff = 50):
                 long_gap += ci[1]
     return gap_num, map_len, long_gap
 
-def calculate_identity(read):
-    if not read.has_tag('NM'):
-        raise ValueError(f"Read {read.query_name} has no NM tag")
-    
-    nm = read.get_tag('NM')
-    aligned_bases = sum(length for op, length in read.cigartuples if op in {0, 1, 2})
-    match_bases = aligned_bases - nm
-    identity = match_bases / aligned_bases if aligned_bases > 0 else 0
-    return identity
 
-def test_read(read, max_NM, q):
+def parse_cigar_operations(cigar_tuples, skip_indel_len=50):
+    """
+    Parse CIGAR operations to count matches, mismatches, insertions, and deletions
+    
+    CIGAR operations:
+    0: M (match/mismatch)
+    1: I (insertion)
+    2: D (deletion)
+    4: S (soft clipping)
+    5: H (hard clipping)
+    7: = (sequence match)
+    8: X (sequence mismatch)
+    """
+    matches = 0
+    mismatches = 0
+    insertions = 0
+    deletions = 0
+    soft_clip = 0
+    hard_clip = 0
+    
+    for op, length in cigar_tuples:
+        if op == 0:  # M (match/mismatch) - need NM tag to distinguish
+            matches += length  # We'll adjust this with NM tag
+        elif op == 1:  # I (insertion)
+            if length > skip_indel_len:  ## skip long indels which might derive from HGT
+                continue
+            insertions += length
+        elif op == 2:  # D (deletion)
+            if length > skip_indel_len:  ## skip long indels which might derive from HGT
+                continue
+            deletions += length
+        elif op == 7:  # = (sequence match)
+            matches += length
+        elif op == 8:  # X (sequence mismatch)
+            mismatches += length
+        elif op == 4:  # S (soft clipping)
+            soft_clip += length
+        elif op == 5:  # H (hard clipping)
+            hard_clip += length
+    clip = soft_clip + hard_clip
+    # print (soft_clip, hard_clip, clip, matches)
+    return matches, mismatches, insertions, deletions, clip
+
+def calculate_identities(read):
+    """
+    Calculate three types of identity based on CIGAR string and NM tag
+    """
+    cigar_tuples = read.cigartuples
+    
+    if not cigar_tuples:
+        return 0
+    
+    # Parse CIGAR operations
+    matches, mismatches, insertions, deletions, clip = parse_cigar_operations(cigar_tuples)
+
+    
+    # 3. Alignment identity (fraction of aligned columns that are matches)
+    total_aligned_columns = matches + mismatches + insertions + deletions
+    alignment_identity = matches / total_aligned_columns if total_aligned_columns > 0 else 0
+    clip_ratio = clip / total_aligned_columns if total_aligned_columns > 0 else 0
+
+    return alignment_identity, clip_ratio
+
+
+def test_read(read, max_NM, q, min_iden):
     if read.is_unmapped:
         return False
     if read.mapping_quality < q:
@@ -80,9 +135,14 @@ def test_read(read, max_NM, q):
         return False
     if read.get_tag("NM") > max_NM:
         return False
+    alignment_identity, clip_ratio = calculate_identities(read)
+    if alignment_identity < min_iden:
+        return False
+    if clip_ratio > 0.1:
+        return False
     return True
 
-def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_depth=500, min_dp=0):
+def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_depth=500, min_dp=0, min_iden=0.97):
     print (f"Processing {contig} {ref}")
 
     #  Create a new header that only includes the specific contig
@@ -95,7 +155,7 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q
     read_number = 0
     total_bases = 0
     for read in samfile.fetch(contig):
-        passed = test_read(read, max_NM, q)
+        passed = test_read(read, max_NM, q, min_iden)
         if not passed:
             continue
         read_number += 1
@@ -124,7 +184,7 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q
         if np.random.rand() > downsample_rate:
             continue
         
-        passed = test_read(read, max_NM, q)
+        passed = test_read(read, max_NM, q, min_iden)
         if not passed:
             continue
 
@@ -149,10 +209,12 @@ def main():
     parser.add_argument("--threads", type=int, default=1, help="Number of threads to use (default: 1)")
     parser.add_argument("--min_len", type=int, default=50000, help="Minimum length of reads to include (default: 1000)")
     parser.add_argument("--max_NM", type=int, help="<int> Max mismatch number in CCS reads.", default=3, metavar="\b")
+    parser.add_argument("--min_iden", type=float, default=0.97,
+                        help="Minimum identity allowed for read alignment.")
 
     args = parser.parse_args()
 
-    split_bam(args.bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM)
+    split_bam(args.bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM, args.min_iden)
 
 
 if __name__ == "__main__":

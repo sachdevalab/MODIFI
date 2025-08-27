@@ -217,5 +217,5 @@ python main.py \
   --work_dir /home/shuaiw/methylation/data/borg/new_test12 \
   --whole_bam /home/shuaiw/methylation/data/borg/b_contigs/11.align.bam \
   --whole_ref /home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa \
-  --read_type subreads 
+  --read_type subreads --min_iden 0.90
 

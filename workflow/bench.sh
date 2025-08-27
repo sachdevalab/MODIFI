@@ -1320,4 +1320,54 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   --min_sites 30 \
   --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv" \
   --job-name=pipeline
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/cow_1/cow_1_methylation_0.99 \
+  --whole_bam /home/shuaiw/borg/paper/run2/cow_1/cow_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/cow_1/cow_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_iden 0.99 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/cow_1/all_mge.tsv \
+  --threads 64" \
+  --job-name=cow_0.99
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/cow_1/cow_1_methylation_0.97 \
+  --whole_bam /home/shuaiw/borg/paper/run2/cow_1/cow_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/cow_1/cow_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_iden 0.97 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/cow_1/all_mge.tsv \
+  --threads 64" \
+  --job-name=cow_0.97
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/infant_1/infant_1_methylation_0.99 \
+  --whole_bam /home/shuaiw/borg/paper/run2/infant_1/infant_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/infant_1/infant_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_iden 0.99 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/infant_1/all_mge.tsv \
+  --threads 64" \
+  --job-name=infant_1_0.99
   

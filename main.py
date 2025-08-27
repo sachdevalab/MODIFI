@@ -89,6 +89,8 @@ def parse_arguments():
     #                     help="Maximum number of alignments to process.")
     parser.add_argument("--read_type", choices=["subreads", "hifi"], default="subreads",
                         help="Type of reads in BAM file.")
+    parser.add_argument("--min_iden", type=float, default=0.97,
+                        help="Minimum identity allowed for read alignment.")
     parser.add_argument("--max_NM", type=int, default=None,
                         help="Maximum number of mismatches allowed (None to disable).")
     parser.add_argument("--min_len", type=int, default=1000,
@@ -581,7 +583,7 @@ if __name__ == "__main__":
         ctg_depth_dict = record_resource_usage(
             "Splitting BAM files",
             split_bam,
-            args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM, args.min_ctg_cov
+            args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM, args.min_ctg_cov, args.min_iden
         )
         record_resource_usage(
             "Depth analysis",

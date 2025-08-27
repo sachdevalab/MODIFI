@@ -120,11 +120,13 @@ def handle_each_contig(bam, fig, prefix, NM_file, iden_fig, q=20):
         ref_iden_list.append(ref_id)
         align_iden_list.append(align_id)
         no_iden_list.append(no_indel_identity)
+        if no_indel_identity < 0.9:
+            print (f"{read.query_name}\t{nm_tag}\t{matches}\t{mismatches}\t{insertions}\t{deletions}\t{query_id:.4f}\t{ref_id:.4f}\t{align_id:.4f}\t{no_indel_identity:.4f}")
 
         print(f"{read.query_name}\t{nm_tag}\t{matches}\t{mismatches}\t{insertions}\t{deletions}\t{query_id:.4f}\t{ref_id:.4f}\t{align_id:.4f}\t{no_indel_identity:.4f}", file=f)
 
-        if len(NM_list) % 10000 == 0 and len(NM_list) > 0:
-            print(f"Processed {len(NM_list)} reads...")
+        # if len(NM_list) % 10000 == 0 and len(NM_list) > 0:
+        #     print(f"Processed {len(NM_list)} reads...")
     
     f.close()
     samfile.close()
@@ -190,22 +192,23 @@ def plot(data_list, fig, prefix, ylabel):
 
 # Main execution
 # prefix = "ERR12723529_mice"
-# prefix = "ocean_1"
+prefix = "cow_1"
 
-all_dir = "/home/shuaiw/borg/paper/run2/"
-for my_dir in os.listdir(all_dir):
-    prefix = my_dir
-    print (prefix)
-    bam = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.bam"
-    fig = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.NM.pdf"
-    iden_fig = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.identities.pdf"
-    NM_file = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.analysis.tsv"
+# all_dir = "/home/shuaiw/borg/paper/run2/"
+# for my_dir in os.listdir(all_dir):
+#     prefix = my_dir
+#     print (prefix)
+bam = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.bam"
+fig = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.NM.pdf"
+iden_fig = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.identities.pdf"
+NM_file = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.analysis.tsv"
+# depth_file = f"/home/shuaiw/borg/paper/run2/{prefix}_methylation2/mean_depth.csv"
 
-    if os.path.exists(bam):
-        print(f"Processing {bam}")
-        handle_each_contig(bam, fig, prefix, NM_file, iden_fig)
-    else:
-        print(f"BAM file not found: {bam}")
+if os.path.exists(bam):
+    print(f"Processing {bam}")
+    handle_each_contig(bam, fig, prefix, NM_file, iden_fig)
+else:
+    print(f"BAM file not found: {bam}")
 
 # prefix = "ERR12723529_mice"
 
