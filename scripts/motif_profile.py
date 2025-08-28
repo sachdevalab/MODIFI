@@ -129,9 +129,10 @@ def get_modified_ratio(gff, score_cutoff):
         pos = line[3]
         strand = line[6]
         score = int(line[5])
-        all_modified_loci[ref + ":" + str(pos) + strand] = set()
+        
         if score <= score_cutoff:
             continue
+        all_modified_loci[ref + ":" + str(pos) + strand] = set()
         # modified_loci[ref + ":" + str(pos) + strand] = score
     print ("no. of modified loci", len(all_modified_loci))
     f.close()

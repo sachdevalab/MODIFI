@@ -1356,6 +1356,22 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --job-name=cow_0.97
 
 sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/ocean_1/ocean_1_methylation_0.97 \
+  --whole_bam /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 1 \
+  --min_iden 0.97 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/ocean_1/all_mge.tsv \
+  --threads 64" \
+  --job-name=ocean_0.97
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/infant_1/infant_1_methylation_0.99 \
   --whole_bam /home/shuaiw/borg/paper/run2/infant_1/infant_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/infant_1/infant_1.hifiasm.p_ctg.rename.fa \
