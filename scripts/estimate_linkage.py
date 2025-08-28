@@ -446,7 +446,7 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, MGE_dict
                 # df.insert(0, 'MGE', plasmid_name)
                 best_host = df.iloc[0].copy()  # Make a copy to avoid SettingWithCopyWarning
                 if best_host['MGE'] not in MGE_dict:
-                    print (f"{best_host['MGE']} not in MGE_dict, skip.")
+                    # print (f"{best_host['MGE']} not in MGE_dict, skip.")
                     continue
 
                 if best_host['MGE'] in MGE_dict and 'length' in MGE_dict[best_host['MGE']]:
