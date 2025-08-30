@@ -61,7 +61,7 @@ def count_cigar(read, long_cutoff = 50):
     return gap_num, map_len, long_gap
 
 
-def parse_cigar_operations(cigar_tuples, skip_indel_len=50):
+def parse_cigar_operations(read, cigar_tuples, contig_len, skip_indel_len=50):
     """
     Parse CIGAR operations to count matches, mismatches, insertions, and deletions
     
@@ -100,17 +100,23 @@ def parse_cigar_operations(cigar_tuples, skip_indel_len=50):
         elif op == 8:  # X (sequence mismatch)
             mismatches += length
         elif op == 4:  # S (soft clipping)
-            # if i != 0 and i != cigar_num - 1:   ### ignore clip at ends, might led by circular
+            if i == 0 and read.reference_start == 0:   ### ignore clip at contig start, might led by circular
+                continue
+            elif i == cigar_num - 1 and read.reference_end == contig_len:  ### ignore clip at contig end, might led by circular
+                continue
             soft_clip += length
         elif op == 5:  # H (hard clipping)
-            # if i != 0 and i != cigar_num - 1:   ### ignore clip at ends, might led by circular
+            if i == 0 and read.reference_start == 0:   ### ignore clip at contig start, might led by circular
+                continue
+            elif i == cigar_num - 1 and read.reference_end == contig_len:  ### ignore clip at contig end, might led by circular
+                continue
             hard_clip += length
         i += 1
     clip = soft_clip + hard_clip
     # print (soft_clip, hard_clip, clip, matches)
     return matches, mismatches, insertions, deletions, clip
 
-def calculate_identities(read):
+def calculate_identities(read, contig_len):
     """
     Calculate three types of identity based on CIGAR string and NM tag
     """
@@ -120,7 +126,7 @@ def calculate_identities(read):
         return 0
     
     # Parse CIGAR operations
-    matches, mismatches, insertions, deletions, clip = parse_cigar_operations(cigar_tuples)
+    matches, mismatches, insertions, deletions, clip = parse_cigar_operations(read, cigar_tuples, contig_len)
 
     
     # 3. Alignment identity (fraction of aligned columns that are matches)
@@ -131,7 +137,7 @@ def calculate_identities(read):
     return alignment_identity, clip_ratio
 
 
-def test_read(read, max_NM, q, min_iden):
+def test_read(read, contig_len, max_NM, q, min_iden):
     if read.is_unmapped:
         return False
     if read.mapping_quality < q:
@@ -141,7 +147,7 @@ def test_read(read, max_NM, q, min_iden):
         return False
     # if read.get_tag("NM") > max_NM:
     #     return False
-    alignment_identity, clip_ratio = calculate_identities(read)
+    alignment_identity, clip_ratio = calculate_identities(read, contig_len)
     if alignment_identity < min_iden:
         return False
     # if clip_ratio > 0.1:
@@ -161,7 +167,7 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q
     read_number = 0
     total_bases = 0
     for read in samfile.fetch(contig):
-        passed = test_read(read, max_NM, q, min_iden)
+        passed = test_read(read, contig_len, max_NM, q, min_iden)
         if not passed:
             continue
         read_number += 1
@@ -190,7 +196,7 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q
         if np.random.rand() > downsample_rate:
             continue
         
-        passed = test_read(read, max_NM, q, min_iden)
+        passed = test_read(read, contig_len, max_NM, q, min_iden)
         if not passed:
             continue
 
