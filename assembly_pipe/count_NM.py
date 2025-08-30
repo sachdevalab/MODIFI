@@ -26,7 +26,10 @@ def parse_cigar_operations(cigar_tuples):
     mismatches = 0
     insertions = 0
     deletions = 0
-    
+    soft_clip = 0
+    hard_clip = 0
+    i = 0
+    cigar_num =len(cigar_tuples)
     for op, length in cigar_tuples:
         if op == 0:  # M (match/mismatch) - need NM tag to distinguish
             matches += length  # We'll adjust this with NM tag
@@ -38,8 +41,16 @@ def parse_cigar_operations(cigar_tuples):
             matches += length
         elif op == 8:  # X (sequence mismatch)
             mismatches += length
+        elif op == 4:  # S (soft clipping)
+            if i != 0 and i != cigar_num - 1:   ### ignore clip at ends
+                soft_clip += length
+        elif op == 5:  # H (hard clipping)
+            if i != 0 and i != cigar_num - 1:   ### ignore clip at ends
+                hard_clip += length
+        i += 1
+    clip = soft_clip + hard_clip
     
-    return matches, mismatches, insertions, deletions
+    return matches, mismatches, insertions, deletions, clip
 
 def calculate_identities(read):
     """
@@ -55,7 +66,7 @@ def calculate_identities(read):
         return None, None, None
     
     # Parse CIGAR operations
-    matches, mismatches, insertions, deletions = parse_cigar_operations(cigar_tuples)
+    matches, mismatches, insertions, deletions, clip = parse_cigar_operations(cigar_tuples)
     
     # Adjust matches based on NM tag
     # NM = mismatches + insertions + deletions
@@ -87,7 +98,7 @@ def calculate_identities(read):
 
     no_indel_identity = matches / (matches + mismatches) if (matches + mismatches) > 0 else 0
 
-    return query_identity, reference_identity, alignment_identity, matches, mismatches, insertions, deletions, no_indel_identity
+    return query_identity, reference_identity, alignment_identity, matches, mismatches, insertions, deletions, no_indel_identity, clip
 
 def handle_each_contig(bam, fig, prefix, NM_file, iden_fig, q=20):
     samfile = pysam.AlignmentFile(bam, "rb")
@@ -101,6 +112,7 @@ def handle_each_contig(bam, fig, prefix, NM_file, iden_fig, q=20):
     ref_iden_list = []
     align_iden_list = []
     no_iden_list = []
+    good_ide_clip = []
     
     for read in samfile:
         if read.is_unmapped:
@@ -114,14 +126,16 @@ def handle_each_contig(bam, fig, prefix, NM_file, iden_fig, q=20):
         NM_list.append(nm_tag)
         
         # Calculate identities
-        query_id, ref_id, align_id, matches, mismatches, insertions, deletions, no_indel_identity = calculate_identities(read)
+        query_id, ref_id, align_id, matches, mismatches, insertions, deletions, no_indel_identity, clip = calculate_identities(read)
 
         query_iden_list.append(query_id)
         ref_iden_list.append(ref_id)
         align_iden_list.append(align_id)
         no_iden_list.append(no_indel_identity)
-        if no_indel_identity < 0.9:
-            print (f"{read.query_name}\t{nm_tag}\t{matches}\t{mismatches}\t{insertions}\t{deletions}\t{query_id:.4f}\t{ref_id:.4f}\t{align_id:.4f}\t{no_indel_identity:.4f}")
+        if no_indel_identity > 0.99 and clip > 200: 
+            clip_ratio = clip/ (matches + mismatches)
+            good_ide_clip.append(clip_ratio)
+            print (f"{read.query_name}\t{nm_tag}\t{matches}\t{mismatches}\t{insertions}\t{deletions}\t{query_id:.4f}\t{ref_id:.4f}\t{align_id:.4f}\t{no_indel_identity:.4f}\t{clip}")
 
         print(f"{read.query_name}\t{nm_tag}\t{matches}\t{mismatches}\t{insertions}\t{deletions}\t{query_id:.4f}\t{ref_id:.4f}\t{align_id:.4f}\t{no_indel_identity:.4f}", file=f)
 
@@ -130,7 +144,10 @@ def handle_each_contig(bam, fig, prefix, NM_file, iden_fig, q=20):
     
     f.close()
     samfile.close()
-    
+    ## plot the distribution of good_ide_clip
+    plot(good_ide_clip, "../tmp/results2/clip.pdf", "clip", "Good Indel Clip Ratio")
+
+
     # Plot all three identity types
     plot_identities(query_iden_list, ref_iden_list, align_iden_list, no_iden_list, iden_fig, prefix)
     # plot(NM_list, fig, prefix, "NM values")
@@ -192,7 +209,7 @@ def plot(data_list, fig, prefix, ylabel):
 
 # Main execution
 # prefix = "ERR12723529_mice"
-prefix = "cow_1"
+prefix = "infant_1"
 
 # all_dir = "/home/shuaiw/borg/paper/run2/"
 # for my_dir in os.listdir(all_dir):

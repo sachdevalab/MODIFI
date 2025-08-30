@@ -36,10 +36,19 @@ def run_blastn_spacer_search(mge_fasta, outdir, spacer_fasta, raw_hit, min_id=0.
     )
 
     # Step 2: Run BLASTN search
+    # subprocess.run(
+    #     f"blastn -task blastn-short -query {spacer_fasta} -db {blast_db_prefix} -out {hits_file} "
+    #     f"-evalue 1e-5 -outfmt '6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore' "
+    #     f"-num_threads {threads} -perc_identity {min_id * 100:.1f}",
+    #     shell=True,
+    #     check=True
+    # )
+
+    ## rohan's version
     subprocess.run(
         f"blastn -task blastn-short -query {spacer_fasta} -db {blast_db_prefix} -out {hits_file} "
-        f"-evalue 1e-5 -outfmt '6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore' "
-        f"-num_threads {threads} -perc_identity {min_id * 100:.1f}",
+        f"-outfmt '6 std qlen nident' -max_target_seqs 5000 "
+        f"-num_threads {threads}",
         shell=True,
         check=True
     )
@@ -133,6 +142,33 @@ def filter_hit(raw_hit, spacer_linkage, mge_ids):
     return df
 
 
+def filter_hit2(raw_hit, spacer_linkage, mge_ids):
+    """
+    Filter BLAST hits to remove those where the spacer's contig is in the MGE set.
+    Args:
+        raw_hit (str): Path to raw BLAST hits file (tsv).
+        spacer_linkage (str): Output file for filtered hits.
+        mge_ids (set): Set of MGE contig IDs to exclude.
+    Returns:
+        pd.DataFrame: Filtered hits DataFrame.
+    """
+    import pandas as pd
+    ## check if raw_hit is empty
+    if not os.path.exists(raw_hit) or os.path.getsize(raw_hit) == 0:
+        print(f"[⚠️] Raw hits file is empty or not found: {raw_hit}")
+        return pd.DataFrame(columns=["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"])
+    df = pd.read_csv(raw_hit, sep="\t")
+    # df.columns = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"]
+    print (df)
+    df['qseqid_ctg'] = df['query_contig_id']
+    # Remove hits where spacer contig is in MGE set
+    df = df[~df["qseqid_ctg"].isin(mge_ids)]
+
+    df.to_csv(spacer_linkage, sep="\t", index=False)
+    print(f"[✔] Filtered hits saved to {spacer_linkage}, total {len(df)} hits.")
+    return df
+
+
 # spacer_fasta="/groups/sachdeva/projects/cow/methanotroph/db/global_crispr_db/nr_spacers_hq-taxoselected_25-05-10.fna"
 # prefix = "96plex"
 # outdir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
@@ -145,17 +181,22 @@ if __name__ == "__main__":
     spacer_outdir = f"{outdir}/spacer/"
     mge_file = f"{outdir}/all_mge.tsv"
     mge_fatsa = f"{outdir}/{prefix}_mge.fa"
-    raw_hit = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits2.tsv"
-    spacer_linkage = f"{spacer_outdir}/{prefix}_spacer_linkage2.tsv"
-    spacer_fasta = "/home/shuaiw/borg/paper/run2/all_spacer.fa"
+    raw_hit = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits.tsv"
+    filter_hit_file = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits.filter.tsv"
+    spacer_linkage = f"{spacer_outdir}/{prefix}_spacer_linkage.tsv"
+    # spacer_fasta = "/home/shuaiw/borg/paper/run2/all_spacer.fa"
 
     # reference_fasta = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa"
     # prefix = "96plex"
     # outdir = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/spacer/"
 
-    # spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
-    # predict_spacer(reference_fasta, spacer_outdir, prefix)
+    spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
+    predict_spacer(reference_fasta, spacer_outdir, prefix)
     
     mge_ids = get_mge_fa(reference_fasta, mge_file, mge_fatsa)
     run_blastn_spacer_search(mge_fasta=mge_fatsa, outdir=spacer_outdir, spacer_fasta=spacer_fasta, raw_hit=raw_hit, min_id=0.95, threads=24)
-    filter_hit(raw_hit, spacer_linkage, mge_ids)
+    cmd = f"""
+    python3 /home/rohan/scripts/crispr_filter_blast.py -m 5 -s {spacer_fasta} -i {raw_hit} -o {filter_hit_file}
+    """
+    os.system(cmd)
+    filter_hit2(filter_hit_file, spacer_linkage, mge_ids)

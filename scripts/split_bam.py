@@ -80,6 +80,9 @@ def parse_cigar_operations(cigar_tuples, skip_indel_len=50):
     deletions = 0
     soft_clip = 0
     hard_clip = 0
+
+    i = 0
+    cigar_num =len(cigar_tuples)
     
     for op, length in cigar_tuples:
         if op == 0:  # M (match/mismatch) - need NM tag to distinguish
@@ -97,9 +100,12 @@ def parse_cigar_operations(cigar_tuples, skip_indel_len=50):
         elif op == 8:  # X (sequence mismatch)
             mismatches += length
         elif op == 4:  # S (soft clipping)
+            # if i != 0 and i != cigar_num - 1:   ### ignore clip at ends, might led by circular
             soft_clip += length
         elif op == 5:  # H (hard clipping)
+            # if i != 0 and i != cigar_num - 1:   ### ignore clip at ends, might led by circular
             hard_clip += length
+        i += 1
     clip = soft_clip + hard_clip
     # print (soft_clip, hard_clip, clip, matches)
     return matches, mismatches, insertions, deletions, clip
@@ -118,7 +124,7 @@ def calculate_identities(read):
 
     
     # 3. Alignment identity (fraction of aligned columns that are matches)
-    total_aligned_columns = matches + mismatches + insertions + deletions
+    total_aligned_columns = matches + mismatches + insertions + deletions + clip
     alignment_identity = matches / total_aligned_columns if total_aligned_columns > 0 else 0
     clip_ratio = clip / total_aligned_columns if total_aligned_columns > 0 else 0
 
@@ -133,13 +139,13 @@ def test_read(read, max_NM, q, min_iden):
     if not read.has_tag('NM'):
         print (f"Read {read.query_name} has no NM tag")
         return False
-    if read.get_tag("NM") > max_NM:
-        return False
+    # if read.get_tag("NM") > max_NM:
+    #     return False
     alignment_identity, clip_ratio = calculate_identities(read)
     if alignment_identity < min_iden:
         return False
-    if clip_ratio > 0.1:
-        return False
+    # if clip_ratio > 0.1:
+    #     return False
     return True
 
 def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_depth=500, min_dp=0, min_iden=0.97):
