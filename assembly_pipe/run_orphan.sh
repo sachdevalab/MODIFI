@@ -36,10 +36,6 @@
                     /home/shuaiw/borg/paper/run2/soil_s3_2/soil_s3_2_methylation2
 /home/shuaiw/miniconda3/envs/methy3/bin/python \
                 /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py \
-                    /home/shuaiw/borg/paper/run2/soil_s4_1/prokka/soil_s4_1.gff \
-                    /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1_methylation2
-/home/shuaiw/miniconda3/envs/methy3/bin/python \
-                /home/shuaiw/Methy/benchmark/orphan/motif_enrichment.py \
                     /home/shuaiw/borg/paper/run2/soil_s1_1/prokka/soil_s1_1.gff \
                     /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation2
 /home/shuaiw/miniconda3/envs/methy3/bin/python \

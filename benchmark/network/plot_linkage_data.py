@@ -178,7 +178,7 @@ def plot_network2(G):
               fontsize=14, pad=20)
     plt.axis('off')
     plt.tight_layout()
-    plt.savefig("../../tmp/results/network_test_plot2.png", dpi=300, bbox_inches='tight')
+    plt.savefig("../../tmp/results2/network_test_plot2.png", dpi=300, bbox_inches='tight')
     plt.close()
 
 def plot(G):
@@ -364,8 +364,12 @@ if __name__ == "__main__":
         gtdk_bac_file = os.path.join(work_dir, "GTDB/gtdbtk.bac120.summary.tsv")
         gtdk_arc_file = os.path.join(work_dir, "GTDB/gtdbtk.ar122.summary.tsv")
         gtdk_all_file = os.path.join(work_dir, "GTDB/gtdbtk.all.summary.tsv")
-        host_summary_file = os.path.join(work_dir, f"{prefix}_methylation2/host_summary.csv")
+        host_summary_file = os.path.join(work_dir, f"{prefix}_methylation3/host_summary.csv")
         print (f"Host summary file: {host_summary_file}")
+        ## check if the host_summary_file exists
+        if not os.path.exists(host_summary_file):
+            print(f"File {host_summary_file} does not exist. Skipping {prefix}.")
+            continue
         ## skip if the host_summary_file is empty, count the number of lines
         ## host sum lines
         line_num = sum(1 for line in open(host_summary_file) if line.strip())

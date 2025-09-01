@@ -130,14 +130,15 @@ rule call_methylation:
         """
         which python
         /usr/bin/time -v -o {output.time} /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/Methy/main.py \
-          --work_dir {config[work_dir]}/{config[prefix]}_methylation \
+          --work_dir {config[work_dir]}/{config[prefix]}_methylation3 \
           --whole_bam {input.bam} \
           --whole_ref {input.fa} \
           --read_type hifi \
-          --min_len 1000 \
+          --min_len 2000 \
+          --min_iden 0.97 \
           --max_NM 3 \
-          --min_cov 1 \
-          --min_frac 0.4 \
+          --min_cov 3 \
+          --min_frac 0.3 \
           --min_score 30 \
           --min_sites 30 \
           --annotate_rm \

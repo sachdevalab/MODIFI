@@ -33,7 +33,7 @@ def read_list(bam_list, cmd_file, prefix_table):
 
             cmd = f"""
             #### number {i}
-            sbatch --partition standard --wrap "snakemake --config \\
+            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \\
                 hifi_bam={hifi_bam} \\
                 prefix={prefix} \\
                 work_dir={work_dir} -j 64" \\
@@ -76,20 +76,20 @@ def read_list(bam_list, cmd_file, prefix_table):
             #     continue
             methy_cmd = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \\
-                --work_dir /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation2 \\
+                --work_dir /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation3 \\
                 --whole_bam /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.bam \\
                 --whole_ref /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
                 --read_type hifi \\
-                --min_len 1000 \\
+                --min_len 2000 \\
                 --max_NM 30000000 \\
-                --min_cov 1 \\
-                --min_frac 0.4 \\
+                --min_cov 3 \\
+                --min_iden 0.97 \\
+                --min_frac 0.3 \\
                 --min_score 30 \\
                 --min_sites 30 \\
-                --run_steps split \\
                 --mge_file /home/shuaiw/borg/paper/run2/{prefix}/all_mge.tsv \\
                 --threads 64" \\
-                --job-name=split_{prefix}
+                --job-name=clip_{prefix}
             """
             print (methy_cmd.strip(), file=m)
 

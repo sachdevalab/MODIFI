@@ -71,14 +71,6 @@
                 --job-name=soil_s3_2 
             
 
-            #### number 44
-            sbatch --partition standard --wrap "snakemake  -s find_MGE.smk --config \
-                hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2022.bam \
-                prefix=soil_s4_1 \
-                work_dir=/home/shuaiw/borg/paper/run2/soil_s4_1 -j 64 --use-conda" \
-                --job-name=soil_s4_1 
-            
-
             #### number 46
             sbatch --partition standard --wrap "snakemake  -s find_MGE.smk --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2025.bam \
