@@ -442,7 +442,7 @@ def get_new_host(plasmid_list):
     return plasmid_host_dict
 
 
-def cal_AUC(): 
+def cal_AUC_pure(): 
     fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
     plasmid_list_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"
     # plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
@@ -460,7 +460,7 @@ def cal_AUC():
 
     for p in ["10", "20", "30", "50", "05", "100"]:
         prefix = f"m64004_210929_143746.p{p}"
-        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage", prefix, "hosts")
+        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/pure", prefix, "hosts")
         recall, precision = assess_linkage(result_dir, cutoff, plasmid_host_dict)
         dp_df = get_depth(result_dir)
         ## add column which is p for all dp_df
@@ -589,8 +589,8 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-# cal_AUC()
-cal_AUC_depth()
+cal_AUC_pure()
+# cal_AUC_depth()
 # assess_motif()
 # host_linkage_eva()
 # for_zymo()

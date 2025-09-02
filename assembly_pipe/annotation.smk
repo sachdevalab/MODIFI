@@ -144,19 +144,18 @@ rule call_host:
         fa=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
         mge_file = f"{config['work_dir']}/all_mge.tsv",
     output:
-        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation/host_summary.csv"
+        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation3/host_summary.csv"
     threads: config["threads"]
     shell:
         """
         /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/Methy/main.py \
-          --work_dir {config[work_dir]}/{config[prefix]}_methylation \
+          --work_dir {config[work_dir]}/{config[prefix]}_methylation3 \
           --whole_bam {input.bam} \
           --whole_ref {input.fa} \
           --read_type hifi \
           --min_len 1000 \
-          --max_NM 3 \
           --min_cov 1 \
-          --min_frac 0.4 \
+          --min_frac 0.3 \
           --min_score 30 \
           --min_sites 30 \
           --run_steps host \
@@ -167,7 +166,7 @@ rule call_host:
 
 rule drep:
     input:
-        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation/host_summary.csv",
+        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation3/host_summary.csv",
     output:
         drep_clu_file = f"{config['work_dir']}/dRep_out/data_tables/Cdb.csv",
         drep_finish = f"{config['work_dir']}/dRep.finish",
@@ -191,7 +190,7 @@ rule drep:
 
 rule dRep_99:
     input:
-        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation/host_summary.csv",
+        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation3/host_summary.csv",
         drep_finish = f"{config['work_dir']}/dRep.finish",
     output:
         drep_clu_file = f"{config['work_dir']}/dRep_out_99/data_tables/Cdb.csv",

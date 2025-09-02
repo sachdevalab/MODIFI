@@ -1136,20 +1136,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --job-name=soil_test
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
-  --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1_methylation2 \
-  --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.align.bam \
-  --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.hifiasm.p_ctg.rename.fa \
-  --read_type hifi \
-  --min_len 1000 \
-  --max_NM 30000000 \
-  --min_cov 1 \
-  --min_frac 0.4 \
-  --min_score 30 \
-  --min_sites 30 \
-  --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_1/all_mge.tsv \
-  --threads 64 --run_steps host" \
-  --job-name=bioreactor_1_test
+
 
 sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/infant_1/infant_1_methylation3 \
@@ -1406,3 +1393,18 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --min_iden 0.97 \
   --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv" \
   --job-name=p05
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1_methylation3_test \
+  --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 10 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 10 \
+  --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_1/all_mge.tsv \
+  --threads 64 --segment --visu_ipd" \
+  --job-name=bioreactor_1_test
