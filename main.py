@@ -446,7 +446,7 @@ def run_merge_profile(args, paras):
 def depth_analysis(paras, ctg_depth_dict):
     ## change the dict to df
     depth_df = (
-        pd.DataFrame.from_dict(ctg_depth_dict, orient="index", columns=["depth"])
+        pd.DataFrame.from_dict(ctg_depth_dict, orient="index", columns=["depth", "length"])
         .reset_index()
         .rename(columns={"index": "contig"})
     )
@@ -457,7 +457,8 @@ def depth_analysis(paras, ctg_depth_dict):
     mean_depth = over0_depth["depth"].mean()
     median_depth = over0_depth["depth"].median()
     logger.info(f"Mean depth: {mean_depth:.2f}, Median depth: {median_depth:.2f} in {len(over0_depth)} contigs with depth > 0.")
-
+    ## sort depth_df by depth in reverse
+    depth_df = depth_df.sort_values(by="depth", ascending=False)
     depth_df.to_csv(paras["depth_file"], index=False)
     ## plot the depth distribution
     sns.set(style="whitegrid")

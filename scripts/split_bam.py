@@ -39,8 +39,8 @@ def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3
     # Use multiprocessing to handle each contig in parallel
     with Pool(processes=threads) as pool:
         results = pool.starmap(handle_each_contig, args)
-    for contig, mean_depth in results:
-        ctg_depth_dict[contig] = mean_depth
+    for contig, mean_depth, contig_len in results:
+        ctg_depth_dict[contig] = [mean_depth, contig_len]
 
     return ctg_depth_dict
 
@@ -178,7 +178,7 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q
     print(f"Mean depth for {contig}: {mean_depth:.2f}")
     if mean_depth < min_dp:
         print(f"Mean depth {mean_depth} is less than minimum depth {min_dp}. Skipping {contig}.")
-        return contig, mean_depth
+        return contig, mean_depth, contig_len
     
     if mean_depth == 0:
         downsample_rate = 1
@@ -211,7 +211,7 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q
     os.system(f"{pbindex_bin} {contig_bam}")
     os.system(f"samtools faidx {whole_ref} {contig} > {ref}")
     os.system(f"samtools faidx {ref}")
-    return contig, mean_depth
+    return contig, mean_depth, contig_len
 
 def main():
     parser = argparse.ArgumentParser(description="Split BAM file by reference.")
