@@ -141,7 +141,7 @@ def plot_network2(G):
     
     if plasmid_nodes:
         nx.draw_networkx_nodes(G, pos, nodelist=plasmid_nodes, node_shape='o',  # circle
-                              node_color='green', node_size=node_size, alpha=0.8, label='Plasmid')
+                              node_color='blue', node_size=node_size, alpha=0.8, label='Plasmid')
     
     if virus_nodes:
         nx.draw_networkx_nodes(G, pos, nodelist=virus_nodes, node_shape='h',  # hexagon
@@ -154,7 +154,7 @@ def plot_network2(G):
     # Create legend
     legend_elements = []
     if plasmid_nodes:
-        legend_elements.append(mpatches.Patch(color='green', label=f'Plasmid ({len(plasmid_nodes)})'))
+        legend_elements.append(mpatches.Patch(color='blue', label=f'Plasmid ({len(plasmid_nodes)})'))
     if virus_nodes:
         legend_elements.append(mpatches.Patch(color='red', label=f'Virus ({len(virus_nodes)})'))
     if novel_nodes:

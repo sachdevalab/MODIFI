@@ -1,3 +1,4 @@
+import profile
 from Bio.SeqUtils import nt_search
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -68,12 +69,12 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
 
     ## plot the distribution of motif_ipd_ratio
     print (len(motif_ipd_ratio))
-    plt.hist(motif_ipd_ratio, bins=100)
-    plt.xlabel("IPD ratio")
-    plt.ylabel("Frequency")
-    plt.title("IPD ratio distribution of motif " + motif_new)
-    plt.savefig("../tmp/" + motif_new + ".png")
-    plt.close()
+    # plt.hist(motif_ipd_ratio, bins=100)
+    # plt.xlabel("IPD ratio")
+    # plt.ylabel("Frequency")
+    # plt.title("IPD ratio distribution of motif " + motif_new)
+    # plt.savefig("../tmp/" + motif_new + ".png")
+    # plt.close()
 
     # print ("motif_loci_num", motif_loci_num)
     # print ("motif_modify_num", motif_modify_num)
@@ -100,8 +101,6 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
     return [for_loci_num, for_modified_num,for_ratio,\
             rev_loci_num, rev_modified_num, rev_ratio,\
             motif_loci_num, motif_modify_num, ratio, proportion_all_modified], record_modified_sites
-
-
 
 def get_modified_ratio(gff):
     ## read the gff file
@@ -149,72 +148,113 @@ if __name__ == "__main__":
     # my_ref = "/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa"
     # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
 
-    my_ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
-    gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_1.gff"
-    # gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
-    # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
-    profile = "/home/shuaiw/borg/test.csv"
-    ipd_ratio_file = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
+    # my_ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
+    # gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_1.gff"
+    # # gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
+    # # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
+    # # profile = "/home/shuaiw/borg/test.csv"
+    # ipd_ratio_file = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
+
+    prefix_list = [["cow_bioreactor_1", "cow_bioreactor_1_636_C"], \
+                   ["cow_bioreactor_2", "cow_bioreactor_2_1062_L"], \
+                   ["cow_bioreactor_2", "cow_bioreactor_2_601_C"], \
+                   ["cow_bioreactor_4", "cow_bioreactor_4_1750_C"],\
+                    ["cow_bioreactor_5", "cow_bioreactor_5_1162_C"]]
+    # prefix = "cow_bioreactor_4"
+    # contig = "cow_bioreactor_4_1750_C"
+    data = []
+    motif_list = [["GATC", 2], ["ACNCAG", 5], ["GAAATC", 4], ["ACTNNNNNNRGTC", 1], ["GGCATC", 4]]
+    for prefix, contig in prefix_list:
+        my_ref = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation3/contigs/{contig}.fa"
+        gff = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation3/gffs/{contig}.gff"
+        ipd_ratio_file = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation3/ipd_ratio/{contig}.ipd3.csv"
+        REF = read_ref(my_ref)
+        # print (REF)
+        modified_loci = get_modified_ratio(gff)
+        # motifs = pd.read_csv(all_motifs)
+        ipd_ratio_dict = read_ipd_ratio(ipd_ratio_file)
+        
+        for motif_new, exact_pos in motif_list:
+            all_record = {}
+            motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
+            print (motif_profile)
+            data.append([contig,motif_new, motif_profile[-2]])
+    df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction"])
+    ## plot heatmap with df
+    df_pivot = df.pivot(index='contig', columns='motifString', values='fraction').fillna(0)
+    import seaborn as sns
+    plt.figure(figsize=(10, 6))
+    ax = sns.heatmap(df_pivot, cmap="YlGnBu", annot=True, fmt=".2f", cbar_kws={'label': 'Fraction'})
+    ax.set_title("Motif Fraction Heatmap")
+    ax.set_xlabel("Motif String")
+    ax.set_ylabel("Contig")
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+    plt.tight_layout()
+    plt.savefig("../../tmp/results2/motif_fraction_heatmap.pdf")
 
     # my_ref = sys.argv[1]
     # gff = sys.argv[2]
     # all_motifs = sys.argv[3]
     # profile = sys.argv[4]
 
-    REF = read_ref(my_ref)
-    # print (REF)
-    modified_loci = get_modified_ratio(gff)
-    # motifs = pd.read_csv(all_motifs)
-    ipd_ratio_dict = read_ipd_ratio(ipd_ratio_file)
-    # print (len(ipd_ratio_dict))
-    # data = []
-    # for index, motif in motifs.iterrows():
-        # motif_new = motif["motifString"]
-        # exact_pos = motif["centerPos"]
-    # motif_new = "AGCANNNNNNCCT"
-    # exact_pos = 4
-    motif_new = "GATC"
-    exact_pos = 2
-    all_record = {}
-    motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
-    ## add record_modified_sites to all_record
-    for k, v in record_modified_sites.items():
-        all_record[k] = v
-    motif_new = "CTTCAG"
-    exact_pos = 5
-    motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
-    ## add record_modified_sites to all_record
-    for k, v in record_modified_sites.items():
-        all_record[k] = v
-    motif_new = "CTGAAG"
-    exact_pos = 5
-    motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
-    ## add record_modified_sites to all_record
-    for k, v in record_modified_sites.items():
-        all_record[k] = v
-    record_modified_sites  = all_record
-    print ("no. of final modified sites", len(record_modified_sites))
+    # REF = read_ref(my_ref)
+    # # print (REF)
+    # modified_loci = get_modified_ratio(gff)
+    # # motifs = pd.read_csv(all_motifs)
+    # ipd_ratio_dict = read_ipd_ratio(ipd_ratio_file)
+    # # print (len(ipd_ratio_dict))
+    # # data = []
+    # # for index, motif in motifs.iterrows():
+    #     # motif_new = motif["motifString"]
+    #     # exact_pos = motif["centerPos"]
+    # # motif_new = "AGCANNNNNNCCT"
+    # # exact_pos = 4
+    # # motif_new = "GGCATC"
+    # # exact_pos = 4
+    # motif_list = [["GATC", 2], ["ACNCAG", 5], ["GAAATC", 4], ["ACTNNNNNNRGTC", 1], ["GGCATC", 4]]
+    # for motif_new, exact_pos in motif_list:
+    #     all_record = {}
+    #     motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
+    #     print (motif_profile)
+    # ## add record_modified_sites to all_record
+    # for k, v in record_modified_sites.items():
+    #     all_record[k] = v
+    # motif_new = "CTTCAG"
+    # exact_pos = 5
+    # motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
+    # ## add record_modified_sites to all_record
+    # for k, v in record_modified_sites.items():
+    #     all_record[k] = v
+    # motif_new = "CTGAAG"
+    # exact_pos = 5
+    # motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
+    # ## add record_modified_sites to all_record
+    # for k, v in record_modified_sites.items():
+    #     all_record[k] = v
+    # record_modified_sites  = all_record
+    # print ("no. of final modified sites", len(record_modified_sites))
     
-    # print (motif_new, motif_profile)
-    new_gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.new.gff"
-    h = open(new_gff, "w")
-    ## read the gff file
-    f = open(gff, "r")
-    modified_loci = {}
-    for line in f:
-        if line[0] == "#":
-            print (line.strip(), file = h)
-            continue
-        field = line.strip().split("\t")
+    # # print (motif_new, motif_profile)
+    # new_gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.new.gff"
+    # h = open(new_gff, "w")
+    # ## read the gff file
+    # f = open(gff, "r")
+    # modified_loci = {}
+    # for line in f:
+    #     if line[0] == "#":
+    #         print (line.strip(), file = h)
+    #         continue
+    #     field = line.strip().split("\t")
 
-        ref = field[0]
-        pos = int(field[3]) 
-        strand = field[6]
-        score = int(field[5])
-        tag = ref + ":" + str(pos) + strand
-        if tag not in all_record and score >= 40:
-            print (line.strip(), file = h)
-    h.close()
+    #     ref = field[0]
+    #     pos = int(field[3]) 
+    #     strand = field[6]
+    #     score = int(field[5])
+    #     tag = ref + ":" + str(pos) + strand
+    #     if tag not in all_record and score >= 40:
+    #         print (line.strip(), file = h)
+    # h.close()
 
 
     ## filter gff file
