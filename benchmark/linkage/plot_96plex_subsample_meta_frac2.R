@@ -68,7 +68,7 @@ legend <- get_legend(
 combined_plot <- plot_grid(prow, legend, ncol = 1, rel_heights = c(1, 0.2))
 
 # Now write to PDF
-pdf(file = "../../tmp/results/96plex_subsample_frac.pdf", width = 10, height = 4, onefile = FALSE)
+pdf(file = "../../tmp/results2/96plex_subsample_frac_meta.pdf", width = 10, height = 4, onefile = FALSE)
   print(combined_plot)
 dev.off()
 

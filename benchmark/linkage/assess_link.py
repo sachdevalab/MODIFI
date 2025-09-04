@@ -500,7 +500,7 @@ def cal_AUC_meta():
         "50": 14.90,
         "100": 25.94
     }
-    for p in ["05", "10", "20", "30", "50"]:
+    for p in ["05", "10", "20", "30", "50", "100"]:
         prefix = f"m64004_210929_143746.p{p}"
         result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta2", prefix, "hosts")
         if p == "100":

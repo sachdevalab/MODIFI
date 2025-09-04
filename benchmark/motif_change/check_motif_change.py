@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
-import sys, os
+import sys, os, re
 
 score_cutoff = 30
 
@@ -70,7 +70,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict):
     # print ("rev_loci_num", rev_loci_num, rev_modified_num, "reverse modified ratio", rev_modified_num/rev_loci_num)
 
     ## plot the distribution of motif_ipd_ratio
-    print (len(motif_ipd_ratio))
+    # print (len(motif_ipd_ratio))
     # plt.hist(motif_ipd_ratio, bins=100)
     # plt.xlabel("IPD ratio")
     # plt.ylabel("Frequency")
@@ -97,8 +97,8 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict):
     else:
         proportion_all_modified = motif_modify_num/len(modified_loci)
 
-    if ratio > 0.4 and proportion_all_modified > 0.1:
-        print (motif_new, "modified_ratio", ratio, motif_modify_num, motif_loci_num, proportion_all_modified)
+    # if ratio > 0.4 and proportion_all_modified > 0.1:
+    #     print (motif_new, "modified_ratio", ratio, motif_modify_num, motif_loci_num, proportion_all_modified)
 
     return [for_loci_num, for_modified_num,for_ratio,\
             rev_loci_num, rev_modified_num, rev_ratio,\
@@ -134,7 +134,7 @@ def read_ipd_ratio(ipd_ratio_file):
             strand_string = "+"
         tag = row['refName'] + ":" + str(row['tpl']+1) + strand_string
         ipd_ratio_dict[tag] = [row['ipd_ratio'], row['tMean']]
-    print (len(ipd_ratio_dict))
+    # print (len(ipd_ratio_dict))
     ## print some of the ipd_ratio_dict
     for i, (k, v) in enumerate(ipd_ratio_dict.items()):
         # print (k, v)
@@ -228,13 +228,25 @@ def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome):
     import seaborn as sns
     from scipy.cluster.hierarchy import linkage, leaves_list
 
-    # Cluster rows and columns
-    row_linkage = linkage(df_pivot.values, method='average')
-    col_linkage = linkage(df_pivot.values.T, method='average')
-    row_order = leaves_list(row_linkage)
-    col_order = leaves_list(col_linkage)
-    df_clustered = df_pivot.iloc[row_order, col_order]
-
+    # Check if we have enough data for clustering
+    if df_pivot.shape[0] < 2 or df_pivot.shape[1] < 2:
+        print(f"Warning: Insufficient data for clustering (shape: {df_pivot.shape}). Plotting without clustering.")
+        df_clustered = df_pivot
+    else:
+        try:
+            # Cluster rows and columns
+            row_linkage = linkage(df_pivot.values, method='average')
+            col_linkage = linkage(df_pivot.values.T, method='average')
+            row_order = leaves_list(row_linkage)
+            col_order = leaves_list(col_linkage)
+            df_clustered = df_pivot.iloc[row_order, col_order]
+        except ValueError as e:
+            print(f"Warning: Clustering failed ({e}). Plotting without clustering.")
+            df_clustered = df_pivot
+    ## check if df_clustered is empty
+    if df_clustered.empty:
+        print("No data available to plot.")
+        return
     plt.figure(figsize=(10, 6))
     ax = sns.heatmap(df_clustered, cmap="YlGnBu", annot=False, fmt=".2f", cbar_kws={'label': 'Fraction'})
     ax.set_xlabel("Motif String")
@@ -246,26 +258,28 @@ def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome):
     plt.tight_layout()
     plt.savefig(plot_name)
 
-
-
-if __name__ == "__main__":
-    # prefix = "infant_2"
-    # outdir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
-    # GTDB_file = f"{outdir}/GTDB/gtdbtk.all.summary.tsv"
-    closed_genome =  "GCF_900104055.1" #"GCF_000735435.1"
-
-    all_dir = "/home/shuaiw/borg/paper/run2/"
+def given_species(all_dir, closed_genome, seq_dir):
+    
     all_motif_set = set()
     all_contig_list = []
-    plot_name = "../../tmp/results2/motif_fraction_heatmap3.pdf"
+    plot_name = f"/home/shuaiw/borg/paper/motif_change/plot/motif_fraction_heatmap_{closed_genome}.pdf"
+    close_genome_dir = os.path.join(seq_dir, closed_genome)
+    if not os.path.exists(close_genome_dir):
+        os.makedirs(close_genome_dir)
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
         outdir = f"{all_dir}/{prefix}/"
         GTDB_file = f"{outdir}/GTDB/gtdbtk.all.summary.tsv"
+        
         ## skip if GTDB_file does not exist
         if not os.path.exists(GTDB_file):
             continue
         motif_set, contig_list = find_species(closed_genome, GTDB_file, outdir, prefix)
+        for contig in contig_list:
+            ref = f"{outdir}/{prefix}_methylation3/contigs/{contig}.fa"
+            ## copy ref to close_genome_dir
+            if os.path.exists(ref):
+                os.system(f"cp {ref} {close_genome_dir}/")
         all_motif_set.update(motif_set)
         all_contig_list.extend(contig_list)
         # if len(all_contig_list) > 5:
@@ -277,7 +291,47 @@ if __name__ == "__main__":
         motif_list.append([motif_name, int(motif_pos)])
     print (motif_list)
     print (all_contig_list)
-    profile_heatmap(all_contig_list, motif_list, all_dir, plot_name, closed_genome)
+    if len(all_contig_list) > 1:
+        profile_heatmap(all_contig_list, motif_list, all_dir, plot_name, closed_genome)
+
+def collect_species(all_dir):
+    genomes_list = []
+    for my_dir in os.listdir(all_dir):
+        prefix = my_dir
+        outdir = f"{all_dir}/{prefix}/"
+        GTDB_file = f"{outdir}/GTDB/gtdbtk.all.summary.tsv"
+        if not os.path.exists(GTDB_file):
+            continue
+        df = pd.read_csv(GTDB_file, sep="\t")
+        for index, row in df.iterrows():
+            # if re.search("s__", row["classification"]):
+            #     continue
+            if len(row["classification"].split(";")) < 7:
+                continue
+            ## skip if closest_genome_reference is nan
+            if pd.isna(row["closest_genome_reference"]):
+                continue
+            if row["closest_genome_reference"] in genomes_list:
+                continue
+            genomes_list.append(row["closest_genome_reference"])
+    return genomes_list
+
+if __name__ == "__main__":
+    # prefix = "infant_2"
+    # outdir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
+    # GTDB_file = f"{outdir}/GTDB/gtdbtk.all.summary.tsv"
+    closed_genome =  "GCF_900104055.1" #"GCF_000735435.1"
+    all_dir = "/home/shuaiw/borg/paper/run2/"
+    seq_dir = "/home/shuaiw/borg/paper/motif_change/seq/"
+    genomes_list = collect_species(all_dir)
+    print (genomes_list)
+    print (len(genomes_list))
+    for closed_genome in genomes_list[55:]:
+        print (f"Processing {closed_genome}...")
+        given_species(all_dir, closed_genome, seq_dir)
+
+
+
 
     # bioreactor()
 
