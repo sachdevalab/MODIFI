@@ -285,15 +285,15 @@ def jaccard_batch():
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
         print (f"Processing {prefix}...")
-        # work_dir = f"{all_dir}/{prefix}/{prefix}_methylation2"
+        # work_dir = f"{all_dir}/{prefix}/{prefix}_methylation3"
 
         # prefix = "ERR12723529"
         work_dir = "/home/shuaiw/borg/paper/run2"
         # drep_clu_file = os.path.join(work_dir, prefix, "dRep_out_99", "data_tables", "Cdb.csv")
         # drep_clu_file = os.path.join(work_dir, prefix, "dRep_out", "data_tables", "Cdb.csv")
         drep_clu_file = os.path.join(work_dir, prefix, "dRep_out_97", "data_tables", "Cdb.csv")
-        profile_file = os.path.join(work_dir, prefix, f"{prefix}_methylation2", "motif_profile.csv")
-        depth_file = os.path.join(work_dir, prefix, f"{prefix}_methylation2", "mean_depth.csv")
+        profile_file = os.path.join(work_dir, prefix, f"{prefix}_methylation3", "motif_profile.csv")
+        depth_file = os.path.join(work_dir, prefix, f"{prefix}_methylation3", "mean_depth.csv")
         fai = os.path.join(work_dir, prefix, f"{prefix}.hifiasm.p_ctg.rename.fa.fai")
         all_host_file = f"{all_dir}/{prefix}/all_host_ctgs.tsv" 
         ## skip if all_host_file does not exist
@@ -613,7 +613,7 @@ def count_all_motif_num():
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
         print (f"Processing {prefix}...")
-        work_dir = f"{all_dir}/{prefix}/{prefix}_methylation2"
+        work_dir = f"{all_dir}/{prefix}/{prefix}_methylation3"
         fai = f"{all_dir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
         map_sum = f"{all_dir}/{prefix}/{prefix}.align.count.csv"
         all_host_file = f"{all_dir}/{prefix}/all_host_ctgs.tsv"
@@ -736,7 +736,7 @@ def plot_motif(df_all_data):
     plt.xlabel('Sample')
     plt.ylabel('Number of Motifs')
     plt.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.savefig("../../tmp/results/motif_num_distribution_all_samples.png", dpi=300, bbox_inches='tight')
+    plt.savefig("../../tmp/results2/motif_num_distribution_all_samples.png", dpi=300, bbox_inches='tight')
 
 def plot_base(df_all_base_data):
     ### sort by sample
@@ -800,7 +800,7 @@ def plot_meta(df_genome_data):
     ax2.legend_.remove()
     ax3.legend_.remove()
     plt.tight_layout()
-    plt.savefig("../../tmp/results/meta_all_samples.png", dpi=300, bbox_inches='tight')  
+    plt.savefig("../../tmp/results2/meta_all_samples.png", dpi=300, bbox_inches='tight')  
 
 
 def plot_genome(df_genome_data):
@@ -835,7 +835,7 @@ def plot_genome(df_genome_data):
     ax3.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
     
     plt.tight_layout()
-    plt.savefig("../../tmp/results/genome_size_N50_all_samples.png", dpi=300, bbox_inches='tight')
+    plt.savefig("../../tmp/results2/genome_size_N50_all_samples.png", dpi=300, bbox_inches='tight')
 
 def count_N50_size(fai):
     """

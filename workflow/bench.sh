@@ -1408,3 +1408,66 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_1/all_mge.tsv \
   --threads 64 --segment --visu_ipd" \
   --job-name=bioreactor_1_test
+
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p100.run.time python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p100/ \
+  --whole_bam /home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p100.align.bam \
+  --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 30 \
+  --min_iden 0.97 \
+  --run_steps motif merge profile host \
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
+  --threads 64" \
+  --job-name=p100
+
+  sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p20.run.time python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p20/ \
+  --whole_bam /home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p20.align.bam \
+  --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 30 \
+  --min_iden 0.97 \
+  --run_steps motif merge profile host \
+  --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
+  --threads 64" \
+  --job-name=p20
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/infant_2/infant_2_methylation3 \
+  --whole_bam /home/shuaiw/borg/paper/run2/infant_2/infant_2.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/infant_2/infant_2.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_iden 0.97 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 30 \
+  --annotate_rm \
+  --threads 64 --run_steps merge" \
+  --job-name=infant_2_methylation3
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/infant_14/infant_14_methylation3 \
+  --whole_bam /home/shuaiw/borg/paper/run2/infant_14/infant_14.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/infant_14/infant_14.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_iden 0.97 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 30 \
+  --annotate_rm \
+  --threads 64 --run_steps merge" \
+  --job-name=infant_2_methylation3

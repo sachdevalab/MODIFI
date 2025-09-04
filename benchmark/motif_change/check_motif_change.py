@@ -6,7 +6,9 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
-import sys
+import sys, os
+
+score_cutoff = 30
 
 
 def read_ref(ref):
@@ -18,7 +20,7 @@ def read_ref(ref):
         # return str(record.seq), record.id
     return REF
 
-def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
+def get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict):
     motif_len = len(motif_new)
     rev_exact_pos = motif_len - exact_pos + 1
     motif_sites = {}
@@ -140,21 +142,7 @@ def read_ipd_ratio(ipd_ratio_file):
             break
     return ipd_ratio_dict
 
-         
-if __name__ == "__main__":
-    # motif_new = "CTGCAG"
-    # exact_pos = 5
-    score_cutoff = 30
-    # my_ref = "/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa"
-    # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
-
-    # my_ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
-    # gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_1.gff"
-    # # gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
-    # # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
-    # # profile = "/home/shuaiw/borg/test.csv"
-    # ipd_ratio_file = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
-
+def bioreactor():
     prefix_list = [["cow_bioreactor_1", "cow_bioreactor_1_636_C"], \
                    ["cow_bioreactor_2", "cow_bioreactor_2_1062_L"], \
                    ["cow_bioreactor_2", "cow_bioreactor_2_601_C"], \
@@ -176,7 +164,7 @@ if __name__ == "__main__":
         
         for motif_new, exact_pos in motif_list:
             all_record = {}
-            motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
+            motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict)
             print (motif_profile)
             data.append([contig,motif_new, motif_profile[-2]])
     df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction"])
@@ -192,6 +180,134 @@ if __name__ == "__main__":
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
     plt.tight_layout()
     plt.savefig("../../tmp/results2/motif_fraction_heatmap.pdf")
+
+def find_species(closed_genome, GTDB_file, outdir, prefix):
+    df = pd.read_csv(GTDB_file, sep="\t")
+    df = df[df["closest_genome_reference"] == closed_genome]
+    species_contigs = df["user_genome"].values
+    contig_list = [[prefix, contig] for contig in species_contigs]
+    #### collect all motifs of these contigs
+    motif_set = set()
+    for contig in species_contigs:
+        motif_file = f"{outdir}/{prefix}_methylation3/motifs/{contig}.motifs.csv"
+        ## check if file exists
+        if not os.path.exists(motif_file):
+            continue
+        motif_df = pd.read_csv(motif_file)
+        for index, row in motif_df.iterrows():
+            motif = str(row["motifString"]) + "_" + str(row["centerPos"])
+            motif_set.add(motif)
+    return motif_set, contig_list
+
+def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome):
+
+    data = []
+    for prefix, contig in prefix_list:
+        my_ref = f"{all_dir}/{prefix}/{prefix}_methylation3/contigs/{contig}.fa"
+        gff = f"{all_dir}/{prefix}/{prefix}_methylation3/gffs/{contig}.gff"
+        ipd_ratio_file = f"{all_dir}/{prefix}/{prefix}_methylation3/ipd_ratio/{contig}.ipd3.csv"
+        ## skip if files do not exist
+        if not os.path.exists(gff) or not os.path.exists(ipd_ratio_file) or not os.path.exists(my_ref):
+            continue
+        REF = read_ref(my_ref)
+        # print (REF)
+        modified_loci = get_modified_ratio(gff)
+        # motifs = pd.read_csv(all_motifs)
+        ipd_ratio_dict = read_ipd_ratio(ipd_ratio_file)
+        
+        for motif_new, exact_pos in motif_list:
+            all_record = {}
+            motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict)
+            print (motif_profile)
+            data.append([contig,motif_new, motif_profile[-2]])
+    df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction"])
+    ## save the df 
+    df.to_csv("../../tmp/results2/motif_fraction_profile_GCF_002902325.1.csv", index=False)
+    ## plot heatmap with df
+    df_pivot = df.pivot(index='contig', columns='motifString', values='fraction').fillna(0)
+    import seaborn as sns
+    from scipy.cluster.hierarchy import linkage, leaves_list
+
+    # Cluster rows and columns
+    row_linkage = linkage(df_pivot.values, method='average')
+    col_linkage = linkage(df_pivot.values.T, method='average')
+    row_order = leaves_list(row_linkage)
+    col_order = leaves_list(col_linkage)
+    df_clustered = df_pivot.iloc[row_order, col_order]
+
+    plt.figure(figsize=(10, 6))
+    ax = sns.heatmap(df_clustered, cmap="YlGnBu", annot=False, fmt=".2f", cbar_kws={'label': 'Fraction'})
+    ax.set_xlabel("Motif String")
+    ax.set_ylabel("Contig")
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+    ## set title as closed_genome
+    ax.set_title(f"Motif Fraction Heatmap (Clustered) - {closed_genome}")
+    plt.tight_layout()
+    plt.savefig(plot_name)
+
+
+
+if __name__ == "__main__":
+    # prefix = "infant_2"
+    # outdir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
+    # GTDB_file = f"{outdir}/GTDB/gtdbtk.all.summary.tsv"
+    closed_genome =  "GCF_900104055.1" #"GCF_000735435.1"
+
+    all_dir = "/home/shuaiw/borg/paper/run2/"
+    all_motif_set = set()
+    all_contig_list = []
+    plot_name = "../../tmp/results2/motif_fraction_heatmap3.pdf"
+    for my_dir in os.listdir(all_dir):
+        prefix = my_dir
+        outdir = f"{all_dir}/{prefix}/"
+        GTDB_file = f"{outdir}/GTDB/gtdbtk.all.summary.tsv"
+        ## skip if GTDB_file does not exist
+        if not os.path.exists(GTDB_file):
+            continue
+        motif_set, contig_list = find_species(closed_genome, GTDB_file, outdir, prefix)
+        all_motif_set.update(motif_set)
+        all_contig_list.extend(contig_list)
+        # if len(all_contig_list) > 5:
+        #     break
+
+    motif_list = []
+    for motif in all_motif_set:
+        motif_name, motif_pos = motif.split("_")
+        motif_list.append([motif_name, int(motif_pos)])
+    print (motif_list)
+    print (all_contig_list)
+    profile_heatmap(all_contig_list, motif_list, all_dir, plot_name, closed_genome)
+
+    # bioreactor()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # motif_new = "CTGCAG"
+    # exact_pos = 5
+    
+    # my_ref = "/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa"
+    # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
+
+    # my_ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
+    # gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_1.gff"
+    # # gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
+    # # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
+    # # profile = "/home/shuaiw/borg/test.csv"
+    # ipd_ratio_file = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
+
+
 
     # my_ref = sys.argv[1]
     # gff = sys.argv[2]

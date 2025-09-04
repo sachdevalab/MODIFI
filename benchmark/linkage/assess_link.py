@@ -478,7 +478,7 @@ def cal_AUC_pure():
     dp_df_all.to_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex_depth.csv", index = False)
 
 
-def cal_AUC_depth(): 
+def cal_AUC_meta(): 
     fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
     plasmid_anno_file = fai + ".plasmid"
     plasmid_list = fai + ".plasmid.list"
@@ -500,9 +500,9 @@ def cal_AUC_depth():
         "50": 14.90,
         "100": 25.94
     }
-    for p in ["05", "10", "20", "30", "50", "100"]:
+    for p in ["05", "10", "20", "30", "50"]:
         prefix = f"m64004_210929_143746.p{p}"
-        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta", prefix, "hosts")
+        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta2", prefix, "hosts")
         if p == "100":
             result_dir = "/home/shuaiw/borg/bench/soil_zymo/run4/hosts/"
         frac = frac_dict[p]
@@ -589,8 +589,8 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-cal_AUC_pure()
-# cal_AUC_depth()
+# cal_AUC_pure()
+cal_AUC_meta()
 # assess_motif()
 # host_linkage_eva()
 # for_zymo()
