@@ -154,6 +154,7 @@ def bioreactor():
     motif_list = [["GATC", 2], ["ACNCAG", 5], ["GAAATC", 4], ["ACTNNNNNNRGTC", 1], ["GGCATC", 4]]
     for prefix, contig in prefix_list:
         my_ref = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation3/contigs/{contig}.fa"
+        print (my_ref)
         gff = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation3/gffs/{contig}.gff"
         ipd_ratio_file = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation3/ipd_ratio/{contig}.ipd3.csv"
         REF = read_ref(my_ref)
@@ -165,7 +166,7 @@ def bioreactor():
         for motif_new, exact_pos in motif_list:
             all_record = {}
             motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict)
-            print (motif_profile)
+            # print (motif_profile)
             data.append([contig,motif_new, motif_profile[-2]])
     df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction"])
     ## plot heatmap with df
@@ -218,13 +219,29 @@ def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome):
         for motif_new, exact_pos in motif_list:
             all_record = {}
             motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict)
-            print (motif_profile)
-            data.append([contig,motif_new, motif_profile[-2]])
+            # print (motif_profile)
+            data.append([contig,motif_new + "_" + str(exact_pos), motif_profile[-2]])
     df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction"])
     ## save the df 
     df.to_csv("../../tmp/results2/motif_fraction_profile_GCF_002902325.1.csv", index=False)
+    print (df)
+    # Check for duplicates and aggregate if necessary
+    duplicates = df.duplicated(subset=['contig', 'motifString'], keep=False)
+    if duplicates.any():
+        
+        print(f"Warning: Found {duplicates.sum()} duplicate entries. Aggregating by taking mean.")
+        df = df.groupby(['contig', 'motifString'])['fraction'].mean().reset_index()
+    
     ## plot heatmap with df
-    df_pivot = df.pivot(index='contig', columns='motifString', values='fraction').fillna(0)
+    try:
+        df_pivot = df.pivot(index='contig', columns='motifString', values='fraction').fillna(0)
+    except ValueError as e:
+        print(f"Error creating pivot table: {e}")
+        print("DataFrame info:")
+        print(f"Shape: {df.shape}")
+        print(f"Columns: {df.columns.tolist()}")
+        print(f"Sample data:\n{df.head()}")
+        return
     import seaborn as sns
     from scipy.cluster.hierarchy import linkage, leaves_list
 
@@ -275,8 +292,9 @@ def given_species(all_dir, closed_genome, seq_dir):
         if not os.path.exists(GTDB_file):
             continue
         motif_set, contig_list = find_species(closed_genome, GTDB_file, outdir, prefix)
-        for contig in contig_list:
+        for prefix, contig in contig_list:
             ref = f"{outdir}/{prefix}_methylation3/contigs/{contig}.fa"
+            # print (ref)
             ## copy ref to close_genome_dir
             if os.path.exists(ref):
                 os.system(f"cp {ref} {close_genome_dir}/")
@@ -326,9 +344,13 @@ if __name__ == "__main__":
     genomes_list = collect_species(all_dir)
     print (genomes_list)
     print (len(genomes_list))
-    for closed_genome in genomes_list[55:]:
-        print (f"Processing {closed_genome}...")
+
+    i = 0
+    for closed_genome in genomes_list[111:]:
+
+        print (f"Processing {closed_genome}...", i)
         given_species(all_dir, closed_genome, seq_dir)
+        i += 1
 
 
 
