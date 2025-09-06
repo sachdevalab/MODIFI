@@ -1471,3 +1471,36 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --annotate_rm \
   --threads 64 --run_steps merge" \
   --job-name=infant_2_methylation3
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/infant_7/infant_7_2_C_methylation_kmer \
+  --whole_bam /home/shuaiw/borg/paper/run2/infant_7/infant_7_methylation3/bams/infant_7_2_C.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/infant_7/infant_7_methylation3/contigs/infant_7_2_C.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --max_NM 30000000 \
+  --min_cov 10 \
+  --min_iden 0.97 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/paper/run2/infant_7/all_mge.tsv \
+  --kmer_mean_db /home/shuaiw/borg/paper/run2/96plex/96plex_methylation/control/control_db.up7.down3.mean.dat \
+  --kmer_num_db /home/shuaiw/borg/paper/run2/96plex/96plex_methylation/control/control_db.up7.down3.num.dat \
+  --threads 64" \
+  --job-name=infant_7_2_C
+
+
+
+sbatch --job-name=drep \
+  --partition standard \
+  --wrap "dRep dereplicate \
+    -p 64 \
+    -g /home/shuaiw/borg/paper/specificity/genome.list \
+    -comp 50 \
+    -con 10 \
+    --S_algorithm skani \
+    -ms 10000 \
+    -sa 0.99 \
+    -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_99_out"

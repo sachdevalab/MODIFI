@@ -1,4 +1,5 @@
 #  sbatch  --partition standard --wrap "/usr/bin/time -v -o ipdSummary.time snakemake -j 64"  --job-name=ipdSum 
+#  sbatch  --partition standard --wrap "/usr/bin/time -v -o ipdSummary2.time snakemake --config work_dir=/home/shuaiw/borg/paper/ipdsummary/ERR12723529_mice_our/ -j 64"  --job-name=ipdSum2
 
 
 

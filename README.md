@@ -141,3 +141,5 @@ seaborn
 scipy 
 samtools
 ```
+
+Depth > 500x will be subsampled.

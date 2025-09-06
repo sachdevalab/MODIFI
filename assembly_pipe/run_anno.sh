@@ -55,6 +55,14 @@
                 --job-name=infant_22 
             
 
+            #### number 37
+            sbatch --partition standard --wrap "snakemake  -s find_MGE.smk --config \
+                hifi_bam=/home/shuaiw/borg/paper/aws/infant/NANO_4_INF1240045_6G1_pacbio.bam \
+                prefix=infant_25 \
+                work_dir=/home/shuaiw/borg/paper/run2/infant_25 -j 64 --use-conda" \
+                --job-name=infant_25 
+            
+
             #### number 42
             sbatch --partition standard --wrap "snakemake  -s find_MGE.smk --config \
                 hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2021.bam \
