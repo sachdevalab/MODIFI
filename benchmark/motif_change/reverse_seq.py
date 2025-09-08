@@ -5,13 +5,21 @@ given a fasta file, use biopython to reverse one segment of it and output a new 
 from Bio import SeqIO
 from Bio.Seq import Seq
 
-raw_fasta = "/home/shuaiw/borg/paper/E_faecalis/infant_14_31_C.fa"
-new_fasta = "/home/shuaiw/borg/paper/E_faecalis/infant_14_31_C_reverse.fa"
-inversion_fasta = "/home/shuaiw/borg/paper/E_faecalis/inversion.fa"
-
+# raw_fasta = "/home/shuaiw/borg/paper/E_faecalis/infant_14_31_C.fa"
+# new_fasta = "/home/shuaiw/borg/paper/E_faecalis/infant_14_31_C_reverse.fa"
+# inversion_fasta = "/home/shuaiw/borg/paper/E_faecalis/inversion.fa"
 # Define the region to reverse complement
-start_pos = 2323857 - 1  # Convert to 0-based indexing
-end_pos = 2323857 + 3259 - 1  # 2327116 in 0-based indexing
+# start_pos = 2323857 - 1  # Convert to 0-based indexing
+# end_pos = 2323857 + 3259 - 1  # 2327116 in 0-based indexing
+
+raw_fasta = "/home/shuaiw/borg/paper/E_faecalis/infant_26_3_C_MT_region.fa"
+new_fasta = "/home/shuaiw/borg/paper/E_faecalis/infant_26_3_C_MT_reverse.fa"
+inversion_fasta = "/home/shuaiw/borg/paper/E_faecalis/infant_26_3_C_inversion.fa"
+
+start_pos = 5132 - 1  # Convert to 0-based indexing
+end_pos = 7520 - 1 
+
+
 
 def reverse_complement_region(input_fasta, output_fasta, start, end, inversion_fasta):
     """

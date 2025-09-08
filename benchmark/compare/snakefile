@@ -19,14 +19,16 @@ def get_samples():
 
 rule all:
     input:
-        expand(os.path.join(ipd_sum_dir, "{sample}.out.pickle"), sample=get_samples())
+        expand(os.path.join(ipd_sum_dir, "{sample}.out.pickle"), sample=get_samples()),
+        expand(os.path.join(ipd_sum_dir, "{sample}.motif.reprocess.gff"), sample=get_samples())
 
 rule ipdSum:
     input:
         align_bam=os.path.join(work_dir, "bams", "{sample}.bam"),
         ref=os.path.join(work_dir, "contigs", "{sample}.fa"),
     output:
-        os.path.join(ipd_sum_dir, "{sample}.out.pickle")
+        os.path.join(ipd_sum_dir, "{sample}.out.pickle"),
+        os.path.join(ipd_sum_dir, "{sample}.motif.reprocess.gff")
     shell:
         """
         bash /home/shuaiw/Methy/benchmark/compare/run_ipdSummary.sh {input.align_bam} {input.ref} {ipd_sum_dir}/{wildcards.sample}

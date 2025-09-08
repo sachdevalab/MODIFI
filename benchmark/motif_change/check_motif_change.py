@@ -7,6 +7,8 @@ import pandas as pd
 from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
 import sys, os, re
+import numpy as np
+from collections import defaultdict
 
 score_cutoff = 30
 
@@ -223,8 +225,8 @@ def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome):
             data.append([contig,motif_new + "_" + str(exact_pos), motif_profile[-2]])
     df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction"])
     ## save the df 
-    df.to_csv("../../tmp/results2/motif_fraction_profile_GCF_002902325.1.csv", index=False)
-    print (df)
+    # df.to_csv("../../tmp/results2/motif_fraction_profile_GCF_002902325.1.csv", index=False)
+    # print (df)
     # Check for duplicates and aggregate if necessary
     duplicates = df.duplicated(subset=['contig', 'motifString'], keep=False)
     if duplicates.any():
@@ -334,10 +336,7 @@ def collect_species(all_dir):
             genomes_list.append(row["closest_genome_reference"])
     return genomes_list
 
-if __name__ == "__main__":
-    # prefix = "infant_2"
-    # outdir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
-    # GTDB_file = f"{outdir}/GTDB/gtdbtk.all.summary.tsv"
+def by_GTDB():
     closed_genome =  "GCF_900104055.1" #"GCF_000735435.1"
     all_dir = "/home/shuaiw/borg/paper/run2/"
     seq_dir = "/home/shuaiw/borg/paper/motif_change/seq/"
@@ -351,6 +350,108 @@ if __name__ == "__main__":
         print (f"Processing {closed_genome}...", i)
         given_species(all_dir, closed_genome, seq_dir)
         i += 1
+
+
+def read_drep_cluster(drep_clu_file, depth_dict):
+    
+    drep_clu_dict = defaultdict(list)
+    df = pd.read_csv(drep_clu_file)
+    for index, row in df.iterrows():
+        # drep_clu_dict[row['genome'][:-3]] = row['secondary_cluster']
+        contig = row['genome'][:-3]
+        if contig not in depth_dict:
+            continue
+        drep_clu_dict[row['secondary_cluster']].append(row['genome'][:-3])
+    return drep_clu_dict
+
+def find_species_drep(contig, outdir, prefix):
+    species_contigs = [contig]
+    contig_list = [[prefix, contig] for contig in species_contigs]
+    #### collect all motifs of these contigs
+    motif_set = set()
+    for contig in species_contigs:
+        motif_file = f"{outdir}/{prefix}_methylation3/motifs/{contig}.motifs.csv"
+        ## check if file exists
+        if not os.path.exists(motif_file):
+            continue
+        motif_df = pd.read_csv(motif_file)
+        for index, row in motif_df.iterrows():
+            motif = str(row["motifString"]) + "_" + str(row["centerPos"])
+            motif_set.add(motif)
+    return motif_set, contig_list
+
+def given_species_drep(all_dir, members, seq_dir, cluster):
+    
+    all_motif_set = set()
+    all_contig_list = []
+    plot_name = f"/home/shuaiw/borg/paper/motif_change/plot_drep/{cluster}.pdf"
+
+    for contig in members:
+        prefix = "_".join(contig.split("_")[:-2])
+        outdir = f"{all_dir}/{prefix}/"
+        GTDB_file = f"{outdir}/GTDB/gtdbtk.all.summary.tsv"
+        
+        ## skip if GTDB_file does not exist
+        # if not os.path.exists(GTDB_file):
+        #     continue
+        motif_set, contig_list = find_species_drep(contig, outdir, prefix)
+
+        all_motif_set.update(motif_set)
+        all_contig_list.extend(contig_list)
+        # if len(all_contig_list) > 5:
+        #     break
+
+    motif_list = []
+    for motif in all_motif_set:
+        motif_name, motif_pos = motif.split("_")
+        motif_list.append([motif_name, int(motif_pos)])
+    print ("motif_list", motif_list)
+    print ("all_contig_list", all_contig_list)
+    if len(all_contig_list) > 1:
+        profile_heatmap(all_contig_list, motif_list, all_dir, plot_name, cluster)
+
+def depth_filter(all_dir, min_depth = 10):
+    depth_dict = {}
+    for my_dir in os.listdir(all_dir):
+        prefix = my_dir
+        depth_file = f"{all_dir}/{prefix}/{prefix}_methylation3/mean_depth.csv"
+        if not os.path.exists(depth_file):
+            continue
+        depth_df = pd.read_csv(depth_file)
+        
+        for index, row in depth_df.iterrows():
+            if row['depth'] < min_depth:
+                continue
+            depth_dict[row['contig']] = row['depth']
+    return depth_dict
+
+
+if __name__ == "__main__":
+    all_dir = "/home/shuaiw/borg/paper/run2/"
+    seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep/"
+
+    drep_clu_file = "/home/shuaiw/borg/paper/specificity/dRep_99_out/data_tables/Cdb.csv"
+    depth_dict = depth_filter(all_dir, min_depth = 10)
+    drep_clu_dict = read_drep_cluster(drep_clu_file, depth_dict)
+    
+    print (len(drep_clu_dict), "drep clusters")
+    ## count how many clusters have more than 10 members
+    count = 0
+    cutoff = 2
+    for cluster, members in drep_clu_dict.items():
+        if len(members) > cutoff:
+            count += 1
+    print (count, f"clusters have more than {cutoff} members")
+    for cluster, members in drep_clu_dict.items():
+        if len(members) > cutoff:
+            print ("cluster", cluster, members)
+            given_species_drep(all_dir, members, seq_dir, cluster)
+            # break
+            print ("###############################")
+
+
+
+    
 
 
 

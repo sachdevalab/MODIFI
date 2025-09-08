@@ -1458,9 +1458,9 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --job-name=infant_2_methylation3
 
 sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
-  --work_dir /home/shuaiw/borg/paper/run2/infant_14/infant_14_methylation3 \
-  --whole_bam /home/shuaiw/borg/paper/run2/infant_14/infant_14.align.bam \
-  --whole_ref /home/shuaiw/borg/paper/run2/infant_14/infant_14.hifiasm.p_ctg.rename.fa \
+  --work_dir /home/shuaiw/borg/paper/run2/infant_26/infant_26_methylation3 \
+  --whole_bam /home/shuaiw/borg/paper/run2/infant_26/infant_26.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/infant_26/infant_26.hifiasm.p_ctg.rename.fa \
   --read_type hifi \
   --min_len 1000 \
   --min_cov 1 \
