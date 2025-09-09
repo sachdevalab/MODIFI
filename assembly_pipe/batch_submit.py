@@ -74,9 +74,27 @@ def read_list(bam_list, cmd_file, prefix_table):
             methy2_dir = os.path.join(work_dir, f"{prefix}_methylation2")
             # if os.path.exists(methy2_dir):
             #     continue
+            # methy_cmd = f"""
+            #     sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \\
+            #     --work_dir /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation_kmer3 \\
+            #     --whole_bam /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.bam \\
+            #     --whole_ref /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
+            #     --read_type hifi \\
+            #     --min_len 2000 \\
+            #     --min_cov 3 \\
+            #     --min_iden 0.97 \\
+            #     --min_frac 0.3 \\
+            #     --min_score 30 \\
+            #     --min_sites 30 \\
+            #     --mge_file /home/shuaiw/borg/paper/run2/{prefix}/all_mge.tsv \\
+            #     --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.mean.dat \\
+            #     --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.num.dat \\
+            #     --threads 64 --clean" \\
+            #     --job-name=clip_{prefix}
+            # """
             methy_cmd = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \\
-                --work_dir /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation_kmer2 \\
+                --work_dir /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation3 \\
                 --whole_bam /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.bam \\
                 --whole_ref /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
                 --read_type hifi \\
@@ -87,9 +105,8 @@ def read_list(bam_list, cmd_file, prefix_table):
                 --min_score 30 \\
                 --min_sites 30 \\
                 --mge_file /home/shuaiw/borg/paper/run2/{prefix}/all_mge.tsv \\
-                --kmer_mean_db /home/shuaiw/borg/paper/run2/96plex/96plex_methylation3/control/control_db.up7.down3.mean.dat \\
-                --kmer_num_db /home/shuaiw/borg/paper/run2/96plex/96plex_methylation3/control/control_db.up7.down3.num.dat \\
-                --threads 64 --clean" \\
+                --annotate_rm \\
+                --threads 64 --run_steps merge" \\
                 --job-name=clip_{prefix}
             """
             print (methy_cmd.strip(), file=m)

@@ -190,13 +190,13 @@ if __name__ == "__main__":
     # prefix = "96plex"
     # outdir = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/spacer/"
 
-    spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
-    predict_spacer(reference_fasta, spacer_outdir, prefix)
+    # spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
+    # predict_spacer(reference_fasta, spacer_outdir, prefix)
     
     mge_ids = get_mge_fa(reference_fasta, mge_file, mge_fatsa)
-    run_blastn_spacer_search(mge_fasta=mge_fatsa, outdir=spacer_outdir, spacer_fasta=spacer_fasta, raw_hit=raw_hit, min_id=0.95, threads=24)
-    cmd = f"""
-    python3 /home/rohan/scripts/crispr_filter_blast.py -m 5 -s {spacer_fasta} -i {raw_hit} -o {filter_hit_file}
-    """
-    os.system(cmd)
-    filter_hit2(filter_hit_file, spacer_linkage, mge_ids)
+    # run_blastn_spacer_search(mge_fasta=mge_fatsa, outdir=spacer_outdir, spacer_fasta=spacer_fasta, raw_hit=raw_hit, min_id=0.95, threads=24)
+    # cmd = f"""
+    # python3 /home/rohan/scripts/crispr_filter_blast.py -m 5 -s {spacer_fasta} -i {raw_hit} -o {filter_hit_file}
+    # """
+    # os.system(cmd)
+    # filter_hit2(filter_hit_file, spacer_linkage, mge_ids)

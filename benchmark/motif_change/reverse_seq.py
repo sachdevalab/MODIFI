@@ -20,6 +20,13 @@ start_pos = 5132 - 1  # Convert to 0-based indexing
 end_pos = 7520 - 1 
 
 
+# raw_fasta = "/home/shuaiw/borg/paper/motif_change/seq_drep/101_1/cow_bioreactor_1_210_C.fa"
+# new_fasta = "/home/shuaiw/borg/paper/motif_change/seq_drep/101_1/cow_bioreactor_1_210_C_reverse.fa"
+# inversion_fasta = "/home/shuaiw/borg/paper/motif_change/seq_drep/101_1/_inversion.fa"
+
+# start_pos = 0  # Convert to 0-based indexing
+# end_pos = 738536 - 1  # 738536 in 0-based indexing
+
 
 def reverse_complement_region(input_fasta, output_fasta, start, end, inversion_fasta):
     """
@@ -36,6 +43,8 @@ def reverse_complement_region(input_fasta, output_fasta, start, end, inversion_f
             
             # Reverse complement the region
             reversed_region = str(Seq(region_to_reverse).reverse_complement())
+            ## only reverse not complement
+            # reversed_region = region_to_reverse[::-1]
             
             # Construct the new sequence
             new_sequence = before_region + reversed_region + after_region
@@ -57,5 +66,29 @@ def reverse_complement_region(input_fasta, output_fasta, start, end, inversion_f
             print(f"Reversed region: {reversed_region[:50]}...")
             print(f"Inversion sequence saved to: {inversion_fasta}")
 
+def reorder(input_fasta, output_fasta):
+    """
+    Reverse complement a specific region in a FASTA file
+    """
+    with open(input_fasta, "r") as infile, open(output_fasta, "w") as outfile, open(inversion_fasta, "w") as inv_file:
+        for record in SeqIO.parse(infile, "fasta"):
+            sequence = str(record.seq)
+            
+            # Extract the region to reverse complement
+            before_region = sequence[:738537]
+            after_region = sequence[738537+1:]
+            
+            # Reverse complement the region
+            # Construct the new sequence
+            new_sequence = after_region + before_region 
+            
+            # Create new record for the full sequence
+            record.seq = Seq(new_sequence)
+            SeqIO.write(record, outfile, "fasta")
+            
+
 if __name__ == "__main__":
-    reverse_complement_region(raw_fasta, new_fasta, start_pos, end_pos, inversion_fasta)
+    # reverse_complement_region(raw_fasta, new_fasta, start_pos, end_pos, inversion_fasta)
+    raw_fasta = "/home/shuaiw/borg/paper/motif_change/seq_drep/101_1/cow_bioreactor_1_210_C.fa"
+    new_fasta = "/home/shuaiw/borg/paper/motif_change/seq_drep/101_1/cow_bioreactor_1_210_C_reverse.fa"
+    reorder(raw_fasta, new_fasta)

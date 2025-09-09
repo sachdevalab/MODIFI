@@ -6,3 +6,4 @@ prefix=$3
 
 ~/smrtlink/motifMaker find -f $ref -g $prefix.gff -m 30 -j 10 -o $prefix.motif.csv
 ~/smrtlink/motifMaker reprocess -c $prefix.csv -f $ref -g $prefix.gff -m $prefix.motif.csv -o $prefix.motif.reprocess.gff
+touch $prefix.motif.done

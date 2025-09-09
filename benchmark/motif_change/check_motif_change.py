@@ -389,11 +389,16 @@ def given_species_drep(all_dir, members, seq_dir, cluster):
     for contig in members:
         prefix = "_".join(contig.split("_")[:-2])
         outdir = f"{all_dir}/{prefix}/"
-        GTDB_file = f"{outdir}/GTDB/gtdbtk.all.summary.tsv"
-        
-        ## skip if GTDB_file does not exist
-        # if not os.path.exists(GTDB_file):
-        #     continue
+
+        ref = f"{outdir}/{prefix}_methylation3/contigs/{contig}.fa"
+        close_genome_dir = os.path.join(seq_dir, cluster)
+        if not os.path.exists(close_genome_dir):
+            os.makedirs(close_genome_dir)
+        # print (ref)
+        ## copy ref to close_genome_dir
+        if os.path.exists(ref):
+            os.system(f"cp {ref} {close_genome_dir}/")
+
         motif_set, contig_list = find_species_drep(contig, outdir, prefix)
 
         all_motif_set.update(motif_set)
