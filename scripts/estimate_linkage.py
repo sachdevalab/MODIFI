@@ -10,6 +10,7 @@ from tqdm import tqdm
 import random
 
 from derep_motifs import MotifFilter, uniq_similar_motifs
+from drep_motifs2 import motif_cluster_worker
 from get_kmer_freq import kmer_freq_sim_bin_worker
 # from linkage_model import compute_p_same_room
 
@@ -529,6 +530,14 @@ def get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref, MGE_dict):
     return bin_cov_dict
 
 def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=None, min_frac = 0.5, threads = 1, min_ctg_cov = 5, min_detect = 100):
+    ### cluster motifs
+    fai = whole_ref + ".fai"
+    if not os.path.exists(fai):
+        raise FileNotFoundError(f"{fai} does not exist. Please provide a valid whole reference fasta file.")
+    output_dir = os.path.join(host_dir, "../")
+    motif_file = os.path.join(output_dir, "motif_profile.csv")
+    motif_cluster_worker(motif_file, fai, output_dir, min_frac)
+
     MGE_dict = read_genomad(plasmid_file)
     cov_dict = load_coverage(host_dir)
     ctg_single_dict, single_ctg_dict, ctg_profile_dict, ctg_motif_dict = load_ctg_motifs_parallele(profile_dir, threads)

@@ -1504,3 +1504,20 @@ sbatch --job-name=drep \
     -ms 10000 \
     -sa 0.99 \
     -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_99_out"
+
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/96plex/96plex_methylation3 \
+  --whole_bam /home/shuaiw/borg/paper/run2/96plex/96plex.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/96plex/96plex.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_iden 0.97 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 30 \
+  --threads 64 --run_steps host \
+  --mge_file /home/shuaiw/borg/paper/run2/96plex/all_mge.tsv \
+  --job-name=infant_2_methylation3
