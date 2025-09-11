@@ -370,6 +370,7 @@ def motif_cluster_worker(motif_file, fai, output_dir, min_frac=0.3, similarity_t
             
     else:
         print("No motif occurrence data found for length analysis")
+    return length_df
     
 
 if __name__ == "__main__":

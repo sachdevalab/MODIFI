@@ -145,7 +145,7 @@ def merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict):
             bin_df = merge_df[['motifString', 'centerPos', 'motif_loci_num', 'motif_modified_num', 'motif_modified_ratio']]
         return bin_df
 
-def merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict, min_frac):
+def merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict, min_frac, min_detect):
     ctg_list = bin_ctg_dict[bin_name]
     if len(ctg_list) == 1:
         if ctg_list[0] not in ctg_motif_dict:
@@ -178,18 +178,35 @@ def merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict, min_frac):
         ## only retain the motifs with fraction >= min_frac and nDetected >= MIN_DETECT
         aggregated_motif = aggregated_motif[
             (aggregated_motif['fraction'] > min_frac) & 
-            (aggregated_motif['nDetected'] > MIN_DETECT)
+            (aggregated_motif['nDetected'] > min_detect)
         ]
         
         return aggregated_motif
 
+def drep_bin_motif(bin_motif, motif_cluster_dict):
+    ### if two motif has the same cluster ID, then only keep one with highest nDetected
+    bin_motif['cluster_id'] = bin_motif.apply(
+        lambda row: motif_cluster_dict.get(row['motifString'])[0] if row['motifString'] in motif_cluster_dict else None, axis=1
+    )
+    filtered_motifs = []
+    seen_clusters = set()
+    for _, row in bin_motif.sort_values(by='nDetected', ascending=False).iterrows():
+        cluster_id = row['cluster_id']
+        if cluster_id and cluster_id not in seen_clusters:
+            filtered_motifs.append(row)
+            seen_clusters.add(cluster_id)
+        elif not cluster_id:  # Keep motifs without a cluster ID
+            filtered_motifs.append(row)
+    return pd.DataFrame(filtered_motifs)
 
-def merge_bin_motif(bin_cov_dict, bin_ctg_dict, ctg_motif_dict, ctg_profile_dict, min_frac):
+
+def merge_bin_motif(bin_cov_dict, bin_ctg_dict, ctg_motif_dict, ctg_profile_dict, motif_cluster_dict, min_frac, min_detect):
     bin_df_dict = {}
     bin_motif_dict = {}
     for bin_name in bin_cov_dict:
         bin_df = merge_bin_profile(ctg_profile_dict, bin_name, bin_ctg_dict)
-        bin_motif = merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict, min_frac)
+        bin_motif = merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict, min_frac, min_detect)
+        bin_motif = drep_bin_motif(bin_motif, motif_cluster_dict)
         if len(bin_df) == 0 and len(bin_motif) == 0:
             print(f"Bin {bin_name} has no methylation profile or motif data.")
             continue
@@ -225,7 +242,8 @@ def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name, min_detect):
     result = linkage_score_from_counts(motif_data)
     return result, motif_data, bin_name
 
-def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir, cov_dict, bin_cov_dict, threads, min_frac = 0.5, min_detect = 100):
+def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir,
+                      cov_dict, bin_cov_dict, motif_cluster_dict, threads, min_frac = 0.5, min_detect = 100):
     import gc
     plasmid_profile = f"{profile_dir}/{plasmid_name}.motifs.profile.csv"
     # cov_dict = load_coverage(host_dir)
@@ -536,7 +554,15 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
         raise FileNotFoundError(f"{fai} does not exist. Please provide a valid whole reference fasta file.")
     output_dir = os.path.join(host_dir, "../")
     motif_file = os.path.join(output_dir, "motif_profile.csv")
-    motif_cluster_worker(motif_file, fai, output_dir, min_frac)
+    length_df = motif_cluster_worker(motif_file, fai, output_dir, min_frac)
+    ## get a dict to record the motif cluster of each motif
+    motif_cluster_dict = {}
+    for i, row in length_df.iterrows():
+        motif = row['motifString']
+        cluster = row['cluster_id']
+        occurrence_length = row['total_length']
+        occurrence_ratio = row['percentage_of_profile']
+        motif_cluster_dict[motif] = [cluster, occurrence_length, occurrence_ratio]
 
     MGE_dict = read_genomad(plasmid_file)
     cov_dict = load_coverage(host_dir)
@@ -553,7 +579,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
     bin_cov_dict = get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref, MGE_dict)  ## estimate the coverage for each bin, and remove bins with cov < min_ctg_cov
     print (f"Estimated {len(bin_cov_dict)} bins with coverage >= {min_ctg_cov}.")
     
-    bin_df_dict, bin_motif_dict = merge_bin_motif(bin_cov_dict, bin_ctg_dict, ctg_motif_dict, ctg_profile_dict, min_frac)
+    bin_df_dict, bin_motif_dict = merge_bin_motif(bin_cov_dict, bin_ctg_dict, ctg_motif_dict, ctg_profile_dict, motif_cluster_dict, min_frac, min_detect)
     print (f"Loaded {len(bin_df_dict)} bins with methylation profile and motifs.")
     
     print ("threads number for linkage prediction: ", threads)
@@ -582,6 +608,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
             threads = threads,
             min_frac = min_frac,
             min_detect = min_detect,
+            motif_cluster_dict = motif_cluster_dict,
         )
         i += 1
         if final_score_list is not None:
