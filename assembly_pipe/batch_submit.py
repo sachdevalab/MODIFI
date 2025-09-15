@@ -105,9 +105,9 @@ def read_list(bam_list, cmd_file, prefix_table):
                 --min_score 30 \\
                 --min_sites 30 \\
                 --mge_file /home/shuaiw/borg/paper/run2/{prefix}/all_mge.tsv \\
-                --annotate_rm \\
-                --threads 64 --run_steps merge" \\
-                --job-name=clip_{prefix}
+                --run_steps host \\
+                --threads 64" \\
+                --job-name={prefix}
             """
             print (methy_cmd.strip(), file=m)
 

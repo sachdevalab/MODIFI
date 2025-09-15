@@ -281,7 +281,7 @@ def count_motif_occurrences(df, fai, min_frac=0.3):
     
     return motif_total_lengths, total_profile_length, profile_stats
 
-def motif_cluster_worker(motif_file, fai, output_dir, min_frac=0.3, similarity_threshold=0.7):
+def motif_cluster_worker(motif_file, fai, output_dir, min_frac=0.3, similarity_threshold=0.99):
 
     # Default behavior for testing
     # prefix = "cow_bioreactor_5"

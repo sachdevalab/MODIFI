@@ -8,15 +8,91 @@ from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 import random
+import math
+from typing import List, Dict
 
 from derep_motifs import MotifFilter, uniq_similar_motifs
 from drep_motifs2 import motif_cluster_worker
 from get_kmer_freq import kmer_freq_sim_bin_worker
 # from linkage_model import compute_p_same_room
 
+def specificity_weight(prevalence: float, s_max: float = 5.0) -> float:
+    """
+    Specificity (IDF-like): phi = clip(-ln p, 0..s_max).
+    Pass prevalence already smoothed/shrunk if you have it.
+    """
+    # p = max(min(prevalence, 1 - 1e-9), 1e-9)
+    
+    p = prevalence * 0.01
+    # Prevent math domain error by ensuring p > 0
+    p = max(p, 1e-9)
+    # print (f"prevalence: {prevalence} {p}")
+    phi = -math.log(p)
+    return min(max(phi, 0.0), s_max)
+
+def linkage_score_from_counts2(motif_data):
+    """
+    Adds confidence weighting based on motif site counts.
+    """
+    scores = []
+    weights = []
+    total_sites = 0
+
+    valid_motif_list = []
+    total_confidence = 0
+    total_p_meth = 0
+    for m in motif_data:
+        h_total = m['host_total']
+        h_meth = m['host_meth']
+        p_total = m['plasmid_total']
+        p_meth = m['plasmid_meth']
+
+        if h_total == 0:
+            continue
+        if p_total == 0:  #skip if plasmid has no motif string
+            continue
+
+        f_host = h_meth / h_total
+        f_plasmid = p_meth / p_total
+        total_sites += h_total + p_total
+        if f_plasmid > f_host:
+            motif_score = 1
+        else:
+            motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
+        weight = specificity_weight(float(m["occurrence_ratio"]), s_max=6)
+        scores.append(motif_score * weight)
+        weights.append(weight)
+        total_confidence += 10000000/m['occurrence_len'] 
+        total_p_meth += p_meth
+    if not scores:
+        return {'linkage_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
+
+    linkage_score = sum(scores) / sum(weights)
+    # confidence = 1.0 - math.exp(-(sum(weights) / 5.5))
+    confidence = min(1, total_confidence)
+    # print (f"linkage_score: {linkage_score}, test_confidence: {confidence}, sum_weights: {sum(weights)}")
+    # confidence = 1
+    motif_confidence = min(1, total_p_meth / 5)  
 
 
-def linkage_score_from_counts(motif_data, max_sites=5000):
+    # motif confidence
+    # valid_motif_num = count_uniq_motif(valid_motif_list)  ## remove redundant motifs in counting
+    filtered_motifs = uniq_similar_motifs(valid_motif_list)
+    valid_motif_num = len(filtered_motifs)
+
+    final_score = linkage_score * confidence * motif_confidence
+
+    return {
+        'linkage_score': round(linkage_score, 4),
+        'confidence': round(confidence, 4),
+        'final_score': round(final_score, 4),
+        'total_sites': total_sites,
+        'motif_confidence': round(motif_confidence, 4),
+        'host_motif_num': len(motif_data),
+    }
+
+
+def linkage_score_from_counts1(motif_data, max_sites=5000):
     """
     Adds confidence weighting based on motif site counts.
     """
@@ -59,6 +135,7 @@ def linkage_score_from_counts(motif_data, max_sites=5000):
 
         scores.append(motif_score * log(weight))
         weights.append(log(weight))
+        
     if not scores:
         return {'linkage_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
 
@@ -88,7 +165,7 @@ def linkage_score_from_counts(motif_data, max_sites=5000):
         'host_motif_num': len(motif_data)
     }
 
-def extract_motif_data(host_df, plasmid_df, min_frac = 0.5, min_detect = 100):
+def extract_motif_data(host_df, plasmid_df, motif_cluster_dict, min_frac = 0.5, min_detect = 100):
     # Early exit if either DataFrame is empty
     if host_df.empty or plasmid_df.empty:
         return []
@@ -113,7 +190,11 @@ def extract_motif_data(host_df, plasmid_df, min_frac = 0.5, min_detect = 100):
                            'motif_modified_num_host', 'motif_loci_num_plasmid', 
                            'motif_modified_num_plasmid']]
     motif_data.columns = ['motif', 'centerPos', 'host_total', 'host_meth', 'plasmid_total', 'plasmid_meth']
-    
+    ## add a column which represents the occurrence_ratio of the motif in the host, recorded in the motif_cluster_dict
+    motif_data['occurrence_ratio'] = motif_data['motif'].apply(lambda x: motif_cluster_dict[x][2])
+    motif_data['cluster_id'] = motif_data['motif'].apply(lambda x: motif_cluster_dict[x][0] if x in motif_cluster_dict else None)
+    motif_data['occurrence_len'] = motif_data['motif'].apply(lambda x: motif_cluster_dict[x][1] if x in motif_cluster_dict else None)
+
     # Convert to records - this is the most efficient way
     return motif_data.to_dict('records')
 
@@ -229,17 +310,19 @@ def summary_motif_info(motif_data):
     ## summary it into a string, use ; separate motifs, use : to separate the motif info
     motif_info = []
     for m in motif_data:
-        motif_info.append(m['motif'] + ":" + str(m['centerPos']) + ":" + str(m['host_total']) + ":" + str(m['host_meth']) + ":" + str(m['plasmid_total']) + ":" + str(m['plasmid_meth']))
+        motif_info.append(m['motif'] + ":" + str(m['centerPos']) + ":" + str(m['host_total']) + \
+                           ":" + str(m['host_meth']) + ":" + str(m['plasmid_total']) + ":" + \
+                            str(m['plasmid_meth']) + ":" + str(m['occurrence_ratio']) + ":" + str(m['occurrence_len']))
     motif_info = ";".join(motif_info)
     return motif_info
 
-def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name, min_detect):
-    motif_data = extract_motif_data(bin_df, plasmid_df, min_frac, min_detect)
+def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name, min_detect, motif_cluster_dict):
+    motif_data = extract_motif_data(bin_df, plasmid_df, motif_cluster_dict, min_frac, min_detect)
     motif_data = filter_motifs(bin_motif, motif_data)
     # motif_filter = MotifFilter(motif_data)
     # motif_data = motif_filter.filter()
 
-    result = linkage_score_from_counts(motif_data)
+    result = linkage_score_from_counts2(motif_data)
     return result, motif_data, bin_name
 
 def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir,
@@ -296,6 +379,7 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
                     min_frac = min_frac,
                     bin_name = bin_name,
                     min_detect = min_detect,
+                    motif_cluster_dict = motif_cluster_dict,
                 )
                 batch_futures.append(future)
 
