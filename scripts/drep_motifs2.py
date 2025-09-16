@@ -281,6 +281,13 @@ def count_motif_occurrences(df, fai, min_frac=0.3):
     
     return motif_total_lengths, total_profile_length, profile_stats
 
+def estimate_motif_probability(length_df, total_profile_length):
+    A = 2000000
+    B = 200000000
+    post_p = (length_df['total_length'] + A) / (total_profile_length + B)
+
+    length_df['percentage_of_profile'] = (post_p * 100).round(2)
+
 def motif_cluster_worker(motif_file, fai, output_dir, min_frac=0.3, similarity_threshold=0.99):
 
     # Default behavior for testing
@@ -344,7 +351,8 @@ def motif_cluster_worker(motif_file, fai, output_dir, min_frac=0.3, similarity_t
         length_df = length_df.sort_values('total_length', ascending=False)
         
         # Add percentage of total profile length
-        length_df['percentage_of_profile'] = (length_df['total_length'] / total_profile_length * 100).round(2)
+        # length_df['percentage_of_profile'] = (length_df['total_length'] / total_profile_length * 100).round(2)
+        estimate_motif_probability(length_df, total_profile_length)
         
         # Add cluster labels to the dataframe
         motif_to_cluster = {motifs[i]: cluster_labels[i] for i in range(len(motifs))}
