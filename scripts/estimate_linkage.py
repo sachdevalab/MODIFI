@@ -41,6 +41,8 @@ def linkage_score_from_counts2(motif_data):
     valid_motif_list = []
     total_confidence = 0
     total_p_meth = 0
+    probability = 1
+    motif_count = 0  # Track number of motifs used in probability calculation
     for m in motif_data:
         h_total = m['host_total']
         h_meth = m['host_meth']
@@ -51,14 +53,25 @@ def linkage_score_from_counts2(motif_data):
             continue
         if p_total == 0:  #skip if plasmid has no motif string
             continue
+        if p_total < 5:
+            continue
 
         f_host = h_meth / h_total
         f_plasmid = p_meth / p_total
         total_sites += h_total + p_total
-        if f_plasmid > f_host:
+        # if f_plasmid > f_host:
+        #     motif_score = 1
+        # else:
+        #     motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
+        if f_plasmid >= 0.3:
             motif_score = 1
+            probability *= float(m["occurrence_ratio"])*0.01
         else:
-            motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
+            motif_score = 0
+            probability *= (1 - float(m["occurrence_ratio"])*0.01)
+        
+        motif_count += 1  # Count this motif
+        # print (probability, m["occurrence_ratio"])
         weight = specificity_weight(float(m["occurrence_ratio"]), s_max=6)
         scores.append(motif_score * weight)
         weights.append(weight)
@@ -68,8 +81,8 @@ def linkage_score_from_counts2(motif_data):
         return {'linkage_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
 
     linkage_score = sum(scores) / sum(weights)
-    # confidence = 1.0 - math.exp(-(sum(weights) / 5.5))
     confidence = min(1, total_confidence)
+    # confidence = log(1+len(motif_data))/log(1+3)   
     # print (f"linkage_score: {linkage_score}, test_confidence: {confidence}, sum_weights: {sum(weights)}")
     # confidence = 1
     motif_confidence = min(1, total_p_meth / 5)  
@@ -77,10 +90,17 @@ def linkage_score_from_counts2(motif_data):
 
     # motif confidence
     # valid_motif_num = count_uniq_motif(valid_motif_list)  ## remove redundant motifs in counting
-    filtered_motifs = uniq_similar_motifs(valid_motif_list)
-    valid_motif_num = len(filtered_motifs)
+    # filtered_motifs = uniq_similar_motifs(valid_motif_list)
+    # valid_motif_num = len(filtered_motifs)
 
-    final_score = linkage_score * confidence * motif_confidence
+    # final_score = linkage_score * confidence * motif_confidence
+    # Normalize probability by number of motifs (geometric mean)
+    if motif_count > 0:
+        normalized_probability = probability ** (1.0 / motif_count)
+    else:
+        normalized_probability = 1.0
+    
+    final_score = 1 - normalized_probability
 
     return {
         'linkage_score': round(linkage_score, 4),
@@ -326,7 +346,7 @@ def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name, min_detect, mo
     return result, motif_data, bin_name
 
 def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir,
-                      cov_dict, bin_cov_dict, motif_cluster_dict, threads, min_frac = 0.5, min_detect = 100):
+                      cov_dict, bin_cov_dict, motif_cluster_dict, bin_ctg_dict, threads, min_frac = 0.5, min_detect = 100):
     import gc
     plasmid_profile = f"{profile_dir}/{plasmid_name}.motifs.profile.csv"
     # cov_dict = load_coverage(host_dir)
@@ -421,11 +441,18 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
     print (f"### Processed bins for {plasmid_name}, total {len(data)} results.")
     ## convert the data to a df, and sort by final_score
     data = pd.DataFrame(data)
+    ## calculate a pvalue to indicate proportion of the final_score that are larger than the value for this plasmid only
+    data['self_pvalue']  = data['final_score'].apply(lambda x: sum(data['final_score'] >= x) / len(data) )
     final_score_list = []
     if len(data) > 0:
         data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
+        data = sort_top_by_cos_sim(data, bin_ctg_dict, os.path.join(host_dir, '../'))
         ## host column the first, final_score the second, linkage_score the third, confidence the forth, total_sites the fifth
-        data = data[['MGE', 'host', 'final_score', 'linkage_score', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
+        data = data[['MGE', 'host', 'final_score', 'linkage_score', 'self_pvalue', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
+        ## if more than one hosts have ths highest final_score, then sort them by cos_sim, and keep them all
+        ## get corrected pvalue for self_pvalue
+        
+        data['self_pvalue'] = data['self_pvalue'].round(4)
         final_score_list = data['final_score'].tolist()
         # data = data[data['final_score'] > 0]
         # data = report_gc(data, host_dir, bin_ctg_dict)
@@ -439,6 +466,26 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
         for index, rows in data.iterrows():
             print (rows.to_dict(), motif_data_dict[rows['host']], file = f)
     return final_score_list
+
+def sort_top_by_cos_sim(data, bin_ctg_dict, work_dir):
+    ## check if more than one hosts have ths highest final_score, then sort them by cos_sim, and keep them all
+    top_final_score = data.iloc[0]['final_score']
+    top_data = data[data['final_score'] == top_final_score].copy()
+    other_data = data[data['final_score'] < top_final_score].copy()
+
+    top_data['cos_sim'] = 0.0
+    if len(top_data) > 1 and len(top_data) < 4:
+        ## calculate cos_sim for these hosts
+        for i, row in top_data.iterrows():
+            bin_name1, bin_1_gc, bin_2_gc, cos_sim = kmer_freq_sim_bin_worker(
+                row['MGE'], row['host'], bin_ctg_dict, work_dir
+            )
+            top_data.loc[i, 'cos_sim'] = cos_sim
+        ## sort the top_data by cos_sim
+        top_data = top_data.sort_values(by = 'cos_sim', ascending = False, ignore_index = True)
+        return pd.concat([top_data, other_data], ignore_index=True)
+    else:
+        return data
 
 def report_gc(data, host_dir, bin_ctg_dict, threads):
     """
@@ -575,7 +622,7 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, MGE_dict
         data['pvalue'] = data['pvalue'].round(4)
         # print (data["MGE_gc"])
         ## resort the columns
-        data = data[['MGE', 'MGE_len', 'host', 'final_score', 'pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
+        data = data[['MGE', 'MGE_len', 'host', 'final_score', 'pvalue', 'self_pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
                     'MGE_cov', 'host_cov', 'linkage_score', 'host_motif_num', 'confidence', 
                     'motif_confidence',  'total_sites', 'motif_info']]
     ## output the data to a csv file
@@ -693,6 +740,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
             min_frac = min_frac,
             min_detect = min_detect,
             motif_cluster_dict = motif_cluster_dict,
+            bin_ctg_dict = bin_ctg_dict,
         )
         i += 1
         if final_score_list is not None:
