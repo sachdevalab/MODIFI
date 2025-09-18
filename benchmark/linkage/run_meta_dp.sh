@@ -9,12 +9,12 @@
             --read_type hifi \
             --min_len 1000 \
             --min_cov 1 \
-            --min_frac 0.3 \
+            --min_frac 0.4 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p100
         
 
@@ -25,12 +25,12 @@
             --read_type hifi \
             --min_len 1000 \
             --min_cov 1 \
-            --min_frac 0.3 \
+            --min_frac 0.4 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p10
         
 
@@ -41,12 +41,12 @@
             --read_type hifi \
             --min_len 1000 \
             --min_cov 1 \
-            --min_frac 0.3 \
+            --min_frac 0.4 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p20
         
 
@@ -57,12 +57,12 @@
             --read_type hifi \
             --min_len 1000 \
             --min_cov 1 \
-            --min_frac 0.3 \
+            --min_frac 0.4 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p30
         
 
@@ -73,12 +73,12 @@
             --read_type hifi \
             --min_len 1000 \
             --min_cov 1 \
-            --min_frac 0.3 \
+            --min_frac 0.4 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p50
         
 
@@ -89,11 +89,11 @@
             --read_type hifi \
             --min_len 1000 \
             --min_cov 1 \
-            --min_frac 0.3 \
+            --min_frac 0.4 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p05
         

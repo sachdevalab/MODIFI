@@ -8,10 +8,10 @@
             --min_cov 1 \
             --min_frac 0.3 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p100_pure
         
 
@@ -24,10 +24,10 @@
             --min_cov 1 \
             --min_frac 0.3 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p10_pure
         
 
@@ -40,10 +40,10 @@
             --min_cov 1 \
             --min_frac 0.3 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p20_pure
         
 
@@ -56,10 +56,10 @@
             --min_cov 1 \
             --min_frac 0.3 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p30_pure
         
 
@@ -72,10 +72,10 @@
             --min_cov 1 \
             --min_frac 0.3 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p50_pure
         
 
@@ -88,9 +88,9 @@
             --min_cov 1 \
             --min_frac 0.3 \
             --min_score 30 \
-            --min_sites 30 \
+            --min_sites 100 \
             --min_iden 0.97 \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
-            --threads 64" \
+            --threads 64 --run_steps host" \
             --job-name=p05_pure
         

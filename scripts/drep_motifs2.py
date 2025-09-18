@@ -139,7 +139,11 @@ def TSNE_cluster(motif_dict):
     ## normalize the matrix
     TSNE_matrix = TSNE_matrix / np.linalg.norm(TSNE_matrix, axis=1, keepdims=True)
 
-    X_embedded = TSNE(n_components=2).fit_transform(TSNE_matrix)
+    # Adjust perplexity based on number of samples
+    n_samples = len(motifs)
+    perplexity = min(30, max(5, n_samples - 1))  # Ensure perplexity < n_samples and >= 5
+    
+    X_embedded = TSNE(n_components=2, perplexity=perplexity).fit_transform(TSNE_matrix)
     clustering = DBSCAN(eps=0.2, min_samples=1).fit(X_embedded)
     n_clusters = len(set(clustering.labels_))
     
@@ -329,19 +333,19 @@ def motif_cluster_worker(motif_file, fai, output_dir, min_frac=0.3, similarity_t
     
     print(f"Found {len(motif_dict)} motifs across {len(samples)} samples")
     
-    # # Calculate cosine similarity
-    # print("Calculating cosine similarity matrix...")
-    # cos_sim_matrix, motifs = calculate_cosine_similarity_matrix(motif_dict)
-    # print("Clustering motifs by sequence similarity...")
-    # cluster_labels = cluster_motifs(motifs, similarity_threshold)
-    # n_clusters = len(np.unique(cluster_labels))
-    # print(f"Found {n_clusters} sequence similarity clusters")
-    # ## output the elements in each cluster
-    # cluster_dict = defaultdict(list)
-    # for i, label in enumerate(cluster_labels):
-    #     cluster_dict[label].append(motifs[i])
+    # Calculate cosine similarity
+    print("Calculating cosine similarity matrix...")
+    cos_sim_matrix, motifs = calculate_cosine_similarity_matrix(motif_dict)
+    print("Clustering motifs by sequence similarity...")
+    cluster_labels = cluster_motifs(motifs, similarity_threshold)
+    n_clusters = len(np.unique(cluster_labels))
+    print(f"Found {n_clusters} sequence similarity clusters")
+    ## output the elements in each cluster
+    cluster_dict = defaultdict(list)
+    for i, label in enumerate(cluster_labels):
+        cluster_dict[label].append(motifs[i])
 
-    cluster_dict, motifs, cluster_labels =  TSNE_cluster(motif_dict)
+    # cluster_dict, motifs, cluster_labels =  TSNE_cluster(motif_dict)
 
     cluster_output_path = os.path.join(output_dir, 'motif_clusters.txt')
     with open(cluster_output_path, 'w') as f:

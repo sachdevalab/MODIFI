@@ -384,7 +384,7 @@ def assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff=0):
     guess_num = 0
     correct_num = 0
 
-    summary_file = os.path.join(result_dir, '../', "host_summary.filter.csv")
+    summary_file = os.path.join(result_dir, '../', "host_summary.csv")
     df = pd.read_csv(summary_file)
     for index, row in df.iterrows():
         plasmid = row['MGE']
@@ -398,7 +398,8 @@ def assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff=0):
             continue
         if plasmid not in plasmid_host_dict:
             continue
-        if pvalue < 0.05:
+        # if pvalue < 0.05:
+        if row['specificity'] < 0.01 and row['final_score'] > 0.5:
         # if best_score > 0.15:
             guess_num += 1
             if best_host in plasmid_host_dict[plasmid][2]:
@@ -445,15 +446,10 @@ def get_new_host(plasmid_list):
 def cal_AUC_pure(): 
     fai = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai"
     plasmid_list_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"
-    # plasmid_host_dict, contig_length_dict = get_plasmid_dict(fai)
-    # print (plasmid_host_dict)
+
     plasmid_host_dict = get_new_host(plasmid_list_file)
     print (len(plasmid_host_dict), "plasmid host dict")
-    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_NM3/hosts/"
-    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec3/hosts/"
-    result_dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_rec4/hosts/"
-    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30_filter2/hosts/"
-    # dir = "/home/shuaiw/borg/bench/zymo_new_ref_p0.1_cov1_s30/hosts/"
+
     cutoff = 0.45
     data = []
     dp_df_all = []
@@ -500,11 +496,11 @@ def cal_AUC_meta():
         "50": 14.90,
         "100": 25.94
     }
-    for p in ["05", "10", "20", "30", "50", "100"]:
+    for p in ["05", "10", "20", "30", "50"]:
         prefix = f"m64004_210929_143746.p{p}"
         result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta2", prefix, "hosts")
-        if p == "100":
-            result_dir = "/home/shuaiw/borg/bench/soil_zymo/run4/hosts/"
+        # if p == "100":
+        #     result_dir = "/home/shuaiw/borg/bench/soil_zymo/run4/hosts/"
         frac = frac_dict[p]
         for depth_cutoff in [5]:
             recall, precision = assess_linkage(result_dir, cutoff, plasmid_host_dict, depth_cutoff)
@@ -589,8 +585,13 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-# cal_AUC_pure()
-cal_AUC_meta()
+cal_AUC_pure()
+# cal_AUC_meta()
+
+
+
+
+
 # assess_motif()
 # host_linkage_eva()
 # for_zymo()

@@ -14,9 +14,11 @@ from scipy.stats import ttest_ind
 
 def read_our(host_sum, ctg2bin_dict={}, score_cutoff = 0.6):
     df = pd.read_csv(host_sum)
-    df = df[df['final_score'] > score_cutoff]
-    ## only keep df with pvalue < 0.05
-    df = df[df['pvalue'] < 0.05]
+    # df = df[df['final_score'] > score_cutoff]
+    # ## only keep df with pvalue < 0.05
+    # df = df[df['pvalue'] < 0.05]
+    df = df[df['specificity'] < 0.01]
+    df = df[df['final_score'] > 0.5]
     our_linkages = defaultdict(list)
     our_ctg_linkages = {}
     for index, row in df.iterrows():
@@ -120,8 +122,8 @@ if __name__ == "__main__":
     # prefix="cow_bioreactor_1"
     # prefix="cow_1"
     data = []
-    # for prefix in ["cow_bioreactor_1", "cow_bioreactor_4", "cow_bioreactor_5"]:
-    for prefix in ["cow_bioreactor_5"]:
+    for prefix in ["cow_bioreactor_1", "cow_bioreactor_4", "cow_bioreactor_5"]:
+    # for prefix in ["cow_bioreactor_5"]:
         bin3c_cluster = f"/home/shuaiw/borg/paper/run2/{prefix}/hic/bin3c_clust/clustering.mcl"
         host_sum = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation3/host_summary.csv"
         # host_sum = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation_kmer3/host_summary.csv"

@@ -32,7 +32,7 @@ def specificity_weight(prevalence: float, s_max: float = 5.0) -> float:
     phi = -math.log(p)
     return min(max(phi, 0.0), s_max)
 
-def linkage_score_from_counts2(motif_data, max_sites=5000):
+def linkage_score_from_counts2(motif_data, min_frac, max_sites=5000):
     """
     Adds confidence weighting based on motif site counts.
     """
@@ -40,7 +40,7 @@ def linkage_score_from_counts2(motif_data, max_sites=5000):
     weights = []
     total_sites = 0
 
-    valid_motif_list = []
+    mge_methy_sites = 0
     total_confidence = 0
     total_p_meth = 0
     probability = 1
@@ -57,7 +57,7 @@ def linkage_score_from_counts2(motif_data, max_sites=5000):
             continue
         if p_total == 0:  #skip if plasmid has no motif string
             continue
-        if p_total < 5:
+        if p_total < 2: # 5
             continue
 
         f_host = h_meth / h_total
@@ -65,18 +65,17 @@ def linkage_score_from_counts2(motif_data, max_sites=5000):
         
         weight = specificity_weight(float(m["occurrence_ratio"]), s_max=6)
 
-        if f_plasmid >= 0.3:
+        if f_plasmid >= min_frac:
             motif_score = 1
             probability *= float(m["occurrence_ratio"])*0.01
             match_p *= float(m["occurrence_ratio"])*0.01
             total_sites += h_total + p_total
             motif_count += 1  # Count this motif
+            mge_methy_sites += p_meth
         else:
             motif_score = 0
             probability *= (1 - float(m["occurrence_ratio"])*0.01)
-            miss_penalty += 2 ** f_host - 1
-        
-       
+            miss_penalty += 2 ** (f_host - f_plasmid) - 1
         
         scores.append(motif_score * weight)
         weights.append(weight)
@@ -101,7 +100,8 @@ def linkage_score_from_counts2(motif_data, max_sites=5000):
     else:
         normalized_probability = 1.0
     linkage_score = round(match_p, 4)
-    final_score = (1 - normalized_probability) * confidence * motif_confidence
+    methy_sites_confidence = min(log(1 + mge_methy_sites) / log(1 + 200), 1)
+    final_score = (1 - normalized_probability) * confidence * motif_confidence 
     final_score = final_score - miss_penalty 
     final_score = max(final_score, 0)
     # final_score = -np.log(1e-16 + linkage_score)
@@ -110,7 +110,7 @@ def linkage_score_from_counts2(motif_data, max_sites=5000):
         'specificity': round(linkage_score, 4),
         'confidence': round(confidence, 4),
         'final_score': round(final_score, 4),
-        'total_sites': miss_penalty,
+        'total_sites': mge_methy_sites,
         'motif_confidence': round(motif_confidence, 4),
         'host_motif_num': len(motif_data),
     }
@@ -346,7 +346,7 @@ def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name, min_detect, mo
     # motif_filter = MotifFilter(motif_data)
     # motif_data = motif_filter.filter()
 
-    result = linkage_score_from_counts2(motif_data)
+    result = linkage_score_from_counts2(motif_data, min_frac)
     return result, motif_data, bin_name
 
 def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, host_dir,
