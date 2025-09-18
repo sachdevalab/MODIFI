@@ -10,11 +10,13 @@ from tqdm import tqdm
 import random
 import math
 from typing import List, Dict
+# from statsmodels.stats.multitest import multipletests
 
 from derep_motifs import MotifFilter, uniq_similar_motifs
 from drep_motifs2 import motif_cluster_worker
 from get_kmer_freq import kmer_freq_sim_bin_worker
 # from linkage_model import compute_p_same_room
+P_CUTOFF = 0.01
 
 def specificity_weight(prevalence: float, s_max: float = 5.0) -> float:
     """
@@ -30,7 +32,7 @@ def specificity_weight(prevalence: float, s_max: float = 5.0) -> float:
     phi = -math.log(p)
     return min(max(phi, 0.0), s_max)
 
-def linkage_score_from_counts2(motif_data):
+def linkage_score_from_counts2(motif_data, max_sites=5000):
     """
     Adds confidence weighting based on motif site counts.
     """
@@ -42,7 +44,9 @@ def linkage_score_from_counts2(motif_data):
     total_confidence = 0
     total_p_meth = 0
     probability = 1
+    match_p = 1
     motif_count = 0  # Track number of motifs used in probability calculation
+    miss_penalty = 0
     for m in motif_data:
         h_total = m['host_total']
         h_meth = m['host_meth']
@@ -58,55 +62,55 @@ def linkage_score_from_counts2(motif_data):
 
         f_host = h_meth / h_total
         f_plasmid = p_meth / p_total
-        total_sites += h_total + p_total
-        # if f_plasmid > f_host:
-        #     motif_score = 1
-        # else:
-        #     motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
+        
+        weight = specificity_weight(float(m["occurrence_ratio"]), s_max=6)
+
         if f_plasmid >= 0.3:
             motif_score = 1
             probability *= float(m["occurrence_ratio"])*0.01
+            match_p *= float(m["occurrence_ratio"])*0.01
+            total_sites += h_total + p_total
+            motif_count += 1  # Count this motif
         else:
             motif_score = 0
             probability *= (1 - float(m["occurrence_ratio"])*0.01)
+            miss_penalty += 2 ** f_host - 1
         
-        motif_count += 1  # Count this motif
-        # print (probability, m["occurrence_ratio"])
-        weight = specificity_weight(float(m["occurrence_ratio"]), s_max=6)
+       
+        
         scores.append(motif_score * weight)
         weights.append(weight)
         total_confidence += 10000000/m['occurrence_len'] 
         total_p_meth += p_meth
-    if not scores:
-        return {'linkage_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
-
-    linkage_score = sum(scores) / sum(weights)
-    confidence = min(1, total_confidence)
-    # confidence = log(1+len(motif_data))/log(1+3)   
-    # print (f"linkage_score: {linkage_score}, test_confidence: {confidence}, sum_weights: {sum(weights)}")
-    # confidence = 1
-    motif_confidence = min(1, total_p_meth / 5)  
 
 
-    # motif confidence
-    # valid_motif_num = count_uniq_motif(valid_motif_list)  ## remove redundant motifs in counting
-    # filtered_motifs = uniq_similar_motifs(valid_motif_list)
-    # valid_motif_num = len(filtered_motifs)
+    motif_confidence = log(1+motif_count)/log(1+3)   
+    motif_confidence = min(motif_confidence, 1)
 
+    # motif_confidence = min(1, total_p_meth / 5)  
+
+    # Confidence scaling (logarithmic)
+    confidence = log(1 + total_sites) / log(1 + max_sites)
+    confidence = min(confidence, 1)
+    
     # final_score = linkage_score * confidence * motif_confidence
     # Normalize probability by number of motifs (geometric mean)
     if motif_count > 0:
         normalized_probability = probability ** (1.0 / motif_count)
+        # normalized_probability = probability 
     else:
         normalized_probability = 1.0
-    
-    final_score = 1 - normalized_probability
+    linkage_score = round(match_p, 4)
+    final_score = (1 - normalized_probability) * confidence * motif_confidence
+    final_score = final_score - miss_penalty 
+    final_score = max(final_score, 0)
+    # final_score = -np.log(1e-16 + linkage_score)
 
     return {
-        'linkage_score': round(linkage_score, 4),
+        'specificity': round(linkage_score, 4),
         'confidence': round(confidence, 4),
         'final_score': round(final_score, 4),
-        'total_sites': total_sites,
+        'total_sites': miss_penalty,
         'motif_confidence': round(motif_confidence, 4),
         'host_motif_num': len(motif_data),
     }
@@ -445,17 +449,20 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
     data['self_pvalue']  = data['final_score'].apply(lambda x: sum(data['final_score'] >= x) / len(data) )
     final_score_list = []
     if len(data) > 0:
-        data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
-        data = sort_top_by_cos_sim(data, bin_ctg_dict, os.path.join(host_dir, '../'))
-        ## host column the first, final_score the second, linkage_score the third, confidence the forth, total_sites the fifth
-        data = data[['MGE', 'host', 'final_score', 'linkage_score', 'self_pvalue', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
-        ## if more than one hosts have ths highest final_score, then sort them by cos_sim, and keep them all
-        ## get corrected pvalue for self_pvalue
+        # Separate rows with specificity < P_CUTOFF and others
+        low_specificity = data[data['specificity'] < P_CUTOFF].sort_values(by='final_score', ascending=False, ignore_index=True)
+        high_specificity = data[data['specificity'] >= P_CUTOFF].sort_values(by='final_score', ascending=False, ignore_index=True)
+
+        # Combine them: low specificity first, then high specificity
+        data = pd.concat([low_specificity, high_specificity], ignore_index=True)
         
+        ## if more than one hosts have ths highest final_score, then sort them by cos_sim, and keep them all
+        data = sort_top_by_cos_sim(data, bin_ctg_dict, os.path.join(host_dir, '../'))
+        ## host column the first, final_score the second, specificity the third, confidence the forth, total_sites the fifth
+        data = data[['MGE', 'host', 'final_score', 'specificity', 'self_pvalue', 'confidence', 'motif_confidence', 'total_sites', 'host_motif_num', 'MGE_cov', 'host_cov','motif_info']]
         data['self_pvalue'] = data['self_pvalue'].round(4)
+        
         final_score_list = data['final_score'].tolist()
-        # data = data[data['final_score'] > 0]
-        # data = report_gc(data, host_dir, bin_ctg_dict)
         print (data.head(5))
         ## output the data to a csv file
         host_prediction = os.path.join(host_dir, f"{plasmid_name}.host_prediction.csv")
@@ -615,15 +622,21 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, MGE_dict
 
     ## sort by final_score
     if len(data) > 0:
-        data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
+        # data = data.sort_values(by = 'final_score', ascending = False, ignore_index = True)
+        low_specificity = data[data['specificity'] < P_CUTOFF].sort_values(by='final_score', ascending=False, ignore_index=True)
+        high_specificity = data[data['specificity'] >= P_CUTOFF].sort_values(by='final_score', ascending=False, ignore_index=True)
+        
+        # Combine them: low specificity first, then high specificity
+        data = pd.concat([low_specificity, high_specificity], ignore_index=True)
+
         data = report_gc(data, host_dir, bin_ctg_dict, threads)
         ## add pvalue for final_score
         data['pvalue'] = data['final_score'].apply(lambda x: sum(1 for score in selected_scores if score >= x) / len(selected_scores))
         data['pvalue'] = data['pvalue'].round(4)
         # print (data["MGE_gc"])
         ## resort the columns
-        data = data[['MGE', 'MGE_len', 'host', 'final_score', 'pvalue', 'self_pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
-                    'MGE_cov', 'host_cov', 'linkage_score', 'host_motif_num', 'confidence', 
+        data = data[['MGE', 'MGE_len', 'host', 'final_score', 'specificity', 'pvalue', 'self_pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
+                    'MGE_cov', 'host_cov', 'host_motif_num', 'confidence', 
                     'motif_confidence',  'total_sites', 'motif_info']]
     ## output the data to a csv file
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")

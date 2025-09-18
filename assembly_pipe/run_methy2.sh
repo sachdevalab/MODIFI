@@ -8,7 +8,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/96plex/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -23,7 +23,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_1/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -38,7 +38,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_2/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -53,7 +53,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_3/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -68,7 +68,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_4/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -83,7 +83,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/cow_bioreactor_5/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -98,7 +98,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/cow_1/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -113,7 +113,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/ERR12723528_mice/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -128,7 +128,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/ERR12723529_mice/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -143,7 +143,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/ERR5621427_sludge/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -158,7 +158,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/ERR5621429_sludge/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -173,7 +173,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/ERR5621430_sludge/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -188,7 +188,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_1/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -203,7 +203,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_2/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -218,7 +218,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_3/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -233,7 +233,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_4/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -248,7 +248,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_5/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -263,7 +263,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_6/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -278,7 +278,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_7/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -293,7 +293,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_8/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -308,7 +308,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_9/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -323,7 +323,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_10/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -338,7 +338,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_11/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -353,7 +353,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_12/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -368,7 +368,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_13/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -383,7 +383,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_14/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -398,7 +398,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_15/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -413,7 +413,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_16/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -428,7 +428,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_17/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -443,7 +443,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_18/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -458,7 +458,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_19/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -473,7 +473,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_20/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -488,7 +488,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_21/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -503,7 +503,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_22/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -518,7 +518,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_23/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -533,7 +533,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_24/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -548,7 +548,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_25/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -563,7 +563,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_26/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -578,7 +578,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_27/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -593,7 +593,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/infant_28/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -608,7 +608,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/ocean_1/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -623,7 +623,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/soil_s3_1/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -638,7 +638,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/soil_s3_2/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -653,7 +653,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/soil_s4_1/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -668,7 +668,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/soil_s4_2/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -683,7 +683,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/soil_s1_1/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -698,7 +698,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/soil_s1_2/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -713,7 +713,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/soil_1/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -728,7 +728,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/SRR14074352_human/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -743,7 +743,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/SRR23446539_sugarcane/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \
@@ -758,7 +758,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
                 --min_iden 0.97 \
                 --min_frac 0.3 \
                 --min_score 30 \
-                --min_sites 30 \
+                --min_sites 100 \
                 --mge_file /home/shuaiw/borg/paper/run2/SRR23446540_sugarcane/all_mge.tsv \
                 --run_steps host \
                 --threads 64" \

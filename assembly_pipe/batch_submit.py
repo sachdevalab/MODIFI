@@ -103,7 +103,7 @@ def read_list(bam_list, cmd_file, prefix_table):
                 --min_iden 0.97 \\
                 --min_frac 0.3 \\
                 --min_score 30 \\
-                --min_sites 30 \\
+                --min_sites 100 \\
                 --mge_file /home/shuaiw/borg/paper/run2/{prefix}/all_mge.tsv \\
                 --run_steps host \\
                 --threads 64" \\
