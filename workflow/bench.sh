@@ -1640,3 +1640,19 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --threads 64 --run_steps host" \
   --job-name=bioreactor_1_test
 
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/isolation/SRR27457941/SRR27457941_methylation \
+  --whole_bam xx \
+  --whole_ref  /home/shuaiw/borg/paper/isolation/SRR27457941//SRR27457941.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 10 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 100 \
+  --mge_file /home/shuaiw/borg/paper/isolation/SRR27457941/all_mge.tsv \
+  --threads 2 --run_steps host" \
+  --job-name=bioreactor_1_test
+
+

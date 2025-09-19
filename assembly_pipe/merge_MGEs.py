@@ -208,7 +208,14 @@ def get_mge_union(all_mge_file, classification_dict, vibrant_virus, virsorter2_v
             "GTDB": classification
         })
     df = pd.DataFrame(data)
-    df = df.sort_values(by=['type', 'length'], ascending=[True, False])
+    
+    # Check if DataFrame is empty
+    if df.empty:
+        print("No MGEs found. Creating empty DataFrame with required columns.")
+        df = pd.DataFrame(columns=["seq_name", "type", "length", "methods", "GTDB"])
+    else:
+        df = df.sort_values(by=['type', 'length'], ascending=[True, False])
+    
     print (df)
     df.to_csv(all_mge_file, sep="\t", index=False)
 

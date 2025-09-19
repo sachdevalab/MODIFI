@@ -187,11 +187,11 @@ rule call_methylation:
           --whole_ref {input.fa} \
           --read_type hifi \
           --min_len 1000 \
-          --max_NM 300000000 \
-          --min_cov 1 \
+          --min_cov 3 \
+          --min_iden 0.97 \
           --min_frac 0.4 \
           --min_score 30 \
-          --min_sites 30 \
+          --min_sites 100 \
           --annotate_rm \
           --mge_file {input.mge_file} \
           --threads {threads} \

@@ -332,6 +332,10 @@ def motif_cluster_worker(motif_file, fai, output_dir, min_frac=0.3, similarity_t
     motif_dict, samples = read_motifs(motif_file, min_frac)
     
     print(f"Found {len(motif_dict)} motifs across {len(samples)} samples")
+    if len(motif_dict) == 0 or len(samples) == 0:
+        print("No motifs or samples found after filtering. Exiting.")
+        ## return empty DataFrame
+        return pd.DataFrame(columns=["motifString", "contig", "fraction"])
     
     # Calculate cosine similarity
     print("Calculating cosine similarity matrix...")
