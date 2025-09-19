@@ -481,7 +481,7 @@ def sort_top_by_cos_sim(data, bin_ctg_dict, work_dir):
     other_data = data[data['final_score'] < top_final_score].copy()
 
     top_data['cos_sim'] = 0.0
-    if len(top_data) > 1 and len(top_data) < 4:
+    if len(top_data) > 1 and len(top_data) < 4 and top_final_score > 0:
         ## calculate cos_sim for these hosts
         for i, row in top_data.iterrows():
             bin_name1, bin_1_gc, bin_2_gc, cos_sim = kmer_freq_sim_bin_worker(
@@ -739,6 +739,8 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
         #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
         #     continue
         # print (f"Processing {i}-th/{len(MGE_dict)} {plasmid_name} with {MGE_motif_num} original motifs.")
+        # if plasmid_name != "ocean_1_1355_L":
+        #     continue
         print (f"Processing {i}-th/{len(MGE_dict)} {plasmid_name}.")
 
         final_score_list = for_each_plasmid(

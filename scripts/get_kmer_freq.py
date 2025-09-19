@@ -6,6 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import os
 from Bio.SeqIO.FastaIO import SimpleFastaParser
+import sys
 
 class Calc_gc:
 
@@ -174,6 +175,9 @@ def kmer_freq_sim_bin_worker(bin_name1, bin_name2, bin_ctg_dict, work_dir):
         seq_len = kmer_freq.get_seq_len()
         bin_1_len += seq_len
         ben_1_gc += gc_count
+    if bin_1_len == 0:
+        print (f"Warning: Bin {bin_name1} has no contigs with sequences.")
+        sys.exit(1)
     bin_1_gc = ben_1_gc / bin_1_len
     
     for contig_name2 in bin_ctg_dict[bin_name2]:

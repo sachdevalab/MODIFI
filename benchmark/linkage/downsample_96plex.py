@@ -91,24 +91,24 @@ def meta_subsample2(out_dir, raw_96, soil):
         prefix = f"m64004_210929_143746.raw.p{p}"
         out_bam = os.path.join(f"/home/shuaiw/borg/paper/linkage/meta/{prefix}.p{p}.bam")
         merge_bam = os.path.join(out_dir, f"{prefix}.infant.merge.bam")
-        cmd = f"""
-            # samtools view -s 42.{p} -b {raw_96} > {out_bam}
-            # /home/shuaiw//smrtlink/pbindex {out_bam}
-            # samtools index {out_bam}
-            samtools merge -f {merge_bam} {out_bam} {soil}
-            /home/shuaiw//smrtlink/pbindex {merge_bam}
-            samtools index {merge_bam}
-        """
-        os.system(cmd)
-        
-        # alignment = f"""
-        #     ~/smrtlink/pbmm2 align --preset CCS -j $SLURM_CPUS_ON_NODE /home/shuaiw/borg/contigs/soil_zymo.fa {merge_bam} {prefix}.align.raw.bam
-        #     samtools sort -T {prefix} -@ $SLURM_CPUS_ON_NODE -o {prefix}.align.bam {prefix}.align.raw.bam
-        #     rm {prefix}.align.raw.bam
-        #     samtools index {prefix}.align.bam
-        #     /home/shuaiw//smrtlink/pbindex {prefix}.align.bam
+        # cmd = f"""
+        #     # samtools view -s 42.{p} -b {raw_96} > {out_bam}
+        #     # /home/shuaiw//smrtlink/pbindex {out_bam}
+        #     # samtools index {out_bam}
+        #     samtools merge -f {merge_bam} {out_bam} {soil}
+        #     /home/shuaiw//smrtlink/pbindex {merge_bam}
+        #     samtools index {merge_bam}
         # """
-        # print (alignment, file = f)
+        # os.system(cmd)
+        prefix = f"/home/shuaiw/borg/paper/linkage/meta_infant_14/m64004_210929_143746.p{p}"
+        alignment = f"""
+            ~/smrtlink/pbmm2 align --preset CCS -j $SLURM_CPUS_ON_NODE /home/shuaiw/borg/paper/linkage/meta_infant_14/96plex_infant.fa {merge_bam} {prefix}.align.raw.bam
+            samtools sort -T {prefix} -@ $SLURM_CPUS_ON_NODE -o {prefix}.align.bam {prefix}.align.raw.bam
+            rm {prefix}.align.raw.bam
+            samtools index {prefix}.align.bam
+            /home/shuaiw//smrtlink/pbindex {prefix}.align.bam
+        """
+        print (alignment, file = f)
     #     align_bam = f"/home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p{p}.align.bam"
     #     prefix = f"/home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p{p}"
     #     run = f"""
@@ -128,7 +128,7 @@ def meta_subsample2(out_dir, raw_96, soil):
     #         --job-name=p{p}
     #     """
     #     print (run, file = f)
-    # f.close()
+    f.close()
 
 # soil = "/home/shuaiw/borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam"
 # raw_96 = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam"
