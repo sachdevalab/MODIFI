@@ -101,33 +101,33 @@ def meta_subsample2(out_dir, raw_96, soil):
         # """
         # os.system(cmd)
         prefix = f"/home/shuaiw/borg/paper/linkage/meta_infant_14/m64004_210929_143746.p{p}"
-        alignment = f"""
-            ~/smrtlink/pbmm2 align --preset CCS -j $SLURM_CPUS_ON_NODE /home/shuaiw/borg/paper/linkage/meta_infant_14/96plex_infant.fa {merge_bam} {prefix}.align.raw.bam
-            samtools sort -T {prefix} -@ $SLURM_CPUS_ON_NODE -o {prefix}.align.bam {prefix}.align.raw.bam
-            rm {prefix}.align.raw.bam
-            samtools index {prefix}.align.bam
-            /home/shuaiw//smrtlink/pbindex {prefix}.align.bam
+        # alignment = f"""
+        #     ~/smrtlink/pbmm2 align --preset CCS -j $SLURM_CPUS_ON_NODE /home/shuaiw/borg/paper/linkage/meta_infant_14/96plex_infant.fa {merge_bam} {prefix}.align.raw.bam
+        #     samtools sort -T {prefix} -@ $SLURM_CPUS_ON_NODE -o {prefix}.align.bam {prefix}.align.raw.bam
+        #     rm {prefix}.align.raw.bam
+        #     samtools index {prefix}.align.bam
+        #     /home/shuaiw//smrtlink/pbindex {prefix}.align.bam
+        # """
+        # print (alignment, file = f)
+        align_bam = f"/home/shuaiw/borg/paper/linkage/meta_infant_14/m64004_210929_143746.p{p}.align.bam"
+        prefix = f"/home/shuaiw/borg/paper/linkage/meta_infant_14/m64004_210929_143746.p{p}"
+        run = f"""
+            sbatch  --partition standard --wrap "/usr/bin/time -v -o {prefix}.run.time python /home/shuaiw/Methy/main.py \\
+            --work_dir {prefix}/ \\
+            --whole_bam {align_bam} \\
+            --whole_ref /home/shuaiw/borg/paper/linkage/meta_infant_14/96plex_infant.fa \\
+            --read_type hifi \\
+            --min_len 1000 \\
+            --min_cov 1 \\
+            --min_frac 0.4 \\
+            --min_score 30 \\
+            --min_sites 100 \\
+            --min_iden 0.97 \\
+            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \\
+            --threads 64 " \\
+            --job-name=p{p}
         """
-        print (alignment, file = f)
-    #     align_bam = f"/home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p{p}.align.bam"
-    #     prefix = f"/home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p{p}"
-    #     run = f"""
-    #         sbatch  --partition standard --wrap "/usr/bin/time -v -o {prefix}.run.time python /home/shuaiw/Methy/main.py \\
-    #         --work_dir {prefix}/ \\
-    #         --whole_bam {align_bam} \\
-    #         --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \\
-    #         --read_type hifi \\
-    #         --min_len 1000 \\
-    #         --min_cov 1 \\
-    #         --min_frac 0.4 \\
-    #         --min_score 30 \\
-    #         --min_sites 100 \\
-    #         --min_iden 0.97 \\
-    #         --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \\
-    #         --threads 64 --run_steps host" \\
-    #         --job-name=p{p}
-    #     """
-    #     print (run, file = f)
+        print (run, file = f)
     f.close()
 
 # soil = "/home/shuaiw/borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam"

@@ -496,9 +496,10 @@ def cal_AUC_meta():
         "50": 14.90,
         "100": 25.94
     }
-    for p in ["05", "10", "20", "30", "50"]:
+    for p in ["05", "10", "20", "30", "50", "100"]:
         prefix = f"m64004_210929_143746.p{p}"
-        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta2", prefix, "hosts")
+        # result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta2", prefix, "hosts")
+        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta_infant_14", prefix, "hosts")
         # if p == "100":
         #     result_dir = "/home/shuaiw/borg/bench/soil_zymo/run4/hosts/"
         frac = frac_dict[p]
@@ -543,16 +544,12 @@ def assess_motif(dir):
     precision_motif = recall_motif / len(motif_list)
     print (precision_motif, "motif precision", recall_motif, "recall_motif", len(motif_list), "detected motif", len(true_motif_list), "true motifs")
 
-
-
-
 def output_host_linkage(plasmid_host_dict, contig_length_dict, plasmid_anno_file):
     f = open(plasmid_anno_file, 'w')
     for plasmid in plasmid_host_dict:
         plasmid_length = contig_length_dict[plasmid]
         print (plasmid, plasmid_length, ",".join(plasmid_host_dict[plasmid][2]), sep="\t", file = f)
     f.close()
-
 
 def check_host(host_list, cluster, plasmid):
     has_host_contig = False
@@ -585,8 +582,8 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-cal_AUC_pure()
-# cal_AUC_meta()
+# cal_AUC_pure()
+cal_AUC_meta()
 
 
 

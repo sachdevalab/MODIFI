@@ -176,7 +176,7 @@ def kmer_freq_sim_bin_worker(bin_name1, bin_name2, bin_ctg_dict, work_dir):
         bin_1_len += seq_len
         ben_1_gc += gc_count
     if bin_1_len == 0:
-        print (f"Warning: Bin {bin_name1} has no contigs with sequences.")
+        print (f"Warning: Bin {bin_name1} has no contigs with sequences.", bin_ctg_dict[bin_name1])
         sys.exit(1)
     bin_1_gc = ben_1_gc / bin_1_len
     

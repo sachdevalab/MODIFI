@@ -484,6 +484,8 @@ def sort_top_by_cos_sim(data, bin_ctg_dict, work_dir):
     if len(top_data) > 1 and len(top_data) < 4 and top_final_score > 0:
         ## calculate cos_sim for these hosts
         for i, row in top_data.iterrows():
+            if row['MGE'] not in bin_ctg_dict:
+                bin_ctg_dict[row['MGE']] = [row['MGE']]
             bin_name1, bin_1_gc, bin_2_gc, cos_sim = kmer_freq_sim_bin_worker(
                 row['MGE'], row['host'], bin_ctg_dict, work_dir
             )

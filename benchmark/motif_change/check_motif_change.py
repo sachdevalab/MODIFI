@@ -410,6 +410,14 @@ def given_species_drep(all_dir, members, seq_dir, cluster):
     for motif in all_motif_set:
         motif_name, motif_pos = motif.split("_")
         motif_list.append([motif_name, int(motif_pos)])
+    if cluster == "180_4":
+        motif_list = [['CRTANNNNNNRTG', 4], ['ATGCAT', 5], ['CAANNNNNNNTAYG', 3], \
+            ['TCAYNNNNNNTTG', 3], ['CAANNNNNNRTGA', 3], \
+                ['CRTANNNNNNNTTG', 4], ['CAYNNNNNNTAYG', 2]]
+        all_contig_list += [["infant_14", "infant_14_230_C"], ["infant_14", "infant_14_88_C"],\
+                            ["infant_2", "infant_2_267_C"], ["infant_2", "infant_2_60_C"],\
+                            ["infant_3", "infant_3_289_C"], ["infant_3", "infant_3_287_C"],\
+                            ["infant_4", "infant_4_271_C"], ["infant_4", "infant_4_61_C"]]
     print ("motif_list", motif_list)
     print ("all_contig_list", all_contig_list)
     if len(all_contig_list) > 1:
@@ -448,6 +456,8 @@ if __name__ == "__main__":
             count += 1
     print (count, f"clusters have more than {cutoff} members")
     for cluster, members in drep_clu_dict.items():
+        if cluster != "180_4":
+            continue
         if len(members) > cutoff:
             print ("cluster", cluster, members)
             given_species_drep(all_dir, members, seq_dir, cluster)
