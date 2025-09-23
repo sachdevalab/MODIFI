@@ -8,10 +8,11 @@ import plotly.graph_objects as go
 from collections import defaultdict
 
 
-def get_edge(host_sum_file, MGE_type_dict, bin2anno_dict, gc_data, environment, prefix, host_clu_dict, mge_clu_dict):
+def get_edge(cluster_anno_dict, host_sum_file, MGE_type_dict, bin2anno_dict, bin2species_dict, gc_data, environment, prefix, host_clu_dict, mge_clu_dict):
     """
     Get the edge data from the host summary file.
     """
+    
     # Read the host summary file
     host_sum = pd.read_csv(host_sum_file)
     
@@ -43,12 +44,14 @@ def get_edge(host_sum_file, MGE_type_dict, bin2anno_dict, gc_data, environment, 
         if row['host'] in bin2anno_dict:
             G.add_node(host_clu, label=row['host'], type=bin2anno_dict[row['host']])
             # G.add_node(row['host'], label=row['host'], type=bin2anno_dict[row['host']])
+            if bin2species_dict[row['host']] != 'Unclassified' and bin2species_dict[row['host']] != 's__':
+                cluster_anno_dict[host_clu] = bin2species_dict[row['host']]
             both_nodes += 1
         if both_nodes == 2:
             G.add_edge(mge_clu_dict[row['MGE']], host_clu, weight=row['final_score'], type='share')
             # G.add_edge(row['MGE'], row['host'], weight=row['final_score'], type='share')
-
-    return G, gc_data
+    # print (cluster_anno_dict)
+    return G, gc_data, cluster_anno_dict
     
 def plot_network(G):
     import matplotlib.patches as mpatches
@@ -287,16 +290,20 @@ def read_gtdb(gatk):
     """
     gtdb_df = pd.read_csv(gatk, sep='\t')
     bin2anno_dict = {}
+    bin2species_dict = {}
     for index, row in gtdb_df.iterrows():
         if row['user_genome'] != 'user_genome':
             anno = row['classification']
             # print (f"anno: {anno}")
             if re.search('Unclassified', anno):
                 phylum = "Unclassified"
+                species = "Unclassified"
             else:
                 phylum = anno.split(';')[1].strip()
+                species = anno.split(';')[-1].strip()
+            bin2species_dict[row['user_genome']] = species
             bin2anno_dict[row['user_genome']] = phylum
-    return bin2anno_dict
+    return bin2anno_dict, bin2species_dict
 
 def read_metadata(meta_file):
     sample_env_dict = {}
@@ -384,6 +391,7 @@ if __name__ == "__main__":
     ## the merged graph 
     whole_G = nx.Graph()
     gc_data = []
+    cluster_anno_dict = {}
     # for prefix in ["96plex", "infant_1", "SRR23446539_sugarcane","ERR12723528_mice"]:
     all_dir = "/home/shuaiw/borg/paper/run2/"
     for my_dir in os.listdir(all_dir):
@@ -425,37 +433,42 @@ if __name__ == "__main__":
             os.system(
                 f"cp {gtdk_bac_file} {gtdk_all_file}"
             )
-        bin2anno_dict = read_gtdb(gtdk_all_file)
+        bin2anno_dict, bin2species_dict = read_gtdb(gtdk_all_file)
         # print (bin2anno_dict)
         MGE_type_dict = get_MGE_type(mge_file)
-        G, gc_data = get_edge(host_summary_file, MGE_type_dict, bin2anno_dict, gc_data, sample_env_dict[prefix], prefix, host_clu_dict, mge_clu_dict)
+        G, gc_data, cluster_anno_dict = get_edge(cluster_anno_dict, host_summary_file, MGE_type_dict, bin2anno_dict, bin2species_dict, gc_data, sample_env_dict[prefix], prefix, host_clu_dict, mge_clu_dict)
         whole_G = nx.compose(whole_G, G)
         # break
     ## print the node with top 10 degree
     top_nodes = sorted(whole_G.degree, key=lambda x: x[1], reverse=True)[:10]
     print("Top 10 nodes by degree:")
     for node, degree in top_nodes:
-        print(f"{node}: {degree}")
+        node_type = whole_G.nodes[node].get('type', 'Unknown')
+        if node_type in ['virus', 'plasmid', 'novel']:
+            print(f"{node}: {degree} (MGE type: {node_type})")
+        else:
+            species = cluster_anno_dict.get(node, 'Unknown')
+            print(f"{node}: {degree} (Host annotation: {species})")
+
+    # ## print the MGE with degree > 1
+    # print("MGEs with degree > 1:")
+    # for node, degree in whole_G.degree:
+    #     if degree > 1 and whole_G.nodes[node]['type'] in ['virus']:
+    #         print(f"virus {node} ({whole_G.nodes[node]['type']}): {degree}")
+    #     # if degree > 1 and whole_G.nodes[node]['type'] in ['plasmid']:
+    #     #     print(f"plasmid {node} ({whole_G.nodes[node]['type']}): {degree}")
+    #     # if degree > 1 and whole_G.nodes[node]['type'] in ['novel']:
+    #     #     print(f"novel {node} ({whole_G.nodes[node]['type']}): {degree}")
     
-    ## print the MGE with degree > 1
-    print("MGEs with degree > 1:")
-    for node, degree in whole_G.degree:
-        if degree > 1 and whole_G.nodes[node]['type'] in ['virus']:
-            print(f"virus {node} ({whole_G.nodes[node]['type']}): {degree}")
-        # if degree > 1 and whole_G.nodes[node]['type'] in ['plasmid']:
-        #     print(f"plasmid {node} ({whole_G.nodes[node]['type']}): {degree}")
-        # if degree > 1 and whole_G.nodes[node]['type'] in ['novel']:
-        #     print(f"novel {node} ({whole_G.nodes[node]['type']}): {degree}")
-    
-            ### print the linked nodes to infant_15_839_L
-            target_node = node #"cow_bioreactor_2_2972_L"
-            if target_node in whole_G:
-                neighbors = list(whole_G.neighbors(target_node))
-                print(f"Neighbors of {target_node}: {neighbors}")
-            print ("#########################")
+    #         ### print the linked nodes to infant_15_839_L
+    #         target_node = node #"cow_bioreactor_2_2972_L"
+    #         if target_node in whole_G:
+    #             neighbors = list(whole_G.neighbors(target_node))
+    #             print(f"Neighbors of {target_node}: {neighbors}")
+    #         print ("#########################")
 
 
-    plot_network2(whole_G)
+    # plot_network2(whole_G)
 
-    gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
-    plot_gc(gc_df)
+    # gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
+    # plot_gc(gc_df)
