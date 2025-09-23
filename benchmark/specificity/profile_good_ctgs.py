@@ -225,8 +225,6 @@ def read_drep_cluster(drep_clu_file, best_ctgs):
     print ("multiple_strain_ctg", multiple_strain_ctg)
     return multiple_strain_ctg, ctg_phylum, len(clu_set)
 
-
-
 def jaccard():
     # drep_clu_file = "/home/shuaiw/methylation/data/borg/contigs/dRep/dRep_out/data_tables/Cdb.csv"
     # profile_file = "/home/shuaiw/borg/bench/soil/run1/motif_profile.csv"
@@ -365,7 +363,6 @@ def jaccard_batch():
     plt.savefig("../../tmp/results/jaccard_similarity_batch.pdf", dpi=300, bbox_inches='tight')
     plt.clf()   
     
-
 def get_phylum(best_ctgs):
     import re
     bin_phylum = {}
@@ -560,9 +557,13 @@ def read_host(host_sum_file):
     host_sum = pd.read_csv(host_sum_file)
     linkage_num = 0
     for index, row in host_sum.iterrows():
-        if row["pvalue"] >= 0.05:
+        # if row["pvalue"] >= 0.05:
+        #     continue
+        # if row['final_score'] <= 0.6:
+        #     continue
+        if row["specificity"] >= 0.01:
             continue
-        if row['final_score'] <= 0.6:
+        if row['final_score'] <= 0.5:
             continue
         linkage_num += 1
     return linkage_num
@@ -604,7 +605,6 @@ def count_modified_base(work_dir, prefix, best_ctgs, length_dict, env, score_cut
         base_data.append([prefix, ctg, length, modified_num, modified_motif_num, modified_ratio, modified_motif_ratio, motif_ratio, env])
     return base_data
 
-
 def count_all_motif_num():
     all_data = []
     all_base_data = []
@@ -612,6 +612,8 @@ def count_all_motif_num():
     all_dir = "/home/shuaiw/borg/paper/run2/"
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
+        if prefix == "ocean_1":
+            continue
         print (f"Processing {prefix}...")
         work_dir = f"{all_dir}/{prefix}/{prefix}_methylation3"
         fai = f"{all_dir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
@@ -620,8 +622,6 @@ def count_all_motif_num():
         depth_file = os.path.join(work_dir, "mean_depth.csv")
         host_sum_file = os.path.join(work_dir, "host_summary.csv")
         orphan_file = os.path.join(work_dir, "regulatory_motif_enrichment.csv")
-
-        
 
         if not os.path.exists(fai):
             print(f"Skipping {prefix} as fai file does not exist.")
@@ -661,7 +661,6 @@ def count_all_motif_num():
     df_all_base_data.to_csv("../../tmp/results2/base_count_all_samples.csv", index=False)
     df_all_data.to_csv("../../tmp/results2/motif_num_all_samples.csv", index=False)
     
-
 def get_stastics():
     df_genome_data = pd.read_csv("../../tmp/results2/genome_data_all_samples.csv")
     df_all_base_data = pd.read_csv("../../tmp/results2/base_count_all_samples.csv")
@@ -724,7 +723,6 @@ def get_stastics():
         print (f"Environment: {env}, Total contigs: {total_ctgs_env}, Average modified_ratio: {avg_modified_ratio_env:.4f}, Average modified_motif_ratio: {avg_modified_motif_ratio_env:.4f}, Average motif_ratio: {avg_motif_ratio_env:.4f}")
     print ("*************************")
 
-
 def plot_motif(df_all_data):
     ### sort by sample
     df_all_data = df_all_data.sort_values(by='sample')
@@ -770,8 +768,6 @@ def plot_base(df_all_base_data):
     plt.savefig("../../tmp/results2/base_count_all_samples.png", dpi=300, bbox_inches='tight')
     ### save the dataframe
     
-
-
 def plot_meta(df_genome_data):
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(16, 12))
     df_genome_data = df_genome_data.sort_values(by='sample')
@@ -801,7 +797,6 @@ def plot_meta(df_genome_data):
     ax3.legend_.remove()
     plt.tight_layout()
     plt.savefig("../../tmp/results2/meta_all_samples.png", dpi=300, bbox_inches='tight')  
-
 
 def plot_genome(df_genome_data):
     ### plot bar plot for genome size and N50 in separate subplots, using log scale for y-axis
@@ -877,7 +872,7 @@ if __name__ == "__main__":
     meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
     sample_env_dict = read_metadata(meta_file)
     count_all_motif_num()
-    get_stastics()
+    # get_stastics()
     # jaccard()
     # jaccard_batch()
 

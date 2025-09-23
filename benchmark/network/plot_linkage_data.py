@@ -18,9 +18,13 @@ def get_edge(host_sum_file, MGE_type_dict, bin2anno_dict, gc_data, environment, 
     G = nx.Graph()
     ## get node file
     for index, row in host_sum.iterrows():
-        if row["pvalue"] >= 0.05:
+        # if row["pvalue"] >= 0.05:
+        #     continue
+        # if row['final_score'] <= 0.6:
+        #     continue
+        if row["specificity"] >= 0.01:
             continue
-        if row['final_score'] <= 0.6:
+        if row['final_score'] <= 0.5:
             continue
         gc_data.append([row['MGE_gc'], row['host_gc'], row['cos_sim'], row['MGE_cov'], row['host_cov'], environment, prefix])
         both_nodes = 0
@@ -341,7 +345,7 @@ def plot_gc(df):
     axs[2].legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=3, fontsize=9)
 
     plt.tight_layout()
-    plt.savefig('../../tmp/results/mge_host_gc_content.pdf')
+    plt.savefig('../../tmp/results2/mge_host_gc_content.pdf')
     plt.close()
 
 def read_drep_cluster(drep_clu_file):
@@ -384,6 +388,8 @@ if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/run2/"
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
+        if prefix in ["ocean_1", "ERR5621427_sludge", "ERR5621429_sludge", "ERR5621430_sludge"]:
+            continue
         # print (f"Processing {prefix}...")
         # work_dir = f"{all_dir}/{prefix}/{prefix}_methylation2"
 
@@ -449,7 +455,7 @@ if __name__ == "__main__":
             print ("#########################")
 
 
-    # plot_network2(whole_G)
+    plot_network2(whole_G)
 
-    # gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
-    # plot_gc(gc_df)
+    gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
+    plot_gc(gc_df)
