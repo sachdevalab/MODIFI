@@ -35,7 +35,8 @@ from analyze_RM import RM_main
 DEPTH_THRESHOLD = 5
 MAX_GAP = 10
 
-motif_maker_bin = "/home/shuaiw/smrtlink/motifMaker"
+# motif_maker_bin = "/home/shuaiw/smrtlink/motifMaker"
+motif_maker_bin = "/home/shuaiw/smrtlink/pbmotifmaker"
 ## pbindex
 
 logger = logging.getLogger(__name__)
@@ -303,7 +304,7 @@ def motif_worker(ctg_name, seg_ref, seg_gff, motif, min_score, each_thread=1):
 
     # mean_depth = process_depth_and_gff(depth_file, fasta, gff, seg_ref, seg_gff,
     #                     depth_threshold=DEPTH_THRESHOLD, max_gap=MAX_GAP)
-    cmd = [
+    cmd = [   ## old version
         motif_maker_bin,
         "find",
         "-f", seg_ref,
@@ -311,6 +312,16 @@ def motif_worker(ctg_name, seg_ref, seg_gff, motif, min_score, each_thread=1):
         "-o", motif,
         "-j", str(each_thread),
         "-m", str(min_score),
+    ]
+
+    cmd = [   ## new version 1.2.0
+        motif_maker_bin,
+        "find",
+        seg_ref,
+        seg_gff,
+        motif,
+        "-j", str(each_thread),
+        "--min-score", str(min_score),
     ]
     # logger.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
