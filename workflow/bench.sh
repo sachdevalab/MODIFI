@@ -1692,7 +1692,21 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --min_score 30 \
   --min_sites 10 \
   --mge_file /home/shuaiw/borg/paper/isolation/bacteria/ERR9843287/all_mge.tsv \
-  --threads 2 --run_steps motif" \
+  --threads 20 --run_steps motif merge profile host" \
+  --job-name=bioreactor_1_test
+
+sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/isolation/bacteria/ERR9843299/ERR9843299_methylation \
+  --whole_bam xx \
+  --whole_ref /home/shuaiw/borg/paper/isolation/bacteria/ERR9843299/ERR9843299.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 10 \
+  --min_frac 0.1 \
+  --min_score 30 \
+  --min_sites 10 \
+  --mge_file /home/shuaiw/borg/paper/isolation/bacteria/ERR9843299/all_mge.tsv \
+  --threads 20 --run_steps motif merge profile host" \
   --job-name=bioreactor_1_test
 
 

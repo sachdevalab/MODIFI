@@ -48,7 +48,27 @@ for subfolder in os.listdir(folder):
 
     ccs_bam = os.path.join(ccs_bam_dir, f"{sra}.ccs.bam")
     # cmd = f'sbatch  --partition standard --job-name={sra} --wrap "/home/shuaiw/smrtlink/ccs {bam} {ccs_bam} --hifi-kinetics --min-rq 0.99 --min-passes 3  --num-threads 64" '
-    cmd =  f"""sbatch  --partition standard --wrap "snakemake -s isolation.smk \\
+    # cmd =  f"""sbatch  --partition standard --wrap "snakemake -s isolation.smk \\
+    #             --config hifi_bam={ccs_bam} \\
+    #             prefix={sra} \\
+    #             work_dir=/home/shuaiw/borg/paper/isolation/bacteria/{sra} \\
+    #             -j 64"  --job-name={sra[3:]}"""
+    # cmd = f"""
+    #     sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \\
+    #     --work_dir /home/shuaiw/borg/paper/isolation/bacteria/{sra}/{sra}_methylation \\
+    #     --whole_bam {ccs_bam} \\
+    #     --whole_ref /home/shuaiw/borg/paper/isolation/bacteria/{sra}/{sra}.hifiasm.p_ctg.rename.fa \\
+    #     --read_type hifi \\
+    #     --min_len 1000 \\
+    #     --min_cov 10 \\
+    #     --min_frac 0.1 \\
+    #     --min_score 30 \\
+    #     --min_sites 10 \\
+    #     --mge_file /home/shuaiw/borg/paper/isolation/bacteria/{sra}/all_mge.tsv \\
+    #     --threads 30 --run_steps motif merge profile host" \\
+    #     --job-name={sra[3:]}
+    # """
+    cmd =  f"""sbatch  --partition standard --wrap "snakemake -s gtdb_isolation.smk \\
                 --config hifi_bam={ccs_bam} \\
                 prefix={sra} \\
                 work_dir=/home/shuaiw/borg/paper/isolation/bacteria/{sra} \\
