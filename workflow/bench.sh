@@ -1710,3 +1710,29 @@ sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \
   --job-name=bioreactor_1_test
 
 
+sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/time/soil_subreads.time python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/time/soil_subreads \
+  --whole_bam /home/shuaiw/methylation/data/borg/all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+  --read_type subreads \
+  --min_len 5000 \
+  --min_score 30 \
+  --run_steps split load control compare motif \
+  --threads 64" \
+  --job-name=subreads
+
+
+sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/time/soil_hifi.time  python /home/shuaiw/Methy/main.py \
+  --work_dir /home/shuaiw/borg/paper/time/soil_hifi \
+  --whole_bam /home/shuaiw/methylation/data/borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+  --read_type hifi \
+  --min_len 5000 \
+  --min_score 30 \
+  --run_steps split load control compare motif \
+  --threads 64" \
+  --job-name=hifi
+
+
+
+

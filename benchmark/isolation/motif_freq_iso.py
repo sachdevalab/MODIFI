@@ -319,7 +319,7 @@ def plot_motif_freq(all_motif_freq_df):
 def analyze_link(all_link_df):
     ## keep these with depth > 10
     # all_link_df = all_link_df[all_link_df['MGE_cov'] > 10]
-    # all_link_df = all_link_df[all_link_df['MGE_len'] > 10000]
+    all_link_df = all_link_df[all_link_df['MGE_len'] > 10000]
     ## plot the distribution of final_score in all_link_df
     plt.figure(figsize=(10, 6))
     sns.histplot(all_link_df['final_score'], bins=50, kde=True, color='skyblue')
@@ -374,8 +374,9 @@ def analyze_link(all_link_df):
     plt.tight_layout()
     plt.savefig("../../tmp/results2/link_features.pdf", dpi=300, bbox_inches="tight")
     plt.close()
-    # for i, row in all_link_df.iterrows():
-    #     print (row["MGE"], row["host"], row["MGE_gc"], row["host_gc"])
+    for i, row in all_link_df.iterrows():
+        if row["cos_sim"] < 0.5:
+            print (row["MGE"], row["host"], row["MGE_gc"], row["host_gc"])
 
 
 if __name__ == "__main__":

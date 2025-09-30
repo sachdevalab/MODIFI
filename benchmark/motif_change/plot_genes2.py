@@ -5,24 +5,24 @@ from matplotlib.patches import FancyArrow
 
 prefix_1 = "infant_2"
 genes_1 = [
-    {"name": "RE", "start": 1001, "end": 3988, "strand": "+"},
-    {"name": "MT", "start": 4011, "end": 5603, "strand": "+"},
-    {"name": "TRD1", "start": 5600, "end": 6787, "strand": "+"},
-    {"name": "TRD2", "start": 7838, "end": 8971, "strand": "-"},
+    {"name": "RE", "start": 2889998, "end": 2892985, "strand": "+"},
+    {"name": "MT", "start": 2893008, "end": 2894600, "strand": "+"},
+    {"name": "S1", "start": 2894597, "end": 2895784, "strand": "+"},
+    {"name": "S2", "start": 2896835, "end": 2897902, "strand": "-"},
 ]
 
 prefix_2 = "infant_14"
 genes_2 = [
-    {"name": "RE", "start": 1001, "end": 3988, "strand": "+"},
-    {"name": "MT", "start": 4011, "end": 5603, "strand": "+"},
-    {"name": "TRD2'", "start": 5600, "end": 6763, "strand": "+"},
-    {"name": "TRD1'", "start": 7814, "end": 8971, "strand": "-"},
+    {"name": "RE", "start": 2889998, "end": 2892985, "strand": "+"},
+    {"name": "MT", "start": 2893008, "end": 2894600, "strand": "+"},
+    {"name": "S1''", "start": 2894597, "end": 2895760, "strand": "+"},
+    {"name": "S2''", "start": 2896811, "end": 2897971, "strand": "-"},
 ]
 
 
 # Highlight inversion region
-inversion_start = 5671
-inversion_end = 8929
+inversion_start = 2894654
+inversion_end = 2897941
 
 
 # Create figure with vertical layout
