@@ -113,8 +113,8 @@ def plot_network(G):
     if len(sorted_host_types) > 10:
         legend_elements.append(mpatches.Patch(color='lightgray', label=f'... +{len(sorted_host_types)-10} more'))
     
-    plt.legend(handles=legend_elements, bbox_to_anchor=(1.05, 1), loc='upper left', 
-              borderaxespad=0., fontsize=10)
+    plt.legend(handles=legend_elements, bbox_to_anchor=(0.5, -0.05), loc='upper center', 
+              borderaxespad=0., fontsize=10, ncol=3)
     
     plt.axis('off')
     plt.title("Network of Host-MGE Interactions", fontsize=16, pad=20)
@@ -126,7 +126,7 @@ def plot_network2(G):
     import matplotlib.patches as mpatches
     import random
     
-    plt.figure(1, figsize=(12, 10))
+    plt.figure(1, figsize=(10, 12))
     
     # layout graphs with positions using graphviz neato
     pos = nx.nx_agraph.graphviz_layout(G, prog="neato")
@@ -186,11 +186,11 @@ def plot_network2(G):
             legend_elements.append(mpatches.Patch(color='lightgray', label=f'... +{len(sorted_host_types)-10} more host types'))
     
     if legend_elements:
-        plt.legend(handles=legend_elements, bbox_to_anchor=(1.05, 1), loc='upper left', 
-                  borderaxespad=0., fontsize=10)
+        plt.legend(handles=legend_elements, bbox_to_anchor=(0.5, -0.05), loc='upper center', 
+                  borderaxespad=0., fontsize=10, ncol=3)
     
-    plt.title(f"Host-MGE Network\nNodes: {G.number_of_nodes()}, Edges: {G.number_of_edges()}", 
-              fontsize=14, pad=20)
+    # plt.title(f"Host-MGE Network\nNodes: {G.number_of_nodes()}, Edges: {G.number_of_edges()}", 
+    #           fontsize=14, pad=20)
     plt.axis('off')
     plt.tight_layout()
     plt.savefig("../../tmp/results2/network_test_plot2.png", dpi=300, bbox_inches='tight')
@@ -325,7 +325,7 @@ def plot_gc(df):
     import seaborn as sns
     import matplotlib.pyplot as plt
     sns.set_palette("Set2")
-    fig, axs = plt.subplots(3, 1, figsize=(6, 19))
+    fig, axs = plt.subplots(1, 3, figsize=(14, 6))
     sns.scatterplot(data=df, x='MGE_gc', y='host_gc', ax=axs[0], hue='environment')
     # Set same limits for x and y axes
     min_gc = min(df['MGE_gc'].min(), df['host_gc'].min())
@@ -334,25 +334,23 @@ def plot_gc(df):
     axs[0].set_ylim(min_gc, max_gc)
     axs[0].set_xlabel('MGE GC content')
     axs[0].set_ylabel('Host GC content')
-    axs[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=3, fontsize=9)
+    axs[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.2), ncol=3, fontsize=9)
 
-    sns.scatterplot(data=df, x='MGE_cov', y='host_cov', ax=axs[1], hue='environment')
+    sns.scatterplot(data=df, x='MGE_cov', y='host_cov', ax=axs[1], hue='environment', legend=False)
     axs[1].set_xscale('log')
     axs[1].set_yscale('log')
     # axs[1].set_title('MGE Coverage vs Host Coverage')
     axs[1].set_xlabel('MGE Coverage (log scale)')
     axs[1].set_ylabel('Host Coverage (log scale)')
-    axs[1].legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=3, fontsize=9)
 
-    sns.boxplot(data=df, x='sample', y='cos_sim', ax=axs[2], hue='environment')
+    sns.boxplot(data=df, x='sample', y='cos_sim', ax=axs[2], hue='environment', legend=False)
     # axs[2].set_title('Cosine Similarity Distribution by Environment')
-    axs[2].set_xlabel('Environment')
+    axs[2].set_xlabel('')
     axs[2].set_ylabel('Cosine Similarity')
-    axs[2].tick_params(axis='x', rotation=90)
-    axs[2].legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=3, fontsize=9)
+    axs[2].tick_params(axis='x', rotation=90, labelsize=7)
 
     plt.tight_layout()
-    plt.savefig('../../tmp/results2/mge_host_gc_content.pdf')
+    plt.savefig('../../tmp/results2/mge_host_gc_content.png', dpi=300)
     plt.close()
 
 def read_drep_cluster(drep_clu_file):
@@ -377,6 +375,28 @@ def read_mge_cluster(mge_clu_file):
             mge_clu_dict[mge] = cluster
     return mge_clu_dict
 
+def count_cross_phylum(whole_G):
+    ## analyze the node in ['virus', 'plasmid', 'novel'], count how many of them are linked to multiple phyla for each of them
+    ## also count the number of nodes in each type in  these three types
+    ## also count the number of nodes number of nodes in each type in these three types
+    cross_phylum_count = {'virus': 0, 'plasmid': 0, 'novel': 0}
+    type_count = {'virus': 0, 'plasmid': 0, 'novel': 0}
+    for node, degree in whole_G.degree:
+        if whole_G.nodes[node]['type'] in ['virus', 'plasmid', 'novel']:
+            type_count[whole_G.nodes[node]['type']] += 1
+            neighbors = list(whole_G.neighbors(node))
+            phyla = set()
+            for neighbor in neighbors:
+                if whole_G.nodes[neighbor]['type'] not in ['virus', 'plasmid', 'novel']:
+                    phyla.add(whole_G.nodes[neighbor]['type'])
+            if len(phyla) > 1:
+                print (f"{node} ({whole_G.nodes[node]['type']}) is linked to multiple phyla: {phyla}")
+                cross_phylum_count[whole_G.nodes[node]['type']] += 1
+    print("Cross-phylum linked MGEs:")
+
+    print(cross_phylum_count)
+    print("Number of nodes in each type:")
+    print(type_count)
 
 if __name__ == "__main__":  
     meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
@@ -396,7 +416,9 @@ if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/run2/"
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
-        if prefix in ["ocean_1", "ERR5621427_sludge", "ERR5621429_sludge", "ERR5621430_sludge"]:
+        # if prefix in ["ocean_1", "ERR5621427_sludge", "ERR5621429_sludge", "ERR5621430_sludge"]:
+        #     continue
+        if prefix in [ "ERR5621427_sludge", "ERR5621429_sludge", "ERR5621430_sludge"]:
             continue
         # print (f"Processing {prefix}...")
         # work_dir = f"{all_dir}/{prefix}/{prefix}_methylation2"
@@ -449,26 +471,28 @@ if __name__ == "__main__":
         else:
             species = cluster_anno_dict.get(node, 'Unknown')
             print(f"{node}: {degree} (Host annotation: {species})")
-
+    count_cross_phylum(whole_G)
     # ## print the MGE with degree > 1
     # print("MGEs with degree > 1:")
-    # for node, degree in whole_G.degree:
-    #     if degree > 1 and whole_G.nodes[node]['type'] in ['virus']:
-    #         print(f"virus {node} ({whole_G.nodes[node]['type']}): {degree}")
-    #     # if degree > 1 and whole_G.nodes[node]['type'] in ['plasmid']:
-    #     #     print(f"plasmid {node} ({whole_G.nodes[node]['type']}): {degree}")
-    #     # if degree > 1 and whole_G.nodes[node]['type'] in ['novel']:
-    #     #     print(f"novel {node} ({whole_G.nodes[node]['type']}): {degree}")
+    for node, degree in whole_G.degree:
+        if degree > 1 and whole_G.nodes[node]['type'] in ['virus']:
+            print(f"virus {node} ({whole_G.nodes[node]['type']}): {degree}")
+        # if degree > 1 and whole_G.nodes[node]['type'] in ['plasmid']:
+        #     print(f"plasmid {node} ({whole_G.nodes[node]['type']}): {degree}")
+        # if degree > 1 and whole_G.nodes[node]['type'] in ['novel']:
+        #     print(f"novel {node} ({whole_G.nodes[node]['type']}): {degree}")
     
-    #         ### print the linked nodes to infant_15_839_L
-    #         target_node = node #"cow_bioreactor_2_2972_L"
-    #         if target_node in whole_G:
-    #             neighbors = list(whole_G.neighbors(target_node))
-    #             print(f"Neighbors of {target_node}: {neighbors}")
-    #         print ("#########################")
+            ### print the linked nodes to infant_15_839_L
+            target_node = node #"cow_bioreactor_2_2972_L"
+            if target_node in whole_G:
+                neighbors = list(whole_G.neighbors(target_node))
+                print(f"Neighbors of {target_node}: {neighbors}")
+            print ("#########################")
 
 
     # plot_network2(whole_G)
 
-    # gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
-    # plot_gc(gc_df)
+    gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
+    ## save gc_df to a csv file
+    gc_df.to_csv("../../tmp/results2/mge_host_gc_cov.csv", index=False)
+    plot_gc(gc_df)

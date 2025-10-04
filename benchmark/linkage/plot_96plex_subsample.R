@@ -5,7 +5,7 @@ library(cowplot)
 library(tidyverse) 
 
 
-pdf(file="../../tmp/results2/96plex_subsample.pdf", width=10, height=4, onefile=FALSE)
+png(file="../../tmp/results2/96plex_subsample.png", width=8, height=3, units="in", res=300)
 
 # Read the CSV file
 df <- read_csv("/home/shuaiw/borg/paper/linkage/subsample_96plex.csv")

@@ -2,7 +2,8 @@ library(ggplot2)
 library(readr)
 library(gridExtra)
 library(cowplot)
-library(tidyverse) 
+library(dplyr)
+
 
 
 # Read the CSV file
@@ -68,7 +69,7 @@ legend <- get_legend(
 combined_plot <- plot_grid(prow, legend, ncol = 1, rel_heights = c(1, 0.2))
 
 # Now write to PDF
-pdf(file = "../../tmp/results2/96plex_subsample_frac_meta.pdf", width = 10, height = 4, onefile = FALSE)
+png(file = "../../tmp/results2/96plex_subsample_frac_meta.png", width = 8, height = 3, units="in", res=300)
   print(combined_plot)
 dev.off()
 

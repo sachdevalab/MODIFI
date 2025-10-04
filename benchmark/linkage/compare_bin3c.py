@@ -219,7 +219,7 @@ if __name__ == "__main__":
     plt.legend(title="Type", fontsize=12, title_fontsize=12)
     plt.grid(True, axis='y', alpha=0.3)
     plt.tight_layout()
-    plt.savefig(f'../../tmp/results2/bin3c_boxplot.pdf',  bbox_inches='tight')
+    plt.savefig(f'../../tmp/results2/bin3c_boxplot.png', dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
     plt.close()
 
 

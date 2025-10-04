@@ -276,6 +276,8 @@ def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome):
     ax.set_title(f"Motif Fraction Heatmap (Clustered) - {closed_genome}")
     plt.tight_layout()
     plt.savefig(plot_name)
+    ## save df 
+    df_clustered.to_csv(plot_name.replace(".pdf", ".csv"))
 
 def given_species(all_dir, closed_genome, seq_dir):
     

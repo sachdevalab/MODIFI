@@ -167,7 +167,7 @@ def get_df():
     df = pd.DataFrame(data, columns=["chr", "start", "end", "color", "motif", "score", "strand"])
     df.to_csv("motif_df.csv", index=False)
 
-def split_gff(gff2, contig, my_ref, out_dir):
+def split_gff(gff2, contig, my_ref, out_dir, score_cutoff):
     # bin_size = 1000 ##650  ## 50000
     bin_size = 55
     max_length = 50000000000
@@ -193,13 +193,15 @@ def split_gff(gff2, contig, my_ref, out_dir):
             line = line.strip().split("\t")
             if motif in line[8]:
                 # motif_gff.write(line[0] + "\t" + line[1] + "\t" + motif + "\t" + line[3] + "\t" + line[4] + "\t" + line[5] + "\t" + line[6] + "\t" + line[7] + "\t" + line[8] + "\n")
-                contig,type,start,stop,strand = line[0],motif,line[3],line[4],line[6]
-                if int(start) >= max_length:
+                contig,type,start,stop,strand, score = line[0],motif,line[3],line[4],line[6], int(line[5])
+                # if int(start) >= max_length:
+                #     continue
+                if score < score_cutoff:
                     continue
                 ## convert start and stop to bin
-                bin_index = int(start) // bin_size
-                start = round((bin_index + 0.25) * bin_size)
-                stop = round((bin_index + 0.75) * bin_size)
+                # bin_index = int(start) // bin_size
+                # start = round((bin_index + 0.25) * bin_size)
+                # stop = round((bin_index + 0.75) * bin_size)
 
                 name = contig + ":" + str(start) + "-" + str(stop) + strand + "_" + motif
                 if name not in name_dict:
@@ -278,33 +280,15 @@ if __name__ == "__main__":
     score_cutoff = 30
 
 
-    contig = "E_coli_H10407_6"
-    # contig = "B_cepacia_UCB-717_4"
-    motif_list = ["GATC", "CTTCAG"]
-    # motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
-    my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
-    gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
-    ipd_ratio_file = f"/home/shuaiw/borg/bench/zymo_new_ref_NM3/ipd_ratio/{contig}.ipd3.csv"
+    contig = "pMEGA2_NANO_2_INF1330004_4PB_final_1"
+    motif_list = ["AATT", "TGCA", "GTNAC", "ATGNNNNNNRTG", "CTAG", "GTAC", "CHCAG", "GATATC", "CTGAAG", "CTTCAG", "CGCAG" ]
+    my_ref = f"/home/shuaiw/borg/allison/pMEGA2/methylation/contigs/{contig}.fa"
+    gff2 = f"/home/shuaiw/borg/allison/pMEGA2/methylation/gffs/{contig}.reprocess.gff"
+    ipd_ratio_file = f"/home/shuaiw/borg/allison/pMEGA2/methylation/ipd_ratio/{contig}.ipd3.csv"
 
 
-    # motif_list = ["CAGAC", "CCGG", "TGCCCA", "TCTANNNNNNNRTNG","GAANNNNNNTGGC"]
-    # # contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_553_L"
-    # contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_10354_C"
-    # my_ref = f"/home/shuaiw/borg/bench/soil/run1/contigs/{contig}.fa"
-    # gff2 = f"/home/shuaiw/borg/bench/soil/run1/gffs/{contig}.reprocess.gff"
-    # ipd_ratio_file = f"/home/shuaiw/borg/bench/soil/run1/ipd_ratio/{contig}.ipd3.csv"
-
-
-    out_dir = "/home/shuaiw/borg/paper/circos4/"
-    # motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
-    # contig_list = ["E_coli_H10407_1", "E_coli_H10407_2", "E_coli_H10407_3","E_coli_H10407_4","E_coli_H10407_5","E_coli_H10407_6"]
-    # motif_list = ["GATC", "CGCATC"]  ## K_pneumoniae_BAA-2146_1
-    # contig_list = ["K_pneumoniae_BAA-2146_1", "K_pneumoniae_BAA-2146_2","K_pneumoniae_BAA-2146_3", "K_pneumoniae_BAA-2146_4", "K_pneumoniae_BAA-2146_5"]
-
-    # motif_list = ["TTGANNNNNNCCT", "CGTCGVNY", "ACAYNNNNNNNTGNG"]  
-    # contig_list = ["B_cereus_971_1","B_multivorans_249_1"]
-
-    split_gff(gff2, contig, my_ref, out_dir)
+    out_dir = "/home/shuaiw/borg/paper/all_circos/circos_plasmid/"
+    split_gff(gff2, contig, my_ref, out_dir, score_cutoff)
     # all_split_gff(out_dir)
 
 
