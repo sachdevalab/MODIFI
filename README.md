@@ -1,11 +1,11 @@
-# Methy
+# mGlu: a software package for DNA modification detection from PacBio SMRT metagenomic sequencing
 
-## env requirement
+## Install
 ```
 conda activate /home/shuaiw/miniconda3/envs/methy3
 add motifMaker
 ```
-## usage
+## Usage
 
 First, align your PacBio reads (BAM) onto the assembled contigs using PBMM2 like:
 ```
@@ -66,6 +66,13 @@ options:
 
 ## Output interpretation
 
+| File | Description |
+| --- | --- |
+|motif_profile.csv| Methylation fraction of each motif on each contig|
+|motif_heatmap.pdf| Visualization of motif profile|
+|host_summary.csv|Inferred best host for each MGE|
+|gffs/*.reprocess.gff| Methylation sites of each contig|
+
 `figs/*.png`
 | Subplot | Description |
 | --- | --- |
@@ -109,13 +116,7 @@ options:
 `hosts/`
 
 
-`summary files`
-| File | Description |
-| --- | --- |
-|motif_profile.csv| Methylation fraction of each motif on each contig|
-|motif_cluster.csv|Contig clustering result based on motif profile|
-|motif_heatmap.pdf| Visualization of motif profile|
-|motif_cluster.pdf|Visualization of contig clusters|
+
 
 ## kmer database
 stored in control namses as control/control_db.up7.down3.mean.dat and control/control_db.up7.down3.num.dat
@@ -143,3 +144,9 @@ samtools
 ```
 
 Depth > 500x will be subsampled.
+
+## Citation
+xxx
+
+## Getting help
+Should you have any queries, please feel free to contact us via opening an issue or sending an email, we will reply as soon as possible (wshuai294@gmail.com).
