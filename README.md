@@ -35,7 +35,7 @@ conda install -c bioconda samtools
 ```bash
 add motifMaker
 ```
-
+SMRT Link server software cannot be installed on Mac OS or Windows systems. So mGlu not support Mac OS and Windows.
 ---
 
 ## ⚡ Quick Start
