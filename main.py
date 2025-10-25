@@ -82,8 +82,10 @@ def parse_arguments():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("--whole_bam", type=str, required=True,
-                        help="Input BAM file with kinetic data (HiFi or subreads).")
+    parser.add_argument("--whole_bam", type=str, required=False,
+                        help="Input aligned BAM file with kinetic data (HiFi or subreads). Use this for pre-aligned BAM files.")
+    parser.add_argument("--unaligned_bam", type=str, required=False,
+                        help="Input unaligned BAM file with kinetic data (HiFi or subreads). Will be aligned using pbmm2.")
     parser.add_argument("--whole_ref", type=str, required=True,
                         help="Reference FASTA file for contigs.")
     parser.add_argument("--work_dir", type=str, required=True,
@@ -146,7 +148,88 @@ def parse_arguments():
         help="Steps to run in the pipeline (default: all), for easy test."
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    
+    # Validate that either whole_bam or unaligned_bam is provided, but not both
+    if args.whole_bam and args.unaligned_bam:
+        parser.error("Cannot specify both --whole_bam and --unaligned_bam. Use one or the other.")
+    if not args.whole_bam and not args.unaligned_bam:
+        parser.error("Must specify either --whole_bam (for aligned BAM) or --unaligned_bam (for unaligned BAM).")
+    
+    return args
+
+def align_bam_with_pbmm2(input_bam, reference_fasta, output_bam, read_type, threads=1):
+    """
+    Align unaligned BAM file to reference using pbmm2.
+    
+    Args:
+        input_bam: Path to input unaligned BAM file
+        reference_fasta: Path to reference FASTA file
+        output_bam: Path to output aligned BAM file
+        read_type: 'hifi' or 'subreads'
+        threads: Number of threads to use
+    """
+    logger.info(f"Aligning {input_bam} to {reference_fasta} using pbmm2...")
+    
+    # Set preset based on read type
+    if read_type.lower() == "hifi":
+        preset = "CCS"
+    elif read_type.lower() == "subreads":
+        preset = "SUBREAD"
+    else:
+        raise ValueError(f"Unknown read type: {read_type}. Must be 'hifi' or 'subreads'")
+    
+    # Create temporary raw BAM file
+    temp_raw_bam = output_bam.replace(".bam", ".raw.bam")
+    
+    try:
+        # Run pbmm2 alignment
+        cmd = [
+            pbmm2_bin,
+            "align",
+            "--preset", preset,
+            "-j", str(threads),
+            reference_fasta,
+            input_bam,
+            temp_raw_bam
+        ]
+        
+        logger.info(f"Running pbmm2 command: {' '.join(cmd)}")
+        subprocess.run(cmd, check=True)
+        
+        # Sort the aligned BAM file
+        logger.info(f"Sorting aligned BAM file...")
+        sort_cmd = [
+            "samtools", "sort",
+            "-T", output_bam.replace(".bam", ""),
+            "-@", str(threads),
+            "-o", output_bam,
+            temp_raw_bam
+        ]
+        
+        subprocess.run(sort_cmd, check=True)
+        
+        # Index the sorted BAM file
+        logger.info(f"Indexing aligned BAM file...")
+        subprocess.run(["samtools", "index", output_bam], check=True)
+        subprocess.run([pbindex_bin, output_bam], check=True)
+        
+        # Clean up temporary file
+        if os.path.exists(temp_raw_bam):
+            os.remove(temp_raw_bam)
+            
+        logger.info(f"Successfully aligned and sorted BAM file: {output_bam}")
+        
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error during alignment: {e}")
+        # Clean up temporary files on error
+        for temp_file in [temp_raw_bam]:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during alignment: {e}")
+        raise
 
 def load_ipd_parallel(args, paras):
     logger.info ("Loading IPD data in parallel...")
@@ -589,9 +672,28 @@ if __name__ == "__main__":
 
 
     # === Insert your pipeline logic below ===
-    logger.info("\n[Placeholder] Pipeline execution starts here...\n")
+    logger.info("\n🔬 Pipeline execution starts here...\n")
 
-
+    # === Handle unaligned BAM alignment if needed ===
+    if args.unaligned_bam:
+        logger.info("Unaligned BAM provided. Running alignment with pbmm2...")
+        
+        # Create align_bam subfolder
+        align_bam_dir = os.path.join(args.work_dir, "align_bam")
+        os.makedirs(align_bam_dir, exist_ok=True)
+        aligned_bam_path = os.path.join(align_bam_dir, "aligned.bam")
+        
+        record_resource_usage(
+            "Aligning BAM with pbmm2",
+            align_bam_with_pbmm2,
+            args.unaligned_bam, args.whole_ref, aligned_bam_path, args.read_type, args.threads
+        )
+        
+        # Set the aligned BAM as the whole_bam for the rest of the pipeline
+        args.whole_bam = aligned_bam_path
+        logger.info(f"Using aligned BAM file for pipeline: {args.whole_bam}")
+    else:
+        logger.info("Using provided aligned BAM file for pipeline.")
 
     if "split" in args.run_steps:
         ctg_depth_dict = record_resource_usage(
