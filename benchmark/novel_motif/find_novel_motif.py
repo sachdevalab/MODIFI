@@ -199,5 +199,3 @@ all_rebase_motif = "/home/shuaiw/borg/paper/novel_motif/rebase.sort.motif.txt"
 # sample_motif_file = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/all.motifs.csv"  
 sample_motif_file = "/home/shuaiw/borg/bench/soil/run1/all.motifs.csv"
 load_sample_motif(all_rebase_motif, sample_motif_file)
-
-## xxx dsfsadf

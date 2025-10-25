@@ -398,6 +398,35 @@ def count_cross_phylum(whole_G):
     print("Number of nodes in each type:")
     print(type_count)
 
+def profile_network(whole_G, cluster_anno_dict):
+    ## print the node with top 10 degree
+    top_nodes = sorted(whole_G.degree, key=lambda x: x[1], reverse=True)[:10]
+    print("Top 10 nodes by degree:")
+    for node, degree in top_nodes:
+        node_type = whole_G.nodes[node].get('type', 'Unknown')
+        if node_type in ['virus', 'plasmid', 'novel']:
+            print(f"{node}: {degree} (MGE type: {node_type})")
+        else:
+            species = cluster_anno_dict.get(node, 'Unknown')
+            print(f"{node}: {degree} (Host annotation: {species})")
+    count_cross_phylum(whole_G)
+    # ## print the MGE with degree > 1
+    # print("MGEs with degree > 1:")
+    for node, degree in whole_G.degree:
+        if degree > 1 and whole_G.nodes[node]['type'] in ['virus']:
+            print(f"virus {node} ({whole_G.nodes[node]['type']}): {degree}")
+        # if degree > 1 and whole_G.nodes[node]['type'] in ['plasmid']:
+        #     print(f"plasmid {node} ({whole_G.nodes[node]['type']}): {degree}")
+        # if degree > 1 and whole_G.nodes[node]['type'] in ['novel']:
+        #     print(f"novel {node} ({whole_G.nodes[node]['type']}): {degree}")
+    
+            ### print the linked nodes to infant_15_839_L
+            target_node = node #"cow_bioreactor_2_2972_L"
+            if target_node in whole_G:
+                neighbors = list(whole_G.neighbors(target_node))
+                print(f"Neighbors of {target_node}: {neighbors}")
+            print ("#########################")
+
 if __name__ == "__main__":  
     meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
     sample_env_dict = read_metadata(meta_file)
@@ -461,38 +490,13 @@ if __name__ == "__main__":
         G, gc_data, cluster_anno_dict = get_edge(cluster_anno_dict, host_summary_file, MGE_type_dict, bin2anno_dict, bin2species_dict, gc_data, sample_env_dict[prefix], prefix, host_clu_dict, mge_clu_dict)
         whole_G = nx.compose(whole_G, G)
         # break
-    ## print the node with top 10 degree
-    top_nodes = sorted(whole_G.degree, key=lambda x: x[1], reverse=True)[:10]
-    print("Top 10 nodes by degree:")
-    for node, degree in top_nodes:
-        node_type = whole_G.nodes[node].get('type', 'Unknown')
-        if node_type in ['virus', 'plasmid', 'novel']:
-            print(f"{node}: {degree} (MGE type: {node_type})")
-        else:
-            species = cluster_anno_dict.get(node, 'Unknown')
-            print(f"{node}: {degree} (Host annotation: {species})")
-    count_cross_phylum(whole_G)
-    # ## print the MGE with degree > 1
-    # print("MGEs with degree > 1:")
-    for node, degree in whole_G.degree:
-        if degree > 1 and whole_G.nodes[node]['type'] in ['virus']:
-            print(f"virus {node} ({whole_G.nodes[node]['type']}): {degree}")
-        # if degree > 1 and whole_G.nodes[node]['type'] in ['plasmid']:
-        #     print(f"plasmid {node} ({whole_G.nodes[node]['type']}): {degree}")
-        # if degree > 1 and whole_G.nodes[node]['type'] in ['novel']:
-        #     print(f"novel {node} ({whole_G.nodes[node]['type']}): {degree}")
-    
-            ### print the linked nodes to infant_15_839_L
-            target_node = node #"cow_bioreactor_2_2972_L"
-            if target_node in whole_G:
-                neighbors = list(whole_G.neighbors(target_node))
-                print(f"Neighbors of {target_node}: {neighbors}")
-            print ("#########################")
 
 
-    # plot_network2(whole_G)
 
-    gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
-    ## save gc_df to a csv file
-    gc_df.to_csv("../../tmp/results2/mge_host_gc_cov.csv", index=False)
-    plot_gc(gc_df)
+    plot_network2(whole_G)
+    # profile_network(whole_G, cluster_anno_dict)
+
+    # gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
+    # ## save gc_df to a csv file
+    # gc_df.to_csv("../../tmp/results2/mge_host_gc_cov.csv", index=False)
+    # plot_gc(gc_df)
