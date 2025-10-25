@@ -55,6 +55,15 @@ pbmm2_bin = "/path/to/your/smrtlink/pbmm2"
 pbindex_bin = "/path/to/your/smrtlink/pbindex"
 ```
 
+## 🧪 Test Installation
+
+To verify that mGlu is working correctly, you can run the provided test dataset:
+
+```bash
+cd test/
+sh test.sh
+```
+
 ---
 
 ## ⚡ Quick Start
@@ -87,14 +96,7 @@ python /home/shuaiw/Methy/main.py \
 
 ---
 
-## 🧪 Test Installation
 
-To verify that mGlu is working correctly, you can run the provided test dataset:
-
-```bash
-cd test/
-sh test.sh
-```
 
 ---
 
