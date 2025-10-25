@@ -31,19 +31,29 @@ pip install git+https://github.com/PacificBiosciences/pbcore.git
 ### 3️⃣ Compile C++ components
 
 ```bash
-cd src
-bash install.sh
+cd src && bash install.sh
 ```
 
-### 4️⃣ Add the `motifMaker` utility
+### 4️⃣ Install SMRT Link Software
 
-```bash
-add motifMaker
+mGlu requires several tools from PacBio's SMRT Link software suite:
+
+- **pbmotifmaker** - For motif discovery
+- **pbmm2** - For sequence alignment (when using `--unaligned_bam`)
+- **pbindex** - For BAM file indexing
+
+**Installation options:**
+
+1. **Install SMRT Link from PacBio** (smrtlink-release_25.3.0.273777+):
+   Download and install from [PacBio SMRT Link](https://www.pacb.com/support/software-downloads/)
+
+**Configuration:**
+After installation, update the paths in `main.py` to point to your SMRT Link installation:
+```python
+motif_maker_bin = "/path/to/your/smrtlink/pbmotifmaker"
+pbmm2_bin = "/path/to/your/smrtlink/pbmm2"
+pbindex_bin = "/path/to/your/smrtlink/pbindex"
 ```
-
-> ⚠️ **Requirements:** SMRT Link server software cannot be installed on Mac OS or Windows systems. Therefore, mGlu only supports Linux.
-
-
 
 ---
 
