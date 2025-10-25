@@ -24,18 +24,27 @@ conda activate methy3
 ```bash
 pip install git+https://github.com/PacificBiosciences/pbcore.git
 pip install numpy seaborn scipy
-conda install -c bioconda samtools
+conda install -c bioconda samtools htslib pbbam
 ```
 
 > ⚠️ Note: Some PacBio BAMs may trigger an integer overflow error in `pbcore`.  
 > See [PacificBiosciences/pbcore#127](https://github.com/PacificBiosciences/pbcore/issues/127) for details.
 
-### 3️⃣ Add the `motifMaker` utility
+### 3️⃣ Compile C++ components
+
+```bash
+cd src
+bash install.sh
+```
+
+### 4️⃣ Add the `motifMaker` utility
 
 ```bash
 add motifMaker
 ```
-SMRT Link server software cannot be installed on Mac OS or Windows systems. So mGlu not support Mac OS and Windows.
+
+> ⚠️ **Requirements:** SMRT Link server software cannot be installed on Mac OS or Windows systems. Therefore, mGlu only supports Linux.
+
 ---
 
 ## ⚡ Quick Start

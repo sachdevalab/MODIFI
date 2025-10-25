@@ -594,7 +594,7 @@ def get_paras(args):
     paras["RM_prefix"] = os.path.join(paras["RM"], "all_ctgs_RM")
     paras["RM_genes"] = paras["RM_prefix"] + ".rm.genes.tsv"
 
-    paras["kmer_bin"] = os.path.join(sys.path[0], "src", "test")
+    paras["kmer_bin"] = os.path.join(sys.path[0], "src", "get_control_IPD")
     paras["ctg_list_file"] = os.path.join(args.work_dir, "contigs_list.txt")
     paras["all_motifs"] = os.path.join(args.work_dir, "all.motifs.csv")
     paras["total_profile"] = os.path.join(args.work_dir, "motif_profile.csv")
