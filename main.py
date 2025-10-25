@@ -37,6 +37,8 @@ MAX_GAP = 10
 
 # motif_maker_bin = "/home/shuaiw/smrtlink/motifMaker"
 motif_maker_bin = "/home/shuaiw/smrtlink/pbmotifmaker"
+pbmm2_bin = "/home/shuaiw/smrtlink/pbmm2"
+pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
 ## pbindex
 
 logger = logging.getLogger(__name__)
@@ -595,7 +597,7 @@ if __name__ == "__main__":
         ctg_depth_dict = record_resource_usage(
             "Splitting BAM files",
             split_bam,
-            args.whole_bam, args.work_dir, args.whole_ref, args.threads, args.min_len, args.max_NM, args.min_ctg_cov, args.min_iden
+            args.whole_bam, args.work_dir, args.whole_ref, pbindex_bin, args.threads, args.min_len, args.max_NM, args.min_ctg_cov, args.min_iden
         )
         record_resource_usage(
             "Depth analysis",

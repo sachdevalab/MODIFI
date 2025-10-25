@@ -12,9 +12,9 @@ import numpy as np
 MAP_Q = 20
 MAX_DEPTH = 500
 
-pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
+# pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
 
-def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3, min_dp=0, min_iden=0.97):
+def split_bam(bam, split_bam_dir, whole_ref, pbindex_bin, threads=10, min_len=50000, max_NM=3, min_dp=0, min_iden=0.97):
     # Ensure the output directory exists
     os.makedirs(split_bam_dir, exist_ok=True)
     bam_dir = os.path.join(split_bam_dir, "bams")
@@ -32,7 +32,7 @@ def split_bam(bam, split_bam_dir, whole_ref, threads=10, min_len=50000, max_NM=3
         contig_bam = os.path.join(bam_dir, contig + ".bam")
         print (f"Processing {contig} {contig_bam}")
         ref = os.path.join(contig_dir, contig + ".fa")
-        args.append((contig, contig_len, ref, contig_bam, bam, whole_ref, max_NM, MAP_Q, MAX_DEPTH, min_dp, min_iden))
+        args.append((contig, contig_len, ref, contig_bam, bam, whole_ref, pbindex_bin, max_NM, MAP_Q, MAX_DEPTH, min_dp, min_iden))
         i += 1
     # samfile.close()
     ctg_depth_dict = {}
@@ -154,7 +154,7 @@ def test_read(read, contig_len, max_NM, q, min_iden):
     #     return False
     return True
 
-def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, max_NM, q=20, max_depth=500, min_dp=0, min_iden=0.97):
+def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, pbindex_bin, max_NM, q=20, max_depth=500, min_dp=0, min_iden=0.97):
     print (f"Processing {contig} {ref}")
 
     #  Create a new header that only includes the specific contig

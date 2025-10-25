@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/Python-≥3.9-blue.svg)](#)
-[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS-lightgrey.svg)](#)
+[![Platform](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)](#)
 [![PacBio](https://img.shields.io/badge/PacBio-SMRT-yellow.svg)](#)
 
 **mGlu** is a software package for detecting DNA base modifications and inferring host–mobile genetic element (MGE) linkages from **PacBio SMRT metagenomic sequencing** data.  
