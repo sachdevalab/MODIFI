@@ -40,22 +40,30 @@ SMRT Link server software cannot be installed on Mac OS or Windows systems. So m
 
 ## ⚡ Quick Start
 
-### Step 1. Align PacBio reads to contigs
+mGlu accepts both **aligned** and **unaligned** PacBio BAM files as input.
+
+### Option A: Using pre-aligned BAM files
+
+If you already have aligned BAM files:
 
 ```bash
-~/smrtlink/pbmm2 align --preset CCS -j $threads   $work_dir/${prefix}.p_ctg.fa $hifi_bam $work_dir/${prefix}.raw.bam
-
-samtools sort -T $work_dir/${prefix} -@ $threads   -o $work_dir/${prefix}.align.bam $work_dir/${prefix}.raw.bam
-
-rm $work_dir/${prefix}.raw.bam
-samtools index $work_dir/${prefix}.align.bam
-/home/shuaiw/smrtlink/pbindex $work_dir/${prefix}.align.bam
+python /home/shuaiw/Methy/main.py \
+  --whole_bam /path/to/your/aligned.bam \
+  --whole_ref /path/to/reference.fa \
+  --work_dir /path/to/output \
+  --read_type hifi
 ```
 
-### Step 2. Run mGlu for methylation detection
+### Option B: Using unaligned BAM files (automatic alignment)
+
+If you have unaligned BAM files, mGlu will automatically align them using pbmm2:
 
 ```bash
-python /home/shuaiw/Methy/main.py   --work_dir /home/shuaiw/methylation/data/borg/new_test12   --whole_bam /home/shuaiw/methylation/data/borg/b_contigs/11.align.bam   --whole_ref /home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa   --read_type subreads
+python /home/shuaiw/Methy/main.py \
+  --unaligned_bam /path/to/your/unaligned.bam \
+  --whole_ref /path/to/reference.fa \
+  --work_dir /path/to/output \
+  --read_type hifi
 ```
 
 ---
@@ -63,28 +71,45 @@ python /home/shuaiw/Methy/main.py   --work_dir /home/shuaiw/methylation/data/bor
 ## ⚙️ Command-line Options
 
 ```bash
-usage: main.py [-h] --whole_bam WHOLE_BAM --whole_ref WHOLE_REF --work_dir WORK_DIR
-               [--maxAlignments MAXALIGNMENTS] [--read_type {subreads,hifi}]
-               [--max_NM MAX_NM] [--min_len MIN_LEN] [--min_cov MIN_COV]
+usage: main.py [-h] [--whole_bam WHOLE_BAM | --unaligned_bam UNALIGNED_BAM] 
+               --whole_ref WHOLE_REF --work_dir WORK_DIR
+               [--read_type {subreads,hifi}] [--max_NM MAX_NM] 
+               [--min_len MIN_LEN] [--min_cov MIN_COV]
                [--kmer_mean_db KMER_MEAN_DB] [--kmer_num_db KMER_NUM_DB]
-               [--no-clean] [--min_frac MIN_FRAC] [--min_sites MIN_SITES]
-               [--min_score MIN_SCORE] [--plasmid_file PLASMID_FILE] [--threads THREADS]
+               [--min_frac MIN_FRAC] [--min_sites MIN_SITES]
+               [--min_score MIN_SCORE] [--threads THREADS] [--clean]
 ```
+
+### Input Options (choose one)
 
 | Option | Description |
 |--------|--------------|
-| `--whole_bam` | Input BAM file with kinetic data (HiFi or subreads). |
+| `--whole_bam` | Input **aligned** BAM file with kinetic data (HiFi or subreads). |
+| `--unaligned_bam` | Input **unaligned** BAM file with kinetic data. Will be automatically aligned using pbmm2. |
+
+### Required Parameters
+
+| Option | Description |
+|--------|--------------|
 | `--whole_ref` | Reference FASTA file for contigs. |
 | `--work_dir` | Working directory for all output files. |
-| `--read_type` | Read type: `subreads` or `hifi`. |
-| `--max_NM` | Max number of mismatches allowed. |
-| `--min_len` | Minimum contig length to process. |
-| `--min_cov` | Minimum read coverage required per base. |
-| `--kmer_mean_db` | Path to optional k-mer mean IPD database. |
-| `--min_frac` | Minimum methylation fraction to retain a motif. |
-| `--min_sites` | Minimum number of methylated sites per motif. |
-| `--min_score` | Minimum score for modification calling. |
-| `--threads` | Number of threads to use. |
+| `--read_type` | Read type: `subreads` or `hifi`. Determines pbmm2 alignment preset (SUBREAD vs CCS). |
+
+### Optional Parameters
+
+| Option | Description | Default |
+|--------|--------------|---------|
+| `--max_NM` | Max number of mismatches allowed. | Auto (20M for HiFi, 10M for subreads) |
+| `--min_len` | Minimum contig length to process. | 1000 |
+| `--min_cov` | Minimum read coverage required per base. | 1 |
+| `--min_ctg_cov` | Minimum read coverage required per contig. | 5 |
+| `--kmer_mean_db` | Path to optional k-mer mean IPD database. | None |
+| `--kmer_num_db` | Path to optional k-mer count database. | None |
+| `--min_frac` | Minimum methylation fraction to retain a motif. | 0.4 |
+| `--min_sites` | Minimum number of methylated sites per motif. | 30 |
+| `--min_score` | Minimum score for modification calling. | 30 |
+| `--threads` | Number of threads to use. | 64 |
+| `--clean` | Remove intermediate files after completion. | False |
 
 ---
 
@@ -99,6 +124,7 @@ usage: main.py [-h] --whole_bam WHOLE_BAM --whole_ref WHOLE_REF --work_dir WORK_
 | `motifs/*motifs.csv` | List of detected motifs and metrics. |
 | `profiles/*.motifs.profile.csv` | Strand-specific methylation ratios. |
 | `figs/*.png` | Quality-control and IPD distribution plots. |
+| `align_bam/aligned.bam` | Aligned BAM file (only created when using `--unaligned_bam`). |
 
 ---
 
