@@ -15,16 +15,14 @@ It enables precise methylation calling, motif discovery, and host–MGE associat
 ### 1️⃣ Create and activate environment
 
 ```bash
-conda create -n methy3 python=3.12
-conda activate methy3
+conda env create -f env.yml
+conda activate mGlu
 ```
 
 ### 2️⃣ Install dependencies
 
 ```bash
 pip install git+https://github.com/PacificBiosciences/pbcore.git
-pip install numpy seaborn scipy
-conda install -c bioconda samtools htslib pbbam
 ```
 
 > ⚠️ Note: Some PacBio BAMs may trigger an integer overflow error in `pbcore`.  
@@ -44,6 +42,8 @@ add motifMaker
 ```
 
 > ⚠️ **Requirements:** SMRT Link server software cannot be installed on Mac OS or Windows systems. Therefore, mGlu only supports Linux.
+
+
 
 ---
 
@@ -73,6 +73,17 @@ python /home/shuaiw/Methy/main.py \
   --whole_ref /path/to/reference.fa \
   --work_dir /path/to/output \
   --read_type hifi
+```
+
+---
+
+## 🧪 Test Installation
+
+To verify that mGlu is working correctly, you can run the provided test dataset:
+
+```bash
+cd test/
+sh test.sh
 ```
 
 ---

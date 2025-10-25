@@ -4,7 +4,7 @@ https://github.com/PacificBiosciences/kineticsTools/blob/master/kineticsTools/Ki
 """
 
 
-from pbcore.io import AlignmentSet
+
 import numpy as np
 import os
 import pandas as pd
@@ -212,6 +212,7 @@ def extract_context(fasta):
 
 def load_IPD(each_ref, contig_bam, ipd_file, fasta, max_mismatch, ref_seq, complement_ref_seq,):
     t0 = time.time()
+    from pbcore.io import AlignmentSet
     alignments = AlignmentSet(contig_bam, referenceFastaFname=fasta)
     refInfo = alignments.referenceInfoTable
     # print ("refInfo", refInfo.shape, len(refInfo))

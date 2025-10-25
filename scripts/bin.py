@@ -17,8 +17,8 @@ from adjustText import adjust_text
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
-import umap
-from sklearn.cluster import AgglomerativeClustering
+
+
 
 
 
@@ -144,6 +144,7 @@ def JC_hierarchical_clustering(df, cutoff=0.45):
 ## use AgglomerativeClustering
 
 def Agglomerative_clustering(df, cutoff=0.8):
+    from sklearn.cluster import AgglomerativeClustering
     matrix = df.to_numpy()
     ## Trabspose the matrix
     matrix = matrix.T
@@ -277,6 +278,7 @@ def hierarchical_clustering(df, cutoff=1.6):
     return cluster_result
 
 def UMAP(df):
+    import umap
     matrix = df.to_numpy()
     ## Trabspose the matrix
     matrix = matrix.T
