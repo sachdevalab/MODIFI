@@ -67,5 +67,6 @@
         "typeinfo": "cpp",
         "__nullptr": "cpp",
         "__hash_table": "cpp"
-    }
+    },
+    "git.enabled": true
 }
