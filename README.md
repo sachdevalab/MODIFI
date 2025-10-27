@@ -18,23 +18,22 @@ conda env create -f env.yml
 conda activate mGlu
 ```
 
-### 2️⃣ Install dependencies
+### 2️⃣  Compile C++ components
+
+```bash
+cd src/ && bash install.sh
+```
+
+### 3️⃣ Install PacBio SMRT Link
+Please install [PacBio SMRT Link](https://www.pacb.com/support/software-downloads/) by yourself. And then set SMRT Link path via system environment or edit `config.yaml`:
+```yaml
+smrtlink_bin: /path/to/smrtlink/
+```
+
+### 4️⃣ Install `pbcore` (for subreads only)
 This step can be skipped if you don't use subreads.
 ```bash
 pip install git+https://github.com/PacificBiosciences/pbcore.git
-```
-
-
-### 3️⃣ Compile C++ components
-
-```bash
-cd src && bash install.sh
-```
-
-### 4️⃣ Install [PacBio SMRT Link](https://www.pacb.com/support/software-downloads/)
-Set SMRT Link path via system environment or edit `config.yaml`:
-```yaml
-smrtlink_bin: /path/to/smrtlink/
 ```
 
 
