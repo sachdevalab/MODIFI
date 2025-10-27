@@ -139,14 +139,13 @@ usage: main.py [-h] [--whole_bam WHOLE_BAM | --unaligned_bam UNALIGNED_BAM]
 
 | File / Folder | Description |
 |----------------|--------------|
-| `motif_profile.csv` | Methylation fraction of each motif per contig. |
-| `motif_heatmap.pdf` | Heatmap visualization of motif profiles. |
-| `host_summary.csv` | Inferred best host for each MGE. |
 | `gffs/*.reprocess.gff` | Base-level methylation annotations. |
 | `motifs/*motifs.csv` | List of detected motifs and metrics. |
-| `profiles/*.motifs.profile.csv` | Strand-specific methylation ratios. |
+| `motif_profile.csv` | Methylation fraction of each motif per contig in the metagenome. |
+| `motif_heatmap.pdf` | Heatmap visualization of motif profiles. |
+| `profiles/*.motifs.profile.csv` | modification profile for each contig. |
+| `host_summary.csv` | Inferred best host for each MGE. |
 | `figs/*.png` | Quality-control and IPD distribution plots. |
-| `align_bam/aligned.bam` | Aligned BAM file (only created when using `--unaligned_bam`). |
 
 ---
 
@@ -161,6 +160,8 @@ usage: main.py [-h] [--whole_bam WHOLE_BAM | --unaligned_bam UNALIGNED_BAM]
 | 6 | Score |
 | 7 | Strand |
 | 9 | Additional annotation (coverage, local context, IPD ratio) |
+
+### 📊 Example: motifs
 
 ### 📈 Example: Figures (`figs/*.png`)
 

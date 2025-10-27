@@ -117,8 +117,8 @@ def parse_arguments():
                         help="Type of reads in BAM file.")
     parser.add_argument("--min_iden", type=float, default=0.97,
                         help="Minimum identity allowed for read alignment.")
-    parser.add_argument("--max_NM", type=int, default=None,
-                        help="Maximum number of mismatches allowed (None to disable).")
+    # parser.add_argument("--max_NM", type=int, default=None,
+    #                     help="Maximum number of mismatches allowed (None to disable).")
     parser.add_argument("--min_len", type=int, default=1000,
                         help="Minimum contig length to process.")
     parser.add_argument("--min_cov", type=int, default=1,
@@ -277,7 +277,7 @@ def load_ipd_parallel(args, paras):
                 IPD_load_worker,
                 fasta=fasta,
                 subread_bam=bam_path,
-                max_mismatch=args.max_NM,
+                max_mismatch=100000000,
                 read_type=args.read_type,
                 ipd_file = ipd_file,
             )
@@ -649,11 +649,6 @@ if __name__ == "__main__":
     motif_maker_bin, pbmm2_bin, pbindex_bin = load_binaries()
     ctg_depth_dict = {}
 
-    if args.max_NM is None:
-        if args.read_type == "hifi":
-            args.max_NM = 20000000
-        else:
-            args.max_NM = 10000000
 
     logger.info("🔬 Running pipeline with the following parameters:")
 
@@ -721,7 +716,7 @@ if __name__ == "__main__":
         ctg_depth_dict = record_resource_usage(
             "Splitting BAM files",
             split_bam,
-            args.whole_bam, args.work_dir, args.whole_ref, pbindex_bin, args.threads, args.min_len, args.max_NM, args.min_ctg_cov, args.min_iden
+            args.whole_bam, args.work_dir, args.whole_ref, pbindex_bin, args.threads, args.min_len, 100000000, args.min_ctg_cov, args.min_iden
         )
         record_resource_usage(
             "Depth analysis",
