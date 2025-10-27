@@ -5,8 +5,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)](#)
 [![PacBio](https://img.shields.io/badge/PacBio-SMRT-yellow.svg)](#)
 
-**mGlu** is a software package for detecting DNA base modifications and inferring host–mobile genetic element (MGE) linkages from **PacBio SMRT metagenomic sequencing** data.  
-It enables precise methylation calling, motif discovery, and host–MGE association in complex microbial communities.
+**mGlu** is a software package for detecting DNA base modifications and inferring host–mobile genetic element (MGE) linkages from **PacBio SMRT metagenomic sequencing** data. It supports both `HiFi reads` and `Subreads`.  It enables precise DNA modification calling, motif discovery, and host–MGE association in complex microbial communities.
 
 ---
 
