@@ -47,6 +47,15 @@ cd test/
 sh test.sh
 ```
 
+## 📝 Important Note
+
+**For low-complexity metagenomes or isolated genomes:**  
+Control IPD estimation may be unreliable due to insufficient k-mer diversity. In these cases, use an external k-mer database from high-complexity metagenomes with the `--kmer_mean_db` and `--kmer_num_db` parameters.
+
+A pre-built control database is available in the `control/` directory:
+- `control/control_db.up7.down3.mean.dat`
+- `control/control_db.up7.down3.num.dat`
+
 ---
 
 ## ⚡ Quick Start
@@ -77,11 +86,10 @@ python /home/shuaiw/Methy/main.py \
   --read_type hifi
 ```
 
+
+
 ---
 
-
-
----
 
 ## ⚙️ Command-line Options
 
