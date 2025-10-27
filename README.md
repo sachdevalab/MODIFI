@@ -20,13 +20,11 @@ conda activate mGlu
 ```
 
 ### 2️⃣ Install dependencies
-
+This step can be skipped if you don't use subreads.
 ```bash
 pip install git+https://github.com/PacificBiosciences/pbcore.git
 ```
 
-> ⚠️ Note: Some PacBio BAMs may trigger an integer overflow error in `pbcore`.  
-> See [PacificBiosciences/pbcore#127](https://github.com/PacificBiosciences/pbcore/issues/127) for details.
 
 ### 3️⃣ Compile C++ components
 
@@ -34,26 +32,12 @@ pip install git+https://github.com/PacificBiosciences/pbcore.git
 cd src && bash install.sh
 ```
 
-### 4️⃣ Install SMRT Link Software
-
-mGlu requires several tools from PacBio's SMRT Link software suite:
-
-- **pbmotifmaker** - For motif discovery
-- **pbmm2** - For sequence alignment (when using `--unaligned_bam`)
-- **pbindex** - For BAM file indexing
-
-**Installation options:**
-
-1. **Install SMRT Link from PacBio** (smrtlink-release_25.3.0.273777+):
-   Download and install from [PacBio SMRT Link](https://www.pacb.com/support/software-downloads/)
-
-**Configuration:**
-After installation, update the paths in `main.py` to point to your SMRT Link installation:
-```python
-motif_maker_bin = "/path/to/your/smrtlink/pbmotifmaker"
-pbmm2_bin = "/path/to/your/smrtlink/pbmm2"
-pbindex_bin = "/path/to/your/smrtlink/pbindex"
+### 4️⃣ Install [PacBio SMRT Link](https://www.pacb.com/support/software-downloads/)
+Set SMRT Link path via system environment or edit `config.yaml`:
+```yaml
+smrtlink_bin: /path/to/smrtlink/
 ```
+
 
 ## 🧪 Test Installation
 
@@ -208,6 +192,10 @@ The same k-mer window size (up7/down3) must be used for both the sample and cont
   ```bash
   pip install --force-reinstall git+https://github.com/PacificBiosciences/pbcore.git
   ```
+
+> ⚠️ Note: Some PacBio BAMs may trigger an integer overflow error in `pbcore`.  
+> See [PacificBiosciences/pbcore#127](https://github.com/PacificBiosciences/pbcore/issues/127) for details.
+
 
 ---
 

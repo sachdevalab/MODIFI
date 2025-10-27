@@ -13,6 +13,7 @@ import time
 import psutil
 import logging
 import shutil
+import yaml
 
 ## add the path to scripts
 sys.path.append(os.path.join(sys.path[0], "scripts"))
@@ -28,6 +29,12 @@ from merge_profile import merge_profile_worker
 from estimate_linkage import batch_MGE_invade
 from analyze_RM import RM_main
 
+from load_cfg import load_binaries
+
+# -------------------------------
+# Version
+# -------------------------------
+__version__ = "0.0.0"
 
 # -------------------------------
 # Parameters
@@ -36,14 +43,27 @@ DEPTH_THRESHOLD = 5
 MAX_GAP = 10
 
 # motif_maker_bin = "/home/shuaiw/smrtlink/motifMaker"
-motif_maker_bin = "/home/shuaiw/smrtlink/pbmotifmaker"
-pbmm2_bin = "/home/shuaiw/smrtlink/pbmm2"
-pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
+# motif_maker_bin = "/home/shuaiw/smrtlink/pbmotifmaker"
+# pbmm2_bin = "/home/shuaiw/smrtlink/pbmm2"
+# pbindex_bin = "/home/shuaiw/smrtlink/pbindex"
 ## pbindex
+
+motif_maker_bin = None
+pbmm2_bin = None
+pbindex_bin = None
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)  # Set level for the logger
 
+
+# config_file = os.path.join(sys.path[0], "config.yaml")
+# if os.path.exists(config_file):
+#     with open(config_file, "r") as cf:
+#         config = yaml.safe_load(cf)
+#         motif_maker_bin = os.path.join(config.get("smrtlink_bin", ""), "pbmotifmaker")
+#         pbmm2_bin = os.path.join(config.get("smrtlink_bin", ""), "pbmm2")
+#         pbindex_bin = os.path.join(config.get("smrtlink_bin", ""), "pbindex")
+# print (f"Loaded binaries from config.yaml: motif_maker_bin={motif_maker_bin}, pbmm2_bin={pbmm2_bin}, pbindex_bin={pbindex_bin}")
 
 def record_resource_usage(step_name, func, *args, **kwargs):
     """
@@ -82,6 +102,7 @@ def parse_arguments():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
+    parser.add_argument("-v", "--version", action="version", version=f"mGlu {__version__}")
     parser.add_argument("--whole_bam", type=str, required=False,
                         help="Input aligned BAM file with kinetic data (HiFi or subreads). Use this for pre-aligned BAM files.")
     parser.add_argument("--unaligned_bam", type=str, required=False,
@@ -625,6 +646,7 @@ def get_paras(args):
 if __name__ == "__main__":
 
     args = parse_arguments()
+    motif_maker_bin, pbmm2_bin, pbindex_bin = load_binaries()
     ctg_depth_dict = {}
 
     if args.max_NM is None:
@@ -633,7 +655,7 @@ if __name__ == "__main__":
         else:
             args.max_NM = 10000000
 
-    logger.info("🔬 Running MGE-host linkage pipeline with the following parameters:")
+    logger.info("🔬 Running pipeline with the following parameters:")
 
     paras = get_paras(args)
 
