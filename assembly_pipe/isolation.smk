@@ -11,6 +11,8 @@ rule all_assembly:
         bam_index = f"{config['work_dir']}/{config['prefix']}.align.bam.bai",
         methyl_time = f"{config['work_dir']}/{config['prefix']}.methyl.time",
         methy_finish = f"{config['work_dir']}/methylation.finish",
+        checkm=f"{config['work_dir']}/checkM2_2/quality_report.tsv",
+        gtdb_finish=f"{config['work_dir']}/GTDB_2/gtdbtk.done",
 
 rule bam_to_fastq_gz:
     input:
@@ -181,22 +183,58 @@ rule call_methylation:
     shell:
         """
         which python
-        /usr/bin/time -v -o {output.time} /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/Methy/main.py \
+        /usr/bin/time -v -o {output.time} /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
           --work_dir {config[work_dir]}/{config[prefix]}_methylation \
           --whole_bam {input.bam} \
           --whole_ref {input.fa} \
           --read_type hifi \
           --min_len 1000 \
-          --min_cov 3 \
-          --min_iden 0.97 \
-          --min_frac 0.4 \
+          --min_cov 10 \
+          --min_frac 0.1 \
           --min_score 30 \
-          --min_sites 100 \
+          --min_sites 10 \
           --annotate_rm \
           --mge_file {input.mge_file} \
-          --threads {threads} \
+          --threads 30 \
           --kmer_mean_db /home/shuaiw/borg/paper/run2/96plex/96plex_methylation/control/control_db.up7.down3.mean.dat \
           --kmer_num_db /home/shuaiw/borg/paper/run2/96plex/96plex_methylation/control/control_db.up7.down3.num.dat
         touch {output.methy_finish}
         """
+
+
+rule checkM2:
+    input:
+        fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
+        methy_finish = f"{config['work_dir']}/methylation.finish",
+    output:
+        checkm=f"{config['work_dir']}/checkM2_2/quality_report.tsv",
+        finish=f"{config['work_dir']}/{config['prefix']}.checkm.finish"
+    threads: config["threads"]
+    shell:
+        """ 
+        mkdir {config[work_dir]}/bins2/
+        python split_ctgs.py {input.fasta} {config[work_dir]}/bins2/
+        checkm2 predict --input {config[work_dir]}/bins2/ --output-directory  {config[work_dir]}/checkM2_2 --force -x .fasta --threads {threads}
+        touch {output.finish}
+        """
+
+rule GTDB2:
+    input:
+        checkm=f"{config['work_dir']}/checkM2_2/quality_report.tsv",
+    params:
+        bin_dir=f"{config['work_dir']}/bins2/",
+    output:
+        gtdb_finish=f"{config['work_dir']}/GTDB_2/gtdbtk.done"
+    threads: config["threads"]
+    shell:
+        """
+        gtdbtk classify_wf \
+          --genome_dir {params.bin_dir} \
+          --out_dir {config[work_dir]}/GTDB_2 \
+          --skip_ani_screen \
+          --cpus {threads} \
+          -x fasta
+        touch {output.gtdb_finish}
+        """
+
 

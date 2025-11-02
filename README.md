@@ -145,6 +145,7 @@ usage: main.py [-h] [--whole_bam WHOLE_BAM | --unaligned_bam UNALIGNED_BAM]
 | `motif_heatmap.pdf` | Heatmap visualization of motif profiles. |
 | `profiles/*.motifs.profile.csv` | modification profile for each contig. |
 | `host_summary.csv` | Inferred best host for each MGE. |
+| `hosts/*host_prediction.csv` | Possible hosts for each MGE sorted by linkage score. |
 | `figs/*.png` | Quality-control and IPD distribution plots. |
 
 ---
@@ -162,6 +163,10 @@ usage: main.py [-h] [--whole_bam WHOLE_BAM | --unaligned_bam UNALIGNED_BAM]
 | 9 | Additional annotation (coverage, local context, IPD ratio) |
 
 ### 📊 Example: motifs
+
+### 📊 Example: modification profile
+
+### 📊 Example: MGE-host linkages
 
 ### 📈 Example: Figures (`figs/*.png`)
 
