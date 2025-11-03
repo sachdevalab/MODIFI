@@ -71,7 +71,7 @@ rule gfa_to_fasta:
         # Rohan's version:
         """
         awk '$1==\"S\" {{printf \">%s\\n%s\\n\", $2, $3}}' {input.gfa} > {config[work_dir]}/{config[prefix]}.p_ctg.fa
-        python /home/shuaiw/Methy/assembly_pipe/gg_rename_assembly_iso.py \
+        python /home/shuaiw/mGlu/assembly_pipe/gg_rename_assembly_iso.py \
             -i {config[work_dir]}/{config[prefix]}.p_ctg.fa \
             -o {output.fasta} -s {config[prefix]}
         """
@@ -95,7 +95,7 @@ rule map_reads_to_assembly:
 
         samtools index {output.align_bam}
         /home/shuaiw/smrtlink/pbindex {output.align_bam}
-        python /home/shuaiw/Methy/assembly_pipe/count_assembly.py {config[prefix]} {config[work_dir]} {input.bam}
+        python /home/shuaiw/mGlu/assembly_pipe/count_assembly.py {config[prefix]} {config[work_dir]} {input.bam}
         """
 
 rule checkM:

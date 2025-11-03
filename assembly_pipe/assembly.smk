@@ -113,7 +113,7 @@ rule map_reads_to_assembly:
 
         samtools index {output.align_bam}
         /home/shuaiw/smrtlink/pbindex {output.align_bam}
-        python /home/shuaiw/Methy/assembly_pipe/count_assembly.py {config[prefix]} {config[work_dir]} {input.bam}
+        python /home/shuaiw/mGlu/assembly_pipe/count_assembly.py {config[prefix]} {config[work_dir]} {input.bam}
         """
 
 rule call_methylation:
@@ -129,7 +129,7 @@ rule call_methylation:
     shell:
         """
         which python
-        /usr/bin/time -v -o {output.time} /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/Methy/main.py \
+        /usr/bin/time -v -o {output.time} /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
           --work_dir {config[work_dir]}/{config[prefix]}_methylation3 \
           --whole_bam {input.bam} \
           --whole_ref {input.fa} \

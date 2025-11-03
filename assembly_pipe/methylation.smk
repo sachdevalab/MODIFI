@@ -40,7 +40,7 @@ rule call_methylation:
     threads: config["threads"]
     shell:
         """
-        /usr/bin/time -v -o {output.time} python /home/shuaiw/Methy/main.py \
+        /usr/bin/time -v -o {output.time} python /home/shuaiw/mGlu/main.py \
           --work_dir {config[work_dir]}/{config[prefix]}_methylation \
           --whole_bam {input.bam} \
           --whole_ref {input.fa} \
