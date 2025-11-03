@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import sys
 import pandas as pd
+import re
 
 
 def run_blastn_spacer_search(mge_fasta, outdir, spacer_fasta, raw_hit, min_id=0.95, threads=24):
@@ -93,6 +94,8 @@ def get_mge_fa(reference_fasta, mge_file, mge_fatsa):
         for line in f:
             if line.startswith("#") or line.strip() == "":
                 continue
+            if re.search("seq_name", line):
+                continue
             fields = line.strip().split("\t")
             if len(fields) < 2:
                 continue
@@ -172,30 +175,42 @@ def filter_hit2(raw_hit, spacer_linkage, mge_ids):
 def single_run():
     # prefix = sys.argv[1]
     # outdir = sys.argv[2]
-    prefix = "ERR10042290"
-    outdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/{prefix}"
+    # prefix = "ERR10042290"
+    # outdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/{prefix}"
 
-    reference_fasta = f"{outdir}/{prefix}.hifiasm.p_ctg.rename.fa"
-    spacer_outdir = f"{outdir}/spacer/"
-    mge_file = f"{outdir}/all_mge.tsv"
-    mge_fatsa = f"{outdir}/{prefix}_mge.fa"
-    raw_hit = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits.tsv"
-    filter_hit_file = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits.filter.tsv"
-    spacer_linkage = f"{spacer_outdir}/{prefix}_spacer_linkage.tsv"
-    # spacer_fasta = "/home/shuaiw/borg/paper/run2/all_spacer.fa"
-
-    spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
-    predict_spacer(reference_fasta, spacer_outdir, prefix)
-    
-    mge_ids = get_mge_fa(reference_fasta, mge_file, mge_fatsa)
-    run_blastn_spacer_search(mge_fasta=mge_fatsa, outdir=spacer_outdir, spacer_fasta=spacer_fasta, raw_hit=raw_hit, min_id=0.95, threads=24)
-    cmd = f"""
-    python3 /home/rohan/scripts/crispr_filter_blast.py -m 5 -s {spacer_fasta} -i {raw_hit} -o {filter_hit_file}
-    """
-    os.system(cmd)
-    print (filter_hit_file)
-    os.system(f"cat {filter_hit_file}")
-    # filter_hit2(filter_hit_file, spacer_linkage, mge_ids)
+    resultdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
+    for folder in os.listdir(resultdir):
+        prefix = folder
+        outdir = f"{resultdir}/{prefix}"
+        reference_fasta = f"{outdir}/{prefix}.hifiasm.p_ctg.rename.fa"
+        spacer_outdir = f"{outdir}/spacer/"
+        mge_file = f"{outdir}/all_mge.tsv"
+        mge_fatsa = f"{outdir}/{prefix}_mge.fa"
+        raw_hit = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits.tsv"
+        filter_hit_file = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits.filter.tsv"
+        spacer_linkage = f"{spacer_outdir}/{prefix}_spacer_linkage.tsv"
+        # spacer_fasta = "/home/shuaiw/borg/paper/run2/all_spacer.fa"
+        ## skip if no mge_file
+        if not os.path.exists(mge_file):
+            continue
+        mge_ids = get_mge_fa(reference_fasta, mge_file, mge_fatsa)
+        if len(mge_ids) == 0:
+            print (f"No MGE found for {prefix}, skip spacer matching.")
+            continue
+        print (mge_ids)
+        spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
+        predict_spacer(reference_fasta, spacer_outdir, prefix)
+        
+        
+        run_blastn_spacer_search(mge_fasta=mge_fatsa, outdir=spacer_outdir, spacer_fasta=spacer_fasta, raw_hit=raw_hit, min_id=0.95, threads=24)
+        cmd = f"""
+        python3 /home/rohan/scripts/crispr_filter_blast.py -m 5 -s {spacer_fasta} -i {raw_hit} -o {filter_hit_file}
+        """
+        os.system(cmd)
+        print (prefix)
+        print (filter_hit_file)
+        os.system(f"cat {filter_hit_file}")
+        # filter_hit2(filter_hit_file, spacer_linkage, mge_ids)
 
 def population_run():
     prefix = "population"
@@ -268,5 +283,6 @@ def load_all_taxa():
 
 if __name__ == "__main__":
     
-    isolation_taxa = load_all_taxa()
-    population_run()
+    # isolation_taxa = load_all_taxa()
+    # population_run()
+    single_run()
