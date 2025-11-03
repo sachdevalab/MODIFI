@@ -3,6 +3,7 @@ import subprocess
 import os
 from pathlib import Path
 import sys
+import pandas as pd
 
 
 def run_blastn_spacer_search(mge_fasta, outdir, spacer_fasta, raw_hit, min_id=0.95, threads=24):
@@ -78,6 +79,8 @@ def predict_spacer(reference_fasta, outdir, prefix):
         shell=True,
         check=True
     )
+    ## print the running code
+    # print(f"minced -spacers {reference_fasta} {outdir}/{prefix}.crisprs")
 
     print(f"[✔] Spacer prediction completed.")
 
@@ -159,23 +162,18 @@ def filter_hit2(raw_hit, spacer_linkage, mge_ids):
         return pd.DataFrame(columns=["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"])
     df = pd.read_csv(raw_hit, sep="\t")
     # df.columns = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"]
-    print (df)
     df['qseqid_ctg'] = df['query_contig_id']
     # Remove hits where spacer contig is in MGE set
     df = df[~df["qseqid_ctg"].isin(mge_ids)]
 
-    df.to_csv(spacer_linkage, sep="\t", index=False)
-    print(f"[✔] Filtered hits saved to {spacer_linkage}, total {len(df)} hits.")
+
     return df
 
-
-# spacer_fasta="/groups/sachdeva/projects/cow/methanotroph/db/global_crispr_db/nr_spacers_hq-taxoselected_25-05-10.fna"
-# prefix = "96plex"
-# outdir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
-
-if __name__ == "__main__":
-    prefix = sys.argv[1]
-    outdir = sys.argv[2]
+def single_run():
+    # prefix = sys.argv[1]
+    # outdir = sys.argv[2]
+    prefix = "ERR10042290"
+    outdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/{prefix}"
 
     reference_fasta = f"{outdir}/{prefix}.hifiasm.p_ctg.rename.fa"
     spacer_outdir = f"{outdir}/spacer/"
@@ -186,17 +184,89 @@ if __name__ == "__main__":
     spacer_linkage = f"{spacer_outdir}/{prefix}_spacer_linkage.tsv"
     # spacer_fasta = "/home/shuaiw/borg/paper/run2/all_spacer.fa"
 
-    # reference_fasta = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa"
-    # prefix = "96plex"
-    # outdir = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/spacer/"
-
-    # spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
-    # predict_spacer(reference_fasta, spacer_outdir, prefix)
+    spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
+    predict_spacer(reference_fasta, spacer_outdir, prefix)
     
     mge_ids = get_mge_fa(reference_fasta, mge_file, mge_fatsa)
-    # run_blastn_spacer_search(mge_fasta=mge_fatsa, outdir=spacer_outdir, spacer_fasta=spacer_fasta, raw_hit=raw_hit, min_id=0.95, threads=24)
-    # cmd = f"""
-    # python3 /home/rohan/scripts/crispr_filter_blast.py -m 5 -s {spacer_fasta} -i {raw_hit} -o {filter_hit_file}
-    # """
-    # os.system(cmd)
+    run_blastn_spacer_search(mge_fasta=mge_fatsa, outdir=spacer_outdir, spacer_fasta=spacer_fasta, raw_hit=raw_hit, min_id=0.95, threads=24)
+    cmd = f"""
+    python3 /home/rohan/scripts/crispr_filter_blast.py -m 5 -s {spacer_fasta} -i {raw_hit} -o {filter_hit_file}
+    """
+    os.system(cmd)
+    print (filter_hit_file)
+    os.system(f"cat {filter_hit_file}")
     # filter_hit2(filter_hit_file, spacer_linkage, mge_ids)
+
+def population_run():
+    prefix = "population"
+    resultdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
+    outdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_spacer/"
+
+    
+
+    reference_fasta = f"{outdir}/{prefix}.all.fa"
+    spacer_outdir = f"{outdir}/spacer/"
+    mge_file = f"{outdir}/all_mge.tsv"
+    mge_fatsa = f"{outdir}/{prefix}_mge.fa"
+    raw_hit = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits.tsv"
+    filter_hit_file = f"{spacer_outdir}/{Path(mge_fatsa).stem}_spacer_hits.filter.tsv"
+    spacer_linkage = f"{spacer_outdir}/{prefix}_spacer_linkage.tsv"
+    os.system(f"cat {resultdir}/*/*.hifiasm.p_ctg.rename.fa > {reference_fasta}")
+    os.system(f"cat {resultdir}/*/all_mge.tsv > {mge_file}")
+
+    spacer_fasta = f"{spacer_outdir}/{prefix}_spacers.fa"
+    predict_spacer(reference_fasta, spacer_outdir, prefix)
+    
+    mge_ids = get_mge_fa(reference_fasta, mge_file, mge_fatsa)
+    run_blastn_spacer_search(mge_fasta=mge_fatsa, outdir=spacer_outdir, spacer_fasta=spacer_fasta, raw_hit=raw_hit, min_id=0.95, threads=24)
+    cmd = f"""
+    python3 /home/rohan/scripts/crispr_filter_blast.py -m 5 -s {spacer_fasta} -i {raw_hit} -o {filter_hit_file}
+    """
+    os.system(cmd)
+    # print (filter_hit_file)
+    # os.system(f"cat {filter_hit_file}")
+    df = filter_hit2(filter_hit_file, spacer_linkage, mge_ids)
+    ## add taxonomy information to df
+    df["query_taxa"] = df["query_contig_id"].apply(lambda x: get_taxa(x, isolation_taxa))
+    df["target_taxa"] = df["target_id"].apply(lambda x: get_taxa(x, isolation_taxa))
+    print (df)
+    df.to_csv(spacer_linkage, sep="\t", index=False)
+    os.system(f"cat {spacer_linkage}")
+    print (spacer_linkage)
+
+def get_taxa(contig, isolation_taxa):
+    sra_id = contig.split("_")[0]
+    if sra_id in isolation_taxa:
+        return isolation_taxa[sra_id]
+    else:
+        return "unknown"
+
+def read_gtdb(isolation_taxa, gatk):
+    """
+    Read the GTDB summary file and return a dictionary of contig to bin mapping.
+    """
+    gtdb_df = pd.read_csv(gatk, sep='\t')
+    
+    for index, row in gtdb_df.iterrows():
+        anno = row['classification']
+        sra_id = row['user_genome'].split("_")[0]
+        isolation_taxa[sra_id] = anno
+        return isolation_taxa
+        
+def load_all_taxa():
+    isolation_taxa = {}
+    resultdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
+    for folder in os.listdir(resultdir):
+        gatk = f"{resultdir}/{folder}/GTDB_2/gtdbtk.bac120.summary.tsv"
+        print (gatk)
+        ## skip if gatk file not exist
+        if not os.path.exists(gatk):
+            continue
+        isolation_taxa = read_gtdb(isolation_taxa, gatk)
+    # print (isolation_taxa)
+    return isolation_taxa
+
+if __name__ == "__main__":
+    
+    isolation_taxa = load_all_taxa()
+    population_run()
