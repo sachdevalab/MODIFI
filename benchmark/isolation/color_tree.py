@@ -44,6 +44,87 @@ DATA
 #NODE_ID TYPE COLOR LABEL_OR_STYLE SIZE_FACTOR
 """
 
+Label_header = """LABELS
+#use this template to change the leaf labels, or define/change the internal node names
+#additionally, you can specify a custom class for internal nodes, which can be used to automatically collapse them
+#lines starting with a hash are comments and ignored during parsing
+
+#=================================================================#
+#                    MANDATORY SETTINGS                           #
+#=================================================================#
+#select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throughout this file.
+
+#SEPARATOR TAB
+#SEPARATOR SPACE
+SEPARATOR COMMA
+
+#Internal tree nodes can be specified using IDs directly, or using the 'last common ancestor' method described in iTOL help pages
+#=================================================================#
+#       Actual data follows after the "DATA" keyword              #
+#=================================================================#
+DATA
+#NODE_ID,LABEL,CLASS
+
+#Examples
+
+#note that the class field is optional
+
+#define a name and class for an internal node. Class 'kingdom' will be available when using the #automatic clade collapsing function
+#9031|9606,Metazoa,kingdom
+
+#change the label for leaf node 9606\n"""
+
+
+legend_header = """DATASET_COLORSTRIP
+#In colored strip datasets, each ID is associated to a color box/strip and can have an optional label. Color can be specified in hexadecimal, RGB or RGBA notation. When using RGB or RGBA notation, you cannot use COMMA as the dataset separator
+
+#lines starting with a hash are comments and ignored during parsing
+
+#=================================================================#
+#                    MANDATORY SETTINGS                           #
+#=================================================================#
+#select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throughout this file.
+
+SEPARATOR SPACE
+#SEPARATOR TAB
+#SEPARATOR COMMA
+
+#label is used in the legend table (can be changed later)
+DATASET_LABEL Phylum_Colors
+
+#dataset color (can be changed later)
+DATASET_COLOR #ff0000
+
+#=================================================================#
+#                    OPTIONAL SETTINGS                            #
+#=================================================================#
+
+#If COLOR_BRANCHES is set to 1, branches of the tree will be colored according to the colors of the strips above the leaves.
+#When all children of a node have the same color, it will be colored the same, otherwise it will be black.
+COLOR_BRANCHES 0
+
+#=================================================================#
+#     all other optional settings can be set or changed later     #
+#           in the web interface (under 'Datasets' tab)           #
+#=================================================================#
+
+#Each dataset can have a legend, which is defined using LEGEND_XXX fields
+#For each row in the legend, there should be one shape, color and label.
+#Optionally, you can define an exact legend position using LEGEND_POSITION_X and LEGEND_POSITION_Y. To use automatic legend positioning, do NOT define these values
+#Optionally, shape scaling can be present (LEGEND_SHAPE_SCALES). For each shape, you can define a scaling factor between 0 and 1.
+#Shape should be a number between 1 and 6, or any protein domain shape definition.
+#1: square
+#2: circle
+#3: star
+#4: right pointing triangle
+#5: left pointing triangle
+#6: checkmark
+
+LEGEND_TITLE Phylum
+LEGEND_POSITION_X 100
+LEGEND_POSITION_Y 100
+LEGEND_HORIZONTAL 0
+LEGEND_SHAPES"""
 
 def get_taxa(isolation_taxa, name):
     # sra_id = contig.split(".")[0]
@@ -124,7 +205,35 @@ def color_phylum():
     for phylum, color in phylum_color.items():
         print(f"  {phylum}: {color}")
     
+    # Generate legend for iTOL
+
+    
+    # Add legend shapes and colors for each phylum
+    legend_shapes = []
+    legend_colors = []
+    legend_labels = []
+    
+    for phylum in sorted(phylum_color.keys()):
+        if phylum != "unknown":
+            legend_shapes.append("1")  # square shape
+            legend_colors.append(phylum_color[phylum])
+            legend_labels.append(phylum)
+    
+    legend_content = legend_header + " " + " ".join(legend_shapes) + "\n"
+    legend_content += "LEGEND_COLORS " + " ".join(legend_colors) + "\n"
+    legend_content += "LEGEND_LABELS " + " ".join(legend_labels) + "\n\n"
+    legend_content += "#=================================================================#\n"
+    legend_content += "#     DATA SECTION                                                #\n"  
+    legend_content += "#=================================================================#\n"
+    legend_content += "DATA\n"
+    legend_content += "#ID COLOR LABEL\n"
+    
     ## generate annotations file for iTol
+    Label_anno = Label_header
+    
+    # Generate color strip data for legend
+    legend_data = ""
+    
     with open("/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/phylum_annotations.txt", "w") as f:
         f.write(f"{header}\n")
         for bin_name, taxa in run_taxa_dict.items():
@@ -136,10 +245,25 @@ def color_phylum():
             species = taxa.split(";")[6] if len(taxa.split(";")) > 6 else "unknown"
             species = species.replace("s__", "")
 
-            f.write(f"{bin_name} label {color} {species}\n")
+            f.write(f"{bin_name} label {color}\n")
+            node_rename = f"{species}_{bin_name}"
+            Label_anno += f"{bin_name},{node_rename}\n"
+            
+            # Add to legend data
+            legend_data += f"{bin_name} {color} {phylum}\n"
+    
+    # Save legend file with color strip format
+    with open("/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/phylum_legend.txt", "w") as f:
+        f.write(legend_content + legend_data)
 
     print(f"\nGenerated iTOL annotation file with {len(run_taxa_dict)} entries using Set1 colors")
+    print(f"Generated legend file: phylum_legend.txt")
+    print(f"Legend includes {len([p for p in phylum_color.keys() if p != 'unknown'])} phylums")
     print(run_taxa_dict)
+    
+    ## save label annotation file
+    with open("/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/label_annotations.csv", "w") as f:
+        f.write(Label_anno)
 
 
 
