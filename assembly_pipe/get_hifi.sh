@@ -1,10 +1,1 @@
 sbatch  --partition standard --wrap 'bash batch/run_ccs_part_0.sh' --job-name=0
-sbatch  --partition standard --wrap 'bash batch/run_ccs_part_1.sh' --job-name=1
-sbatch  --partition standard --wrap 'bash batch/run_ccs_part_2.sh' --job-name=2
-sbatch  --partition standard --wrap 'bash batch/run_ccs_part_3.sh' --job-name=3
-sbatch  --partition standard --wrap 'bash batch/run_ccs_part_4.sh' --job-name=4
-sbatch  --partition standard --wrap 'bash batch/run_ccs_part_5.sh' --job-name=5
-sbatch  --partition standard --wrap 'bash batch/run_ccs_part_6.sh' --job-name=6
-sbatch  --partition standard --wrap 'bash batch/run_ccs_part_7.sh' --job-name=7
-sbatch  --partition standard --wrap 'bash batch/run_ccs_part_8.sh' --job-name=8
-sbatch  --partition standard --wrap 'bash batch/run_ccs_part_9.sh' --job-name=9

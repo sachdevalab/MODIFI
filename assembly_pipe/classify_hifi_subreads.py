@@ -31,15 +31,28 @@ def convert_hifi():
 
         ## list all bam files in subfolder_path
         bam_num = 0
+        bam_dict = {}
         for file in os.listdir(subfolder_path):
-            if file.endswith(".bam") and not file.endswith(".ccs.bam"):
+            
+            if file.endswith(".bam") and not file.endswith(".merge.bam"):
                 bam = os.path.join(subfolder_path, file)
+                ## record the bam size
+                bam_size = os.path.getsize(bam)
+                bam_dict[bam] = bam_size
                 bam_type = classify_bam(bam)
-                print (f"{sra}\t{file}\t{bam_type}")
+                # print (f"{sra}\t{file}\t{bam_type}")
                 bam_num += 1
         if bam_num > 1:
             print (f"############### {sra}\t has over 1 bams")
-            continue
+            ## select the largest bam
+            # sorted_bam = sorted(bam_dict.items(), key=lambda x: x[1], reverse=True)
+            # bam = sorted_bam[0][0]
+            bam = os.path.join(subfolder_path, f"{sra}.merge.bam")
+            # use samtools to merge the bam files in bam_list into bam
+            merge_cmd = f"samtools merge {bam} " + " ".join(list(bam_dict.keys()))
+            if not os.path.exists(bam):
+                os.system(merge_cmd)    
+            print(merge_cmd)
         if bam_num == 0:
             print (f"################{sra}\t has no bams")
             continue
@@ -52,17 +65,15 @@ def convert_hifi():
         elif bam_type == "subreads":
             cmd = f'sbatch  --partition standard --job-name={sra} --wrap "/home/shuaiw/smrtlink/ccs {bam} {ccs_bam} --hifi-kinetics --min-rq 0.99 --min-passes 3  --num-threads 64" '
             cmd = f'/home/shuaiw/smrtlink/ccs {bam} {ccs_bam} --hifi-kinetics --min-rq 0.99 --min-passes 3  --num-threads 64'
-            cmd_list.append(cmd)
+            if not os.path.exists(ccs_bam):
+                # os.system(cmd)
+                cmd_list.append(cmd)
         else:
             print (f"############### {sra}\t is already hifi")
             ## link the bam to ccs_bam
             cmd = f'ln -s {bam} {ccs_bam}'
-            os.system(cmd)
-        # cmd =  f"""sbatch  --partition standard --wrap "snakemake -s isolation.smk \\
-        #             --config hifi_bam={ccs_bam} \\
-        #             prefix={sra} \\
-        #             work_dir=/home/shuaiw/borg/paper/isolation/bacteria/{sra} \\
-        #             -j 64"  --job-name={sra[3:]}"""
+            if not os.path.exists(ccs_bam):
+                os.system(cmd)
         # cmd = f"""
         #     sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \\
         #     --work_dir /home/shuaiw/borg/paper/isolation/bacteria/{sra}/{sra}_methylation \\
@@ -78,16 +89,11 @@ def convert_hifi():
         #     --threads 30 --run_steps motif merge profile host" \\
         #     --job-name={sra[3:]}
         # """
-        # cmd =  f"""sbatch  --partition standard --wrap "snakemake -s gtdb_isolation.smk \\
-        #             --config hifi_bam={ccs_bam} \\
-        #             prefix={sra} \\
-        #             work_dir=/home/shuaiw/borg/paper/isolation/bacteria/{sra} \\
-        #             -j 64"  --job-name={sra[3:]}"""
         
     convert = "get_hifi.sh"
     f = open(convert, "w")
     ## separately run the commands using ten scripts
-    num_scripts = 10
+    num_scripts = 1
     for i in range(num_scripts):
         script_file = f"batch/run_ccs_part_{i}.sh"
         with open(script_file, "w") as sf:
@@ -127,5 +133,6 @@ def batch_run(ccs_bam_dir):
 
 folder = "/groups/banfield/projects/multienv/methylation_temp/aws_methylation/"
 ccs_bam_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/"
-batch_run(ccs_bam_dir)
+# batch_run(ccs_bam_dir)
+convert_hifi()
 

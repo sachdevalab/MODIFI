@@ -1740,5 +1740,23 @@ sbatch  --partition standard --wrap "snakemake -s isolation.smk \
                 -j 64"  --job-name=ERR12778152
 
 
+gtdbtk classify_wf \
+  --genome_dir /groups/banfield/projects/multienv/methylation_temp/GTDB_tree/genomes \
+  --out_dir /groups/banfield/projects/multienv/methylation_temp/GTDB_tree/gtdb_classify \
+  --skip_ani_screen \
+  --cpus 32 \
+  -x fa
+
+gtdbtk de_novo_wf \
+  --genome_dir /groups/banfield/projects/multienv/methylation_temp/GTDB_tree/genomes \
+  --out_dir /groups/banfield/projects/multienv/methylation_temp/GTDB_tree/gtdb_all_denovo \
+  --cpus 32 \
+  --bacteria \
+  --outgroup_taxon p__Patescibacteria \
+  -x fa
+
+
+
+
 
 
