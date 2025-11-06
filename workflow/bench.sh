@@ -1756,6 +1756,11 @@ gtdbtk de_novo_wf \
   -x fa
 
 
+snakemake -s methy_isolation.smk --config prefix=ERR12778152 \
+                work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results/ERR12778152 \
+                -j 3
+
+
 
 
 
