@@ -9,8 +9,7 @@ rule all_assembly:
     input:
         final_fa = f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
         bam_index = f"{config['work_dir']}/{config['prefix']}.align.bam.bai",
-        methyl_time = f"{config['work_dir']}/{config['prefix']}.methyl.time",
-        methy_finish = f"{config['work_dir']}/methylation.finish",
+        methy_finish = f"{config['work_dir']}/{config['prefix']}_methylation2/methylation.finish",
         checkm=f"{config['work_dir']}/checkM2_2/quality_report.tsv",
         gtdb_finish=f"{config['work_dir']}/GTDB_2/gtdbtk.done",
 
@@ -175,16 +174,16 @@ rule call_methylation:
         fa=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
         mge_file = f"{config['work_dir']}/all_mge.tsv",
     output:
-        time=f"{config['work_dir']}/{config['prefix']}.methyl.time",
-        summary=f"{config['work_dir']}/{config['prefix']}_methylation/summary.csv",
-        methy_finish = f"{config['work_dir']}/methylation.finish"
+        time=f"{config['work_dir']}/{config['prefix']}_methylation2/{config['prefix']}.methyl.time",
+        summary=f"{config['work_dir']}/{config['prefix']}_methylation2/summary.csv",
+        methy_finish = f"{config['work_dir']}/{config['prefix']}_methylation2/methylation.finish"
     threads: config["threads"]
     # conda: "methy3"
     shell:
         """
         which python
         /usr/bin/time -v -o {output.time} /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
-          --work_dir {config[work_dir]}/{config[prefix]}_methylation \
+          --work_dir {config[work_dir]}/{config[prefix]}_methylation2 \
           --whole_bam {input.bam} \
           --whole_ref {input.fa} \
           --read_type hifi \
@@ -196,8 +195,8 @@ rule call_methylation:
           --annotate_rm \
           --mge_file {input.mge_file} \
           --threads 30 \
-          --kmer_mean_db /home/shuaiw/borg/paper/run2/96plex/96plex_methylation/control/control_db.up7.down3.mean.dat \
-          --kmer_num_db /home/shuaiw/borg/paper/run2/96plex/96plex_methylation/control/control_db.up7.down3.num.dat
+          --kmer_mean_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.mean.dat \
+          --kmer_num_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.num.dat
         touch {output.methy_finish}
         """
 
@@ -205,7 +204,7 @@ rule call_methylation:
 rule checkM2:
     input:
         fasta=f"{config['work_dir']}/{config['prefix']}.hifiasm.p_ctg.rename.fa",
-        methy_finish = f"{config['work_dir']}/methylation.finish",
+        methy_finish = f"{config['work_dir']}/{config['prefix']}_methylation2/methylation.finish",
     output:
         checkm=f"{config['work_dir']}/checkM2_2/quality_report.tsv",
         finish=f"{config['work_dir']}/{config['prefix']}.checkm.finish"

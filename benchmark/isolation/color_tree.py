@@ -160,7 +160,7 @@ def single_run():
         isolation_taxa = read_gtdb(gtdb)
         bin_name = f"{prefix}.hifiasm.p_ctg.rename"
         taxa = get_taxa(isolation_taxa, bin_name)
-        print (f"Processing {prefix} with taxa {taxa}", bin_name)
+        # print (f"Processing {prefix} with taxa {taxa}", bin_name)
         run_taxa_dict[prefix] = taxa
 
     return run_taxa_dict
@@ -183,7 +183,7 @@ def color_phylum():
     n_colors = len(phylum_list)
     
     # Get Set1 palette colors (Set1 has 9 distinct colors)
-    set1_colors = sns.color_palette("Set1", n_colors=max(n_colors, 9))
+    set1_colors = list(sns.color_palette("Set2", n_colors=max(n_colors, 9)))
     
     # Convert RGB to hex format for iTOL
     phylum_color = {}
@@ -204,35 +204,9 @@ def color_phylum():
     print(f"Found {len(phylum_list)} unique phylums using Seaborn Set1 palette:")
     for phylum, color in phylum_color.items():
         print(f"  {phylum}: {color}")
-    
-    # Generate legend for iTOL
-
-    
-    # Add legend shapes and colors for each phylum
-    legend_shapes = []
-    legend_colors = []
-    legend_labels = []
-    
-    for phylum in sorted(phylum_color.keys()):
-        if phylum != "unknown":
-            legend_shapes.append("1")  # square shape
-            legend_colors.append(phylum_color[phylum])
-            legend_labels.append(phylum)
-    
-    legend_content = legend_header + " " + " ".join(legend_shapes) + "\n"
-    legend_content += "LEGEND_COLORS " + " ".join(legend_colors) + "\n"
-    legend_content += "LEGEND_LABELS " + " ".join(legend_labels) + "\n\n"
-    legend_content += "#=================================================================#\n"
-    legend_content += "#     DATA SECTION                                                #\n"  
-    legend_content += "#=================================================================#\n"
-    legend_content += "DATA\n"
-    legend_content += "#ID COLOR LABEL\n"
-    
-    ## generate annotations file for iTol
     Label_anno = Label_header
     
-    # Generate color strip data for legend
-    legend_data = ""
+
     
     with open("/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/phylum_annotations.txt", "w") as f:
         f.write(f"{header}\n")
@@ -245,21 +219,17 @@ def color_phylum():
             species = taxa.split(";")[6] if len(taxa.split(";")) > 6 else "unknown"
             species = species.replace("s__", "")
 
-            f.write(f"{bin_name} label {color}\n")
+            f.write(f"{bin_name} range {color} {phylum}\n")
             node_rename = f"{species}_{bin_name}"
             Label_anno += f"{bin_name},{node_rename}\n"
             
             # Add to legend data
-            legend_data += f"{bin_name} {color} {phylum}\n"
+            # legend_data += f"{bin_name} {color} {phylum}\n"
     
-    # Save legend file with color strip format
-    with open("/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/phylum_legend.txt", "w") as f:
-        f.write(legend_content + legend_data)
 
     print(f"\nGenerated iTOL annotation file with {len(run_taxa_dict)} entries using Set1 colors")
-    print(f"Generated legend file: phylum_legend.txt")
     print(f"Legend includes {len([p for p in phylum_color.keys() if p != 'unknown'])} phylums")
-    print(run_taxa_dict)
+    # print(run_taxa_dict)
     
     ## save label annotation file
     with open("/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/label_annotations.csv", "w") as f:

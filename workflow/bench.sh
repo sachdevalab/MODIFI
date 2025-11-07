@@ -1760,6 +1760,9 @@ snakemake -s methy_isolation.smk --config prefix=ERR12778152 \
                 work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results/ERR12778152 \
                 -j 3
 
+snakemake -s methy_isolation.smk --config prefix=ERR10042285 \
+                work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results/ERR10042285 \
+                -j 10
 
 
 

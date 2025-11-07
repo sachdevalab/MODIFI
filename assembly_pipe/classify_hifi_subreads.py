@@ -20,15 +20,22 @@ def classify_bam(bam):
     
 
 
-def convert_hifi():
+def convert_hifi(folder, ccs_bam_dir):
     cmd_list = []
+    num = 0
     for subfolder in os.listdir(folder):
         ## skip if it is not a directory
         if not os.path.isdir(os.path.join(folder, subfolder)):
             continue
         sra = subfolder.split(".")[0]
         subfolder_path = os.path.join(folder, subfolder)
+        ccs_bam = os.path.join(ccs_bam_dir, f"{sra}.ccs.bam")
 
+        ## skip if ccs_bam already exists
+        if os.path.exists(ccs_bam):
+            continue
+        # print (sra)
+        num += 1
         ## list all bam files in subfolder_path
         bam_num = 0
         bam_dict = {}
@@ -58,13 +65,13 @@ def convert_hifi():
             continue
         # print (f"Total BAM files in {subfolder}: {bam_num}")
 
-        ccs_bam = os.path.join(ccs_bam_dir, f"{sra}.ccs.bam")
+        
         if bam_type == "unknown":
             print (f"############### {sra}\t has unknown bam type")
             continue
         elif bam_type == "subreads":
             cmd = f'sbatch  --partition standard --job-name={sra} --wrap "/home/shuaiw/smrtlink/ccs {bam} {ccs_bam} --hifi-kinetics --min-rq 0.99 --min-passes 3  --num-threads 64" '
-            cmd = f'/home/shuaiw/smrtlink/ccs {bam} {ccs_bam} --hifi-kinetics --min-rq 0.99 --min-passes 3  --num-threads 64'
+            cmd = f'/home/shuaiw/smrtlink/ccs {bam} {ccs_bam} --hifi-kinetics --min-rq 0.99 --min-passes 3  --num-threads 10'
             if not os.path.exists(ccs_bam):
                 # os.system(cmd)
                 cmd_list.append(cmd)
@@ -74,38 +81,27 @@ def convert_hifi():
             cmd = f'ln -s {bam} {ccs_bam}'
             if not os.path.exists(ccs_bam):
                 os.system(cmd)
-        # cmd = f"""
-        #     sbatch  --partition standard --wrap "python /home/shuaiw/Methy/main.py \\
-        #     --work_dir /home/shuaiw/borg/paper/isolation/bacteria/{sra}/{sra}_methylation \\
-        #     --whole_bam {ccs_bam} \\
-        #     --whole_ref /home/shuaiw/borg/paper/isolation/bacteria/{sra}/{sra}.hifiasm.p_ctg.rename.fa \\
-        #     --read_type hifi \\
-        #     --min_len 1000 \\
-        #     --min_cov 10 \\
-        #     --min_frac 0.1 \\
-        #     --min_score 30 \\
-        #     --min_sites 10 \\
-        #     --mge_file /home/shuaiw/borg/paper/isolation/bacteria/{sra}/all_mge.tsv \\
-        #     --threads 30 --run_steps motif merge profile host" \\
-        #     --job-name={sra[3:]}
-        # """
         
     convert = "get_hifi.sh"
     f = open(convert, "w")
     ## separately run the commands using ten scripts
-    num_scripts = 1
+    num_scripts = 5
     for i in range(num_scripts):
         script_file = f"batch/run_ccs_part_{i}.sh"
         with open(script_file, "w") as sf:
             for j in range(i, len(cmd_list), num_scripts):
                 sf.write(cmd_list[j] + "\n")
-        print (f"sbatch  --partition standard --wrap 'bash {script_file}' --job-name={i}", file = f)
+        # print (f"sbatch  --partition standard --wrap 'bash {script_file}' --job-name={i}", file = f)
+        print (f"nohup bash {script_file} &", file = f)
     f.close()
+    print (num)
+    print (len(cmd_list))
 
 
 def batch_run(ccs_bam_dir):
     ## get all ccs bam files
     cmd_list = []
+    work_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
     for file in os.listdir(ccs_bam_dir):
         if file.endswith(".ccs.bam"):
             ccs_bam = os.path.join(ccs_bam_dir, file)
@@ -113,9 +109,11 @@ def batch_run(ccs_bam_dir):
             cmd =  f"""snakemake -s isolation.smk \\
                         --config hifi_bam={ccs_bam} \\
                         prefix={sra} \\
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results/{sra} \\
+                        work_dir={work_dir}/{sra} \\
                         -j 64  """
-            cmd_list.append(cmd)
+            finish_file = os.path.join(work_dir, sra, f"GTDB_2/gtdbtk.done")
+            if not os.path.exists(finish_file):
+                cmd_list.append(cmd)
     batch_file = "run_all_isolation.sh"
     num_scripts = 10
     f = open(batch_file, "w")
@@ -125,14 +123,40 @@ def batch_run(ccs_bam_dir):
             for j in range(i, len(cmd_list), num_scripts):
                 sf.write(cmd_list[j] + "\n")
         print (f"sbatch  --partition standard --wrap 'bash {script_file}' --job-name=iso_{i}", file = f)
+    print (f"Total isolation jobs: {len(cmd_list)}")
+    f.close()
+
+def methy_run(results_dir):
+    ## get all ccs bam files
+    cmd_list = []
+    for folder in os.listdir(results_dir):
+        prefix = folder
+        aligned_bam = os.path.join(results_dir, folder, f"{prefix}.aligned.bam")
+        finish_file = os.path.join(results_dir, folder, f"{prefix}_methylation2/methylation.finish")
+        if not os.path.exists(finish_file):
+
+            cmd =  f"""snakemake -s methy_isolation.smk --config prefix={prefix} \
+                work_dir={results_dir}/{prefix} -j 5"""
+            cmd_list.append(cmd)
+    batch_file = "run_methy_isolation.sh"
+    num_scripts = 10
+    f = open(batch_file, "w")
+    for i in range(num_scripts):
+        script_file = f"batch/methy_isolation_part_{i}.sh"
+        with open(script_file, "w") as sf:
+            for j in range(i, len(cmd_list), num_scripts):
+                sf.write(cmd_list[j] + "\n")
+        print (f"nohup bash {script_file} &", file = f)
     f.close()
 
 # bam = "/home/shuaiw/borg/paper/aws/isolate/bacteria/set1/ERR10087071/demultiplex.bc1053T__bc1053T.bam"
 # folder = "/home/shuaiw/borg/paper/aws/isolate/bacteria/set1/"
 # ccs_bam_dir = "/home/shuaiw/borg/paper/aws/isolate/bacteria/ccs_bams/"
 
-folder = "/groups/banfield/projects/multienv/methylation_temp/aws_methylation/"
+folder = "/groups/banfield/projects/multienv/methylation_temp/aws_methylation2/"
 ccs_bam_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/"
+results_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
 # batch_run(ccs_bam_dir)
-convert_hifi()
+convert_hifi(folder, ccs_bam_dir)
+# methy_run(results_dir)
 
