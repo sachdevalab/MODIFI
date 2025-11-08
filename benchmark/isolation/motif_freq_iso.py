@@ -1,4 +1,5 @@
 import os
+import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -8,8 +9,10 @@ from sklearn.manifold import TSNE
 from scipy.spatial.distance import pdist, squareform, cosine
 from sklearn.metrics.pairwise import cosine_similarity
 import re
-
+import sys
 from Bio.Seq import Seq
+
+from sample_object import My_sample, Isolation_sample
 
 def read_motif_freq(motif_freq_file, prefix, all_motif_freq):
     motif_freq_df = pd.read_csv(motif_freq_file)
@@ -41,168 +44,124 @@ def read_motif_freq_ctg(profile, all_motif_freq, mge_dict):
             all_motif_freq.append([row[cols[j]], cols[j], row["motifString"], ctg_type])
     return all_motif_freq
 
-def read_gtdb(gtdb):
-    ## collect the species name of each contig, if no species name, use genus name, if no genus name, use family name
-    gtdb_dict = {}
-    if not os.path.exists(gtdb):
-        print (f"[⚠️] GTDB file not found: {gtdb}")
-        return gtdb_dict
-    df = pd.read_csv(gtdb, sep="\t")
-    for i, row in df.iterrows():
-        classification = row["classification"]
-        contig = row["user_genome"]
-        fields = classification.split(";")
 
-        # print (contig, classification)
-        if len(fields) < 1:
-            taxon = "Unclassified"
+def quantify_sharing(profile, mge_dict, depth_dict, length_dict, unique_motifs):
+    """
+    Add contig annotation columns (type, depth, length) to motif profile data.
+    
+    Args:
+        profile (str): Path to motif profile CSV file
+        mge_dict (dict): Dictionary mapping contig names to MGE types
+        depth_dict (dict): Dictionary mapping contig names to depth values
+        length_dict (dict): Dictionary mapping contig names to length values
+    
+    Returns:
+        pd.DataFrame: Enhanced dataframe with additional annotation columns
+    """
+    df = pd.read_csv(profile)
+    
+    # Get contig names (all columns except the first one which is motifString)
+    contig_cols = df.columns.tolist()[1:]  # Skip the motifString column
+    
+    # Create annotation dictionaries for each contig
+    contig_annotations = []
+    
+    for contig in contig_cols:
+        # Determine contig type
+        if contig in mge_dict:
+            ctg_type = "MGE"
+            mge_type = mge_dict[contig]
         else:
-            for i in range(-1, -len(fields)-1, -1):
-                if fields[i].strip():
-                    if len(fields[i].strip()) > 3:
-                        taxon = fields[i].strip()
-
-                        break
-        # print (contig, taxon)
-        gtdb_dict[contig] = taxon   
-    return gtdb_dict
-
-## read length of each contig
-def read_fai(fai):
-    contig_len = {}
-    if not os.path.exists(fai):
-        print (f"[⚠️] FAI file not found: {fai}")
-        return contig_len
-    with open(fai, "r") as f:
-        for line in f:
-            fields = line.strip().split("\t")
-            if len(fields) < 2:
-                continue
-            contig = fields[0]
-            length = int(fields[1])
-            contig_len[contig] = length
-    return contig_len
-
-def check_pure(gtdb_dict, contig_len_dict, mge_dict):
-    """
-    Check if the assembly is pure based on GTDB classification.
-    """
-    # 1) Length-weighted GTDB consistency (core test)
-
-    # Make a table with: contig, length, GTDB_species (or genus if species is unavailable), and any confidence/support score.
-
-    # Compute the fraction of total assembly length assigned to each species.
-
-    # Quick call:
-
-    # Pure: ≥99% of total assembly length → one species.
-
-    # Likely pure: 95–99% one species and the leftovers are short contigs (<10–20 kb) that look like plasmid/phage.
-
-    # Mixed: ≥2 species each >5% of total length (or any minority block >1 Mb from a different genus).
-    species_len = {}
-    total_len = 0
-    for contig, taxon in gtdb_dict.items():
-        if contig in mge_dict:  ## skip the contigs that are MGEs
-            continue
-        length = contig_len_dict.get(contig, 0)
-        total_len += length
-        if taxon not in species_len:
-            species_len[taxon] = 0
-        species_len[taxon] += length
-    species_fraction = {taxon: length / total_len for taxon, length in species_len.items()}
-    # print (species_fraction)      
-    sorted_species = sorted(species_fraction.items(), key=lambda x: x[1], reverse=True)
-    print (sorted_species)
-    if len(sorted_species) == 0:
-        return "unknown"
-    top_species, top_fraction = sorted_species[0]
-    if top_fraction >= 0.99:
-        return "pure"
-    elif top_fraction >= 0.95:
-        # check if the other species are short contigs
-        for taxon, fraction in sorted_species[1:]:
-            if fraction * total_len > 20000:
-                return "mixed"
-        return "likely pure"
-    else:
-        for taxon, fraction in sorted_species[1:]:
-            if fraction > 0.05:
-                return "mixed"
-            if fraction * total_len > 1000000:
-                return "mixed"
-        return "likely pure"
-
-def check_pure2(checkm):
-    ## read checkm file
-    if not os.path.exists(checkm):
-        print (f"[⚠️] CheckM file not found: {checkm}")
-        return "unknown"
-    df = pd.read_csv(checkm, sep="\t")
-    if "Completeness" not in df.columns or "Contamination" not in df.columns:
-        print (f"[⚠️] CheckM file does not have required columns.")
-        return "unknown"
-    completeness = df["Completeness"].values[0]
-    contamination = df["Contamination"].values[0]
-    if contamination <= 5:
-        return "pure"
-    else:
-        return "mixed"
-
-def read_MGE(mge_file):
-    mge_dict = {}
-    f = open(mge_file, "r")
-    for line in f:
-        if line.startswith("seq_name"):
-            continue
-        fields = line.strip().split("\t")
-        if len(fields) < 2:
-            continue
-        contig = fields[0]
-        mge_type = fields[1]
-        mge_dict[contig] = mge_type
-    return mge_dict
-
-def read_host(host_sum_file, min_dp = 5):
-    # Read the host summary file
-    host_sum = pd.read_csv(host_sum_file)
-    all_df = pd.DataFrame()
+            ctg_type = "Host"
+            mge_type = "N/A"
+        
+        # Get depth and length
+        depth = depth_dict.get(contig, 0.0)
+        length = length_dict.get(contig, 0)
+        
+        contig_annotations.append({
+            'contig': contig,
+            'contig_type': ctg_type,
+            'mge_type': mge_type,
+            'depth': depth,
+            'length': length
+        })
     
-   
-
-
+    # Convert to DataFrame
+    annotations_df = pd.DataFrame(contig_annotations)
     
+    # Transform the motif profile from wide to long format
+    df_melted = df.melt(id_vars=['motifString'], 
+                        var_name='contig', 
+                        value_name='motif_frequency')
+    
+    # Merge with annotations
+    df_enhanced = df_melted.merge(annotations_df, on='contig', how='left')
+    
+    # Reorder columns for better readability
+    df_enhanced = df_enhanced[['motifString', 'contig', 'contig_type', 'mge_type', 
+                               'depth', 'length', 'motif_frequency']]
+    ## only consider the motif in unique_motifs
+    df_enhanced = df_enhanced[df_enhanced['motifString'].isin(unique_motifs)]
 
-def collect_freq():
+    return cal_jaccard(df_enhanced)
+    # return df_enhanced
+
+def cal_jaccard(df_enhanced, depth_cutoff = 10, length_cutoff = 5000, bin_freq = 0.3):
+    ## filter the dataframe based on depth and length cutoff
+    filtered_df = df_enhanced[
+        (df_enhanced['depth'] >= depth_cutoff) &
+        (df_enhanced['length'] >= length_cutoff)
+    ]
+    ## binary the motif_frequency based on bin_freq
+    filtered_df['motif_frequency'] = filtered_df['motif_frequency'].apply(lambda x: 1 if x >= bin_freq else 0)
+    print (filtered_df)
+    ## calculate jaccard similarity between each pair of MGE and host
+    ## Only consider motifs with frequency = 1 (present motifs)
+    present_motifs = filtered_df[filtered_df['motif_frequency'] == 1]
+    
+    mge_motifs = present_motifs[present_motifs['contig_type'] == 'MGE'][['motifString', 'contig']]
+    host_motifs = present_motifs[present_motifs['contig_type'] == 'Host'][['motifString', 'contig']]
+    
+    print(f"[✔] Found {len(mge_motifs)} MGE motifs and {len(host_motifs)} Host motifs with frequency = 1")
+    
+    jaccard_scores = []
+    for mge_contig in mge_motifs['contig'].unique():
+        mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
+        for host_contig in host_motifs['contig'].unique():
+            host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
+            intersection = mge_motifs_set.intersection(host_motifs_set)
+            union = mge_motifs_set.union(host_motifs_set)
+            if len(union) > 0:
+                jaccard = len(intersection) / len(union)
+                jaccard_scores.append({
+                    'mge_contig': mge_contig,
+                    'host_contig': host_contig,
+                    'jaccard_similarity': jaccard
+                })
+    print (jaccard_scores)
+    return pd.DataFrame(jaccard_scores)
+
+
+def collect_freq(all_dir, fig_dir):
     all_motif_freq = []
     all_link_df = pd.DataFrame()
-    all_dir = "/home/shuaiw/borg/paper/isolation/bacteria/"
+
     i = 0
-    pure_num = 0
-    for my_dir in os.listdir(all_dir):
-        prefix = my_dir
-        if re.search("sludge", prefix):
+    pure_num, mge_num, has_motif_num = 0, 0, 0
+    jaccard_all = pd.DataFrame()
+    for prefix in os.listdir(all_dir):
+
+        sample_obj = Isolation_sample(prefix, all_dir)
+        if not os.path.exists(sample_obj.profile):
             continue
-        # if prefix != "ERR10820930":
-        #     continue
-        # print (f"Processing {prefix}...")
-        work_dir = f"{all_dir}/{prefix}/{prefix}_methylation"
-        fai = f"{all_dir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
-        map_sum = f"{all_dir}/{prefix}/{prefix}.align.count.csv"
-        all_host_file = f"{all_dir}/{prefix}/all_host_ctgs.tsv"
-        depth_file = os.path.join(work_dir, "mean_depth.csv")
-        host_sum_file = os.path.join(work_dir, "host_summary.csv")
-        orphan_file = os.path.join(work_dir, "regulatory_motif_enrichment.csv")
-        motif_freq_file = os.path.join(work_dir, "motif_length_stats.csv")
-        profile = os.path.join(work_dir, "motif_profile.csv")
-        gtdb = os.path.join(work_dir, "../GTDB_2/gtdbtk.bac120.summary.tsv")
-        checkm = os.path.join(work_dir, "../checkM2/quality_report.tsv")
-        mge_file = f"{all_dir}/{prefix}/all_mge.tsv"
-        gtdb_dict = read_gtdb(gtdb)
-        contig_len_dict = read_fai(fai)
-        mge_dict = read_MGE(mge_file)
-        # pure_flag = check_pure(gtdb_dict, contig_len_dict, mge_dict)
-        pure_flag = check_pure2(checkm)
+
+        sample_obj.get_phylum()
+        mge_dict = sample_obj.read_MGE()
+        depth_dict, length_dict = sample_obj.read_depth()
+        pure_flag = sample_obj.check_pure2()
+        unique_motif_num, unique_motifs = sample_obj.get_unique_motifs()
+        i += 1
         if pure_flag == "pure":
             pure_num += 1
         else:
@@ -210,27 +169,39 @@ def collect_freq():
         # print (f"{prefix} is {pure_flag}")
         if len(mge_dict) < 1:
             continue
+        else:
+            mge_num += 1
 
-        if not os.path.exists(motif_freq_file):
+
+        if unique_motifs == 0:
             print(f"Skipping {prefix} as no motifs.")
             continue
-        ## if host_sum_file is not empty
-        line_num = sum(1 for line in open(host_sum_file) if line.strip())
-        if line_num > 1:
-            host_sum = pd.read_csv(host_sum_file) 
-            all_link_df = pd.concat([all_link_df, host_sum], axis=0)
+        else:
+            has_motif_num += 1
 
-        all_motif_freq = read_motif_freq_ctg(profile, all_motif_freq, mge_dict)
-        i += 1
+        # all_motif_freq = read_motif_freq_ctg(profile, all_motif_freq, mge_dict)
+        
+        # Enhanced motif sharing analysis with additional annotations
+        jaccard_scores = quantify_sharing(sample_obj.profile, mge_dict, depth_dict, length_dict, unique_motifs)
+        jaccard_scores['prefix'] = prefix
+        jaccard_scores['phylum'] = sample_obj.phylum
+        jaccard_all = pd.concat([jaccard_all, jaccard_scores], axis=0)
+        # break
         # if i > 10:
         #     break
-    ## convert to dataframe
+    # convert to dataframe
     # all_motif_freq_df = pd.DataFrame(all_motif_freq, columns=["frequency", "prefix", "motif", "contig_type"])
     # print (all_motif_freq_df)
     # plot_motif_freq(all_motif_freq_df)
-    # print (f"Total {i} samples, {pure_num} pure samples.")
-
-    analyze_link(all_link_df)
+    print (f"Total {i} samples, {pure_num} pure samples, {mge_num} samples with MGEs, {has_motif_num} samples with motifs.")
+    print (jaccard_all)
+    # analyze_link(all_link_df)
+    plot_jaccard(jaccard_all, fig_dir)
+    ## print all rows with jaccard similarity < 0.5 for check
+    low_jaccard = jaccard_all[jaccard_all['jaccard_similarity'] < 0.5]
+    print("Low Jaccard Similarity Samples:")
+    for index, row in low_jaccard.iterrows():
+        print(f"Prefix: {row['prefix']}, MGE Contig: {row['mge_contig']}, Host Contig: {row['host_contig']}, Jaccard Similarity: {row['jaccard_similarity']:.4f}")
 
 def plot_motif_freq(all_motif_freq_df):
     ## plot clustered heatmap
@@ -313,7 +284,7 @@ def plot_motif_freq(all_motif_freq_df):
     g.ax_heatmap.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.05, 1))
     
     plt.title('Motif Frequency Heatmap')
-    plt.savefig("../../tmp/results2/motif_freq_iso.pdf", dpi=300, bbox_inches="tight")
+    plt.savefig("../../tmp/results2/motif_freq_iso2.pdf", dpi=300, bbox_inches="tight")
     plt.close()
 
 def analyze_link(all_link_df):
@@ -378,8 +349,22 @@ def analyze_link(all_link_df):
         if row["cos_sim"] < 0.5:
             print (row["MGE"], row["host"], row["MGE_gc"], row["host_gc"])
 
+def plot_jaccard(jaccard_all, fig_dir):
+    ## box plot hue to phylum
+    plt.figure(figsize=(12, 8))
+    sns.boxplot(data=jaccard_all, x='phylum', y='jaccard_similarity', hue='phylum', palette='Set3', legend=False)
+    plt.title('Jaccard Similarity between MGE and Host by Phylum', fontsize=16, fontweight='bold')
+    plt.xlabel('Phylum', fontsize=14)
+    plt.ylabel('Jaccard Similarity', fontsize=14)
+    plt.xticks(rotation=45, ha='right')
+    plt.grid(axis='y', alpha=0.3)
+    plt.savefig(f"{fig_dir}/jaccard_similarity_by_phylum.pdf", dpi=300, bbox_inches="tight")
+    plt.close()
 
 if __name__ == "__main__":
     # meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
     # sample_env_dict = read_metadata(meta_file)
-    collect_freq()
+    # all_dir = "/home/shuaiw/borg/paper/isolation/bacteria/"
+    all_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
+    fig_dir = "../../tmp/figures/motif_sharing/"
+    collect_freq(all_dir, fig_dir)

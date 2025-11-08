@@ -11,6 +11,9 @@ import re
 
 from Bio.Seq import Seq
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
+from sample_object import get_unique_motifs
+
 
 def get_best_ctg(depth_file, fai, min_len = 1000000):
     """
@@ -412,15 +415,6 @@ def out_best_ctgs2(ref, best_ref, best_ctgs, best_ctg_dir):
                     SeqIO.write(record, f_out, "fasta")
     print(f"Extracted {len(best_ctgs)} best contigs to {best_ref}")
 
-def get_unique_motifs(df_motif):
-    df_motif = df_motif[(df_motif['fraction'] >= 0.4) & (df_motif['nDetected'] >= 100)]
-    ## rm redundant motifs which are reverse complement 
-    unique_motifs = []
-    for index, row in df_motif.iterrows():
-        if row['motifString'] not in unique_motifs and  str(Seq(row['motifString']).reverse_complement()) not in unique_motifs:
-            unique_motifs.append(row['motifString'])
-    return len(unique_motifs)
-
 def count_motifs(depth_file, best_ctgs, work_dir, prefix, environment):
     ## read depth file
     depth_df = pd.read_csv(depth_file)
@@ -442,7 +436,7 @@ def count_motifs(depth_file, best_ctgs, work_dir, prefix, environment):
         if os.path.exists(motif_file):
             df_motif = pd.read_csv(motif_file)
             ## only keep themotifs with fraction >= 0.4, and nDetected >=100
-            unique_motifs_num = get_unique_motifs(df_motif)
+            unique_motifs_num, unique_motifs = get_unique_motifs(df_motif)
             if unique_motifs_num > 0:
                 has_motif_ctg_num += 1
             motif_num_list.append(unique_motifs_num)
@@ -499,7 +493,7 @@ def plot_MT_motif():
         if os.path.exists(motif_file):
             df_motif = pd.read_csv(motif_file)
             ## only keep themotifs with fraction >= 0.4, and nDetected >=100
-            unique_motifs_num = get_unique_motifs(df_motif)
+            unique_motifs_num, unique_motifs = get_unique_motifs(df_motif)
             data.append({
                 'contig': ctg,
                 'motif_num': unique_motifs_num,
