@@ -23,6 +23,7 @@ class My_sample(object):
         self.all_dir = all_dir
 
         self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
+        self.reference_fasta = f"{self.all_dir}/{self.prefix}/{self.prefix}.hifiasm.p_ctg.rename.fa"
         self.fai = f"{self.all_dir}/{self.prefix}/{self.prefix}.hifiasm.p_ctg.rename.fa.fai"
         self.map_sum = f"{self.all_dir}/{self.prefix}/{self.prefix}.align.count.csv"
         self.all_host_file = f"{self.all_dir}/{self.prefix}/all_host_ctgs.tsv"
@@ -35,6 +36,7 @@ class My_sample(object):
         self.checkm = os.path.join(self.work_dir, "../checkM2/quality_report.tsv")
         self.mge_file = f"{self.all_dir}/{self.prefix}/all_mge.tsv"
         self.all_motif_file = f"{self.work_dir}/all.motifs.csv"
+        
         self.mge_dict = None
         self.depth_dict = None
         self.length_dict = None

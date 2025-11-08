@@ -8,6 +8,8 @@ import re
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+from sample_object import My_sample, Isolation_sample
+
 header = """TREE_COLORS
 #use this template to define branch colors and styles, colored ranges and label colors/font styles/backgrounds
 #lines starting with a hash are comments and ignored during parsing
@@ -75,97 +77,23 @@ DATA
 #change the label for leaf node 9606\n"""
 
 
-legend_header = """DATASET_COLORSTRIP
-#In colored strip datasets, each ID is associated to a color box/strip and can have an optional label. Color can be specified in hexadecimal, RGB or RGBA notation. When using RGB or RGBA notation, you cannot use COMMA as the dataset separator
-
-#lines starting with a hash are comments and ignored during parsing
-
-#=================================================================#
-#                    MANDATORY SETTINGS                           #
-#=================================================================#
-#select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throughout this file.
-
-SEPARATOR SPACE
-#SEPARATOR TAB
-#SEPARATOR COMMA
-
-#label is used in the legend table (can be changed later)
-DATASET_LABEL Phylum_Colors
-
-#dataset color (can be changed later)
-DATASET_COLOR #ff0000
-
-#=================================================================#
-#                    OPTIONAL SETTINGS                            #
-#=================================================================#
-
-#If COLOR_BRANCHES is set to 1, branches of the tree will be colored according to the colors of the strips above the leaves.
-#When all children of a node have the same color, it will be colored the same, otherwise it will be black.
-COLOR_BRANCHES 0
-
-#=================================================================#
-#     all other optional settings can be set or changed later     #
-#           in the web interface (under 'Datasets' tab)           #
-#=================================================================#
-
-#Each dataset can have a legend, which is defined using LEGEND_XXX fields
-#For each row in the legend, there should be one shape, color and label.
-#Optionally, you can define an exact legend position using LEGEND_POSITION_X and LEGEND_POSITION_Y. To use automatic legend positioning, do NOT define these values
-#Optionally, shape scaling can be present (LEGEND_SHAPE_SCALES). For each shape, you can define a scaling factor between 0 and 1.
-#Shape should be a number between 1 and 6, or any protein domain shape definition.
-#1: square
-#2: circle
-#3: star
-#4: right pointing triangle
-#5: left pointing triangle
-#6: checkmark
-
-LEGEND_TITLE Phylum
-LEGEND_POSITION_X 100
-LEGEND_POSITION_Y 100
-LEGEND_HORIZONTAL 0
-LEGEND_SHAPES"""
-
-def get_taxa(isolation_taxa, name):
-    # sra_id = contig.split(".")[0]
-    if name in isolation_taxa:
-        return isolation_taxa[name]
-    else:
-        return "unknown"
-
-def read_gtdb(gatk):
-    """
-    Read the GTDB summary file and return a dictionary of contig to bin mapping.
-    """
-    gtdb_df = pd.read_csv(gatk, sep='\t')
-    isolation_taxa = {}
-    for index, row in gtdb_df.iterrows():
-        anno = row['classification']
-        sra_id = row['user_genome']
-        isolation_taxa[sra_id] = anno
-        return isolation_taxa
-        
-def single_run():
-    resultdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
+  
+def single_run(resultdir):
+    
     run_taxa_dict = {}
     for folder in os.listdir(resultdir):
         prefix = folder
-        outdir = f"{resultdir}/{prefix}"
-        reference_fasta = f"{outdir}/{prefix}.hifiasm.p_ctg.rename.fa"
-        gtdb = f"{outdir}/GTDB/gtdbtk.bac120.summary.tsv"
-        ## skip if gtdb file not found
-        if not os.path.exists(gtdb):
+        sample_obj = Isolation_sample(prefix, resultdir)
+
+        if not os.path.exists(sample_obj.gtdb):
             print (f"GTDB file not found for {prefix}, skipping...")
             continue
-        isolation_taxa = read_gtdb(gtdb)
-        bin_name = f"{prefix}.hifiasm.p_ctg.rename"
-        taxa = get_taxa(isolation_taxa, bin_name)
-        # print (f"Processing {prefix} with taxa {taxa}", bin_name)
-        run_taxa_dict[prefix] = taxa
+        sample_obj.get_phylum()
+        run_taxa_dict[prefix] = sample_obj.lineage
 
     return run_taxa_dict
 
-def color_phylum():
+def color_phylum(run_taxa_dict, tree_results):
     ## in iTol, color by phylum using general colors
     ## collect phyllums in run_taxa_dict, and assign colors
     taxa_list = set(list(run_taxa_dict.values()))
@@ -207,8 +135,8 @@ def color_phylum():
     Label_anno = Label_header
     
 
-    
-    with open("/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/phylum_annotations.txt", "w") as f:
+
+    with open(f"{tree_results}/phylum_annotations.txt", "w") as f:
         f.write(f"{header}\n")
         for bin_name, taxa in run_taxa_dict.items():
             phylum = taxa.split(";")[1] if len(taxa.split(";")) > 1 else "unknown"
@@ -232,10 +160,12 @@ def color_phylum():
     # print(run_taxa_dict)
     
     ## save label annotation file
-    with open("/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/label_annotations.csv", "w") as f:
+    with open(f"{tree_results}/label_annotations.csv", "w") as f:
         f.write(Label_anno)
 
 
-
-run_taxa_dict = single_run()
-color_phylum()
+if __name__ == "__main__":
+    resultdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
+    tree_results = "/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/"
+    run_taxa_dict = single_run(resultdir)
+    color_phylum(run_taxa_dict, tree_results)

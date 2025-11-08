@@ -8,7 +8,7 @@ from sklearn.manifold import TSNE
 from scipy.spatial.distance import pdist, squareform, cosine
 from sklearn.metrics.pairwise import cosine_similarity
 import re
-
+import sys
 from Bio.Seq import Seq
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
