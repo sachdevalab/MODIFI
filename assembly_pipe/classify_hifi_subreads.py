@@ -115,7 +115,7 @@ def batch_run(ccs_bam_dir):
             if not os.path.exists(finish_file):
                 cmd_list.append(cmd)
     batch_file = "run_all_isolation.sh"
-    num_scripts = 10
+    num_scripts = 5
     f = open(batch_file, "w")
     for i in range(num_scripts):
         script_file = f"batch/run_isolation_part_{i}.sh"
@@ -156,7 +156,7 @@ def methy_run(results_dir):
 folder = "/groups/banfield/projects/multienv/methylation_temp/aws_methylation2/"
 ccs_bam_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/"
 results_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
-# batch_run(ccs_bam_dir)
-convert_hifi(folder, ccs_bam_dir)
+batch_run(ccs_bam_dir)
+# convert_hifi(folder, ccs_bam_dir)
 # methy_run(results_dir)
 

@@ -156,9 +156,45 @@ def read_prefix_table(prefix_table):
             prefix_dict[raw_prefix] = prefix
     return prefix_dict
 
+def batch_asthma(cmd_file, prefix_table, outdir):
+    """
+    Read a list of BAM files from a given file.
+    """
+    prefix_dict = read_prefix_table(prefix_table)
+    w = open(cmd_file, 'w')
+    i = 1
+    with open(prefix_table, 'r') as f:
+        for line in f:
+            items = line.strip().split("\t")
+            raw_prefix = items[0]
+            prefix = items[1]
+            hifi_bam = items[2]
+
+            work_dir = os.path.join(outdir, prefix)
+
+            cmd = f"""
+            #### number {i}
+            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \\
+                hifi_bam={hifi_bam} \\
+                prefix={prefix} \\
+                work_dir={work_dir} -j 64" \\
+                --job-name={prefix}
+            """
+            print (cmd.strip())
+            print (cmd, file=w)
+
+            i += 1
+    w.close()
+
+
 
 if __name__ == "__main__":
-    bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
-    cmd_file = "run.sh"
-    prefix_table = "prefix_table.tab"
-    read_list(bam_list, cmd_file, prefix_table)
+    # bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
+    # cmd_file = "run.sh"
+    # prefix_table = "prefix_table.tab"
+    # read_list(bam_list, cmd_file, prefix_table)
+
+    outdir = "/groups/banfield/projects/multienv/methylation_temp/asthma_run/"
+    cmd_file = "run_asthma.sh"
+    prefix_table = "prefix_table2.tab"
+    batch_asthma(cmd_file, prefix_table, outdir)

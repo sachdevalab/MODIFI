@@ -1,122 +1,157 @@
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR13063111.ccs.bam \
-                        prefix=ERR13063111 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR13063111 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR10386752.ccs.bam \
+                        prefix=ERR10386752 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR10386752 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR13655874.ccs.bam \
-                        prefix=ERR13655874 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR13655874 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR12743217.ccs.bam \
+                        prefix=ERR12743217 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR12743217 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR13656132.ccs.bam \
-                        prefix=ERR13656132 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR13656132 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR12743222.ccs.bam \
+                        prefix=ERR12743222 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR12743222 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR13656274.ccs.bam \
-                        prefix=ERR13656274 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR13656274 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR12743228.ccs.bam \
+                        prefix=ERR12743228 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR12743228 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR13656541.ccs.bam \
-                        prefix=ERR13656541 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR13656541 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR13063109.ccs.bam \
+                        prefix=ERR13063109 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR13063109 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373166.ccs.bam \
-                        prefix=ERR15373166 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373166 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR13655792.ccs.bam \
+                        prefix=ERR13655792 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR13655792 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373190.ccs.bam \
-                        prefix=ERR15373190 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373190 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR13656302.ccs.bam \
+                        prefix=ERR13656302 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR13656302 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373220.ccs.bam \
-                        prefix=ERR15373220 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373220 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373173.ccs.bam \
+                        prefix=ERR15373173 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373173 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373231.ccs.bam \
-                        prefix=ERR15373231 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373231 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373180.ccs.bam \
+                        prefix=ERR15373180 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373180 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15402434.ccs.bam \
-                        prefix=ERR15402434 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15402434 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373196.ccs.bam \
+                        prefix=ERR15373196 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373196 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6535518.ccs.bam \
-                        prefix=ERR6535518 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6535518 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373202.ccs.bam \
+                        prefix=ERR15373202 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373202 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6536176.ccs.bam \
-                        prefix=ERR6536176 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6536176 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373210.ccs.bam \
+                        prefix=ERR15373210 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373210 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6536186.ccs.bam \
-                        prefix=ERR6536186 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6536186 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373217.ccs.bam \
+                        prefix=ERR15373217 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373217 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6536196.ccs.bam \
-                        prefix=ERR6536196 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6536196 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR15373240.ccs.bam \
+                        prefix=ERR15373240 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR15373240 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6536206.ccs.bam \
-                        prefix=ERR6536206 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6536206 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6536241.ccs.bam \
+                        prefix=ERR6536241 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6536241 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6536217.ccs.bam \
-                        prefix=ERR6536217 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6536217 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6719415.ccs.bam \
+                        prefix=ERR6719415 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6719415 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6536227.ccs.bam \
-                        prefix=ERR6536227 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6536227 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6719425.ccs.bam \
+                        prefix=ERR6719425 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6719425 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6536237.ccs.bam \
-                        prefix=ERR6536237 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6536237 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6719434.ccs.bam \
+                        prefix=ERR6719434 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6719434 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6536247.ccs.bam \
-                        prefix=ERR6536247 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6536247 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6719440.ccs.bam \
+                        prefix=ERR6719440 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6719440 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6719419.ccs.bam \
-                        prefix=ERR6719419 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6719419 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6797425.ccs.bam \
+                        prefix=ERR6797425 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6797425 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6719433.ccs.bam \
-                        prefix=ERR6719433 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6719433 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6797430.ccs.bam \
+                        prefix=ERR6797430 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6797430 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6797423.ccs.bam \
-                        prefix=ERR6797423 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6797423 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6797435.ccs.bam \
+                        prefix=ERR6797435 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6797435 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR6797433.ccs.bam \
-                        prefix=ERR6797433 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR6797433 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR7339227.ccs.bam \
+                        prefix=ERR7339227 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR7339227 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9516997.ccs.bam \
-                        prefix=ERR9516997 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9516997 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9516994.ccs.bam \
+                        prefix=ERR9516994 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9516994 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9516999.ccs.bam \
+                        prefix=ERR9516999 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9516999 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9517004.ccs.bam \
+                        prefix=ERR9517004 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9517004 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9517009.ccs.bam \
+                        prefix=ERR9517009 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9517009 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9517014.ccs.bam \
+                        prefix=ERR9517014 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9517014 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9517019.ccs.bam \
+                        prefix=ERR9517019 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9517019 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9517024.ccs.bam \
+                        prefix=ERR9517024 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9517024 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9517029.ccs.bam \
+                        prefix=ERR9517029 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9517029 \
                         -j 64  
 snakemake -s isolation.smk \
                         --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9517034.ccs.bam \
@@ -124,149 +159,354 @@ snakemake -s isolation.smk \
                         work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9517034 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9795553.ccs.bam \
-                        prefix=ERR9795553 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9795553 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9682690.ccs.bam \
+                        prefix=ERR9682690 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9682690 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843293.ccs.bam \
-                        prefix=ERR9843293 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843293 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9682695.ccs.bam \
+                        prefix=ERR9682695 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9682695 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843311.ccs.bam \
-                        prefix=ERR9843311 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843311 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9682700.ccs.bam \
+                        prefix=ERR9682700 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9682700 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843325.ccs.bam \
-                        prefix=ERR9843325 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843325 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9682705.ccs.bam \
+                        prefix=ERR9682705 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9682705 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843344.ccs.bam \
-                        prefix=ERR9843344 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843344 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9682710.ccs.bam \
+                        prefix=ERR9682710 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9682710 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843356.ccs.bam \
-                        prefix=ERR9843356 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843356 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9682715.ccs.bam \
+                        prefix=ERR9682715 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9682715 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843369.ccs.bam \
-                        prefix=ERR9843369 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843369 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9682720.ccs.bam \
+                        prefix=ERR9682720 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9682720 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843379.ccs.bam \
-                        prefix=ERR9843379 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843379 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9682725.ccs.bam \
+                        prefix=ERR9682725 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9682725 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR13132367.ccs.bam \
-                        prefix=SRR13132367 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR13132367 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9682730.ccs.bam \
+                        prefix=ERR9682730 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9682730 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108818.ccs.bam \
-                        prefix=SRR14108818 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108818 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9682735.ccs.bam \
+                        prefix=ERR9682735 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9682735 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108836.ccs.bam \
-                        prefix=SRR14108836 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108836 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9795546.ccs.bam \
+                        prefix=ERR9795546 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9795546 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108854.ccs.bam \
-                        prefix=SRR14108854 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108854 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9795551.ccs.bam \
+                        prefix=ERR9795551 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9795551 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108865.ccs.bam \
-                        prefix=SRR14108865 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108865 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843285.ccs.bam \
+                        prefix=ERR9843285 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843285 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15075161.ccs.bam \
-                        prefix=SRR15075161 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15075161 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843291.ccs.bam \
+                        prefix=ERR9843291 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843291 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15076204.ccs.bam \
-                        prefix=SRR15076204 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15076204 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843301.ccs.bam \
+                        prefix=ERR9843301 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843301 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15076584.ccs.bam \
-                        prefix=SRR15076584 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15076584 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843308.ccs.bam \
+                        prefix=ERR9843308 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843308 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15079693.ccs.bam \
-                        prefix=SRR15079693 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15079693 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843315.ccs.bam \
+                        prefix=ERR9843315 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843315 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15444232.ccs.bam \
-                        prefix=SRR15444232 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15444232 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843323.ccs.bam \
+                        prefix=ERR9843323 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843323 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR17133870.ccs.bam \
-                        prefix=SRR17133870 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR17133870 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843328.ccs.bam \
+                        prefix=ERR9843328 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843328 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19049480.ccs.bam \
-                        prefix=SRR19049480 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19049480 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843339.ccs.bam \
+                        prefix=ERR9843339 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843339 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519860.ccs.bam \
-                        prefix=SRR19519860 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519860 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843348.ccs.bam \
+                        prefix=ERR9843348 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843348 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519871.ccs.bam \
-                        prefix=SRR19519871 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519871 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843354.ccs.bam \
+                        prefix=ERR9843354 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843354 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519883.ccs.bam \
-                        prefix=SRR19519883 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519883 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843361.ccs.bam \
+                        prefix=ERR9843361 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843361 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519894.ccs.bam \
-                        prefix=SRR19519894 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519894 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843366.ccs.bam \
+                        prefix=ERR9843366 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843366 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519906.ccs.bam \
-                        prefix=SRR19519906 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519906 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843372.ccs.bam \
+                        prefix=ERR9843372 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843372 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519917.ccs.bam \
-                        prefix=SRR19519917 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519917 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843377.ccs.bam \
+                        prefix=ERR9843377 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843377 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519927.ccs.bam \
-                        prefix=SRR19519927 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519927 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/ERR9843382.ccs.bam \
+                        prefix=ERR9843382 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//ERR9843382 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519938.ccs.bam \
-                        prefix=SRR19519938 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519938 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR13132365.ccs.bam \
+                        prefix=SRR13132365 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR13132365 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR24764220.ccs.bam \
-                        prefix=SRR24764220 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR24764220 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108810.ccs.bam \
+                        prefix=SRR14108810 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108810 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108815.ccs.bam \
+                        prefix=SRR14108815 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108815 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108822.ccs.bam \
+                        prefix=SRR14108822 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108822 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108833.ccs.bam \
+                        prefix=SRR14108833 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108833 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108842.ccs.bam \
+                        prefix=SRR14108842 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108842 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108851.ccs.bam \
+                        prefix=SRR14108851 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108851 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108857.ccs.bam \
+                        prefix=SRR14108857 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108857 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR14108862.ccs.bam \
+                        prefix=SRR14108862 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR14108862 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15032811.ccs.bam \
+                        prefix=SRR15032811 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15032811 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15032816.ccs.bam \
+                        prefix=SRR15032816 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15032816 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15075387.ccs.bam \
+                        prefix=SRR15075387 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15075387 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15075447.ccs.bam \
+                        prefix=SRR15075447 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15075447 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15076250.ccs.bam \
+                        prefix=SRR15076250 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15076250 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15076444.ccs.bam \
+                        prefix=SRR15076444 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15076444 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15076596.ccs.bam \
+                        prefix=SRR15076596 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15076596 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15076629.ccs.bam \
+                        prefix=SRR15076629 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15076629 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15079697.ccs.bam \
+                        prefix=SRR15079697 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15079697 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR15195250.ccs.bam \
+                        prefix=SRR15195250 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR15195250 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR16202909.ccs.bam \
+                        prefix=SRR16202909 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR16202909 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR16962737.ccs.bam \
+                        prefix=SRR16962737 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR16962737 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR17157250.ccs.bam \
+                        prefix=SRR17157250 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR17157250 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR18933346.ccs.bam \
+                        prefix=SRR18933346 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR18933346 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19049487.ccs.bam \
+                        prefix=SRR19049487 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19049487 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519855.ccs.bam \
+                        prefix=SRR19519855 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519855 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519861.ccs.bam \
+                        prefix=SRR19519861 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519861 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519866.ccs.bam \
+                        prefix=SRR19519866 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519866 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519872.ccs.bam \
+                        prefix=SRR19519872 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519872 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519878.ccs.bam \
+                        prefix=SRR19519878 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519878 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519885.ccs.bam \
+                        prefix=SRR19519885 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519885 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519890.ccs.bam \
+                        prefix=SRR19519890 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519890 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519895.ccs.bam \
+                        prefix=SRR19519895 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519895 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519901.ccs.bam \
+                        prefix=SRR19519901 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519901 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519907.ccs.bam \
+                        prefix=SRR19519907 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519907 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519913.ccs.bam \
+                        prefix=SRR19519913 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519913 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519918.ccs.bam \
+                        prefix=SRR19519918 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519918 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519923.ccs.bam \
+                        prefix=SRR19519923 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519923 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519928.ccs.bam \
+                        prefix=SRR19519928 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519928 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519933.ccs.bam \
+                        prefix=SRR19519933 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519933 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR19519939.ccs.bam \
+                        prefix=SRR19519939 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR19519939 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR23455085.ccs.bam \
+                        prefix=SRR23455085 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR23455085 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR24764221.ccs.bam \
+                        prefix=SRR24764221 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR24764221 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR25258151.ccs.bam \
+                        prefix=SRR25258151 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR25258151 \
                         -j 64  
 snakemake -s isolation.smk \
                         --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR26329584.ccs.bam \
@@ -274,109 +514,289 @@ snakemake -s isolation.smk \
                         work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR26329584 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467503.ccs.bam \
-                        prefix=SRR27467503 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467503 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467497.ccs.bam \
+                        prefix=SRR27467497 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467497 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467513.ccs.bam \
-                        prefix=SRR27467513 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467513 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467502.ccs.bam \
+                        prefix=SRR27467502 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467502 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467523.ccs.bam \
-                        prefix=SRR27467523 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467523 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467507.ccs.bam \
+                        prefix=SRR27467507 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467507 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467533.ccs.bam \
-                        prefix=SRR27467533 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467533 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467512.ccs.bam \
+                        prefix=SRR27467512 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467512 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467544.ccs.bam \
-                        prefix=SRR27467544 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467544 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467517.ccs.bam \
+                        prefix=SRR27467517 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467517 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467554.ccs.bam \
-                        prefix=SRR27467554 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467554 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467522.ccs.bam \
+                        prefix=SRR27467522 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467522 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467564.ccs.bam \
-                        prefix=SRR27467564 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467564 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467527.ccs.bam \
+                        prefix=SRR27467527 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467527 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467574.ccs.bam \
-                        prefix=SRR27467574 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467574 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467532.ccs.bam \
+                        prefix=SRR27467532 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467532 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467584.ccs.bam \
-                        prefix=SRR27467584 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467584 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467537.ccs.bam \
+                        prefix=SRR27467537 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467537 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR28781550.ccs.bam \
-                        prefix=SRR28781550 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR28781550 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467542.ccs.bam \
+                        prefix=SRR27467542 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467542 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR28812098.ccs.bam \
-                        prefix=SRR28812098 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR28812098 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467547.ccs.bam \
+                        prefix=SRR27467547 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467547 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR29842186.ccs.bam \
-                        prefix=SRR29842186 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR29842186 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467552.ccs.bam \
+                        prefix=SRR27467552 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467552 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR29842206.ccs.bam \
-                        prefix=SRR29842206 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR29842206 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467557.ccs.bam \
+                        prefix=SRR27467557 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467557 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR30238177.ccs.bam \
-                        prefix=SRR30238177 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR30238177 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467562.ccs.bam \
+                        prefix=SRR27467562 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467562 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303423.ccs.bam \
-                        prefix=SRR31303423 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303423 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467567.ccs.bam \
+                        prefix=SRR27467567 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467567 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303433.ccs.bam \
-                        prefix=SRR31303433 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303433 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467572.ccs.bam \
+                        prefix=SRR27467572 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467572 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303443.ccs.bam \
-                        prefix=SRR31303443 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303443 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467577.ccs.bam \
+                        prefix=SRR27467577 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467577 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303454.ccs.bam \
-                        prefix=SRR31303454 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303454 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467582.ccs.bam \
+                        prefix=SRR27467582 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467582 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303464.ccs.bam \
-                        prefix=SRR31303464 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303464 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR27467587.ccs.bam \
+                        prefix=SRR27467587 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR27467587 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303474.ccs.bam \
-                        prefix=SRR31303474 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303474 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR28781548.ccs.bam \
+                        prefix=SRR28781548 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR28781548 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303484.ccs.bam \
-                        prefix=SRR31303484 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303484 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR28781553.ccs.bam \
+                        prefix=SRR28781553 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR28781553 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR28781560.ccs.bam \
+                        prefix=SRR28781560 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR28781560 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR29015166.ccs.bam \
+                        prefix=SRR29015166 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR29015166 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR29552491.ccs.bam \
+                        prefix=SRR29552491 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR29552491 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR29842190.ccs.bam \
+                        prefix=SRR29842190 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR29842190 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR29842202.ccs.bam \
+                        prefix=SRR29842202 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR29842202 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR30223606.ccs.bam \
+                        prefix=SRR30223606 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR30223606 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR30238175.ccs.bam \
+                        prefix=SRR30238175 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR30238175 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR30802885.ccs.bam \
+                        prefix=SRR30802885 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR30802885 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31038675.ccs.bam \
+                        prefix=SRR31038675 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31038675 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31038681.ccs.bam \
+                        prefix=SRR31038681 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31038681 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31038687.ccs.bam \
+                        prefix=SRR31038687 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31038687 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303427.ccs.bam \
+                        prefix=SRR31303427 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303427 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303432.ccs.bam \
+                        prefix=SRR31303432 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303432 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303437.ccs.bam \
+                        prefix=SRR31303437 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303437 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303442.ccs.bam \
+                        prefix=SRR31303442 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303442 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303447.ccs.bam \
+                        prefix=SRR31303447 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303447 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303452.ccs.bam \
+                        prefix=SRR31303452 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303452 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303458.ccs.bam \
+                        prefix=SRR31303458 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303458 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303463.ccs.bam \
+                        prefix=SRR31303463 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303463 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303468.ccs.bam \
+                        prefix=SRR31303468 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303468 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303473.ccs.bam \
+                        prefix=SRR31303473 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303473 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303478.ccs.bam \
+                        prefix=SRR31303478 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303478 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31303483.ccs.bam \
+                        prefix=SRR31303483 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31303483 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR31647635.ccs.bam \
+                        prefix=SRR31647635 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR31647635 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364633.ccs.bam \
+                        prefix=SRR32364633 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364633 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364638.ccs.bam \
+                        prefix=SRR32364638 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364638 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364644.ccs.bam \
+                        prefix=SRR32364644 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364644 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364649.ccs.bam \
+                        prefix=SRR32364649 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364649 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364654.ccs.bam \
+                        prefix=SRR32364654 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364654 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364659.ccs.bam \
+                        prefix=SRR32364659 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364659 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364664.ccs.bam \
+                        prefix=SRR32364664 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364664 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364669.ccs.bam \
+                        prefix=SRR32364669 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364669 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364674.ccs.bam \
+                        prefix=SRR32364674 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364674 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364679.ccs.bam \
+                        prefix=SRR32364679 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364679 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364684.ccs.bam \
+                        prefix=SRR32364684 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364684 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364689.ccs.bam \
+                        prefix=SRR32364689 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364689 \
                         -j 64  
 snakemake -s isolation.smk \
                         --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364694.ccs.bam \
@@ -384,9 +804,149 @@ snakemake -s isolation.smk \
                         work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364694 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364784.ccs.bam \
-                        prefix=SRR32364784 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364784 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364699.ccs.bam \
+                        prefix=SRR32364699 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364699 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364704.ccs.bam \
+                        prefix=SRR32364704 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364704 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364709.ccs.bam \
+                        prefix=SRR32364709 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364709 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364715.ccs.bam \
+                        prefix=SRR32364715 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364715 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364720.ccs.bam \
+                        prefix=SRR32364720 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364720 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364725.ccs.bam \
+                        prefix=SRR32364725 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364725 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364731.ccs.bam \
+                        prefix=SRR32364731 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364731 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364737.ccs.bam \
+                        prefix=SRR32364737 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364737 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364742.ccs.bam \
+                        prefix=SRR32364742 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364742 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364747.ccs.bam \
+                        prefix=SRR32364747 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364747 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364752.ccs.bam \
+                        prefix=SRR32364752 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364752 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364757.ccs.bam \
+                        prefix=SRR32364757 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364757 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364762.ccs.bam \
+                        prefix=SRR32364762 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364762 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364768.ccs.bam \
+                        prefix=SRR32364768 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364768 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364773.ccs.bam \
+                        prefix=SRR32364773 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364773 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364778.ccs.bam \
+                        prefix=SRR32364778 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364778 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364783.ccs.bam \
+                        prefix=SRR32364783 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364783 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364788.ccs.bam \
+                        prefix=SRR32364788 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364788 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364793.ccs.bam \
+                        prefix=SRR32364793 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364793 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364798.ccs.bam \
+                        prefix=SRR32364798 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364798 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364803.ccs.bam \
+                        prefix=SRR32364803 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364803 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364810.ccs.bam \
+                        prefix=SRR32364810 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364810 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364815.ccs.bam \
+                        prefix=SRR32364815 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364815 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364820.ccs.bam \
+                        prefix=SRR32364820 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364820 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364825.ccs.bam \
+                        prefix=SRR32364825 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364825 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364830.ccs.bam \
+                        prefix=SRR32364830 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364830 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364835.ccs.bam \
+                        prefix=SRR32364835 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364835 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364840.ccs.bam \
+                        prefix=SRR32364840 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364840 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364845.ccs.bam \
+                        prefix=SRR32364845 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364845 \
                         -j 64  
 snakemake -s isolation.smk \
                         --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364850.ccs.bam \
@@ -394,9 +954,69 @@ snakemake -s isolation.smk \
                         work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364850 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364902.ccs.bam \
-                        prefix=SRR32364902 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364902 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364855.ccs.bam \
+                        prefix=SRR32364855 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364855 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364860.ccs.bam \
+                        prefix=SRR32364860 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364860 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364865.ccs.bam \
+                        prefix=SRR32364865 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364865 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364870.ccs.bam \
+                        prefix=SRR32364870 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364870 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364875.ccs.bam \
+                        prefix=SRR32364875 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364875 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364882.ccs.bam \
+                        prefix=SRR32364882 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364882 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364887.ccs.bam \
+                        prefix=SRR32364887 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364887 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364892.ccs.bam \
+                        prefix=SRR32364892 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364892 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364898.ccs.bam \
+                        prefix=SRR32364898 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364898 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364903.ccs.bam \
+                        prefix=SRR32364903 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364903 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364908.ccs.bam \
+                        prefix=SRR32364908 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364908 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364913.ccs.bam \
+                        prefix=SRR32364913 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364913 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364918.ccs.bam \
+                        prefix=SRR32364918 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364918 \
                         -j 64  
 snakemake -s isolation.smk \
                         --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364923.ccs.bam \
@@ -404,12 +1024,72 @@ snakemake -s isolation.smk \
                         work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364923 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32456542.ccs.bam \
-                        prefix=SRR32456542 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32456542 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32364928.ccs.bam \
+                        prefix=SRR32364928 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32364928 \
                         -j 64  
 snakemake -s isolation.smk \
-                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR34899602.ccs.bam \
-                        prefix=SRR34899602 \
-                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR34899602 \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375280.ccs.bam \
+                        prefix=SRR32375280 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375280 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375285.ccs.bam \
+                        prefix=SRR32375285 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375285 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375290.ccs.bam \
+                        prefix=SRR32375290 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375290 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375295.ccs.bam \
+                        prefix=SRR32375295 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375295 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375300.ccs.bam \
+                        prefix=SRR32375300 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375300 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375305.ccs.bam \
+                        prefix=SRR32375305 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375305 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375310.ccs.bam \
+                        prefix=SRR32375310 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375310 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375315.ccs.bam \
+                        prefix=SRR32375315 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375315 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375320.ccs.bam \
+                        prefix=SRR32375320 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375320 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375325.ccs.bam \
+                        prefix=SRR32375325 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375325 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR32375330.ccs.bam \
+                        prefix=SRR32375330 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR32375330 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR33150860.ccs.bam \
+                        prefix=SRR33150860 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR33150860 \
+                        -j 64  
+snakemake -s isolation.smk \
+                        --config hifi_bam=/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/SRR34878266.ccs.bam \
+                        prefix=SRR34878266 \
+                        work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results//SRR34878266 \
                         -j 64  
