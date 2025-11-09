@@ -44,8 +44,7 @@ def read_motif_freq_ctg(profile, all_motif_freq, mge_dict):
             all_motif_freq.append([row[cols[j]], cols[j], row["motifString"], ctg_type])
     return all_motif_freq
 
-
-def quantify_sharing(profile, mge_dict, depth_dict, length_dict, unique_motifs):
+def quantify_sharing(sample_obj, mge_dict, depth_dict, length_dict, unique_motifs):
     """
     Add contig annotation columns (type, depth, length) to motif profile data.
     
@@ -58,7 +57,7 @@ def quantify_sharing(profile, mge_dict, depth_dict, length_dict, unique_motifs):
     Returns:
         pd.DataFrame: Enhanced dataframe with additional annotation columns
     """
-    df = pd.read_csv(profile)
+    df = pd.read_csv(sample_obj.profile)
     
     # Get contig names (all columns except the first one which is motifString)
     contig_cols = df.columns.tolist()[1:]  # Skip the motifString column
@@ -84,7 +83,10 @@ def quantify_sharing(profile, mge_dict, depth_dict, length_dict, unique_motifs):
             'contig_type': ctg_type,
             'mge_type': mge_type,
             'depth': depth,
-            'length': length
+            'length': length,
+            'prefix': sample_obj.prefix,
+            'phylum': sample_obj.phylum,
+            'lineage': sample_obj.lineage
         })
     
     # Convert to DataFrame
@@ -99,8 +101,8 @@ def quantify_sharing(profile, mge_dict, depth_dict, length_dict, unique_motifs):
     df_enhanced = df_melted.merge(annotations_df, on='contig', how='left')
     
     # Reorder columns for better readability
-    df_enhanced = df_enhanced[['motifString', 'contig', 'contig_type', 'mge_type', 
-                               'depth', 'length', 'motif_frequency']]
+    # df_enhanced = df_enhanced[['motifString', 'contig', 'contig_type', 'mge_type', 
+    #                            'depth', 'length', 'motif_frequency']]
     ## only consider the motif in unique_motifs
     df_enhanced = df_enhanced[df_enhanced['motifString'].isin(unique_motifs)]
 
@@ -115,14 +117,50 @@ def cal_jaccard(df_enhanced, depth_cutoff = 10, length_cutoff = 5000, bin_freq =
     ]
     ## binary the motif_frequency based on bin_freq
     filtered_df['motif_frequency'] = filtered_df['motif_frequency'].apply(lambda x: 1 if x >= bin_freq else 0)
-    print (filtered_df)
+    # print (filtered_df)
     ## calculate jaccard similarity between each pair of MGE and host
     ## Only consider motifs with frequency = 1 (present motifs)
     present_motifs = filtered_df[filtered_df['motif_frequency'] == 1]
     
-    mge_motifs = present_motifs[present_motifs['contig_type'] == 'MGE'][['motifString', 'contig']]
-    host_motifs = present_motifs[present_motifs['contig_type'] == 'Host'][['motifString', 'contig']]
+    mge_motifs = present_motifs[present_motifs['contig_type'] == 'MGE'][['motifString', 'contig', 'prefix', 'phylum', 'lineage']]
+    host_motifs = present_motifs[present_motifs['contig_type'] == 'Host'][['motifString', 'contig', 'prefix', 'phylum', 'lineage']]
+
+    # print(f"[✔] Found {len(mge_motifs)} MGE motifs and {len(host_motifs)} Host motifs with frequency = 1")
     
+    jaccard_scores = []
+    for mge_contig in mge_motifs['contig'].unique():
+        mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
+        for host_contig in host_motifs['contig'].unique():
+            host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
+            intersection = mge_motifs_set.intersection(host_motifs_set)
+            union = mge_motifs_set.union(host_motifs_set)
+            if len(union) == 0:
+                jaccard = 0.0
+            else:
+                jaccard = len(intersection) / len(union)
+
+            if mge_motifs['prefix'].values[0] == host_motifs['prefix'].values[0] :
+                relation = 'same_sample'
+            else:
+                relation = esti_relation(
+                    mge_motifs[mge_motifs['contig'] == mge_contig]['lineage'].values[0],
+                    host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0]
+                )
+            jaccard_scores.append({
+                'mge_contig': mge_contig,
+                'host_contig': host_contig,
+                'jaccard_similarity': jaccard,
+                'share_num': len(intersection),
+                'all_num': len(union),
+                'relation': relation,
+            })
+    # print (jaccard_scores)
+    return pd.DataFrame(jaccard_scores), present_motifs
+
+def cross_sample_jaccard(present_motifs_all):
+    mge_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'MGE'][['motifString', 'contig', 'prefix', 'phylum', 'lineage']]
+    host_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'Host'][['motifString', 'contig', 'prefix', 'phylum', 'lineage']]
+
     print(f"[✔] Found {len(mge_motifs)} MGE motifs and {len(host_motifs)} Host motifs with frequency = 1")
     
     jaccard_scores = []
@@ -132,76 +170,55 @@ def cal_jaccard(df_enhanced, depth_cutoff = 10, length_cutoff = 5000, bin_freq =
             host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
             intersection = mge_motifs_set.intersection(host_motifs_set)
             union = mge_motifs_set.union(host_motifs_set)
-            if len(union) > 0:
+            if len(union) == 0:
+                jaccard = 0.0
+            else:
                 jaccard = len(intersection) / len(union)
-                jaccard_scores.append({
-                    'mge_contig': mge_contig,
-                    'host_contig': host_contig,
-                    'jaccard_similarity': jaccard
-                })
-    print (jaccard_scores)
+
+            # Get the prefix for the current MGE and host contigs
+            mge_prefix = mge_motifs[mge_motifs['contig'] == mge_contig]['prefix'].iloc[0]
+            host_prefix = host_motifs[host_motifs['contig'] == host_contig]['prefix'].iloc[0]
+            
+            if mge_prefix == host_prefix:
+                relation = 'same_sample'
+                # continue
+            else:
+                relation = esti_relation(
+                    mge_motifs[mge_motifs['contig'] == mge_contig]['lineage'].values[0],
+                    host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0]
+                )
+            jaccard_scores.append({
+                'mge_contig': mge_contig,
+                'host_contig': host_contig,
+                'jaccard_similarity': jaccard,
+                'share_num': len(intersection),
+                'all_num': len(union),
+                'relation': relation,
+            })
+
     return pd.DataFrame(jaccard_scores)
 
+def esti_relation(lineage1, lineage2):
+    """
+    Estimate the relationship between two lineages based on taxonomic levels.
+    
+    Args:
+        lineage1 (str): Taxonomic lineage of the first contig
+        lineage2 (str): Taxonomic lineage of the second contig
+    
+    Returns:
+        str: Estimated relationship (e.g., 'same_species', 'same_genus', etc.)
+    """
+    levels = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+    taxa1 = lineage1.split(';')
+    taxa2 = lineage2.split(';')
+    
+    for i in range(len(levels)-1, -1, -1):
+        if taxa1[i] == taxa2[i] and taxa1[i] != 'unknown' and len(taxa1[i]) > 3:
+            return f'same_{levels[i]}'
+    
+    return 'different_lineage'
 
-def collect_freq(all_dir, fig_dir):
-    all_motif_freq = []
-    all_link_df = pd.DataFrame()
-
-    i = 0
-    pure_num, mge_num, has_motif_num = 0, 0, 0
-    jaccard_all = pd.DataFrame()
-    for prefix in os.listdir(all_dir):
-
-        sample_obj = Isolation_sample(prefix, all_dir)
-        if not os.path.exists(sample_obj.profile):
-            continue
-
-        sample_obj.get_phylum()
-        mge_dict = sample_obj.read_MGE()
-        depth_dict, length_dict = sample_obj.read_depth()
-        pure_flag = sample_obj.check_pure2()
-        unique_motif_num, unique_motifs = sample_obj.get_unique_motifs()
-        i += 1
-        if pure_flag == "pure":
-            pure_num += 1
-        else:
-            continue
-        # print (f"{prefix} is {pure_flag}")
-        if len(mge_dict) < 1:
-            continue
-        else:
-            mge_num += 1
-
-
-        if unique_motifs == 0:
-            print(f"Skipping {prefix} as no motifs.")
-            continue
-        else:
-            has_motif_num += 1
-
-        # all_motif_freq = read_motif_freq_ctg(profile, all_motif_freq, mge_dict)
-        
-        # Enhanced motif sharing analysis with additional annotations
-        jaccard_scores = quantify_sharing(sample_obj.profile, mge_dict, depth_dict, length_dict, unique_motifs)
-        jaccard_scores['prefix'] = prefix
-        jaccard_scores['phylum'] = sample_obj.phylum
-        jaccard_all = pd.concat([jaccard_all, jaccard_scores], axis=0)
-        # break
-        # if i > 10:
-        #     break
-    # convert to dataframe
-    # all_motif_freq_df = pd.DataFrame(all_motif_freq, columns=["frequency", "prefix", "motif", "contig_type"])
-    # print (all_motif_freq_df)
-    # plot_motif_freq(all_motif_freq_df)
-    print (f"Total {i} samples, {pure_num} pure samples, {mge_num} samples with MGEs, {has_motif_num} samples with motifs.")
-    print (jaccard_all)
-    # analyze_link(all_link_df)
-    plot_jaccard(jaccard_all, fig_dir)
-    ## print all rows with jaccard similarity < 0.5 for check
-    low_jaccard = jaccard_all[jaccard_all['jaccard_similarity'] < 0.5]
-    print("Low Jaccard Similarity Samples:")
-    for index, row in low_jaccard.iterrows():
-        print(f"Prefix: {row['prefix']}, MGE Contig: {row['mge_contig']}, Host Contig: {row['host_contig']}, Jaccard Similarity: {row['jaccard_similarity']:.4f}")
 
 def plot_motif_freq(all_motif_freq_df):
     ## plot clustered heatmap
@@ -351,9 +368,9 @@ def analyze_link(all_link_df):
 
 def plot_jaccard(jaccard_all, fig_dir):
     ## box plot hue to phylum
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(5, 5))
     sns.boxplot(data=jaccard_all, x='phylum', y='jaccard_similarity', hue='phylum', palette='Set3', legend=False)
-    plt.title('Jaccard Similarity between MGE and Host by Phylum', fontsize=16, fontweight='bold')
+    # plt.title('Jaccard Similarity between MGE and Host by Phylum', fontsize=16, fontweight='bold')
     plt.xlabel('Phylum', fontsize=14)
     plt.ylabel('Jaccard Similarity', fontsize=14)
     plt.xticks(rotation=45, ha='right')
@@ -361,10 +378,101 @@ def plot_jaccard(jaccard_all, fig_dir):
     plt.savefig(f"{fig_dir}/jaccard_similarity_by_phylum.pdf", dpi=300, bbox_inches="tight")
     plt.close()
 
+def gradient_plot(jaccard_all, fig_dir):
+    ## plot the proportion of MGE-host pairs with at least 0, 1, 2, ... shared motifs  using bar plot
+    max_share = jaccard_all['share_num'].max()
+    share_counts = []
+    for i in range(0, int(max_share) + 1):
+        count = len(jaccard_all[jaccard_all['share_num'] >= i])
+        share_counts.append({'shared_motifs': i, 'count': count, 'proportion': count / len(jaccard_all)})
+    share_counts_df = pd.DataFrame(share_counts)
+    plt.figure(figsize=(5, 5))
+    sns.barplot(data=share_counts_df, x='shared_motifs', y='proportion', color='steelblue')
+    # plt.title('Number of MGE-Host Pairs by Shared Motifs', fontsize=16, fontweight='bold')
+    plt.xlabel('Number of Shared Motifs', fontsize=14)
+    plt.ylabel('Proportion of MGE-Host Pairs', fontsize=14)
+    plt.grid(axis='y', alpha=0.3)
+    plt.savefig(f"{fig_dir}/mge_host_shared_motifs.pdf", dpi=300, bbox_inches="tight")
+    plt.close()
+
+def cross_taxa_plot(jaccard_all, fig_dir):
+    ## box plot hue to relation with ordered x-axis
+    # Define the desired order from most closely related to least related
+    relation_order = ['same_sample', 'same_species', 'same_genus', 'same_family', 'same_order', 
+                     'same_class', 'same_phylum', 'same_domain']
+    
+    plt.figure(figsize=(5, 5))
+    sns.boxplot(data=jaccard_all, x='relation', y='jaccard_similarity', 
+                hue='relation', palette='Set2', legend=False, order=relation_order)
+    # plt.title('Jaccard Similarity between MGE and Host by Taxonomic Relation', fontsize=16, fontweight='bold')
+    plt.xlabel('Taxonomic Relation', fontsize=14)
+    plt.ylabel('Jaccard Similarity', fontsize=14)
+    plt.xticks(rotation=45, ha='right')
+    plt.grid(axis='y', alpha=0.3)
+    plt.savefig(f"{fig_dir}/jaccard_similarity_by_taxa_relation.pdf", dpi=300, bbox_inches="tight")
+    plt.close()
+
+def main(all_dir, fig_dir):
+    i = 0
+    pure_num, mge_num, has_motif_num = 0, 0, 0
+    jaccard_all = pd.DataFrame()
+    present_motifs_all = pd.DataFrame()
+    for prefix in os.listdir(all_dir):
+
+        sample_obj = Isolation_sample(prefix, all_dir)
+        if not os.path.exists(sample_obj.profile):
+            continue
+
+        sample_obj.get_phylum()
+        mge_dict = sample_obj.read_MGE()
+        depth_dict, length_dict = sample_obj.read_depth()
+        pure_flag = sample_obj.check_pure2()
+        unique_motif_num, unique_motifs = sample_obj.get_unique_motifs()
+        i += 1
+        if pure_flag == "pure":
+            pure_num += 1
+        else:
+            continue
+        # print (f"{prefix} is {pure_flag}")
+        if len(mge_dict) < 1:
+            continue
+        else:
+            mge_num += 1
+
+        if unique_motifs == 0:
+            print(f"Skipping {prefix} as no motifs.")
+            continue
+        else:
+            has_motif_num += 1
+        
+        # Enhanced motif sharing analysis with additional annotations
+        jaccard_scores, present_motifs = quantify_sharing(sample_obj, mge_dict, depth_dict, length_dict, unique_motifs)
+        jaccard_scores['prefix'] = prefix
+        jaccard_scores['phylum'] = sample_obj.phylum
+        jaccard_all = pd.concat([jaccard_all, jaccard_scores], axis=0)
+        present_motifs_all = pd.concat([present_motifs_all, present_motifs], axis=0)
+
+    
+    same_sample_df = jaccard_all[jaccard_all['relation'] == 'same_sample']
+    print (same_sample_df)
+    # analyze_link(all_link_df)
+    plot_jaccard(same_sample_df, fig_dir)
+    gradient_plot(same_sample_df, fig_dir)
+    
+    ## print all rows with jaccard similarity < 0.5 for check
+    low_jaccard = same_sample_df[same_sample_df['jaccard_similarity'] < 0.5]
+    print("Low Jaccard Similarity Samples:")
+    for index, row in low_jaccard.iterrows():
+        print(f"Prefix: {row['prefix']}, MGE Contig: {row['mge_contig']}, Host Contig: {row['host_contig']}, Jaccard Similarity: {row['jaccard_similarity']:.4f}")
+    
+    jaccard_all = cross_sample_jaccard(present_motifs_all)
+    cross_taxa_plot(jaccard_all, fig_dir)
+    print (f"Total {i} samples, {pure_num} pure samples, {mge_num} samples with MGEs, {has_motif_num} samples with motifs.")
+
 if __name__ == "__main__":
     # meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
     # sample_env_dict = read_metadata(meta_file)
     # all_dir = "/home/shuaiw/borg/paper/isolation/bacteria/"
     all_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
     fig_dir = "../../tmp/figures/motif_sharing/"
-    collect_freq(all_dir, fig_dir)
+    main(all_dir, fig_dir)
