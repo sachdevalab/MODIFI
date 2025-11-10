@@ -40,6 +40,8 @@ class My_sample(object):
         self.mge_dict = None
         self.depth_dict = None
         self.length_dict = None
+        self.depth_cutoff = 10
+        self.length_cutoff = 5000
 
     def get_unique_motifs(self):
         if not os.path.exists(self.all_motif_file):
@@ -175,4 +177,34 @@ class Isolation_sample(My_sample):
             return "pure"
         else:
             return "mixed"
-            
+
+    def get_mge_specific_motif(self, MGE_ctg, host_ctg, min_frac=0.8, min_sites=20):
+        MGE_motif_file = os.path.join(self.work_dir, "motifs/" + MGE_ctg + ".motifs.csv")
+        df = pd.read_csv(MGE_motif_file)
+        df = df[df["fraction"] >= min_frac]
+        df = df[df["nDetected"] >= min_sites]
+
+        host_df = pd.read_csv(os.path.join(self.work_dir, "motifs/" + host_ctg + ".motifs.csv"))
+        host_motifs = set(host_df["motifString"].tolist())
+        mge_specific_motifs = []
+        for index, row in df.iterrows():
+            if row["motifString"] not in host_motifs and str(Seq(row["motifString"]).reverse_complement()) not in host_motifs:
+                mge_specific_motifs.append(row["motifString"])
+        return mge_specific_motifs
+
+    def explore_specific_motifs(self):    
+        host_ctgs = []
+        MGE_ctgs = []
+        self.read_MGE()
+        for contig in self.depth_dict:
+            if self.depth_dict[contig] < self.depth_cutoff: continue
+            if self.length_dict[contig] < self.length_cutoff: continue
+            if contig not in self.mge_dict:
+                host_ctgs.append(contig)
+            else:
+                MGE_ctgs.append(contig)
+        for mge_ctg in MGE_ctgs:
+            for host_ctg in host_ctgs:
+                mge_specific_motifs = self.get_mge_specific_motif(mge_ctg, host_ctg)
+                if len(mge_specific_motifs) > 0:
+                    print (f"{self.prefix}\t{mge_ctg}\t{host_ctg}\t{len(mge_specific_motifs)}\t{mge_specific_motifs}")
