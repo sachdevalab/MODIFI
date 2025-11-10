@@ -76,11 +76,115 @@ DATA
 
 #change the label for leaf node 9606\n"""
 
+gradient_header="""
+DATASET_GRADIENT
+#In gradient datasets, each ID is associated to a single numeric value which is converted to a colored box based on the gradient defined.
+
+#lines starting with a hash are comments and ignored during parsing
+
+#=================================================================#
+#                    MANDATORY SETTINGS                           #
+#=================================================================#
+#select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throught this file.
+#SEPARATOR TAB
+SEPARATOR SPACE
+#SEPARATOR COMMA
+
+#label is used in the legend table (can be changed later)
+DATASET_LABEL label 1
+
+#dataset color (can be changed later)
+COLOR #ff0000
+
+#=================================================================#
+#                    OPTIONAL SETTINGS                            #
+#=================================================================#
+
+#=================================================================#
+#     all other optional settings can be set or changed later     #
+#           in the web interface (under 'Datasets' tab)           #
+#=================================================================#
+
+
+#Each dataset can have a legend, which is defined using LEGEND_XXX fields below
+#For each row in the legend, there should be one shape, color and label.
+#Optionally, you can define an exact legend position using LEGEND_POSITION_X and LEGEND_POSITION_Y. To use automatic legend positioning, do NOT define these values
+#Optionally, shape scaling can be present (LEGEND_SHAPE_SCALES). For each shape, you can define a scaling factor between 0 and 1.
+#To order legend entries horizontally instead of vertically, set LEGEND_HORIZONTAL to 1
+#Shape should be a number between 1 and 6, or any protein domain shape definition.
+#1: square
+#2: circle
+#3: star
+#4: right pointing triangle
+#5: left pointing triangle
+#6: checkmark
+
+
+#LEGEND_TITLE Dataset legend
+#LEGEND_SCALE 1
+#LEGEND_POSITION_X 100
+#LEGEND_POSITION_Y 100
+#LEGEND_HORIZONTAL 0
+#LEGEND_SHAPES 1 2 3
+#LEGEND_COLORS #ff0000 #00ff00 #0000ff
+#LEGEND_LABELS value1 value2 value3
+#LEGEND_SHAPE_SCALES 1 1 0.5
+
+#width of the gradient strip
+#STRIP_WIDTH 25
+
+#left margin, used to increase/decrease the spacing to the next dataset. Can be negative, causing datasets to overlap.
+#MARGIN 0
+
+#border width; if set above 0, a border of specified width (in pixels) will be drawn around the gradient strip
+#BORDER_WIDTH 0
+
+#border color; used when BORDER_WIDTH is above 0
+#BORDER_COLOR #0000ff
+
+#automatically create and display a legend based on the color gradient defined below
+#AUTO_LEGEND 1
+
+#define the gradient colors. Values in the dataset will be mapped onto the corresponding color gradient.
+#COLOR_MIN #ff0000
+#COLOR_MAX #0000ff
+
+#you can specify a gradient with three colors (e.g red to yellow to green) by setting 'USE_MID_COLOR' to 1, and specifying the midpoint color
+#USE_MID_COLOR 1
+#COLOR_MID #ffff00
+
+#always show internal values; if set, values associated to internal nodes will be displayed even if these nodes are not collapsed. It could cause overlapping in the dataset display.
+#SHOW_INTERNAL 1
+
+#display or hide the dataset label above the gradient strip
+#SHOW_LABELS 1
+
+#text label size factor
+#SIZE_FACTOR 1
+
+#text label rotation
+#LABEL_ROTATION 0
+
+#text label shift in pixels (positive or negative)
+#LABEL_SHIFT 0
+
+#align the dataset label to the tree circle; only applies in circular display mode
+#LABEL_ALIGN_TO_TREE,0
+
+#Internal tree nodes can be specified using IDs directly, or using the 'last common ancestor' method described in iTOL help pages
+#=================================================================#
+#       Actual data follows after the "DATA" keyword              #
+#=================================================================#
+DATA
+#ID2 value2
+#9606 10000
+#LEAF1|LEAF2 11000"""
 
   
 def single_run(resultdir):
     
     run_taxa_dict = {}
+    sample_meta_dict = {}
     for folder in os.listdir(resultdir):
         prefix = folder
         sample_obj = Isolation_sample(prefix, resultdir)
@@ -90,10 +194,14 @@ def single_run(resultdir):
             continue
         sample_obj.get_phylum()
         run_taxa_dict[prefix] = sample_obj.lineage
+        motif_num, unique_motifs = sample_obj.get_unique_motifs()
+        sample_meta_dict[prefix] = {
+            "motif_num": motif_num
+        }
+    print ("No. of runs (samples) processed:", len(run_taxa_dict))
+    return run_taxa_dict, sample_meta_dict
 
-    return run_taxa_dict
-
-def color_phylum(run_taxa_dict, tree_results):
+def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
     ## in iTol, color by phylum using general colors
     ## collect phyllums in run_taxa_dict, and assign colors
     taxa_list = set(list(run_taxa_dict.values()))
@@ -135,7 +243,7 @@ def color_phylum(run_taxa_dict, tree_results):
     Label_anno = Label_header
     
 
-
+    motif_num_anno = gradient_header + "\n"
     with open(f"{tree_results}/phylum_annotations.txt", "w") as f:
         f.write(f"{header}\n")
         for bin_name, taxa in run_taxa_dict.items():
@@ -150,7 +258,8 @@ def color_phylum(run_taxa_dict, tree_results):
             f.write(f"{bin_name} range {color} {phylum}\n")
             node_rename = f"{species}_{bin_name}"
             Label_anno += f"{bin_name},{node_rename}\n"
-            
+            if sample_meta_dict[bin_name]['motif_num'] is not None:
+                motif_num_anno += f"{bin_name} {sample_meta_dict[bin_name]['motif_num']}\n"
             # Add to legend data
             # legend_data += f"{bin_name} {color} {phylum}\n"
     
@@ -162,10 +271,12 @@ def color_phylum(run_taxa_dict, tree_results):
     ## save label annotation file
     with open(f"{tree_results}/label_annotations.csv", "w") as f:
         f.write(Label_anno)
+    with open(f"{tree_results}/motif_num_annotations.txt", "w") as f:
+        f.write(motif_num_anno)
 
 
 if __name__ == "__main__":
     resultdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
-    tree_results = "/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/"
-    run_taxa_dict = single_run(resultdir)
-    color_phylum(run_taxa_dict, tree_results)
+    tree_results = "/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/anno/"
+    run_taxa_dict, sample_meta_dict = single_run(resultdir)
+    color_phylum(run_taxa_dict, tree_results, sample_meta_dict)

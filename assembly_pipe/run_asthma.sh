@@ -1,153 +1,320 @@
 
-
-            #### number 2
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_208058140_1Mo_LR/PACBIO_DATA/TIPS_208058140_1Mo_LR.hifi_reads.bam \
-                prefix=asthma_2 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_2 -j 64" \
-                --job-name=asthma_2
+                # sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                # --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_1/asthma_1_methylation3 \
+                # --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_1/asthma_1.align.bam \
+                # --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_1/asthma_1.hifiasm.p_ctg.rename.fa \
+                # --read_type hifi \
+                # --min_len 2000 \
+                # --min_cov 3 \
+                # --min_iden 0.97 \
+                # --min_frac 0.3 \
+                # --min_score 30 \
+                # --min_sites 100 \
+                # --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_1/all_mge.tsv \
+                # --threads 64" \
+                # --job-name=sue_1
             
 
-            #### number 3
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_208062141_12Mo_LR/PACBIO_DATA/TIPS_208062141_12Mo_LR.hifi_reads.bam \
-                prefix=asthma_3 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_3 -j 64" \
-                --job-name=asthma_3
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_2/asthma_2_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_2/asthma_2.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_2/asthma_2.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_2/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_2
             
 
-            #### number 4
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_208062141_1Mo_LR/PACBIO_DATA/TIPS_208062141_1Mo_LR.hifi_reads.bam \
-                prefix=asthma_4 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_4 -j 64" \
-                --job-name=asthma_4
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_3/asthma_3_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_3/asthma_3.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_3/asthma_3.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_3/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_3
             
 
-            #### number 5
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_208075159_12Mo_LR/PACBIO_DATA/TIPS_208075159_12Mo_LR.hifi_reads.bam \
-                prefix=asthma_5 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_5 -j 64" \
-                --job-name=asthma_5
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_4/asthma_4_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_4/asthma_4.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_4/asthma_4.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_4/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_4
             
 
-            #### number 6
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_208075159_1Mo_LR/PACBIO_DATA/TIPS_208075159_1Mo_LR.hifi_reads.bam \
-                prefix=asthma_6 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_6 -j 64" \
-                --job-name=asthma_6
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_5/asthma_5_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_5/asthma_5.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_5/asthma_5.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_5/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_5
             
 
-            #### number 7
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_208107157_12Mo_LR/PACBIO_DATA/TIPS_208107157_12Mo_LR.hifi_reads.bam \
-                prefix=asthma_7 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_7 -j 64" \
-                --job-name=asthma_7
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_6/asthma_6_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_6/asthma_6.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_6/asthma_6.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_6/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_6
             
 
-            #### number 8
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_208107157_1Mo_LR/PACBIO_DATA/TIPS_208107157_1Mo_LR.hifi_reads.bam \
-                prefix=asthma_8 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_8 -j 64" \
-                --job-name=asthma_8
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_7/asthma_7_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_7/asthma_7.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_7/asthma_7.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_7/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_7
             
 
-            #### number 9
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_209129175_12Mo_LR/PACBIO_DATA/TIPS_209129175_12Mo_LR.hifi_reads.bam \
-                prefix=asthma_9 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_9 -j 64" \
-                --job-name=asthma_9
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_8/asthma_8_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_8/asthma_8.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_8/asthma_8.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_8/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_8
             
 
-            #### number 10
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_209129175_1Mo_LR/PACBIO_DATA/TIPS_209129175_1Mo_LR.hifi_reads.bam \
-                prefix=asthma_10 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_10 -j 64" \
-                --job-name=asthma_10
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_9/asthma_9_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_9/asthma_9.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_9/asthma_9.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_9/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_9
             
 
-            #### number 11
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_209134177_12Mo_LR/PACBIO_DATA/TIPS_209134177_12Mo_LR.hifi_reads.bam \
-                prefix=asthma_11 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_11 -j 64" \
-                --job-name=asthma_11
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_10/asthma_10_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_10/asthma_10.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_10/asthma_10.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_10/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_10
             
 
-            #### number 12
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_209134177_1Mo_LR/PACBIO_DATA/TIPS_209134177_1Mo_LR.hifi_reads.bam \
-                prefix=asthma_12 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_12 -j 64" \
-                --job-name=asthma_12
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_11/asthma_11_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_11/asthma_11.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_11/asthma_11.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_11/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_11
             
 
-            #### number 13
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_209158193_12Mo_LR/PACBIO_DATA/TIPS_209158193_12Mo_LR.hifi_reads.bam \
-                prefix=asthma_13 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_13 -j 64" \
-                --job-name=asthma_13
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_12/asthma_12_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_12/asthma_12.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_12/asthma_12.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_12/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_12
             
 
-            #### number 14
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_209158193_1Mo_LR/PACBIO_DATA/TIPS_209158193_1Mo_LR.hifi_reads.bam \
-                prefix=asthma_14 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_14 -j 64" \
-                --job-name=asthma_14
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_13/asthma_13_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_13/asthma_13.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_13/asthma_13.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_13/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_13
             
 
-            #### number 15
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_210173216_12Mo_LR/PACBIO_DATA/TIPS_210173216_12Mo_LR.hifi_reads.bam \
-                prefix=asthma_15 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_15 -j 64" \
-                --job-name=asthma_15
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_14/asthma_14_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_14/asthma_14.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_14/asthma_14.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_14/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_14
             
 
-            #### number 16
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_210173216_1Mo_LR/PACBIO_DATA/TIPS_210173216_1Mo_LR.hifi_reads.bam \
-                prefix=asthma_16 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_16 -j 64" \
-                --job-name=asthma_16
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_15/asthma_15_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_15/asthma_15.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_15/asthma_15.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_15/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_15
             
 
-            #### number 17
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_211245247_12Mo_LR/PACBIO_DATA/TIPS_211245247_12Mo_LR.hifi_reads.bam \
-                prefix=asthma_17 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_17 -j 64" \
-                --job-name=asthma_17
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_16/asthma_16_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_16/asthma_16.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_16/asthma_16.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_16/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_16
             
 
-            #### number 18
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_211245247_1Mo_LR/PACBIO_DATA/TIPS_211245247_1Mo_LR.hifi_reads.bam \
-                prefix=asthma_18 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_18 -j 64" \
-                --job-name=asthma_18
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_17/asthma_17_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_17/asthma_17.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_17/asthma_17.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_17/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_17
             
 
-            #### number 19
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_212256257_12Mo_LR/PACBIO_DATA/TIPS_212256257_12Mo_LR.hifi_reads.bam \
-                prefix=asthma_19 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_19 -j 64" \
-                --job-name=asthma_19
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_18/asthma_18_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_18/asthma_18.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_18/asthma_18.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_18/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_18
             
 
-            #### number 20
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \
-                hifi_bam=/groups/diamond/sequences/2024/TIPS_212256257_1Mo_LR/PACBIO_DATA/TIPS_212256257_1Mo_LR.hifi_reads.bam \
-                prefix=asthma_20 \
-                work_dir=/groups/banfield/projects/multienv/methylation_temp/asthma_run/asthma_20 -j 64" \
-                --job-name=asthma_20
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_19/asthma_19_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_19/asthma_19.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_19/asthma_19.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_19/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_19
+            
+
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_20/asthma_20_methylation3 \
+                --whole_bam /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_20/asthma_20.align.bam \
+                --whole_ref /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_20/asthma_20.hifiasm.p_ctg.rename.fa \
+                --read_type hifi \
+                --min_len 2000 \
+                --min_cov 3 \
+                --min_iden 0.97 \
+                --min_frac 0.3 \
+                --min_score 30 \
+                --min_sites 100 \
+                --mge_file /groups/banfield/projects/multienv/methylation_temp/asthma_run//asthma_20/all_mge.tsv \
+                --threads 64" \
+                --job-name=sue_20
             

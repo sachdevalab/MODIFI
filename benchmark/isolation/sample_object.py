@@ -42,6 +42,9 @@ class My_sample(object):
         self.length_dict = None
 
     def get_unique_motifs(self):
+        if not os.path.exists(self.all_motif_file):
+            print (f"[⚠️] Motif file not found: {self.all_motif_file}")
+            return None, None
         df = pd.read_csv(self.all_motif_file)
         return get_unique_motifs(df)
 

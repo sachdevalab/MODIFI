@@ -412,6 +412,48 @@ def cross_taxa_plot(jaccard_all, fig_dir):
     plt.savefig(f"{fig_dir}/jaccard_similarity_by_taxa_relation.pdf", dpi=300, bbox_inches="tight")
     plt.close()
 
+def count_jaccard(same_sample_df, jaccard_all_sample):
+    ## print all rows with jaccard similarity < 0.5 for check
+    low_jaccard = same_sample_df[same_sample_df['jaccard_similarity'] < 0.5]
+    print("Low Jaccard Similarity Samples:")
+    for index, row in low_jaccard.iterrows():
+        print(f"Prefix: {row['prefix']}, MGE Contig: {row['mge_contig']}, Host Contig: {row['host_contig']}, Jaccard Similarity: {row['jaccard_similarity']:.4f}")
+    
+    ## count proportion of MGE-host pairs with jaccard similarity =1
+    jaccard_1 = same_sample_df[same_sample_df['jaccard_similarity'] == 1]
+    print(f"Proportion of MGE-host pairs with Jaccard similarity = 1: {len(jaccard_1) / len(same_sample_df):.4f}")
+    ## compare cross-sample and same-sample jaccard similarity using boxplot, jaccard_all_sample have both same_sample and cross_sample
+    combined_df = pd.concat([same_sample_df.assign(sample_type='same_sample'),
+                             jaccard_all_sample[jaccard_all_sample['relation'] != 'same_sample'].assign(sample_type='cross_sample')])
+    plot_compare(combined_df, fig_dir)
+
+def plot_compare(combined_df, fig_dir):
+    plt.figure(figsize=(5, 5))
+    sns.boxplot(data=combined_df, x='sample_type', y='jaccard_similarity', hue='sample_type', palette='Set1', legend=False)
+    plt.xlabel('Sample Type', fontsize=14)
+    plt.ylabel('Jaccard Similarity', fontsize=14)
+    plt.grid(axis='y', alpha=0.3)
+    ## add statistical annotation
+    from scipy.stats import mannwhitneyu
+    same_sample_values = combined_df[combined_df['sample_type'] == 'same_sample']['jaccard_similarity']
+    cross_sample_values = combined_df[combined_df['sample_type'] == 'cross_sample']['jaccard_similarity']
+    stat, p_value = mannwhitneyu(same_sample_values, cross_sample_values, alternative='two-sided')
+    ## add p-value to the plot
+    plt.text(0.5, max(combined_df['jaccard_similarity']) * 0.95, f'p-value = {p_value:.4e}', ha='center', fontsize=12)
+    plt.savefig(f"{fig_dir}/jaccard_similarity_same_vs_cross_sample.pdf", dpi=300, bbox_inches="tight")
+    plt.close()
+
+def plot_jaccard_distribution(same_sample_df, fig_dir):
+    ## plot the distribution of jaccard similarity using histogram
+    plt.figure(figsize=(5, 5))
+    sns.histplot(same_sample_df['jaccard_similarity'], bins=20, kde=True, color='lightgreen')
+    # plt.title('Distribution of Jaccard Similarity (Same Sample)', fontsize=16, fontweight='bold')
+    plt.xlabel('Jaccard Similarity', fontsize=14)
+    plt.ylabel('Count', fontsize=14)
+    plt.grid(axis='y', alpha=0.3)
+    plt.savefig(f"{fig_dir}/jaccard_similarity_distribution_same_sample.pdf", dpi=300, bbox_inches="tight")
+    plt.close()
+
 def main(all_dir, fig_dir):
     i = 0
     pure_num, mge_num, has_motif_num = 0, 0, 0
@@ -459,14 +501,12 @@ def main(all_dir, fig_dir):
     plot_jaccard(same_sample_df, fig_dir)
     gradient_plot(same_sample_df, fig_dir)
     
-    ## print all rows with jaccard similarity < 0.5 for check
-    low_jaccard = same_sample_df[same_sample_df['jaccard_similarity'] < 0.5]
-    print("Low Jaccard Similarity Samples:")
-    for index, row in low_jaccard.iterrows():
-        print(f"Prefix: {row['prefix']}, MGE Contig: {row['mge_contig']}, Host Contig: {row['host_contig']}, Jaccard Similarity: {row['jaccard_similarity']:.4f}")
+
+    jaccard_all_sample = cross_sample_jaccard(present_motifs_all)
+    cross_taxa_plot(jaccard_all_sample, fig_dir)
     
-    jaccard_all = cross_sample_jaccard(present_motifs_all)
-    cross_taxa_plot(jaccard_all, fig_dir)
+    count_jaccard(same_sample_df, jaccard_all_sample)
+    plot_jaccard_distribution(same_sample_df, fig_dir)
     print (f"Total {i} samples, {pure_num} pure samples, {mge_num} samples with MGEs, {has_motif_num} samples with motifs.")
 
 if __name__ == "__main__":
