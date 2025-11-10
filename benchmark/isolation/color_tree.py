@@ -195,8 +195,10 @@ def single_run(resultdir):
         sample_obj.get_phylum()
         run_taxa_dict[prefix] = sample_obj.lineage
         motif_num, unique_motifs = sample_obj.get_unique_motifs()
+        mge_bool = sample_obj.get_MGE_bool()
         sample_meta_dict[prefix] = {
-            "motif_num": motif_num
+            "motif_num": motif_num,
+            "mge_bool": mge_bool
         }
     print ("No. of runs (samples) processed:", len(run_taxa_dict))
     return run_taxa_dict, sample_meta_dict
@@ -244,6 +246,7 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
     
 
     motif_num_anno = gradient_header + "\n"
+    mge_num_anno = gradient_header + "\n"
     with open(f"{tree_results}/phylum_annotations.txt", "w") as f:
         f.write(f"{header}\n")
         for bin_name, taxa in run_taxa_dict.items():
@@ -260,6 +263,8 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
             Label_anno += f"{bin_name},{node_rename}\n"
             if sample_meta_dict[bin_name]['motif_num'] is not None:
                 motif_num_anno += f"{bin_name} {sample_meta_dict[bin_name]['motif_num']}\n"
+            if sample_meta_dict[bin_name]['mge_bool'] is not None:
+                mge_num_anno += f"{bin_name} {sample_meta_dict[bin_name]['mge_bool']}\n"
             # Add to legend data
             # legend_data += f"{bin_name} {color} {phylum}\n"
     
@@ -273,10 +278,12 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
         f.write(Label_anno)
     with open(f"{tree_results}/motif_num_annotations.txt", "w") as f:
         f.write(motif_num_anno)
+    with open(f"{tree_results}/mge_num_annotations.txt", "w") as f:
+        f.write(mge_num_anno)
 
 
 if __name__ == "__main__":
     resultdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
-    tree_results = "/groups/banfield/projects/multienv/methylation_temp/GTDB_tree/anno/"
+    tree_results = "/home/shuaiw/borg/paper/isolation//GTDB_tree/anno/"
     run_taxa_dict, sample_meta_dict = single_run(resultdir)
     color_phylum(run_taxa_dict, tree_results, sample_meta_dict)

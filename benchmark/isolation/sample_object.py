@@ -49,6 +49,9 @@ class My_sample(object):
         return get_unique_motifs(df)
 
     def read_MGE(self):
+        if not os.path.exists(self.mge_file):
+            print (f"[⚠️] MGE file not found: {self.mge_file}")
+            return None
         self.mge_dict = {}
         f = open(self.mge_file, "r")
         for line in f:
@@ -61,6 +64,16 @@ class My_sample(object):
             mge_type = fields[1]
             self.mge_dict[contig] = mge_type
         return self.mge_dict
+
+    def get_MGE_bool(self):
+        self.read_MGE()
+        if self.mge_dict is None:
+            return None
+        else:
+            if len(self.mge_dict) == 0:
+                return 0
+            else:
+                return 1
 
     ## read length of each contig
     def read_fai(self):
