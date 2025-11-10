@@ -57,8 +57,8 @@ def convert_hifi(folder, ccs_bam_dir):
             bam = os.path.join(subfolder_path, f"{sra}.merge.bam")
             # use samtools to merge the bam files in bam_list into bam
             merge_cmd = f"samtools merge {bam} " + " ".join(list(bam_dict.keys()))
-            if not os.path.exists(bam):
-                os.system(merge_cmd)    
+            # if not os.path.exists(bam):
+            #     os.system(merge_cmd)    
             print(merge_cmd)
         if bam_num == 0:
             print (f"################{sra}\t has no bams")
@@ -77,10 +77,9 @@ def convert_hifi(folder, ccs_bam_dir):
                 cmd_list.append(cmd)
         else:
             print (f"############### {sra}\t is already hifi")
-            ## link the bam to ccs_bam
-            cmd = f'ln -s {bam} {ccs_bam}'
-            if not os.path.exists(ccs_bam):
-                os.system(cmd)
+            ## link the bam to ccs_bam (force overwrite if exists)
+            cmd = f'ln -sf {bam} {ccs_bam}'
+            os.system(cmd)
         
     convert = "get_hifi.sh"
     f = open(convert, "w")
@@ -98,10 +97,9 @@ def convert_hifi(folder, ccs_bam_dir):
     print (len(cmd_list))
 
 
-def batch_run(ccs_bam_dir):
+def batch_run(ccs_bam_dir, work_dir):
     ## get all ccs bam files
     cmd_list = []
-    work_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
     for file in os.listdir(ccs_bam_dir):
         if file.endswith(".ccs.bam"):
             ccs_bam = os.path.join(ccs_bam_dir, file)
@@ -115,7 +113,7 @@ def batch_run(ccs_bam_dir):
             if not os.path.exists(finish_file):
                 cmd_list.append(cmd)
     batch_file = "run_all_isolation.sh"
-    num_scripts = 5
+    num_scripts = 9
     f = open(batch_file, "w")
     for i in range(num_scripts):
         script_file = f"batch/run_isolation_part_{i}.sh"
@@ -153,10 +151,10 @@ def methy_run(results_dir):
 # folder = "/home/shuaiw/borg/paper/aws/isolate/bacteria/set1/"
 # ccs_bam_dir = "/home/shuaiw/borg/paper/aws/isolate/bacteria/ccs_bams/"
 
-folder = "/groups/banfield/projects/multienv/methylation_temp/aws_methylation2/"
-ccs_bam_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_ccs_bam/"
-results_dir = "/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
-batch_run(ccs_bam_dir)
+folder = "/home/shuaiw/borg/paper/isolation/aws_methylation2/"
+ccs_bam_dir = "/home/shuaiw/borg/paper/isolation/batch2_ccs_bam/"
+results_dir = "/home/shuaiw/borg/paper/isolation/batch2_results/"
+batch_run(ccs_bam_dir, results_dir)
 # convert_hifi(folder, ccs_bam_dir)
 # methy_run(results_dir)
 
