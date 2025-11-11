@@ -6,6 +6,19 @@ import os
 import sys
 import pandas as pd
 from Bio.Seq import Seq
+import profile
+from Bio.SeqUtils import nt_search
+from Bio import SeqIO
+from Bio.Seq import Seq
+import xml.etree.ElementTree as ET
+import pandas as pd
+from scipy.stats import pearsonr
+import matplotlib.pyplot as plt
+import sys, os, re
+import numpy as np
+from collections import defaultdict
+import seaborn as sns
+from scipy.cluster.hierarchy import linkage, leaves_list
 
 def get_unique_motifs(df_motif):
     df_motif = df_motif[(df_motif['fraction'] >= 0.4) & (df_motif['nDetected'] >= 100)]
@@ -348,3 +361,88 @@ class Isolation_sample(My_sample):
                 mge_specific_motifs = self.get_mge_specific_motif(mge_ctg, host_ctg)
                 if len(mge_specific_motifs) > 0:
                     print (f"{self.prefix}\t{mge_ctg}\t{host_ctg}\t{len(mge_specific_motifs)}\t{mge_specific_motifs}")
+
+
+class My_contig(My_sample):
+
+    def __init__(self, prefix, all_dir, contig):
+        super().__init__(prefix, all_dir)
+        self.contig = contig
+        self.ctg_ref = f"{all_dir}/{prefix}/{prefix}_methylation3/contigs/{contig}.fa"
+        self.gff = f"{all_dir}/{prefix}/{prefix}_methylation3/gffs/{contig}.gff"
+        self.ipd_ratio_file = f"{all_dir}/{prefix}/{prefix}_methylation3/ipd_ratio/{contig}.ipd3.csv"
+        self.motif_file = f"{all_dir}/{prefix}/{prefix}_methylation3/motifs/{contig}.motifs.csv"
+
+    def read_motif(self, min_frac=0.3, min_sites=30):
+        ## check if file exists
+        if not os.path.exists(self.motif_file):
+            return None
+        motif_df = pd.read_csv(self.motif_file)
+        motif_df = motif_df[(motif_df['fraction'] >= min_frac) & (motif_df['nDetected'] >= min_sites)]
+        return motif_df
+
+
+
+class My_cluster(object):
+    def __init__(self, cluster, members):
+        self.cluster = cluster
+        self.members = members  
+        self.profile_df = None
+    
+    def get_profile(self, df):
+        self.profile_df = df
+
+    def plot_profile(self, closed_genome, plot_name, tmp_res_file):
+        duplicates = self.profile_df.duplicated(subset=['contig', 'motifString'], keep=False)
+        if duplicates.any():
+            
+            print(f"Warning: Found {duplicates.sum()} duplicate entries. Aggregating by taking mean.")
+            self.profile_df = self.profile_df.groupby(['contig', 'motifString'])['fraction'].mean().reset_index()
+        try:
+            df_pivot = self.profile_df.pivot(index='contig', columns='motifString', values='fraction').fillna(0)
+        except ValueError as e:
+            print(f"Error creating pivot table: {e}")
+            print("DataFrame info:")
+            print(f"Shape: {self.profile_df.shape}")
+            print(f"Columns: {self.profile_df.columns.tolist()}")
+            print(f"Sample data:\n{self.profile_df.head()}")
+            return
+        
+        if df_pivot.shape[0] < 2 or df_pivot.shape[1] < 2:
+            print(f"Warning: Insufficient data for clustering (shape: {df_pivot.shape}). Plotting without clustering.")
+            df_clustered = df_pivot
+        else:
+            try:
+                # Cluster rows and columns
+                row_linkage = linkage(df_pivot.values, method='average')
+                col_linkage = linkage(df_pivot.values.T, method='average')
+                row_order = leaves_list(row_linkage)
+                col_order = leaves_list(col_linkage)
+                df_clustered = df_pivot.iloc[row_order, col_order]
+            except ValueError as e:
+                print(f"Warning: Clustering failed ({e}). Plotting without clustering.")
+                df_clustered = df_pivot
+        ## check if df_clustered is empty
+        if df_clustered.empty:
+            print("No data available to plot.")
+            return
+        plt.figure(figsize=(10, 6))
+        ax = sns.heatmap(df_clustered, cmap="YlGnBu", annot=False, fmt=".2f", cbar_kws={'label': 'Fraction'})
+        ax.set_xlabel("Motif String")
+        ax.set_ylabel("Contig")
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+        ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+        ## set title as closed_genome
+        ax.set_title(f"Motif Fraction Heatmap (Clustered) - {closed_genome}")
+        plt.tight_layout()
+        plt.savefig(plot_name)
+        df_clustered.to_csv(tmp_res_file)
+    
+    def check_diff_motifs(self):
+        ## if there is a contig has fraction < 0.1, regard lack a motif, so different motifs exist
+        minus_frac = 0.1
+        lack_motif_df = self.profile_df[self.profile_df['fraction'] < minus_frac]
+        if not lack_motif_df.empty:
+            return "variation"
+        else:
+            return "uniform"

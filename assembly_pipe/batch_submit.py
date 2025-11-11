@@ -174,20 +174,20 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
 
             cmd = f"""
-            # #### number {i}
-            # sbatch --partition standard --wrap "snakemake -s assembly.smk --config \\
-            #     hifi_bam={hifi_bam} \\
-            #     prefix={prefix} \\
-            #     work_dir={work_dir} -j 64" \\
-            #     --job-name={prefix}
-            # """
-            cmd = f"""
-            # #### number {i}
-            snakemake -s annotation.smk --config \\
+            #### number {i}
+            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \\
                 hifi_bam={hifi_bam} \\
                 prefix={prefix} \\
-                work_dir={work_dir} -j 64 
+                work_dir={work_dir} -j 64" \\
+                --job-name={prefix}
             """
+            # cmd = f"""
+            # # #### number {i}
+            # snakemake -s annotation.smk --config \\
+            #     hifi_bam={hifi_bam} \\
+            #     prefix={prefix} \\
+            #     work_dir={work_dir} -j 64 
+            # """
             # cmd = f"""
             # # #### number {i}
             # sbatch --partition standard --wrap "snakemake -s annotation.smk --config \\

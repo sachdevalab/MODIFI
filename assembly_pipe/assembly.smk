@@ -136,7 +136,6 @@ rule call_methylation:
           --read_type hifi \
           --min_len 2000 \
           --min_iden 0.97 \
-          --max_NM 3 \
           --min_cov 3 \
           --min_frac 0.3 \
           --min_score 30 \

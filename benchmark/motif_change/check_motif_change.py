@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 import sys, os, re
 import numpy as np
 from collections import defaultdict
+import seaborn as sns
+from scipy.cluster.hierarchy import linkage, leaves_list
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
+from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster
 
 score_cutoff = 30
 
@@ -202,82 +206,30 @@ def find_species(closed_genome, GTDB_file, outdir, prefix):
             motif_set.add(motif)
     return motif_set, contig_list
 
-def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome):
-
+def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome, tmp_res_file, cluster_obj):
     data = []
     for prefix, contig in prefix_list:
-        my_ref = f"{all_dir}/{prefix}/{prefix}_methylation3/contigs/{contig}.fa"
-        gff = f"{all_dir}/{prefix}/{prefix}_methylation3/gffs/{contig}.gff"
-        ipd_ratio_file = f"{all_dir}/{prefix}/{prefix}_methylation3/ipd_ratio/{contig}.ipd3.csv"
+        ctg_obj = My_contig(prefix, all_dir, contig)
         ## skip if files do not exist
-        if not os.path.exists(gff) or not os.path.exists(ipd_ratio_file) or not os.path.exists(my_ref):
+        if not os.path.exists(ctg_obj.gff) or not os.path.exists(ctg_obj.ipd_ratio_file) or not os.path.exists(ctg_obj.ctg_ref):
             continue
-        REF = read_ref(my_ref)
+        REF = read_ref(ctg_obj.ctg_ref)
         # print (REF)
-        modified_loci = get_modified_ratio(gff)
+        modified_loci = get_modified_ratio(ctg_obj.gff)
         # motifs = pd.read_csv(all_motifs)
-        ipd_ratio_dict = read_ipd_ratio(ipd_ratio_file)
-        
+        ipd_ratio_dict = read_ipd_ratio(ctg_obj.ipd_ratio_file)
+
         for motif_new, exact_pos in motif_list:
             all_record = {}
             motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict)
             # print (motif_profile)
             data.append([contig,motif_new + "_" + str(exact_pos), motif_profile[-2]])
     df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction"])
-    ## save the df 
-    # df.to_csv("../../tmp/results2/motif_fraction_profile_GCF_002902325.1.csv", index=False)
-    # print (df)
-    # Check for duplicates and aggregate if necessary
-    duplicates = df.duplicated(subset=['contig', 'motifString'], keep=False)
-    if duplicates.any():
-        
-        print(f"Warning: Found {duplicates.sum()} duplicate entries. Aggregating by taking mean.")
-        df = df.groupby(['contig', 'motifString'])['fraction'].mean().reset_index()
+    cluster_obj.get_profile(df)
+    if len(cluster_obj.profile_df) > 1:
+        cluster_obj.plot_profile(closed_genome, plot_name, tmp_res_file)
+    return cluster_obj
     
-    ## plot heatmap with df
-    try:
-        df_pivot = df.pivot(index='contig', columns='motifString', values='fraction').fillna(0)
-    except ValueError as e:
-        print(f"Error creating pivot table: {e}")
-        print("DataFrame info:")
-        print(f"Shape: {df.shape}")
-        print(f"Columns: {df.columns.tolist()}")
-        print(f"Sample data:\n{df.head()}")
-        return
-    import seaborn as sns
-    from scipy.cluster.hierarchy import linkage, leaves_list
-
-    # Check if we have enough data for clustering
-    if df_pivot.shape[0] < 2 or df_pivot.shape[1] < 2:
-        print(f"Warning: Insufficient data for clustering (shape: {df_pivot.shape}). Plotting without clustering.")
-        df_clustered = df_pivot
-    else:
-        try:
-            # Cluster rows and columns
-            row_linkage = linkage(df_pivot.values, method='average')
-            col_linkage = linkage(df_pivot.values.T, method='average')
-            row_order = leaves_list(row_linkage)
-            col_order = leaves_list(col_linkage)
-            df_clustered = df_pivot.iloc[row_order, col_order]
-        except ValueError as e:
-            print(f"Warning: Clustering failed ({e}). Plotting without clustering.")
-            df_clustered = df_pivot
-    ## check if df_clustered is empty
-    if df_clustered.empty:
-        print("No data available to plot.")
-        return
-    plt.figure(figsize=(10, 6))
-    ax = sns.heatmap(df_clustered, cmap="YlGnBu", annot=False, fmt=".2f", cbar_kws={'label': 'Fraction'})
-    ax.set_xlabel("Motif String")
-    ax.set_ylabel("Contig")
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
-    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
-    ## set title as closed_genome
-    ax.set_title(f"Motif Fraction Heatmap (Clustered) - {closed_genome}")
-    plt.tight_layout()
-    plt.savefig(plot_name)
-    ## save df 
-    df_clustered.to_csv(plot_name.replace(".pdf", ".csv"))
 
 def given_species(all_dir, closed_genome, seq_dir):
     
@@ -361,33 +313,31 @@ def read_drep_cluster(drep_clu_file, depth_dict):
     for index, row in df.iterrows():
         # drep_clu_dict[row['genome'][:-3]] = row['secondary_cluster']
         contig = row['genome'][:-3]
-        if contig not in depth_dict:
-            continue
+        # if contig not in depth_dict:
+        #     continue
         drep_clu_dict[row['secondary_cluster']].append(row['genome'][:-3])
     return drep_clu_dict
 
-def find_species_drep(contig, outdir, prefix):
+def find_species_drep(contig, all_dir, prefix):
     species_contigs = [contig]
     contig_list = [[prefix, contig] for contig in species_contigs]
     #### collect all motifs of these contigs
     motif_set = set()
     for contig in species_contigs:
-        motif_file = f"{outdir}/{prefix}_methylation3/motifs/{contig}.motifs.csv"
-        ## check if file exists
-        if not os.path.exists(motif_file):
-            continue
-        motif_df = pd.read_csv(motif_file)
+        ctg_obj = My_contig(prefix, all_dir, contig)
+        motif_df = ctg_obj.read_motif(min_frac=0.7, min_sites=100)
         for index, row in motif_df.iterrows():
             motif = str(row["motifString"]) + "_" + str(row["centerPos"])
             motif_set.add(motif)
     return motif_set, contig_list
 
-def given_species_drep(all_dir, members, seq_dir, cluster):
+def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir, tmp_res):
     
     all_motif_set = set()
     all_contig_list = []
-    plot_name = f"/home/shuaiw/borg/paper/motif_change/plot_drep/{cluster}.pdf"
-
+    plot_name = f"{fig_dir}/{cluster}.pdf"
+    tmp_res_file = f"{tmp_res}/{cluster}.csv"
+    cluster_obj = My_cluster(cluster, members)
     for contig in members:
         prefix = "_".join(contig.split("_")[:-2])
         outdir = f"{all_dir}/{prefix}/"
@@ -396,34 +346,33 @@ def given_species_drep(all_dir, members, seq_dir, cluster):
         close_genome_dir = os.path.join(seq_dir, cluster)
         if not os.path.exists(close_genome_dir):
             os.makedirs(close_genome_dir)
-        # print (ref)
-        ## copy ref to close_genome_dir
+
         if os.path.exists(ref):
             os.system(f"cp {ref} {close_genome_dir}/")
 
-        motif_set, contig_list = find_species_drep(contig, outdir, prefix)
+        motif_set, contig_list = find_species_drep(contig, all_dir, prefix)
 
         all_motif_set.update(motif_set)
         all_contig_list.extend(contig_list)
-        # if len(all_contig_list) > 5:
-        #     break
 
     motif_list = []
     for motif in all_motif_set:
         motif_name, motif_pos = motif.split("_")
         motif_list.append([motif_name, int(motif_pos)])
-    if cluster == "180_4":
-        motif_list = [['CRTANNNNNNRTG', 4], ['ATGCAT', 5], ['CAANNNNNNNTAYG', 3], \
-            ['TCAYNNNNNNTTG', 3], ['CAANNNNNNRTGA', 3], \
-                ['CRTANNNNNNNTTG', 4], ['CAYNNNNNNTAYG', 2]]
-        all_contig_list += [["infant_14", "infant_14_230_C"], ["infant_14", "infant_14_88_C"],\
-                            ["infant_2", "infant_2_267_C"], ["infant_2", "infant_2_60_C"],\
-                            ["infant_3", "infant_3_289_C"], ["infant_3", "infant_3_287_C"],\
-                            ["infant_4", "infant_4_271_C"], ["infant_4", "infant_4_61_C"]]
+    # if cluster == "180_4":
+    #     motif_list = [['CRTANNNNNNRTG', 4], ['ATGCAT', 5], ['CAANNNNNNNTAYG', 3], \
+    #         ['TCAYNNNNNNTTG', 3], ['CAANNNNNNRTGA', 3], \
+    #             ['CRTANNNNNNNTTG', 4], ['CAYNNNNNNTAYG', 2]]
+    #     all_contig_list += [["infant_14", "infant_14_230_C"], ["infant_14", "infant_14_88_C"],\
+    #                         ["infant_2", "infant_2_267_C"], ["infant_2", "infant_2_60_C"],\
+    #                         ["infant_3", "infant_3_289_C"], ["infant_3", "infant_3_287_C"],\
+    #                         ["infant_4", "infant_4_271_C"], ["infant_4", "infant_4_61_C"]]
     print ("motif_list", motif_list)
     print ("all_contig_list", all_contig_list)
-    if len(all_contig_list) > 1:
-        profile_heatmap(all_contig_list, motif_list, all_dir, plot_name, cluster)
+    # if len(all_contig_list) > 1:
+    cluster_obj = profile_heatmap(all_contig_list, motif_list, all_dir, plot_name, cluster, tmp_res_file, cluster_obj)
+    
+    return cluster_obj
 
 def depth_filter(all_dir, min_depth = 10):
     depth_dict = {}
@@ -440,14 +389,47 @@ def depth_filter(all_dir, min_depth = 10):
             depth_dict[row['contig']] = row['depth']
     return depth_dict
 
+def plot_variation_fraction(variation_data, paper_fig_dir):
+    ## count the proportion of clusters with motif variation
+    ## x-axis shows cluster member cutoff, for 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+    cutoff_dict = defaultdict(lambda: [0,0]) # key: cutoff, value: [total clusters, clusters with variation]
+    for cluster, member_num, motif_variation_flag in variation_data:
+        for cutoff in range(2, 11):
+            if member_num >= cutoff:
+                cutoff_dict[cutoff][0] += 1
+                if motif_variation_flag == "variation":
+                    cutoff_dict[cutoff][1] += 1
+    ## plot the proportion barplot
+    cutoffs = []
+    proportions = []
+    for cutoff in range(2, 11):
+        total_clusters, variation_clusters = cutoff_dict[cutoff]
+        if total_clusters == 0:
+            proportion = 0
+        else:
+            proportion = variation_clusters / total_clusters
+        cutoffs.append(cutoff)
+        proportions.append(proportion)
+    plt.figure(figsize=(6,6))
+    sns.barplot(x=cutoffs, y=proportions, color="skyblue")
+    plt.xlabel("Cluster member cutoff")
+    plt.ylabel("Proportion of clusters with motif variation")
+    # plt.ylim(0,1)
+    # plt.title("Proportion of clusters with motif variation vs. cluster member cutoff")
+    plt.savefig(f"{paper_fig_dir}/motif_variation_proportion.pdf")
 
 if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/run2/"
     seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep/"
-
+    fig_dir = "/home/shuaiw/borg/paper/motif_change/plot_drep2/"
+    tmp_res = "/home/shuaiw/borg/paper/motif_change/result_drep2/"
     drep_clu_file = "/home/shuaiw/borg/paper/specificity/dRep_99_out/data_tables/Cdb.csv"
-    depth_dict = depth_filter(all_dir, min_depth = 10)
-    drep_clu_dict = read_drep_cluster(drep_clu_file, depth_dict)
+    paper_fig_dir = "../../tmp/figures/strain_diff/"
+
+
+    # depth_dict = depth_filter(all_dir, min_depth = 10)
+    drep_clu_dict = read_drep_cluster(drep_clu_file, {})
+    # drep_clu_dict = read_drep_cluster(drep_clu_file, depth_dict)
     
     print (len(drep_clu_dict), "drep clusters")
     ## count how many clusters have more than 10 members
@@ -457,14 +439,23 @@ if __name__ == "__main__":
         if len(members) > cutoff:
             count += 1
     print (count, f"clusters have more than {cutoff} members")
+
+    variation_data = []
     for cluster, members in drep_clu_dict.items():
-        if cluster != "180_4":
-            continue
-        if len(members) > cutoff:
-            print ("cluster", cluster, members)
-            given_species_drep(all_dir, members, seq_dir, cluster)
-            # break
+        # if cluster != "180_4":
+        #     continue
+        if len(members) > 1:
+            print ("cluster", cluster, len(members), len(variation_data))
+            cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster, fig_dir, tmp_res)
+            motif_variation_flag = cluster_obj.check_diff_motifs()
+
+            variation_data.append([cluster, len(members), motif_variation_flag])
+
             print ("###############################")
+            # if len(variation_data) > 20:
+            #     break
+            # break
+    plot_variation_fraction(variation_data, paper_fig_dir)
 
 
 
