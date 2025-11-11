@@ -1493,29 +1493,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
 
 
 
-sbatch --job-name=drep \
-  --partition standard \
-  --wrap "dRep dereplicate \
-    -p 64 \
-    -g /home/shuaiw/borg/paper/specificity/genome.list \
-    -comp 50 \
-    -con 10 \
-    --S_algorithm skani \
-    -ms 10000 \
-    -sa 0.99 \
-    -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_99_out"
 
-  sbatch --job-name=drep \
-  --partition standard \
-  --wrap "dRep dereplicate \
-    -p 64 \
-    -g /home/shuaiw/borg/paper/specificity/genome.list \
-    -comp 50 \
-    -con 10 \
-    --S_algorithm skani \
-    -ms 10000 \
-    -sa 0.95 \
-    -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_95_out"
 
 
 
@@ -1763,6 +1741,56 @@ snakemake -s methy_isolation.smk --config prefix=ERR12778152 \
 snakemake -s methy_isolation.smk --config prefix=ERR10042285 \
                 work_dir=/groups/banfield/projects/multienv/methylation_temp/batch2_results/ERR10042285 \
                 -j 10
+
+  sbatch --job-name=d95 \
+  --partition standard \
+  --wrap "dRep dereplicate \
+    -p 64 \
+    -g /home/shuaiw/borg/paper/specificity/genome.list \
+    -comp 50 \
+    -con 10 \
+    --S_algorithm skani \
+    -ms 10000 \
+    -sa 0.95 \
+    -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_95_out"
+
+sbatch --job-name=d99 \
+  --partition standard \
+  --wrap "dRep dereplicate \
+    -p 64 \
+    -g /home/shuaiw/borg/paper/specificity/genome.list \
+    -comp 50 \
+    -con 10 \
+    --S_algorithm skani \
+    -ms 10000 \
+    -sa 0.99 \
+    -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_99_out"
+
+  sbatch --job-name=d98 \
+  --partition standard \
+  --wrap "dRep dereplicate \
+    -p 64 \
+    -g /home/shuaiw/borg/paper/specificity/genome.list \
+    -comp 50 \
+    -con 10 \
+    --S_algorithm skani \
+    -ms 10000 \
+    -sa 0.98 \
+    -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_98_out"
+  
+  sbatch --job-name=d97 \
+  --partition standard \
+  --wrap "dRep dereplicate \
+    -p 64 \
+    -g /home/shuaiw/borg/paper/specificity/genome.list \
+    -comp 50 \
+    -con 10 \
+    --S_algorithm skani \
+    -ms 10000 \
+    -sa 0.97 \
+    -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_97_out"
+
+
 
 
 

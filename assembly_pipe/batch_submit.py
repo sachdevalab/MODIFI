@@ -172,6 +172,7 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
             work_dir = os.path.join(outdir, prefix)
 
+
             cmd = f"""
             # #### number {i}
             # sbatch --partition standard --wrap "snakemake -s assembly.smk --config \\
@@ -180,35 +181,44 @@ def batch_asthma(cmd_file, prefix_table, outdir):
             #     work_dir={work_dir} -j 64" \\
             #     --job-name={prefix}
             # """
-            # cmd = f"""
+            cmd = f"""
             # #### number {i}
+            snakemake -s annotation.smk --config \\
+                hifi_bam={hifi_bam} \\
+                prefix={prefix} \\
+                work_dir={work_dir} -j 64 
+            """
+            # cmd = f"""
+            # # #### number {i}
             # sbatch --partition standard --wrap "snakemake -s annotation.smk --config \\
             #     hifi_bam={hifi_bam} \\
             #     prefix={prefix} \\
             #     work_dir={work_dir} -j 64" \\
             #     --job-name={prefix}
             # """
+            if i   in [9, 14, 18]:
+
+                print (cmd.strip())
+                print (cmd, file=w)
+
+            # cmd = f"""
+            #     sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
+            #     --work_dir {outdir}/{prefix}/{prefix}_methylation3 \\
+            #     --whole_bam {outdir}/{prefix}/{prefix}.align.bam \\
+            #     --whole_ref {outdir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
+            #     --read_type hifi \\
+            #     --min_len 2000 \\
+            #     --min_cov 3 \\
+            #     --min_iden 0.97 \\
+            #     --min_frac 0.3 \\
+            #     --min_score 30 \\
+            #     --min_sites 100 \\
+            #     --mge_file {outdir}/{prefix}/all_mge.tsv \\
+            #     --threads 64" \\
+            #     --job-name=sue_{i}
+            # """
             # print (cmd.strip())
             # print (cmd, file=w)
-
-            cmd = f"""
-                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
-                --work_dir {outdir}/{prefix}/{prefix}_methylation3 \\
-                --whole_bam {outdir}/{prefix}/{prefix}.align.bam \\
-                --whole_ref {outdir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
-                --read_type hifi \\
-                --min_len 2000 \\
-                --min_cov 3 \\
-                --min_iden 0.97 \\
-                --min_frac 0.3 \\
-                --min_score 30 \\
-                --min_sites 100 \\
-                --mge_file {outdir}/{prefix}/all_mge.tsv \\
-                --threads 64" \\
-                --job-name=sue_{i}
-            """
-            print (cmd.strip())
-            print (cmd, file=w)
 
             i += 1
     w.close()
@@ -221,7 +231,7 @@ if __name__ == "__main__":
     # prefix_table = "prefix_table.tab"
     # read_list(bam_list, cmd_file, prefix_table)
 
-    outdir = "/groups/banfield/projects/multienv/methylation_temp/asthma_run/"
+    outdir = "/home/shuaiw/borg/paper/run2/"
     cmd_file = "run_asthma.sh"
     prefix_table = "prefix_table2.tab"
     batch_asthma(cmd_file, prefix_table, outdir)
