@@ -250,6 +250,17 @@ class My_sample(object):
             spacer_linkage_dict[row['target_id']].add(row['query_contig_id'])
         return spacer_linkage_dict
 
+    def read_bin3c(self):
+        bin3c_cluster_list = []
+        with open(self.bin3c_cluster, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                bin3c_cluster_list.append(line.split())
+        return bin3c_cluster_list
+
+
     def read_depth(self):
         self.depth_dict = {}
         self.length_dict = {}
