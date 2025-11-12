@@ -19,15 +19,24 @@ import numpy as np
 from collections import defaultdict
 import seaborn as sns
 from scipy.cluster.hierarchy import linkage, leaves_list
+from sklearn.metrics import jaccard_score
+from sklearn.metrics.pairwise import cosine_similarity
 
-def get_unique_motifs(df_motif):
-    df_motif = df_motif[(df_motif['fraction'] >= 0.4) & (df_motif['nDetected'] >= 100)]
+def get_unique_motifs(df_motif, min_frac=0.4, min_sites = 100):
+    df_motif = df_motif[(df_motif['fraction'] >= min_frac) & (df_motif['nDetected'] >= min_sites)]
     ## rm redundant motifs which are reverse complement 
     unique_motifs = []
     for index, row in df_motif.iterrows():
         if row['motifString'] not in unique_motifs and  str(Seq(row['motifString']).reverse_complement()) not in unique_motifs:
             unique_motifs.append(row['motifString'])
     return len(unique_motifs), unique_motifs
+
+def get_unique_motifs_simple(df_motif):
+    unique_motifs = []
+    for index, row in df_motif.iterrows():
+        if row['motifString'] not in unique_motifs and  str(Seq(row['motifString']).reverse_complement()) not in unique_motifs:
+            unique_motifs.append(row['motifString'])
+    return unique_motifs
 
 def count_N50_size(fai):
     """
@@ -387,15 +396,16 @@ class My_cluster(object):
     def __init__(self, cluster, members):
         self.cluster = cluster
         self.members = members  
-        self.profile_df = None
+        self.profile_df = None  # ["contig", "motifString", "fraction"]
     
-    def get_profile(self, df):
+    def get_profile(self, df, tmp_res_file):
         self.profile_df = df
+        self.profile_df.to_csv(tmp_res_file)
 
-    def plot_profile(self, closed_genome, plot_name, tmp_res_file):
+    def plot_profile(self, closed_genome, plot_name):
+        
         duplicates = self.profile_df.duplicated(subset=['contig', 'motifString'], keep=False)
         if duplicates.any():
-            
             print(f"Warning: Found {duplicates.sum()} duplicate entries. Aggregating by taking mean.")
             self.profile_df = self.profile_df.groupby(['contig', 'motifString'])['fraction'].mean().reset_index()
         try:
@@ -436,7 +446,7 @@ class My_cluster(object):
         ax.set_title(f"Motif Fraction Heatmap (Clustered) - {closed_genome}")
         plt.tight_layout()
         plt.savefig(plot_name)
-        df_clustered.to_csv(tmp_res_file)
+        
     
     def check_diff_motifs(self):
         ## if there is a contig has fraction < 0.1, regard lack a motif, so different motifs exist
@@ -446,3 +456,38 @@ class My_cluster(object):
             return "variation"
         else:
             return "uniform"
+        
+    def pairwise_compare(self, bin_freq = 0.3):
+        ## for every pair of contigs, compare their motif profiles using cosine similarity
+        ## only retain unique motifs using get_unique_motifs
+        unique_motifs = get_unique_motifs_simple(self.profile_df)
+        ## filter the profile_df to only include these motifs
+        filtered_df = self.profile_df[self.profile_df['motifString'].isin(unique_motifs)]
+
+        df_pivot = filtered_df.pivot(index='contig', columns='motifString', values='fraction').fillna(0)
+        contig_list = df_pivot.index.tolist()
+        profile_matrix = df_pivot.values
+        if len(df_pivot) < 2:
+            print("Warning: Insufficient data for pairwise comparison.")
+            return []
+        similarity_matrix = cosine_similarity(profile_matrix)
+        ## also count Jaccard similarity, binary presence/absence with cutoff 0.3
+        binary_df = df_pivot.applymap(lambda x: 1 if x >= bin_freq else 0)
+        binary_matrix = binary_df.values
+
+        n = len(contig_list)
+        data = []
+        for i in range(n):
+            for j in range(i+1, n):
+                jaccard = jaccard_score(binary_matrix[i], binary_matrix[j])
+                data.append([similarity_matrix[i][j], jaccard])
+        return data
+    
+    def load_df(self, tmp_res):
+        tmp_res_file = f"{tmp_res}/{self.cluster}.csv"
+        if not os.path.exists(tmp_res_file):
+            print(f"[⚠️] Profile file not found: {tmp_res_file}")
+            return
+        self.profile_df = pd.read_csv(tmp_res_file)
+
+             

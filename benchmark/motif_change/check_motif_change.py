@@ -225,12 +225,10 @@ def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome, 
             # print (motif_profile)
             data.append([contig,motif_new + "_" + str(exact_pos), motif_profile[-2]])
     df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction"])
-    cluster_obj.get_profile(df)
-    if len(cluster_obj.profile_df) > 1:
-        cluster_obj.plot_profile(closed_genome, plot_name, tmp_res_file)
+    cluster_obj.get_profile(df, tmp_res_file)
+
     return cluster_obj
     
-
 def given_species(all_dir, closed_genome, seq_dir):
     
     all_motif_set = set()
@@ -305,7 +303,6 @@ def by_GTDB():
         given_species(all_dir, closed_genome, seq_dir)
         i += 1
 
-
 def read_drep_cluster(drep_clu_file, depth_dict):
     
     drep_clu_dict = defaultdict(list)
@@ -318,20 +315,21 @@ def read_drep_cluster(drep_clu_file, depth_dict):
         drep_clu_dict[row['secondary_cluster']].append(row['genome'][:-3])
     return drep_clu_dict
 
-def find_species_drep(contig, all_dir, prefix):
+def find_species_drep(contig, all_dir, prefix, min_frac=0.3, min_sites=100):
     species_contigs = [contig]
     contig_list = [[prefix, contig] for contig in species_contigs]
     #### collect all motifs of these contigs
     motif_set = set()
     for contig in species_contigs:
         ctg_obj = My_contig(prefix, all_dir, contig)
-        motif_df = ctg_obj.read_motif(min_frac=0.7, min_sites=100)
+        motif_df = ctg_obj.read_motif(min_frac=0.3, min_sites=100)
         for index, row in motif_df.iterrows():
             motif = str(row["motifString"]) + "_" + str(row["centerPos"])
             motif_set.add(motif)
     return motif_set, contig_list
 
-def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir, tmp_res):
+def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir, 
+                       tmp_res, min_frac=0.3, min_sites=100):
     
     all_motif_set = set()
     all_contig_list = []
@@ -350,7 +348,7 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir, tmp_res):
         if os.path.exists(ref):
             os.system(f"cp {ref} {close_genome_dir}/")
 
-        motif_set, contig_list = find_species_drep(contig, all_dir, prefix)
+        motif_set, contig_list = find_species_drep(contig, all_dir, prefix, min_frac=0.3, min_sites=100)
 
         all_motif_set.update(motif_set)
         all_contig_list.extend(contig_list)
@@ -402,6 +400,7 @@ def plot_variation_fraction(variation_data, paper_fig_dir):
     ## plot the proportion barplot
     cutoffs = []
     proportions = []
+    all_clusters = []
     for cutoff in range(2, 11):
         total_clusters, variation_clusters = cutoff_dict[cutoff]
         if total_clusters == 0:
@@ -410,6 +409,7 @@ def plot_variation_fraction(variation_data, paper_fig_dir):
             proportion = variation_clusters / total_clusters
         cutoffs.append(cutoff)
         proportions.append(proportion)
+        all_clusters.append([variation_clusters, total_clusters - variation_clusters])
     plt.figure(figsize=(6,6))
     sns.barplot(x=cutoffs, y=proportions, color="skyblue")
     plt.xlabel("Cluster member cutoff")
@@ -417,6 +417,37 @@ def plot_variation_fraction(variation_data, paper_fig_dir):
     # plt.ylim(0,1)
     # plt.title("Proportion of clusters with motif variation vs. cluster member cutoff")
     plt.savefig(f"{paper_fig_dir}/motif_variation_proportion.pdf")
+    ## also plot the stacked barplot of all clusters
+    plt.figure(figsize=(6,6))
+    all_clusters_array = np.array(all_clusters)
+    bottom = np.zeros(len(all_clusters_array))
+    labels = ["Variation", "No Variation"]
+    colors = ["skyblue", "lightgray"]
+    for i in range(all_clusters_array.shape[1]):
+        plt.bar(cutoffs, all_clusters_array[:, i], bottom=bottom, color=colors[i], label=labels[i])
+        bottom += all_clusters_array[:, i]
+    plt.xlabel("Cluster member cutoff")
+    plt.ylabel("Number of clusters")
+    plt.legend()
+    plt.savefig(f"{paper_fig_dir}/motif_variation_stacked_bar.pdf")
+
+def plot_similarity_dist(similarity_data, paper_fig_dir):
+    ## similarity_data: list of [cosine_similarity, jaccard_similarity]
+    cosine_similarities = [x[0] for x in similarity_data]
+    jaccard_similarities = [x[1] for x in similarity_data]
+    plt.figure(figsize=(12,6))
+    plt.subplot(1,2,1)
+    sns.histplot(cosine_similarities, bins=30, kde=True, color="skyblue")
+    plt.xlabel("Cosine Similarity")
+    plt.ylabel("Frequency")
+    plt.title("Distribution of Cosine Similarity between pairs of contigs")
+    plt.subplot(1,2,2)
+    sns.histplot(jaccard_similarities, bins=30, kde=True, color="lightgreen")
+    plt.xlabel("Jaccard Similarity")
+    plt.ylabel("Frequency")
+    plt.title("Distribution of Jaccard Similarity between pairs of contigs")
+    plt.tight_layout()
+    plt.savefig(f"{paper_fig_dir}/similarity_distributions.pdf")
 
 if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/run2/"
@@ -434,137 +465,37 @@ if __name__ == "__main__":
     print (len(drep_clu_dict), "drep clusters")
     ## count how many clusters have more than 10 members
     count = 0
-    cutoff = 2
+    cutoff = 1
     for cluster, members in drep_clu_dict.items():
         if len(members) > cutoff:
             count += 1
     print (count, f"clusters have more than {cutoff} members")
 
     variation_data = []
+    similarity_data = []
     for cluster, members in drep_clu_dict.items():
         # if cluster != "180_4":
         #     continue
-        if len(members) > 1:
+        if len(members) > cutoff:
             print ("cluster", cluster, len(members), len(variation_data))
-            cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster, fig_dir, tmp_res)
+
+            cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                                             fig_dir, tmp_res, min_frac=0.3, min_sites=100)
+            
+            # cluster_obj = My_cluster(cluster, members) 
+            # cluster_obj.load_df(tmp_res)
+
             motif_variation_flag = cluster_obj.check_diff_motifs()
+            if motif_variation_flag == "variation":
+                plot_name = f"{fig_dir}/{cluster}.pdf"
+                cluster_obj.plot_profile(cluster, plot_name)
 
             variation_data.append([cluster, len(members), motif_variation_flag])
-
+            similarity_data_cluster = cluster_obj.pairwise_compare(bin_freq=0.3)
+            similarity_data += similarity_data_cluster
             print ("###############################")
-            # if len(variation_data) > 20:
+            # if len(variation_data) > 10:
             #     break
-            # break
     plot_variation_fraction(variation_data, paper_fig_dir)
-
-
-
-    
-
-
-
-
-    # bioreactor()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # motif_new = "CTGCAG"
-    # exact_pos = 5
-    
-    # my_ref = "/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa"
-    # gff = "/home/shuaiw/borg/bench/C227_native/gffs/CP011331.1.gff"
-
-    # my_ref = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/contigs/E_coli_H10407_1.fa"
-    # gff = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/gffs/E_coli_H10407_1.gff"
-    # # gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.gff"
-    # # all_motifs = "/home/shuaiw/methylation/data/borg/bench/zymo2/all.motifs.csv"
-    # # profile = "/home/shuaiw/borg/test.csv"
-    # ipd_ratio_file = "/home/shuaiw/borg/bench/zymo_new_ref_p0.05_cov1_s30/ipd_ratio/E_coli_H10407_1.ipd3.csv"
-
-
-
-    # my_ref = sys.argv[1]
-    # gff = sys.argv[2]
-    # all_motifs = sys.argv[3]
-    # profile = sys.argv[4]
-
-    # REF = read_ref(my_ref)
-    # # print (REF)
-    # modified_loci = get_modified_ratio(gff)
-    # # motifs = pd.read_csv(all_motifs)
-    # ipd_ratio_dict = read_ipd_ratio(ipd_ratio_file)
-    # # print (len(ipd_ratio_dict))
-    # # data = []
-    # # for index, motif in motifs.iterrows():
-    #     # motif_new = motif["motifString"]
-    #     # exact_pos = motif["centerPos"]
-    # # motif_new = "AGCANNNNNNCCT"
-    # # exact_pos = 4
-    # # motif_new = "GGCATC"
-    # # exact_pos = 4
-    # motif_list = [["GATC", 2], ["ACNCAG", 5], ["GAAATC", 4], ["ACTNNNNNNRGTC", 1], ["GGCATC", 4]]
-    # for motif_new, exact_pos in motif_list:
-    #     all_record = {}
-    #     motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
-    #     print (motif_profile)
-    # ## add record_modified_sites to all_record
-    # for k, v in record_modified_sites.items():
-    #     all_record[k] = v
-    # motif_new = "CTTCAG"
-    # exact_pos = 5
-    # motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
-    # ## add record_modified_sites to all_record
-    # for k, v in record_modified_sites.items():
-    #     all_record[k] = v
-    # motif_new = "CTGAAG"
-    # exact_pos = 5
-    # motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
-    # ## add record_modified_sites to all_record
-    # for k, v in record_modified_sites.items():
-    #     all_record[k] = v
-    # record_modified_sites  = all_record
-    # print ("no. of final modified sites", len(record_modified_sites))
-    
-    # # print (motif_new, motif_profile)
-    # new_gff = "/home/shuaiw/borg/bench/test/E_coli_H10407_1.new.gff"
-    # h = open(new_gff, "w")
-    # ## read the gff file
-    # f = open(gff, "r")
-    # modified_loci = {}
-    # for line in f:
-    #     if line[0] == "#":
-    #         print (line.strip(), file = h)
-    #         continue
-    #     field = line.strip().split("\t")
-
-    #     ref = field[0]
-    #     pos = int(field[3]) 
-    #     strand = field[6]
-    #     score = int(field[5])
-    #     tag = ref + ":" + str(pos) + strand
-    #     if tag not in all_record and score >= 40:
-    #         print (line.strip(), file = h)
-    # h.close()
-
-
-    ## filter gff file
-
-    #     data.append([motif_new, exact_pos] + motif_profile)
-
-    # df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
-    #                                     "rev_loci_num", "rev_modified_num", "rev_modified_ratio",\
-    #                                     "motif_loci_num", "motif_modified_num", "motif_modified_ratio", "proportion"])
-    # df.to_csv(profile, index=False)
-
-
+    plot_similarity_dist(similarity_data, paper_fig_dir)
+    print ("all done")
