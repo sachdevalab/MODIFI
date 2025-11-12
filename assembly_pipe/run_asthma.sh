@@ -10,7 +10,7 @@
                 --min_frac 0.3 \
                 --min_score 30 \
                 --min_sites 100 \
-                --run_steps control \
+                --run_steps control compare motif profile merge host \
                 --mge_file /home/shuaiw/borg/paper/run2//asthma_9/all_mge.tsv \
                 --threads 64" \
                 --job-name=sue_9

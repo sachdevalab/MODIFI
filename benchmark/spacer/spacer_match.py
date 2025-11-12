@@ -178,7 +178,8 @@ def single_run():
     # prefix = "ERR10042290"
     # outdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/{prefix}"
 
-    resultdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
+    # resultdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
+    resultdir = "/home/shuaiw/borg/paper/run2/"
     for folder in os.listdir(resultdir):
         prefix = folder
         outdir = f"{resultdir}/{prefix}"

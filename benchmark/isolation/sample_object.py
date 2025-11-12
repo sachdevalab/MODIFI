@@ -107,12 +107,17 @@ class My_sample(object):
         self.checkm = os.path.join(self.work_dir, "../checkM2/quality_report.tsv")
         self.mge_file = f"{self.all_dir}/{self.prefix}/all_mge.tsv"
         self.all_motif_file = f"{self.work_dir}/all.motifs.csv"
+        self.bin3c_cluster = f"{all_dir}/{prefix}/hic/bin3c_clust/clustering.mcl"
+        self.contact_value_file = f"{all_dir}/{prefix}/hic/bin3c/contact_values.txt"
+        self.spacer_linkage_file = f"{all_dir}/{prefix}/spacer/{prefix}_mge_spacer_hits.filter.tsv"
         
         self.mge_dict = None
         self.depth_dict = None
         self.length_dict = None
         self.depth_cutoff = 10
         self.length_cutoff = 5000
+        self.specificity_cutoff = 0.01
+        self.final_score_cutoff = 0.5
 
     def get_unique_motifs(self):
         if not os.path.exists(self.all_motif_file):
@@ -185,12 +190,65 @@ class My_sample(object):
             #     continue
             # if row['final_score'] <= 0.6:
             #     continue
-            if row["specificity"] >= 0.01:
+            if row["specificity"] >= self.specificity_cutoff:
                 continue
-            if row['final_score'] <= 0.5:
+            if row['final_score'] <= self.final_score_cutoff:
                 continue
             linkage_num += 1
         return linkage_num
+
+    def read_linkage_dict(self, ctg2bin_dict={}):
+        ## if self.host_sum_file not exists
+        if not os.path.exists(self.host_sum_file):
+            print(f"Host summary file {self.host_sum_file} not found.")
+            return {}, {}
+        line_num = sum(1 for line in open(self.host_sum_file) if line.strip())
+        if line_num < 2:
+            print(f"Host summary file {self.host_sum_file} is empty or has only header.")
+            return {}, {}
+
+        df = pd.read_csv(self.host_sum_file)
+        df = df[df['specificity'] < self.specificity_cutoff]
+        df = df[df['final_score'] > self.final_score_cutoff]
+        our_linkages = defaultdict(list)
+        our_ctg_linkages = {}
+        for index, row in df.iterrows():
+            if row['host'] not in ctg2bin_dict:
+                bin_name = row['host']
+                ## raise error
+                # print (f"contig {row['host']} is not in ctg2bin_dict")
+                # sys.exit(1)
+            else:
+                bin_name = ctg2bin_dict[row['host']]
+            ## try plasmid is in header of row
+            try:
+                plasmid_name = row['plasmid']
+            ## otherwise index with MGE
+            except KeyError:
+                plasmid_name = row['MGE']
+            our_linkages[plasmid_name].append(bin_name)
+            our_ctg_linkages[plasmid_name] = row['host']
+            # our_linkages[row['plasmid']] = row['host']
+        multiple_host_plasmid_num = 0
+        for plasmid in our_linkages:
+            if len(our_linkages[plasmid]) > 1:
+                multiple_host_plasmid_num += 1
+                # print (f"{plasmid} has multiple host: {our_linkages[plasmid]}")
+        print (f"multiple host plasmid num: {multiple_host_plasmid_num} out of {len(our_linkages)}")
+        return our_linkages, our_ctg_linkages
+
+    def read_spacer(self, mismatch_allowed=0):
+        spacer_linkage_dict = defaultdict(set)
+        ## check if spacer_linkage_file empty
+        if not os.path.exists(self.spacer_linkage_file) or os.path.getsize(self.spacer_linkage_file) == 0:
+            return spacer_linkage_dict
+        df = pd.read_csv(self.spacer_linkage_file, sep="\t")
+        # print (df)
+        for index, row in df.iterrows():
+            if row['full_mismatch'] > mismatch_allowed:
+                continue
+            spacer_linkage_dict[row['target_id']].add(row['query_contig_id'])
+        return spacer_linkage_dict
 
     def read_depth(self):
         self.depth_dict = {}
