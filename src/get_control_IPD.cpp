@@ -191,7 +191,16 @@ IPD_Result load_ipd(string raw_ipd){
         getline(ss, tErr, ',');
         // cout << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << endl;
 
-        int tpl_int = stoi(tpl);
+        int tpl_int;
+        try {
+            tpl_int = stoi(tpl);
+        } catch (const std::invalid_argument& e) {
+            std::cerr << "Invalid tpl argument in " << raw_ipd << " - Full line: " << line << std::endl;
+            continue; // Skip this line
+        } catch (const std::out_of_range& e) {
+            std::cerr << "tpl out of range in " << raw_ipd << " - Full line: " << line << std::endl;
+            continue; // Skip this line
+        }
         // float tMean_float = stof(tMean);
         float tMean_float;
         try {
@@ -251,7 +260,16 @@ void update_ipd(string raw_ipd, map<int, IPD_Control> for_control_map, map<int, 
         string tErr;
         getline(ss, tErr, ',');
         // cout << refName << "\t" << strand << "\t" << tpl << "\t" << coverage << "\t" << tMean << "\t" << tErr << endl;
-        int tpl_int = stoi(tpl);
+        int tpl_int;
+        try {
+            tpl_int = stoi(tpl);
+        } catch (const std::invalid_argument& e) {
+            std::cerr << "Invalid tpl argument in " << raw_ipd << " - Full line: " << line << std::endl;
+            continue; // Skip this line
+        } catch (const std::out_of_range& e) {
+            std::cerr << "tpl out of range in " << raw_ipd << " - Full line: " << line << std::endl;
+            continue; // Skip this line
+        }
         float tMean_float = stof(tMean);
         if (strand == "1"){
             if (for_control_map.find(tpl_int) != for_control_map.end()){
