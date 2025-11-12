@@ -510,8 +510,6 @@ def plot_MT_motif():
     plt.ylabel('Number of Motifs')
     plt.savefig(os.path.join("../../tmp/results", "MT_motif_num_distribution.png"), dpi=300, bbox_inches='tight')
 
-
-
 def count_modified_base(work_dir, prefix, best_ctgs, length_dict, env, score_cutoff = 30):
     base_data = []
     for ctg in best_ctgs:
@@ -534,8 +532,6 @@ def count_modified_base(work_dir, prefix, best_ctgs, length_dict, env, score_cut
         motif_ratio =  modified_motif_num / modified_num if modified_num > 0 else 0
         base_data.append([prefix, ctg, length, modified_num, modified_motif_num, modified_ratio, modified_motif_ratio, motif_ratio, env])
     return base_data
-
-
 
 def get_stastics():
     df_genome_data = pd.read_csv("../../tmp/results2/genome_data_all_samples.csv")
@@ -611,6 +607,23 @@ def plot_motif(df_all_data, fig_dir):
     plt.ylabel('Number of Motifs')
     plt.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.savefig(f"{fig_dir}/motif_num_distribution_all_samples.png", dpi=300, bbox_inches='tight')
+
+def plot_motif_env(df_all_data, fig_dir):
+    ### sort by sample
+    df_all_data = df_all_data.sort_values(by='environment')
+    ## plot boxplot where sample is on x-axis and motif_num is on y-axis
+    plt.figure(figsize=(6, 6))
+    order = df_all_data.groupby('environment')['motif_num'].median().sort_values().index
+    sns.boxplot(data=df_all_data, x='environment', y='motif_num', order=order, showfliers=False)
+    
+    # Set y-axis limits to focus on the main distribution (exclude extreme outliers)
+    plt.ylim(0, 13)
+    ## sort the x axis by median motif_num
+
+    plt.xticks(rotation=90)
+    plt.xlabel('Environment')
+    plt.ylabel('Number of Motifs')
+    plt.savefig(f"{fig_dir}/motif_num_env.png", dpi=300, bbox_inches='tight')
 
 def plot_base(df_all_base_data, fig_dir):
     ### sort by sample
@@ -767,29 +780,35 @@ def main(fig_dir):
         all_data += count_motifs(depth_file, best_ctgs, work_dir, prefix, sample_env_dict[prefix])
         # all_base_data += count_modified_base(work_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
         # break
-    # print ("start plot...")
-    # df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig'])
-    # df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
-    # df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
+    print ("start plot...")
+    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig'])
+    df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
+    df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
+    plot_motif_env(df_all_data, fig_dir)
     # plot_motif(df_all_data, fig_dir)
     # plot_genome(df_genome_data, fig_dir)
     # plot_meta(df_genome_data, fig_dir)
     # # plot_base(df_all_base_data, fig_dir)
     # ## save genome data
-    # df_genome_data.to_csv(f"{fig_dir}/genome_data_all_samples.csv", index = False)
-    # df_all_base_data.to_csv(f"{fig_dir}/base_count_all_samples.csv", index=False)
-    # df_all_data.to_csv(f"{fig_dir}/motif_num_all_samples.csv", index=False)
+    df_genome_data.to_csv(f"{fig_dir}/genome_data_all_samples.csv", index = False)
+    df_all_base_data.to_csv(f"{fig_dir}/base_count_all_samples.csv", index=False)
+    df_all_data.to_csv(f"{fig_dir}/motif_num_all_samples.csv", index=False)
 
-    with open(genome_list_file, "w") as f:
-        for genome in genome_list:
-            f.write(genome + "\n")
+    # with open(genome_list_file, "w") as f:
+    #     for genome in genome_list:
+    #         f.write(genome + "\n")
+
+def rerun(fig_dir):
+    df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
+    plot_motif_env(df_all_data, fig_dir)
 
 if __name__ == "__main__":
     meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
     fig_dir = "../../tmp/figures/multi_env_linkage/"
     genome_list_file =  "/home/shuaiw/borg/paper/specificity/genome.list"
     sample_env_dict = read_metadata(meta_file)
-    main(fig_dir)
+    # main(fig_dir)
+    rerun(fig_dir)
     # get_stastics()
     # jaccard()
     # jaccard_batch()

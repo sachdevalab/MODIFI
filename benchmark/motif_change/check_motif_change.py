@@ -451,51 +451,57 @@ def plot_similarity_dist(similarity_data, paper_fig_dir):
 
 if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/run2/"
-    seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep/"
-    fig_dir = "/home/shuaiw/borg/paper/motif_change/plot_drep2/"
-    tmp_res = "/home/shuaiw/borg/paper/motif_change/result_drep2/"
-    drep_clu_file = "/home/shuaiw/borg/paper/specificity/dRep_99_out/data_tables/Cdb.csv"
-    paper_fig_dir = "../../tmp/figures/strain_diff/"
+    ANI = 95
+    for ANI in [95, 97, 98]:
+        drep_clu_file = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/data_tables/Cdb.csv"
+        seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep/"
+        fig_dir = f"/home/shuaiw/borg/paper/motif_change/plot_drep2_{ANI}/"
+        tmp_res = f"/home/shuaiw/borg/paper/motif_change/result_drep2_{ANI}/"
+        paper_fig_dir = f"../../tmp/figures/strain_diff/drep_{ANI}/"
+        ## create fig_dir and tmp_res if not exist
+        os.makedirs(fig_dir, exist_ok=True)
+        os.makedirs(tmp_res, exist_ok=True)
+        os.makedirs(paper_fig_dir, exist_ok=True)
 
 
-    # depth_dict = depth_filter(all_dir, min_depth = 10)
-    drep_clu_dict = read_drep_cluster(drep_clu_file, {})
-    # drep_clu_dict = read_drep_cluster(drep_clu_file, depth_dict)
-    
-    print (len(drep_clu_dict), "drep clusters")
-    ## count how many clusters have more than 10 members
-    count = 0
-    cutoff = 1
-    for cluster, members in drep_clu_dict.items():
-        if len(members) > cutoff:
-            count += 1
-    print (count, f"clusters have more than {cutoff} members")
+        # depth_dict = depth_filter(all_dir, min_depth = 10)
+        drep_clu_dict = read_drep_cluster(drep_clu_file, {})
+        # drep_clu_dict = read_drep_cluster(drep_clu_file, depth_dict)
+        
+        print (len(drep_clu_dict), "drep clusters")
+        ## count how many clusters have more than 10 members
+        count = 0
+        cutoff = 1
+        for cluster, members in drep_clu_dict.items():
+            if len(members) > cutoff:
+                count += 1
+        print (count, f"clusters have more than {cutoff} members")
 
-    variation_data = []
-    similarity_data = []
-    for cluster, members in drep_clu_dict.items():
-        # if cluster != "180_4":
-        #     continue
-        if len(members) > cutoff:
-            print ("cluster", cluster, len(members), len(variation_data))
+        variation_data = []
+        similarity_data = []
+        for cluster, members in drep_clu_dict.items():
+            # if cluster != "180_4":
+            #     continue
+            if len(members) > cutoff:
+                print ("cluster", cluster, len(members), len(variation_data))
 
-            cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                             fig_dir, tmp_res, min_frac=0.3, min_sites=100)
-            
-            # cluster_obj = My_cluster(cluster, members) 
-            # cluster_obj.load_df(tmp_res)
+                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                                                fig_dir, tmp_res, min_frac=0.3, min_sites=100)
+                
+                # cluster_obj = My_cluster(cluster, members) 
+                # cluster_obj.load_df(tmp_res)
 
-            motif_variation_flag = cluster_obj.check_diff_motifs()
-            if motif_variation_flag == "variation":
-                plot_name = f"{fig_dir}/{cluster}.pdf"
-                cluster_obj.plot_profile(cluster, plot_name)
+                motif_variation_flag = cluster_obj.check_diff_motifs()
+                if motif_variation_flag == "variation":
+                    plot_name = f"{fig_dir}/{cluster}.pdf"
+                    cluster_obj.plot_profile(cluster, plot_name)
 
-            variation_data.append([cluster, len(members), motif_variation_flag])
-            similarity_data_cluster = cluster_obj.pairwise_compare(bin_freq=0.3)
-            similarity_data += similarity_data_cluster
-            print ("###############################")
-            # if len(variation_data) > 10:
-            #     break
-    plot_variation_fraction(variation_data, paper_fig_dir)
-    plot_similarity_dist(similarity_data, paper_fig_dir)
-    print ("all done")
+                variation_data.append([cluster, len(members), motif_variation_flag])
+                similarity_data_cluster = cluster_obj.pairwise_compare(bin_freq=0.3)
+                similarity_data += similarity_data_cluster
+                print ("###############################")
+                # if len(variation_data) > 10:
+                #     break
+        plot_variation_fraction(variation_data, paper_fig_dir)
+        plot_similarity_dist(similarity_data, paper_fig_dir)
+        print ("all done")
