@@ -13,7 +13,7 @@ from scipy.stats import ttest_ind
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'linkage'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 
-from compare_bin3c import read_our
+
 from sample_object import get_unique_motifs, My_sample, Isolation_sample
 
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
         sample_obj.read_MGE()
         our_linkages, our_ctg_linkages = sample_obj.read_linkage_dict()
-        spacer_linkage_dict = sample_obj.read_spacer()
+        spacer_linkage_dict = sample_obj.read_spacer(mismatch_allowed=0)
 
         consistent_num, spacer_linkage_num, our_linkage_num, mge_type_consistent_dict = compare_linkage(our_linkages, spacer_linkage_dict, sample_obj)
         mge_type_consistent_dict_all = {k: mge_type_consistent_dict_all.get(k, 0) + mge_type_consistent_dict.get(k, 0) for k in set(mge_type_consistent_dict_all) | set(mge_type_consistent_dict)}

@@ -12,7 +12,7 @@ import sys
 from Bio.Seq import Seq
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
-from sample_object import get_unique_motifs, My_sample, get_ctg_taxa, classify_taxa, My_contig
+from sample_object import get_unique_motifs, My_sample, get_ctg_taxa, classify_taxa, My_contig, Isolation_sample
 
 
 def get_best_ctg(depth_file, fai, min_len = 1000000):
@@ -719,6 +719,18 @@ def read_metadata(meta_file):
             sample_env_dict[sample] = env
     return sample_env_dict
 
+def collect_iso_ctgsall_dir(iso_genome_list_file):
+    all_dir= "/home/shuaiw/borg/paper/isolation/batch2_results/"
+    iso_genome_list = []
+    for my_dir in os.listdir(all_dir):
+        prefix = my_dir
+        isolation_obj = Isolation_sample(prefix, all_dir)
+        isolation_obj.read_depth()
+        iso_genome_list += isolation_obj.get_high_dp_ctg_list()
+    with open(iso_genome_list_file, "w") as f:
+        for genome in iso_genome_list:
+            f.write(genome + "\n")
+
 def main(fig_dir):
     all_data = []
     all_base_data = []
@@ -792,12 +804,28 @@ if __name__ == "__main__":
     meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
     fig_dir = "../../tmp/figures/multi_env_linkage/"
     genome_list_file =  "/home/shuaiw/borg/paper/specificity/genome.list"
-    sample_env_dict = read_metadata(meta_file)
-    main(fig_dir)
+    iso_genome_list_file = "/home/shuaiw/borg/paper/specificity/iso_genome.list"
+    # sample_env_dict = read_metadata(meta_file)
+    # main(fig_dir)
     # rerun(fig_dir)
     # get_stastics()
     # jaccard()
     # jaccard_batch()
+    collect_iso_ctgsall_dir(iso_genome_list_file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # fai = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa.fai"
     # ref = "/home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa"

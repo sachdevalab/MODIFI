@@ -411,7 +411,15 @@ class Isolation_sample(My_sample):
         self.phylum = None
         self.lineages = None
         self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
-        
+        self.depth_file = os.path.join(self.work_dir, "mean_depth.csv")
+        self.host_sum_file = os.path.join(self.work_dir, "host_summary.csv")
+        self.orphan_file = os.path.join(self.work_dir, "regulatory_motif_enrichment.csv")
+        self.motif_freq_file = os.path.join(self.work_dir, "motif_length_stats.csv")
+        self.profile = os.path.join(self.work_dir, "motif_profile.csv")
+        self.gtdb = os.path.join(self.work_dir, "../GTDB_2/gtdbtk.bac120.summary.tsv")
+        self.all_gtdb = os.path.join(self.work_dir, "../GTDB/gtdbtk.bac120.summary.tsv")
+        self.all_motif_file = f"{self.work_dir}/all.motifs.csv"
+
     def get_phylum(self):
         isolation_taxa = self.read_isolation_gtdb()
         self.lineage = isolation_taxa[list(isolation_taxa.keys())[0]]
@@ -421,7 +429,7 @@ class Isolation_sample(My_sample):
         """
         Read the GTDB summary file and return a dictionary of contig to bin mapping.
         """
-        gtdb_df = pd.read_csv(self.gtdb, sep='\t')
+        gtdb_df = pd.read_csv(self.all_gtdb, sep='\t')
         isolation_taxa = {}
         for index, row in gtdb_df.iterrows():
             anno = row['classification']
