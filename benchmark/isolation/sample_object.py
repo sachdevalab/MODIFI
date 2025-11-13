@@ -99,22 +99,29 @@ def classify_taxa(lineage, level="species"):
         return "Unknown"
     return taxon
 
-def get_ctg_taxa(all_dir):
+def get_ctg_taxa(all_dir, data_type="meta"):
     ctg_taxa_dict = {}
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
-        sample_obj = My_sample(prefix, all_dir)
+        if data_type == "meta":
+            sample_obj = My_sample(prefix, all_dir)
+        else:
+            sample_obj = Isolation_sample(prefix, all_dir)
         sample_taxa_dict = sample_obj.read_meta_gtdb()
         ctg_taxa_dict.update(sample_taxa_dict)
     print (len(ctg_taxa_dict), "contig taxa info collected")
     return ctg_taxa_dict
 
 class My_sample(object):
-    def __init__(self, prefix, all_dir):
+    def __init__(self, prefix, all_dir, data_type="meta"):
         self.prefix = prefix
         self.all_dir = all_dir
 
-        self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation3"
+        if data_type == "meta":
+            self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation3"
+        else:
+            self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
+
         self.reference_fasta = f"{self.all_dir}/{self.prefix}/{self.prefix}.hifiasm.p_ctg.rename.fa"
         self.fai = f"{self.all_dir}/{self.prefix}/{self.prefix}.hifiasm.p_ctg.rename.fa.fai"
         self.map_sum = f"{self.all_dir}/{self.prefix}/{self.prefix}.align.count.csv"
@@ -487,13 +494,17 @@ class Isolation_sample(My_sample):
 
 class My_contig(My_sample):
 
-    def __init__(self, prefix, all_dir, contig):
-        super().__init__(prefix, all_dir)
+    def __init__(self, prefix, all_dir, contig, data_type="meta"):
+        super().__init__(prefix, all_dir, data_type)
         self.contig = contig
-        self.ctg_ref = f"{all_dir}/{prefix}/{prefix}_methylation3/contigs/{contig}.fa"
-        self.gff = f"{all_dir}/{prefix}/{prefix}_methylation3/gffs/{contig}.gff"
-        self.ipd_ratio_file = f"{all_dir}/{prefix}/{prefix}_methylation3/ipd_ratio/{contig}.ipd3.csv"
-        self.motif_file = f"{all_dir}/{prefix}/{prefix}_methylation3/motifs/{contig}.motifs.csv"
+        if data_type == "meta":
+            self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation3"
+        else:
+            self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
+        self.ctg_ref = f"{self.work_dir}/contigs/{contig}.fa"
+        self.gff = f"{self.work_dir}/gffs/{contig}.gff"
+        self.ipd_ratio_file = f"{self.work_dir}/ipd_ratio/{contig}.ipd3.csv"
+        self.motif_file = f"{self.work_dir}/motifs/{contig}.motifs.csv"
 
     def read_motif(self, min_frac=0.3, min_sites=30):
         ## check if file exists

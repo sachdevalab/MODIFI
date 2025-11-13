@@ -206,10 +206,10 @@ def find_species(closed_genome, GTDB_file, outdir, prefix):
             motif_set.add(motif)
     return motif_set, contig_list
 
-def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome, tmp_res_file, cluster_obj):
+def profile_heatmap(prefix_list, motif_list, all_dir, tmp_res_file, cluster_obj, data_type="meta"):
     data = []
     for prefix, contig in prefix_list:
-        ctg_obj = My_contig(prefix, all_dir, contig)
+        ctg_obj = My_contig(prefix, all_dir, contig, data_type)
         ## skip if files do not exist
         if not os.path.exists(ctg_obj.gff) or not os.path.exists(ctg_obj.ipd_ratio_file) or not os.path.exists(ctg_obj.ctg_ref):
             continue
@@ -220,7 +220,6 @@ def profile_heatmap(prefix_list, motif_list, all_dir, plot_name, closed_genome, 
         ipd_ratio_dict = read_ipd_ratio(ctg_obj.ipd_ratio_file)
 
         for motif_new, exact_pos in motif_list:
-            all_record = {}
             motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict)
             # print (motif_profile)
             data.append([contig,motif_new + "_" + str(exact_pos), motif_profile[-2]])
@@ -315,21 +314,23 @@ def read_drep_cluster(drep_clu_file, depth_dict):
         drep_clu_dict[row['secondary_cluster']].append(row['genome'][:-3])
     return drep_clu_dict
 
-def find_species_drep(contig, all_dir, prefix, min_frac=0.3, min_sites=100):
+def find_species_drep(contig, all_dir, prefix, data_type="meta", min_frac=0.3, min_sites=100):
     species_contigs = [contig]
     contig_list = [[prefix, contig] for contig in species_contigs]
     #### collect all motifs of these contigs
     motif_set = set()
     for contig in species_contigs:
-        ctg_obj = My_contig(prefix, all_dir, contig)
+        ctg_obj = My_contig(prefix, all_dir, contig, data_type)
         motif_df = ctg_obj.read_motif(min_frac=0.3, min_sites=100)
+        if motif_df is None:
+            continue
         for index, row in motif_df.iterrows():
             motif = str(row["motifString"]) + "_" + str(row["centerPos"])
             motif_set.add(motif)
     return motif_set, contig_list
 
 def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir, 
-                       tmp_res, min_frac=0.3, min_sites=100):
+                       tmp_res, data_type="meta", min_frac=0.3, min_sites=100):
     
     all_motif_set = set()
     all_contig_list = []
@@ -338,9 +339,9 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
     cluster_obj = My_cluster(cluster, members)
     for contig in members:
         prefix = "_".join(contig.split("_")[:-2])
-        outdir = f"{all_dir}/{prefix}/"
+        ctg_obj = My_contig(prefix, all_dir, contig, data_type)
+        ref = ctg_obj.ctg_ref
 
-        ref = f"{outdir}/{prefix}_methylation3/contigs/{contig}.fa"
         close_genome_dir = os.path.join(seq_dir, cluster)
         if not os.path.exists(close_genome_dir):
             os.makedirs(close_genome_dir)
@@ -348,7 +349,7 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
         if os.path.exists(ref):
             os.system(f"cp {ref} {close_genome_dir}/")
 
-        motif_set, contig_list = find_species_drep(contig, all_dir, prefix, min_frac=0.3, min_sites=100)
+        motif_set, contig_list = find_species_drep(contig, all_dir, prefix, data_type, min_frac=0.3, min_sites=100)
 
         all_motif_set.update(motif_set)
         all_contig_list.extend(contig_list)
@@ -368,7 +369,7 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
     print ("motif_list", motif_list)
     print ("all_contig_list", all_contig_list)
     # if len(all_contig_list) > 1:
-    cluster_obj = profile_heatmap(all_contig_list, motif_list, all_dir, plot_name, cluster, tmp_res_file, cluster_obj)
+    cluster_obj = profile_heatmap(all_contig_list, motif_list, all_dir, tmp_res_file, cluster_obj,data_type)
     
     return cluster_obj
 
@@ -481,9 +482,6 @@ def plot_clade_size(clade_data, paper_fig_dir):
     plt.tight_layout()
     plt.savefig(f"{paper_fig_dir}/top20_species_clade_numbers.pdf", bbox_inches='tight')
 
-
-
-
 def collect_represent_ctgs(dereplicated_genomes_dir):
     represent_ctg_set = set()
     for file in os.listdir(dereplicated_genomes_dir):
@@ -499,7 +497,7 @@ def select_represent(represent_ctg_set, members):
             return contig
     return None
 
-if __name__ == "__main__":
+def main_meta():
     all_dir = "/home/shuaiw/borg/paper/run2/"
     ctg_taxa_dict = get_ctg_taxa(all_dir)
     # print (ctg_taxa_dict)
@@ -546,6 +544,83 @@ if __name__ == "__main__":
                 
                 cluster_obj = My_cluster(cluster, members) 
                 cluster_obj.load_df(tmp_res)
+                cluster_obj.manual_filter_motifs()
+
+                if len(cluster_obj.profile_df) < 2:
+                    print ("skip cluster with less than 2 contigs with motif profiles")
+                    continue
+
+                represent_ctg = select_represent(represent_ctg_set, members)
+                represent_ctg_lineage = ctg_taxa_dict[represent_ctg] if represent_ctg in ctg_taxa_dict else "NA"
+                cluster_phylum = classify_taxa(represent_ctg_lineage, "phylum")
+                cluster_species = classify_taxa(represent_ctg_lineage, "species")
+
+                motif_variation_flag = cluster_obj.check_diff_motifs()
+
+                
+                similarity_data_cluster, motif_clade_num = cluster_obj.pairwise_compare(bin_freq=0.6)
+                variation_data.append([cluster, len(members), motif_variation_flag])
+                similarity_data += similarity_data_cluster
+                clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
+                print ("###############################", represent_ctg_lineage)
+                if motif_variation_flag == "variation" or motif_clade_num > 1:
+                    plot_name = f"{fig_dir}/{cluster}.pdf"
+                    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+                # if len(variation_data) > 10:
+                #     break
+        plot_variation_fraction(variation_data, paper_fig_dir)
+        plot_similarity_dist(similarity_data, paper_fig_dir)
+        plot_clade_size(clade_data, paper_fig_dir)
+        print ("all done")
+
+if __name__ == "__main__":
+    all_dir = "/home/shuaiw/borg/paper/isolation/batch2_results/"
+    ctg_taxa_dict = get_ctg_taxa(all_dir, 'isolation')
+    # print (ctg_taxa_dict)
+    # ANI = 95
+    # for ANI in [95, 97, 98, 99]:
+    for ANI in [95]:
+        drep_clu_file = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/data_tables/Cdb.csv"
+        dereplicated_genomes_dir = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/dereplicated_genomes/"
+        seq_dir = "/home/shuaiw/borg/paper/motif_change/iso_seq_drep/"
+        fig_dir = f"/home/shuaiw/borg/paper/motif_change/iso_plot_drep2_{ANI}/"
+        tmp_res = f"/home/shuaiw/borg/paper/motif_change/iso_result_drep2_{ANI}/"
+        paper_fig_dir = f"../../tmp/figures/strain_diff/iso_drep_{ANI}/"
+        ## create fig_dir and tmp_res if not exist
+        os.makedirs(fig_dir, exist_ok=True)
+        os.makedirs(tmp_res, exist_ok=True)
+        os.makedirs(paper_fig_dir, exist_ok=True)
+
+
+        # depth_dict = depth_filter(all_dir, min_depth = 10)
+        drep_clu_dict = read_drep_cluster(drep_clu_file, {})
+        represent_ctg_set = collect_represent_ctgs(dereplicated_genomes_dir)
+        # drep_clu_dict = read_drep_cluster(drep_clu_file, depth_dict)
+        
+        print (len(drep_clu_dict), "drep clusters")
+        ## count how many clusters have more than 10 members
+        count = 0
+        cutoff = 1
+        for cluster, members in drep_clu_dict.items():
+            if len(members) > cutoff:
+                count += 1
+        print (count, f"clusters have more than {cutoff} members")
+
+        variation_data = []
+        similarity_data = []
+        clade_data = []
+        for cluster, members in drep_clu_dict.items():
+            # if cluster != "180_4":
+            #     continue
+            if len(members) > cutoff:
+                print ("cluster", cluster, len(members), len(variation_data))
+
+                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                                                fig_dir, tmp_res, "isolation", min_frac=0.3, min_sites=100)
+                
+                # cluster_obj = My_cluster(cluster, members) 
+                # cluster_obj.load_df(tmp_res)
+                print (">>>>", cluster_obj.profile_df)
                 cluster_obj.manual_filter_motifs()
 
                 if len(cluster_obj.profile_df) < 2:
