@@ -84,9 +84,20 @@ def get_best_ctg(depth_file, fai, min_len = 1000000):
     # print (f"Total {len(best_ctgs)} contigs with length >= {min_len} found.")
     return good_depth, length_dict
 
-
-
-
+def classify_taxa(lineage, level="species"):
+    ## given a lineage string, return the taxa at the given level
+    levels = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+    if lineage == "Unknown":
+        return "Unknown"
+    lineage = lineage.split(";")
+    if len(lineage) == 0:
+        return "Unknown"
+    if len(lineage) < 7:
+        return "Unknown"
+    taxon = lineage[levels.index(level)]
+    if len(taxon) == 3:
+        return "Unknown"
+    return taxon
 
 class My_sample(object):
     def __init__(self, prefix, all_dir):
@@ -368,6 +379,21 @@ class My_sample(object):
                 genome_list.append(genome)
         return genome_list
 
+    def read_meta_gtdb(self):
+        """
+        Read the GTDB summary file and return a dictionary of contig to bin mapping.
+        """
+        if not os.path.exists(self.gtdb):
+            print (f"[⚠️] GTDB file not found: {self.gtdb}")
+            return {}
+        gtdb_df = pd.read_csv(self.gtdb, sep='\t')
+        isolation_taxa = {}
+        for index, row in gtdb_df.iterrows():
+            anno = row['classification']
+            isolation_taxa[row['user_genome']] = anno
+        return isolation_taxa
+
+
 class Isolation_sample(My_sample):
 
     def __init__(self, prefix, all_dir):
@@ -466,12 +492,13 @@ class My_cluster(object):
         self.cluster = cluster
         self.members = members  
         self.profile_df = None  # ["contig", "motifString", "fraction"]
+        self.filtered_motif_file = "../motif_change/manual_filtered_motifs.csv"
     
     def get_profile(self, df, tmp_res_file):
         self.profile_df = df
         self.profile_df.to_csv(tmp_res_file)
 
-    def plot_profile(self, closed_genome, plot_name):
+    def plot_profile(self, closed_genome, plot_name, cluster_species):
         
         duplicates = self.profile_df.duplicated(subset=['contig', 'motifString'], keep=False)
         if duplicates.any():
@@ -512,7 +539,7 @@ class My_cluster(object):
         ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
         ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
         ## set title as closed_genome
-        ax.set_title(f"Motif Fraction Heatmap (Clustered) - {closed_genome}")
+        ax.set_title(f"{cluster_species} - {closed_genome}")
         plt.tight_layout()
         plt.savefig(plot_name)
         
@@ -538,7 +565,7 @@ class My_cluster(object):
         profile_matrix = df_pivot.values
         if len(df_pivot) < 2:
             print("Warning: Insufficient data for pairwise comparison.")
-            return []
+            return [], 0
         similarity_matrix = cosine_similarity(profile_matrix)
         ## also count Jaccard similarity, binary presence/absence with cutoff 0.3
         binary_df = df_pivot.applymap(lambda x: 1 if x >= bin_freq else 0)
@@ -550,8 +577,19 @@ class My_cluster(object):
             for j in range(i+1, n):
                 jaccard = jaccard_score(binary_matrix[i], binary_matrix[j])
                 data.append([similarity_matrix[i][j], jaccard])
-        return data
-    
+        return data, self.uniq_clade_num(binary_matrix)
+
+    def uniq_clade_num(self, binary_matrix):
+        ### cluster the binary matrix rows and count unique clades, 
+        # in each clade, the jaccard similarity between any two contigs is 1
+        # use hierarchical clustering
+        from scipy.cluster.hierarchy import fcluster
+        linkage_matrix = linkage(binary_matrix, method='ward')
+        # get the cluster labels with t=0 for perfect similarity (Jaccard=1)
+        cluster_labels = fcluster(linkage_matrix, t=0.2, criterion='distance')
+        return len(set(cluster_labels))
+
+
     def load_df(self, tmp_res):
         tmp_res_file = f"{tmp_res}/{self.cluster}.csv"
         if not os.path.exists(tmp_res_file):
@@ -559,4 +597,12 @@ class My_cluster(object):
             return
         self.profile_df = pd.read_csv(tmp_res_file)
 
-             
+    def manual_filter_motifs(self):
+        if not os.path.exists(self.filtered_motif_file):
+            print(f"[⚠️] Filtered motif file not found: {self.filtered_motif_file}")
+            return
+        df_filter = pd.read_csv(self.filtered_motif_file)
+        self.filtered_motifs = df_filter['motifString'].tolist()
+        # filter self.profile_df to exclude these motifs
+        self.profile_df = self.profile_df[~self.profile_df['motifString'].isin(self.filtered_motifs)]
+       

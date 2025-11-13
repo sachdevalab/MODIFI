@@ -12,7 +12,7 @@ from collections import defaultdict
 import seaborn as sns
 from scipy.cluster.hierarchy import linkage, leaves_list
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
-from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster
+from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa
 
 score_cutoff = 30
 
@@ -449,11 +449,73 @@ def plot_similarity_dist(similarity_data, paper_fig_dir):
     plt.tight_layout()
     plt.savefig(f"{paper_fig_dir}/similarity_distributions.pdf")
 
+def plot_clade_size(clade_data, paper_fig_dir):
+    clade_df = pd.DataFrame(clade_data, columns=["clade_num", "cluster", "member_num", "phylum", "species"])
+    ## plot distribution of clade sizes
+    plt.figure(figsize=(6,6))
+    sns.histplot(clade_df['clade_num'], bins=30, kde=True, color="salmon")
+    plt.xlabel("Number of Motif Clades")
+    plt.ylabel("Frequency")
+    plt.title("Distribution of Motif Clade Sizes across Clusters")
+    plt.savefig(f"{paper_fig_dir}/clade_size_distribution.pdf")
+    ## select the top 20 species with highest clade_num, plot barplot, show species name, 
+    # cluster name,  and member_num. rotate whole plot for better visualization
+    top20_df = clade_df.sort_values(by="clade_num", ascending=False).head(10)
+    
+    # Create labels that include cluster name and member count
+    top20_df['combined_label'] = top20_df.apply(lambda row: f"{row['species']}\n({row['cluster']}, n={row['member_num']})", axis=1)
+    
+    plt.figure(figsize=(12,8))
+    ax = sns.barplot(x="clade_num", y="combined_label", data=top20_df, palette="viridis")
+    
+    # Adjust layout to accommodate longer labels
+    plt.subplots_adjust(left=0.4)  # Make more space for y-axis labels
+    
+    # Set font size for better readability
+    plt.tick_params(axis='y', labelsize=10)
+    plt.tick_params(axis='x', labelsize=10)
+    
+    plt.xlabel("Number of Motif Clades", fontsize=12)
+    plt.ylabel("Species (Cluster, Members)", fontsize=12)
+    plt.title("Top 10 Species with Highest Motif Clade Numbers", fontsize=14)
+    plt.tight_layout()
+    plt.savefig(f"{paper_fig_dir}/top20_species_clade_numbers.pdf", bbox_inches='tight')
+
+
+def get_ctg_taxa(all_dir):
+    ctg_taxa_dict = {}
+    for my_dir in os.listdir(all_dir):
+        prefix = my_dir
+        sample_obj = My_sample(prefix, all_dir)
+        sample_taxa_dict = sample_obj.read_meta_gtdb()
+        ctg_taxa_dict.update(sample_taxa_dict)
+    print (len(ctg_taxa_dict), "contig taxa info collected")
+    return ctg_taxa_dict
+
+def collect_represent_ctgs(dereplicated_genomes_dir):
+    represent_ctg_set = set()
+    for file in os.listdir(dereplicated_genomes_dir):
+        if file.endswith(".fa"):
+            contig = file[:-3]
+            represent_ctg_set.add(contig)
+    print (len(represent_ctg_set), "representative contigs collected")
+    return represent_ctg_set
+
+def select_represent(represent_ctg_set, members):
+    for contig in members:
+        if contig in represent_ctg_set:
+            return contig
+    return None
+
 if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/run2/"
-    ANI = 95
-    for ANI in [95, 97, 98]:
+    ctg_taxa_dict = get_ctg_taxa(all_dir)
+    # print (ctg_taxa_dict)
+    # ANI = 95
+    for ANI in [95, 97, 98, 99]:
+    # for ANI in [99]:
         drep_clu_file = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/data_tables/Cdb.csv"
+        dereplicated_genomes_dir = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/dereplicated_genomes/"
         seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep/"
         fig_dir = f"/home/shuaiw/borg/paper/motif_change/plot_drep2_{ANI}/"
         tmp_res = f"/home/shuaiw/borg/paper/motif_change/result_drep2_{ANI}/"
@@ -466,6 +528,7 @@ if __name__ == "__main__":
 
         # depth_dict = depth_filter(all_dir, min_depth = 10)
         drep_clu_dict = read_drep_cluster(drep_clu_file, {})
+        represent_ctg_set = collect_represent_ctgs(dereplicated_genomes_dir)
         # drep_clu_dict = read_drep_cluster(drep_clu_file, depth_dict)
         
         print (len(drep_clu_dict), "drep clusters")
@@ -479,29 +542,43 @@ if __name__ == "__main__":
 
         variation_data = []
         similarity_data = []
+        clade_data = []
         for cluster, members in drep_clu_dict.items():
             # if cluster != "180_4":
             #     continue
             if len(members) > cutoff:
                 print ("cluster", cluster, len(members), len(variation_data))
 
-                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                                fig_dir, tmp_res, min_frac=0.3, min_sites=100)
+                # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                #                                 fig_dir, tmp_res, min_frac=0.3, min_sites=100)
                 
-                # cluster_obj = My_cluster(cluster, members) 
-                # cluster_obj.load_df(tmp_res)
+                cluster_obj = My_cluster(cluster, members) 
+                cluster_obj.load_df(tmp_res)
+                cluster_obj.manual_filter_motifs()
+
+                if len(cluster_obj.profile_df) < 2:
+                    print ("skip cluster with less than 2 contigs with motif profiles")
+                    continue
+
+                represent_ctg = select_represent(represent_ctg_set, members)
+                represent_ctg_lineage = ctg_taxa_dict[represent_ctg] if represent_ctg in ctg_taxa_dict else "NA"
+                cluster_phylum = classify_taxa(represent_ctg_lineage, "phylum")
+                cluster_species = classify_taxa(represent_ctg_lineage, "species")
 
                 motif_variation_flag = cluster_obj.check_diff_motifs()
-                if motif_variation_flag == "variation":
-                    plot_name = f"{fig_dir}/{cluster}.pdf"
-                    cluster_obj.plot_profile(cluster, plot_name)
 
+                
+                similarity_data_cluster, motif_clade_num = cluster_obj.pairwise_compare(bin_freq=0.6)
                 variation_data.append([cluster, len(members), motif_variation_flag])
-                similarity_data_cluster = cluster_obj.pairwise_compare(bin_freq=0.3)
                 similarity_data += similarity_data_cluster
-                print ("###############################")
+                clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
+                print ("###############################", represent_ctg_lineage)
+                if motif_variation_flag == "variation" or motif_clade_num > 1:
+                    plot_name = f"{fig_dir}/{cluster}.pdf"
+                    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
                 # if len(variation_data) > 10:
                 #     break
         plot_variation_fraction(variation_data, paper_fig_dir)
         plot_similarity_dist(similarity_data, paper_fig_dir)
+        plot_clade_size(clade_data, paper_fig_dir)
         print ("all done")
