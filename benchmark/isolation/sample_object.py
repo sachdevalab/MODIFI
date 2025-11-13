@@ -62,7 +62,7 @@ def count_N50_size(fai):
             break
     return n50_size, total_length
 
-def get_best_ctg(depth_file, fai, min_len = 1000000):
+def get_best_ctg(depth_file, fai, min_len = 1000000, min_dp = 10):
     """
     Get the best contig based on length from a fasta file.
     """
@@ -71,7 +71,7 @@ def get_best_ctg(depth_file, fai, min_len = 1000000):
     length_dict = {}
     for index, row in depth_df.iterrows():
 
-        if row['depth'] >= 10:
+        if row['depth'] >= min_dp:
             good_depth[row['contig']] = row['depth']
     best_ctgs = {}
     with open(fai, "r") as f:
@@ -98,6 +98,16 @@ def classify_taxa(lineage, level="species"):
     if len(taxon) == 3:
         return "Unknown"
     return taxon
+
+def get_ctg_taxa(all_dir):
+    ctg_taxa_dict = {}
+    for my_dir in os.listdir(all_dir):
+        prefix = my_dir
+        sample_obj = My_sample(prefix, all_dir)
+        sample_taxa_dict = sample_obj.read_meta_gtdb()
+        ctg_taxa_dict.update(sample_taxa_dict)
+    print (len(ctg_taxa_dict), "contig taxa info collected")
+    return ctg_taxa_dict
 
 class My_sample(object):
     def __init__(self, prefix, all_dir):

@@ -12,7 +12,7 @@ from collections import defaultdict
 import seaborn as sns
 from scipy.cluster.hierarchy import linkage, leaves_list
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
-from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa
+from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa
 
 score_cutoff = 30
 
@@ -482,15 +482,7 @@ def plot_clade_size(clade_data, paper_fig_dir):
     plt.savefig(f"{paper_fig_dir}/top20_species_clade_numbers.pdf", bbox_inches='tight')
 
 
-def get_ctg_taxa(all_dir):
-    ctg_taxa_dict = {}
-    for my_dir in os.listdir(all_dir):
-        prefix = my_dir
-        sample_obj = My_sample(prefix, all_dir)
-        sample_taxa_dict = sample_obj.read_meta_gtdb()
-        ctg_taxa_dict.update(sample_taxa_dict)
-    print (len(ctg_taxa_dict), "contig taxa info collected")
-    return ctg_taxa_dict
+
 
 def collect_represent_ctgs(dereplicated_genomes_dir):
     represent_ctg_set = set()
