@@ -77,25 +77,9 @@ def cluster_mge_95ani(input_mge, output_dir, threads=8, ani_threshold=95, min_tc
         print(f"Error during clustering: {e}")
         raise
 
-def main(all_dir, fig_dir, input_mge):
-    i = 0
-    ## using biopython, output all MGE sequences to input_mge
-    with open(input_mge, "w") as f:
-        for prefix in os.listdir(all_dir):
-            sample_obj = My_sample(prefix, all_dir)
-            sample_obj.read_MGE()
-            # check if sample_obj.mge_dict is empty
-            if not sample_obj.mge_dict:
-                print (f">>>No MGE found in sample {prefix}")
-                continue
-            for mge in sample_obj.mge_dict:
-                ## using biopython to read sample_obj.reference_fasta
-                ## retrieve the record with id mge
-                # Create a dictionary to store all records from the reference fasta
-                cmd = "samtools faidx " + sample_obj.reference_fasta + " " + mge + " >> " + input_mge
-                os.system(cmd)
-                i += 1
-    print (f">>>Total {i} MGE sequences written to {input_mge}")
+def merge_mge(all_dir, input_mge):
+    cmd = f"cat {all_dir}/*/*_mge.fa > {input_mge}"
+    os.system(cmd)
 
 
 
@@ -107,6 +91,6 @@ if __name__ == "__main__":
     output_dir = "/home/shuaiw/borg/paper/MGE/cluster"
     all_dir = "/home/shuaiw/borg/paper/run2/"
     fig_dir = "../../tmp/figures/multi_env_linkage/"
-    main(all_dir, fig_dir, input_mge)
-    # results = cluster_mge_95ani(input_mge, output_dir, threads=32)
-    # print("Output files:", results)
+    # merge_mge(all_dir, input_mge)
+    results = cluster_mge_95ani(input_mge, output_dir, threads=32)
+    print("Output files:", results)

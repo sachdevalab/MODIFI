@@ -1829,5 +1829,12 @@ sbatch --job-name=all95 \
     -nc 0.7 /home/shuaiw/borg/paper/specificity/all_95_out"
 
 
-
+sbatch --job-name=gtdb \
+  --partition standard \
+  --wrap "gtdbtk classify_wf \
+  --genome_dir /home/shuaiw/borg/paper/isolation/GTDB_tree/meta_genomes/ \
+  --out_dir /home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_classify \
+  --skip_ani_screen \
+  --cpus 64 \
+  -x fa"
 

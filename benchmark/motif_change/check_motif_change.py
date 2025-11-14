@@ -579,7 +579,7 @@ if __name__ == "__main__":
     # print (ctg_taxa_dict)
     # ANI = 95
     # for ANI in [95, 97, 98, 99]:
-    for ANI in [95]:
+    for ANI in [99]:
         drep_clu_file = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/data_tables/Cdb.csv"
         dereplicated_genomes_dir = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/dereplicated_genomes/"
         seq_dir = "/home/shuaiw/borg/paper/motif_change/iso_seq_drep/"

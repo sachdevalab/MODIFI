@@ -6,125 +6,49 @@ import matplotlib.pyplot as plt
 from networkx.algorithms import bipartite
 import plotly.graph_objects as go
 from collections import defaultdict
+import matplotlib.patches as mpatches
+import random
+import sys
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
+from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa
 
 
-def get_edge(cluster_anno_dict, host_sum_file, MGE_type_dict, bin2anno_dict, bin2species_dict, gc_data, environment, prefix, host_clu_dict, mge_clu_dict):
+
+def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix, 
+             host_clu_dict, mge_clu_dict, sample_obj, ctg_taxa_dict):
     """
     Get the edge data from the host summary file.
     """
-    
-    # Read the host summary file
-    host_sum = pd.read_csv(host_sum_file)
+    our_linkages, our_ctg_linkages, linkage_info_list = sample_obj.read_linkage_dict()
+
     
     G = nx.Graph()
-    ## get node file
-    for index, row in host_sum.iterrows():
-        # if row["pvalue"] >= 0.05:
-        #     continue
-        # if row['final_score'] <= 0.6:
-        #     continue
-        if row["specificity"] >= 0.01:
-            continue
-        if row['final_score'] <= 0.5:
-            continue
-        gc_data.append([row['MGE_gc'], row['host_gc'], row['cos_sim'], row['MGE_cov'], row['host_cov'], environment, prefix])
-        both_nodes = 0
-        if row['host'] not in bin2anno_dict:
-            continue
-        if bin2anno_dict[row['host']] == "Unclassified":
-            continue
-        if row['host'] in host_clu_dict:
-            host_clu = host_clu_dict[row['host']]
+    for linkage_obj in linkage_info_list:
+
+        gc_data.append([linkage_obj.MGE_gc, linkage_obj.host_gc, linkage_obj.cos_sim, 
+                        linkage_obj.MGE_cov, linkage_obj.host_cov, environment, prefix])
+
+        if linkage_obj.host in host_clu_dict:
+            host_clu = host_clu_dict[linkage_obj.host]
         else:
-            host_clu = row['host']
-        if row['MGE'] in MGE_type_dict:
+            host_clu = linkage_obj.host
+        if linkage_obj.mge in MGE_type_dict:
             # G.add_node(row['MGE'], label=row['MGE'], type=MGE_type_dict[row['MGE']])
-            G.add_node(mge_clu_dict[row['MGE']], label=row['MGE'], type=MGE_type_dict[row['MGE']])
-            both_nodes += 1
-        if row['host'] in bin2anno_dict:
-            G.add_node(host_clu, label=row['host'], type=bin2anno_dict[row['host']])
-            # G.add_node(row['host'], label=row['host'], type=bin2anno_dict[row['host']])
-            if bin2species_dict[row['host']] != 'Unclassified' and bin2species_dict[row['host']] != 's__':
-                cluster_anno_dict[host_clu] = bin2species_dict[row['host']]
-            both_nodes += 1
-        if both_nodes == 2:
-            G.add_edge(mge_clu_dict[row['MGE']], host_clu, weight=row['final_score'], type='share')
-            # G.add_edge(row['MGE'], row['host'], weight=row['final_score'], type='share')
-    # print (cluster_anno_dict)
+            G.add_node(mge_clu_dict[linkage_obj.mge], label=linkage_obj.mge, type=MGE_type_dict[linkage_obj.mge])
+
+        represent_ctg_lineage = ctg_taxa_dict[linkage_obj.host] if linkage_obj.host in ctg_taxa_dict else "NA"
+        ctg_phylum = classify_taxa(represent_ctg_lineage, "phylum")
+        G.add_node(host_clu, label=linkage_obj.host, type=ctg_phylum)
+        cluster_anno_dict[host_clu] = ctg_phylum
+        G.add_edge(mge_clu_dict[linkage_obj.mge], host_clu, weight=linkage_obj.final_score, type='share')
+
     return G, gc_data, cluster_anno_dict
     
-def plot_network(G):
-    import matplotlib.patches as mpatches
-    
-    print(f"Number of nodes: {G.number_of_nodes()}")
-    print(f"Number of edges: {G.number_of_edges()}")
-    
-    # Use a large canvas for better visualization
-    plt.figure(figsize=(16, 12))
-    
-    # Separate nodes by type
-    virus_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'virus']
-    plasmid_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'plasmid']
-    novel_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'novel']
-    host_nodes = [n for n, d in G.nodes(data=True) if d.get('type') not in ['virus', 'plasmid', 'novel']]
-    
-    # Use spring layout with more iterations and fixed seed for reproducibility
-    pos = nx.spring_layout(G, k=0.3, iterations=200, seed=42)
-    
-    # Assign a color to each host type (phylum)
-    host_types = list(set([G.nodes[n]['type'] for n in host_nodes]))
-    color_map = plt.get_cmap('tab20')
-    host_type_to_color = {t: color_map(i % 20) for i, t in enumerate(host_types)}
-    host_colors = [host_type_to_color[G.nodes[n]['type']] for n in host_nodes]
+def plot_network2(G,paper_fig_dir ):
 
-    # Draw edges first (so they appear behind nodes)
-    nx.draw_networkx_edges(G, pos, edge_color='black', alpha=0.3, width=0.5)
-    
-    # Draw nodes with larger sizes and better visibility
-    node_size = 50  # Larger nodes
-    if virus_nodes:
-        nx.draw_networkx_nodes(G, pos, nodelist=virus_nodes, node_shape='s', 
-                              node_color='red', node_size=node_size, alpha=0.8)
-    if plasmid_nodes:
-        nx.draw_networkx_nodes(G, pos, nodelist=plasmid_nodes, node_shape='s', 
-                              node_color='blue', node_size=node_size, alpha=0.8)
-    if novel_nodes:
-        nx.draw_networkx_nodes(G, pos, nodelist=novel_nodes, node_shape='s', 
-                              node_color='black', node_size=node_size, alpha=0.8)
-    if host_nodes:
-        nx.draw_networkx_nodes(G, pos, nodelist=host_nodes, node_shape='o', 
-                              node_color=host_colors, node_size=node_size, alpha=0.8)
-    
-    # Create legend
-    legend_elements = []
-    if virus_nodes:
-        legend_elements.append(mpatches.Patch(color='red', label=f'Virus ({len(virus_nodes)})'))
-    if plasmid_nodes:
-        legend_elements.append(mpatches.Patch(color='blue', label=f'Plasmid ({len(plasmid_nodes)})'))
-    if novel_nodes:
-        legend_elements.append(mpatches.Patch(color='black', label=f'Novel ({len(novel_nodes)})'))
-    
-    # Add host type legend (limit to top 10 to avoid clutter)
-    sorted_host_types = sorted(host_types, key=lambda t: sum(1 for n in host_nodes if G.nodes[n]['type'] == t), reverse=True)
-    for i, t in enumerate(sorted_host_types[:10]):  # Show only top 10 host types
-        count = sum(1 for n in host_nodes if G.nodes[n]['type'] == t)
-        legend_elements.append(mpatches.Patch(color=host_type_to_color[t], label=f'{t} ({count})'))
-    
-    if len(sorted_host_types) > 10:
-        legend_elements.append(mpatches.Patch(color='lightgray', label=f'... +{len(sorted_host_types)-10} more'))
-    
-    plt.legend(handles=legend_elements, bbox_to_anchor=(0.5, -0.05), loc='upper center', 
-              borderaxespad=0., fontsize=10, ncol=3)
-    
-    plt.axis('off')
-    plt.title("Network of Host-MGE Interactions", fontsize=16, pad=20)
-    plt.tight_layout()
-    plt.savefig("../../tmp/results/network_test_plot.png", dpi=300, bbox_inches='tight')
-    plt.close()
-
-def plot_network2(G):
-    import matplotlib.patches as mpatches
-    import random
     
     plt.figure(1, figsize=(10, 12))
     
@@ -143,11 +67,15 @@ def plot_network2(G):
     # Define colors for each node type
     node_size = 50
     
-    # Assign a color to each host type (phylum)
-    host_types = list(set([G.nodes[n]['type'] for n in host_nodes]))
+    # Assign a unique color to each individual host cluster
+    unique_host_clusters = list(set(host_nodes))  # Get unique host cluster IDs
     color_map = plt.get_cmap('tab20')
-    host_type_to_color = {t: color_map(i % 20) for i, t in enumerate(host_types)}
-    host_colors = [host_type_to_color[G.nodes[n]['type']] for n in host_nodes]
+    host_cluster_to_color = {cluster: color_map(i % 20) for i, cluster in enumerate(unique_host_clusters)}
+    host_colors = [host_cluster_to_color[n] for n in host_nodes]
+    
+    # Group clusters by phylum for legend
+    host_types = list(set([G.nodes[n]['type'] for n in host_nodes]))
+    host_type_to_clusters = {t: [n for n in host_nodes if G.nodes[n]['type'] == t] for t in host_types}
     
     # Draw different node types with different shapes and colors
     if host_nodes:
@@ -166,144 +94,44 @@ def plot_network2(G):
         nx.draw_networkx_nodes(G, pos, nodelist=novel_nodes, node_shape='^',  # triangle
                               node_color='orange', node_size=node_size, alpha=0.8, label='Novel')
     
-    # Create legend
+    # Create legend with shape indicators
+    from matplotlib.lines import Line2D
     legend_elements = []
+    
     if plasmid_nodes:
-        legend_elements.append(mpatches.Patch(color='blue', label=f'Plasmid ({len(plasmid_nodes)})'))
+        legend_elements.append(Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', 
+                                    markersize=8, label=f'Plasmid ({len(plasmid_nodes)})'))
     if virus_nodes:
-        legend_elements.append(mpatches.Patch(color='red', label=f'Virus ({len(virus_nodes)})'))
+        legend_elements.append(Line2D([0], [0], marker='h', color='w', markerfacecolor='red', 
+                                    markersize=8, label=f'Virus ({len(virus_nodes)})'))
     if novel_nodes:
-        legend_elements.append(mpatches.Patch(color='orange', label=f'Novel ({len(novel_nodes)})'))
+        legend_elements.append(Line2D([0], [0], marker='^', color='w', markerfacecolor='orange', 
+                                    markersize=8, label=f'Novel ({len(novel_nodes)})'))
     
     # Add host type legend (limit to top 10 to avoid clutter)
     if host_nodes:
         sorted_host_types = sorted(host_types, key=lambda t: sum(1 for n in host_nodes if G.nodes[n]['type'] == t), reverse=True)
-        for i, t in enumerate(sorted_host_types[:10]):  # Show only top 10 host types
+        for i, t in enumerate(sorted_host_types[:6]):  # Show only top 10 host types
             count = sum(1 for n in host_nodes if G.nodes[n]['type'] == t)
-            legend_elements.append(mpatches.Patch(color=host_type_to_color[t], label=f'{t} ({count})'))
+            # Use the color of the first cluster of this phylum type as representative color
+            representative_cluster = host_type_to_clusters[t][0]
+            legend_elements.append(Line2D([0], [0], marker='s', color='w', markerfacecolor=host_cluster_to_color[representative_cluster], 
+                                        markersize=8, label=f'{t} ({count})'))
         
-        if len(sorted_host_types) > 10:
-            legend_elements.append(mpatches.Patch(color='lightgray', label=f'... +{len(sorted_host_types)-10} more host types'))
+        if len(sorted_host_types) > 6:
+            legend_elements.append(Line2D([0], [0], marker='s', color='w', markerfacecolor='lightgray', 
+                                        markersize=8, label=f'... +{len(sorted_host_types)-10} more host types'))
     
     if legend_elements:
         plt.legend(handles=legend_elements, bbox_to_anchor=(0.5, -0.05), loc='upper center', 
                   borderaxespad=0., fontsize=10, ncol=3)
     
-    # plt.title(f"Host-MGE Network\nNodes: {G.number_of_nodes()}, Edges: {G.number_of_edges()}", 
-    #           fontsize=14, pad=20)
+    plt.title(f"Host-MGE Network\nNodes: {G.number_of_nodes()}, Edges: {G.number_of_edges()}", 
+              fontsize=14, pad=20)
     plt.axis('off')
     plt.tight_layout()
-    plt.savefig("../../tmp/results2/network_test_plot2.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"{paper_fig_dir}/network_test_plot2.png", dpi=300, bbox_inches='tight')
     plt.close()
-
-def plot(G):
-    import matplotlib.patches as mpatches
-
-    print(f"Number of nodes: {G.number_of_nodes()}")
-    print(f"Number of edges: {G.number_of_edges()}")
-    # Use a large canvas
-    plt.figure(figsize=(10, 8))  # Increased canvas size
-
-
-    # Separate nodes by type
-    virus_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'virus']
-    plasmid_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'plasmid']
-    novel_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'novel']
-    host_nodes = [n for n, d in G.nodes(data=True) if d.get('type') not in ['virus', 'plasmid', 'novel']]
-
-
-
-    # Assume virus_nodes + plasmid_nodes are one set, host_nodes are the other
-    top_nodes = virus_nodes + plasmid_nodes + novel_nodes
-    pos = nx.bipartite_layout(G, top_nodes)  
-
-    # Assign a color to each host type (phylum)
-    host_types = list(set([G.nodes[n]['type'] for n in host_nodes]))
-    color_map = plt.get_cmap('tab20')
-    host_type_to_color = {t: color_map(i % 20) for i, t in enumerate(host_types)}
-    host_colors = [host_type_to_color[G.nodes[n]['type']] for n in host_nodes]
-
-    # Draw edges
-    # nx.draw_networkx_edges(G, pos, edge_color='gray', alpha=0.5)
-    edge_type_to_color = {
-        'share': 'gray',
-        'unique': 'gray',
-        'transduction': 'purple',
-        # add more types and colors as needed
-        None: 'gray'  # default
-    }
-    # Group edges by type
-    edge_type_dict = {}
-    for u, v, d in G.edges(data=True):
-        etype = d.get('type', None)
-        edge_type_dict.setdefault(etype, []).append((u, v))
-
-    for etype, edges in edge_type_dict.items():
-        nx.draw_networkx_edges(
-            G, pos,
-            edgelist=edges,
-            edge_color=edge_type_to_color.get(etype, 'gray'),
-            alpha=0.7,
-            width=1,
-            label=etype
-        )
-
-
-    # Draw nodes: viruses and plasmids as squares, hosts as circles colored by type
-    nx.draw_networkx_nodes(G, pos, nodelist=virus_nodes, node_shape='s', node_color='red', label='Virus', node_size=100)
-    nx.draw_networkx_nodes(G, pos, nodelist=plasmid_nodes, node_shape='s', node_color='blue', label='Plasmid', node_size=100)
-    nx.draw_networkx_nodes(G, pos, nodelist=novel_nodes, node_shape='s', node_color='black', label='Novel', node_size=100)
-    nx.draw_networkx_nodes(G, pos, nodelist=host_nodes, node_shape='o', node_color=host_colors, label='Host', node_size=100)
-
-    # Do not show labels
-
-    # Legend for host types
-    handles = [
-        mpatches.Patch(color='red', label='Virus'),
-        mpatches.Patch(color='blue', label='Plasmid')
-    ] + [
-        mpatches.Patch(color=host_type_to_color[t], label=t) for t in host_types
-    ]
-    plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-
-    plt.title("Network of Host-MGE Interactions")
-    plt.tight_layout(pad=3.0)
-    plt.savefig("../../tmp/results/network_test_plot.png", dpi=300, bbox_inches='tight')
-    plt.close()
-
-
-def get_MGE_type(mge_file):
-    """
-    Get the MGE type from the plasmid and virus summary files.
-    """
-    plasmid_types = {}
-    plasmid_sum = pd.read_csv(mge_file, sep='\t')
-
-    for index, row in plasmid_sum.iterrows():
-        plasmid_types[row['seq_name']] = row["type"]
-
-    return plasmid_types
-
-def read_gtdb(gatk):
-    """
-    Read the GTDB summary file and return a dictionary of contig to bin mapping.
-    """
-    gtdb_df = pd.read_csv(gatk, sep='\t')
-    bin2anno_dict = {}
-    bin2species_dict = {}
-    for index, row in gtdb_df.iterrows():
-        if row['user_genome'] != 'user_genome':
-            anno = row['classification']
-            # print (f"anno: {anno}")
-            if re.search('Unclassified', anno):
-                phylum = "Unclassified"
-                species = "Unclassified"
-            else:
-                phylum = anno.split(';')[1].strip()
-                species = anno.split(';')[-1].strip()
-            bin2species_dict[row['user_genome']] = species
-            bin2anno_dict[row['user_genome']] = phylum
-    return bin2anno_dict, bin2species_dict
 
 def read_metadata(meta_file):
     sample_env_dict = {}
@@ -317,15 +145,14 @@ def read_metadata(meta_file):
             sample_env_dict[sample] = env
     return sample_env_dict
 
-def plot_gc(df):
+def plot_gc(df, paper_fig_dir):
     ## sort df by sample
     df = df.sort_values(by='sample')
     ## using seaborn to plot three subplots, first is MGE_gc vs host_gc, second is MGE_cov vs host_cov, third is a box plot show cos_sim in each environment
     ## use set2 as color palette
-    import seaborn as sns
-    import matplotlib.pyplot as plt
+
     sns.set_palette("Set2")
-    fig, axs = plt.subplots(1, 3, figsize=(14, 6))
+    fig, axs = plt.subplots(1, 3, figsize=(16, 6))
     sns.scatterplot(data=df, x='MGE_gc', y='host_gc', ax=axs[0], hue='environment')
     # Set same limits for x and y axes
     min_gc = min(df['MGE_gc'].min(), df['host_gc'].min())
@@ -343,14 +170,17 @@ def plot_gc(df):
     axs[1].set_xlabel('MGE Coverage (log scale)')
     axs[1].set_ylabel('Host Coverage (log scale)')
 
-    sns.boxplot(data=df, x='sample', y='cos_sim', ax=axs[2], hue='environment', legend=False)
+
+    # Calculate median cos_sim for each environment and sort
+    env_order = df.groupby('environment')['cos_sim'].median().sort_values(ascending=False).index
+    sns.boxplot(data=df, x='environment', y='cos_sim', ax=axs[2], hue='environment', legend=False, order=env_order)
     # axs[2].set_title('Cosine Similarity Distribution by Environment')
-    axs[2].set_xlabel('')
+    axs[2].set_xlabel('Environment')
     axs[2].set_ylabel('Cosine Similarity')
-    axs[2].tick_params(axis='x', rotation=90, labelsize=7)
+    axs[2].tick_params(axis='x', rotation=45, labelsize=9)
 
     plt.tight_layout()
-    plt.savefig('../../tmp/results2/mge_host_gc_content.png', dpi=300)
+    plt.savefig(f"{paper_fig_dir}/mge_host_gc_content.png", dpi=300)
     plt.close()
 
 def read_drep_cluster(drep_clu_file):
@@ -398,7 +228,7 @@ def count_cross_phylum(whole_G):
     print("Number of nodes in each type:")
     print(type_count)
 
-def profile_network(whole_G, cluster_anno_dict):
+def profile_network(whole_G, ctg_taxa_dict):
     ## print the node with top 10 degree
     top_nodes = sorted(whole_G.degree, key=lambda x: x[1], reverse=True)[:10]
     print("Top 10 nodes by degree:")
@@ -407,96 +237,94 @@ def profile_network(whole_G, cluster_anno_dict):
         if node_type in ['virus', 'plasmid', 'novel']:
             print(f"{node}: {degree} (MGE type: {node_type})")
         else:
-            species = cluster_anno_dict.get(node, 'Unknown')
-            print(f"{node}: {degree} (Host annotation: {species})")
-    count_cross_phylum(whole_G)
-    # ## print the MGE with degree > 1
-    # print("MGEs with degree > 1:")
-    for node, degree in whole_G.degree:
-        if degree > 1 and whole_G.nodes[node]['type'] in ['virus']:
-            print(f"virus {node} ({whole_G.nodes[node]['type']}): {degree}")
-        # if degree > 1 and whole_G.nodes[node]['type'] in ['plasmid']:
-        #     print(f"plasmid {node} ({whole_G.nodes[node]['type']}): {degree}")
-        # if degree > 1 and whole_G.nodes[node]['type'] in ['novel']:
-        #     print(f"novel {node} ({whole_G.nodes[node]['type']}): {degree}")
+            ## get the label of the node
+            node_label = whole_G.nodes[node].get('label', 'Unknown')
+            represent_ctg_lineage = ctg_taxa_dict[node_label] if node_label in ctg_taxa_dict else "NA"
+            ctg_species = classify_taxa(represent_ctg_lineage, "species")
+            ctg_genus = classify_taxa(represent_ctg_lineage, "genus")
+            print(f"{node} {node_label}: {degree} (Host annotation: {ctg_species}, {ctg_genus})")
     
-            ### print the linked nodes to infant_15_839_L
-            target_node = node #"cow_bioreactor_2_2972_L"
-            if target_node in whole_G:
-                neighbors = list(whole_G.neighbors(target_node))
-                print(f"Neighbors of {target_node}: {neighbors}")
-            print ("#########################")
+    ## see which host has linked the most virus
+    # host_virus_link_count = defaultdict(int)
+    # for node, degree in whole_G.degree:
+    #     if whole_G.nodes[node]['type'] not in ['virus', 'plasmid', 'novel']:
+    #         neighbors = list(whole_G.neighbors(node))
+    #         for neighbor in neighbors:
+    #             if whole_G.nodes[neighbor]['type'] == 'virus':
+    #                 host_virus_link_count[node] += 1
+    # # get the top 10 hosts that linked the most virus
+    # top_hosts = sorted(host_virus_link_count.items(), key=lambda x: x[1], reverse=True)[:10]
+    # print("Top 10 hosts linking the most viruses:")
+    # for host, count in top_hosts:
+    #     node_label = whole_G.nodes[host].get('label', 'Unknown')
+    #     represent_ctg_lineage = ctg_taxa_dict[node_label] if node_label in ctg_taxa_dict else "NA"
+    #     ctg_species = classify_taxa(represent_ctg_lineage, "species")
+    #     ctg_genus = classify_taxa(represent_ctg_lineage, "genus")
+    #     print(f"{host} {node_label}: linked to {count} viruses (Host annotation: {ctg_species}, {ctg_genus})")
+    # count_cross_phylum(whole_G)
+    # # ## print the MGE with degree > 1
+    # # print("MGEs with degree > 1:")
+    # for node, degree in whole_G.degree:
+    #     if degree > 1 and whole_G.nodes[node]['type'] in ['virus']:
+    #         print(f"virus {node} ({whole_G.nodes[node]['type']}): {degree}")
+    #     # if degree > 1 and whole_G.nodes[node]['type'] in ['plasmid']:
+    #     #     print(f"plasmid {node} ({whole_G.nodes[node]['type']}): {degree}")
+    #     # if degree > 1 and whole_G.nodes[node]['type'] in ['novel']:
+    #     #     print(f"novel {node} ({whole_G.nodes[node]['type']}): {degree}")
+    
+    #         ### print the linked nodes to infant_15_839_L
+    #         target_node = node #"cow_bioreactor_2_2972_L"
+    #         if target_node in whole_G:
+    #             neighbors = list(whole_G.neighbors(target_node))
+    #             print(f"Neighbors of {target_node}: {neighbors}")
+    #         print ("#########################")
 
 if __name__ == "__main__":  
-    meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
-    sample_env_dict = read_metadata(meta_file)
-    drep_clu_file = "/home/shuaiw/borg/paper/specificity/dRep_99_out/data_tables/Cdb.csv"
-    drep_clu_dict, host_clu_dict = read_drep_cluster(drep_clu_file)
-
+    ANI = 99
+    meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
     mge_clu_file = "/home/shuaiw/borg/paper/MGE/cluster/megablast.cluster.95ani.tsv"
-    mge_clu_dict = read_mge_cluster(mge_clu_file)
+    paper_fig_dir = f"../../tmp/figures/multi_env_linkage/network_{ANI}/"
+    drep_clu_file = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/data_tables/Cdb.csv"
+    all_dir = "/home/shuaiw/borg/paper/run2/"
 
-    prefix = "96plex"
+    ## mkdir paper_fig_dir if not exists
+    if not os.path.exists(paper_fig_dir):
+        os.makedirs(paper_fig_dir)
+
+    sample_env_dict = read_metadata(meta_file)
+    drep_clu_dict, host_clu_dict = read_drep_cluster(drep_clu_file)
+    mge_clu_dict = read_mge_cluster(mge_clu_file)
+    ctg_taxa_dict = get_ctg_taxa(all_dir)
+
+
     ## the merged graph 
     whole_G = nx.Graph()
     gc_data = []
     cluster_anno_dict = {}
-    # for prefix in ["96plex", "infant_1", "SRR23446539_sugarcane","ERR12723528_mice"]:
-    all_dir = "/home/shuaiw/borg/paper/run2/"
+    
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
-        # if prefix in ["ocean_1", "ERR5621427_sludge", "ERR5621429_sludge", "ERR5621430_sludge"]:
-        #     continue
+
         if prefix in [ "ERR5621427_sludge", "ERR5621429_sludge", "ERR5621430_sludge"]:
             continue
-        # print (f"Processing {prefix}...")
-        # work_dir = f"{all_dir}/{prefix}/{prefix}_methylation2"
 
+        sample_obj = My_sample(prefix, all_dir)
         print(f"Processing {prefix}...")
-        work_dir = f"/home/shuaiw/borg/paper/run2/{prefix}/"
-        mge_file = os.path.join(work_dir, "all_mge.tsv")
-        ## check if the mge_file exists
-        if not os.path.exists(mge_file):
-            print(f"File {mge_file} does not exist. Skipping {prefix}.")
-            continue
-        gtdk_bac_file = os.path.join(work_dir, "GTDB/gtdbtk.bac120.summary.tsv")
-        gtdk_arc_file = os.path.join(work_dir, "GTDB/gtdbtk.ar122.summary.tsv")
-        gtdk_all_file = os.path.join(work_dir, "GTDB/gtdbtk.all.summary.tsv")
-        host_summary_file = os.path.join(work_dir, f"{prefix}_methylation3/host_summary.csv")
-        print (f"Host summary file: {host_summary_file}")
-        ## check if the host_summary_file exists
-        if not os.path.exists(host_summary_file):
-            print(f"File {host_summary_file} does not exist. Skipping {prefix}.")
-            continue
-        ## skip if the host_summary_file is empty, count the number of lines
-        ## host sum lines
-        line_num = sum(1 for line in open(host_summary_file) if line.strip())
-        if line_num < 2:
-            print(f"Host summary file {host_summary_file} is empty or has only header. Skipping {prefix}.")
-            continue
 
-        if os.path.exists(gtdk_arc_file):
-            ## merge gtdk_bac_file and gtdk_arc_file to gtdk_all_file
-            os.system(
-                f"cat {gtdk_bac_file} {gtdk_arc_file} > {gtdk_all_file}"
-            )
-        else:
-            os.system(
-                f"cp {gtdk_bac_file} {gtdk_all_file}"
-            )
-        bin2anno_dict, bin2species_dict = read_gtdb(gtdk_all_file)
-        # print (bin2anno_dict)
-        MGE_type_dict = get_MGE_type(mge_file)
-        G, gc_data, cluster_anno_dict = get_edge(cluster_anno_dict, host_summary_file, MGE_type_dict, bin2anno_dict, bin2species_dict, gc_data, sample_env_dict[prefix], prefix, host_clu_dict, mge_clu_dict)
+
+        MGE_type_dict = sample_obj.read_MGE()
+        G, gc_data, cluster_anno_dict = get_edge(cluster_anno_dict, MGE_type_dict, gc_data, 
+                                                 sample_env_dict[prefix], prefix, host_clu_dict, 
+                                                 mge_clu_dict, sample_obj, ctg_taxa_dict)
         whole_G = nx.compose(whole_G, G)
         # break
 
 
 
-    plot_network2(whole_G)
-    # profile_network(whole_G, cluster_anno_dict)
+    plot_network2(whole_G, paper_fig_dir)
+    profile_network(whole_G, ctg_taxa_dict)
 
-    # gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
-    # ## save gc_df to a csv file
-    # gc_df.to_csv("../../tmp/results2/mge_host_gc_cov.csv", index=False)
-    # plot_gc(gc_df)
+    gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
+    ## save gc_df to a csv file
+    gc_df.to_csv(f"{paper_fig_dir}/mge_host_gc_cov.csv", index=False)
+    plot_gc(gc_df, paper_fig_dir)

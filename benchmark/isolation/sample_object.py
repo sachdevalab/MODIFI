@@ -226,14 +226,15 @@ class My_sample(object):
         return linkage_num
 
     def read_linkage_dict(self, ctg2bin_dict={}):
+        linkage_info_list = []
         ## if self.host_sum_file not exists
         if not os.path.exists(self.host_sum_file):
             print(f"Host summary file {self.host_sum_file} not found.")
-            return {}, {}
+            return {}, {}, []
         line_num = sum(1 for line in open(self.host_sum_file) if line.strip())
         if line_num < 2:
             print(f"Host summary file {self.host_sum_file} is empty or has only header.")
-            return {}, {}
+            return {}, {}, []
 
         df = pd.read_csv(self.host_sum_file)
         df = df[df['specificity'] < self.specificity_cutoff]
@@ -254,6 +255,9 @@ class My_sample(object):
             ## otherwise index with MGE
             except KeyError:
                 plasmid_name = row['MGE']
+            linkage_obj = Linkage_object()
+            linkage_obj.load_from_row(row)
+            linkage_info_list.append(linkage_obj)
             our_linkages[plasmid_name].append(bin_name)
             our_ctg_linkages[plasmid_name] = row['host']
             # our_linkages[row['plasmid']] = row['host']
@@ -263,7 +267,7 @@ class My_sample(object):
                 multiple_host_plasmid_num += 1
                 # print (f"{plasmid} has multiple host: {our_linkages[plasmid]}")
         print (f"multiple host plasmid num: {multiple_host_plasmid_num} out of {len(our_linkages)}")
-        return our_linkages, our_ctg_linkages
+        return our_linkages, our_ctg_linkages, linkage_info_list
 
     def read_spacer(self, mismatch_allowed=0):
         spacer_linkage_dict = defaultdict(set)
@@ -410,6 +414,32 @@ class My_sample(object):
             isolation_taxa[row['user_genome']] = anno
         return isolation_taxa
 
+class Linkage_object(object):
+
+
+    def __init__(self):
+        self.mge = None
+        self.host = None
+        self.specificity = None
+        self.final_score = None
+        self.pvalue = None
+        self.MGE_gc = None
+        self.host_gc = None
+        self.cos_sim = None
+        self.MGE_cov = None
+        self.host_cov = None
+
+    def load_from_row(self, row):
+        self.mge = row['MGE']
+        self.host = row['host']
+        self.specificity = row['specificity']
+        self.final_score = row['final_score']
+        self.pvalue = row['pvalue']
+        self.MGE_gc = row['MGE_gc']
+        self.host_gc = row['host_gc']
+        self.cos_sim = row['cos_sim']
+        self.MGE_cov = row['MGE_cov']
+        self.host_cov = row['host_cov']
 
 class Isolation_sample(My_sample):
 
