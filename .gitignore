@@ -1,5 +1,7 @@
 test/output/
 
+# NFS temporary files
+.nfs*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -16,6 +18,7 @@ nohup.out
 .snakemake/
 *png
 done.txt
+
 
 # C extensions
 *.so

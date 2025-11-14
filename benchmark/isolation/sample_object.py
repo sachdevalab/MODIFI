@@ -664,4 +664,247 @@ class My_cluster(object):
         self.filtered_motifs = df_filter['motifString'].tolist()
         # filter self.profile_df to exclude these motifs
         self.profile_df = self.profile_df[~self.profile_df['motifString'].isin(self.filtered_motifs)]
-       
+
+
+class My_gene(object):
+
+    def __init__(self, gff, genome, genome_file):
+        self.gff = gff
+        self.genome = genome
+        self.genome_file = genome_file
+        self.Gene_regulatory_regions = None
+        self.cds_regions = None
+        self.modified_regions = None
+
+    def collect_regulation_region(self):
+        import pandas as pd
+        
+        # Read GFF file efficiently using pandas
+        try:
+            # Define column names for GFF format
+            gff_columns = ['seqname', 'source', 'feature', 'start', 'end', 'score', 'strand', 'frame', 'attribute']
+            
+            # Read the file, manually filtering out comment lines (# and ##)
+            valid_lines = []
+            with open(self.gff, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        valid_lines.append(line.split('\t'))
+            
+            if not valid_lines:
+                self.Gene_regulatory_regions = []
+                self.cds_regions = []
+                return self.Gene_regulatory_regions
+            
+            # Create DataFrame from filtered lines
+            df = pd.DataFrame(valid_lines, columns=gff_columns)
+            df['start'] = pd.to_numeric(df['start'], errors='coerce')
+            df['end'] = pd.to_numeric(df['end'], errors='coerce')
+            
+            # Remove rows where start/end conversion failed
+            df = df.dropna(subset=['start', 'end'])
+            df['start'] = df['start'].astype(int)
+            df['end'] = df['end'].astype(int)
+            
+            # Filter for the specific genome and CDS features
+            cds_df = df[(df['seqname'] == self.genome) & (df['feature'] == 'CDS')].copy()
+            
+            if cds_df.empty:
+                self.Gene_regulatory_regions = []
+                self.cds_regions = []
+                return self.Gene_regulatory_regions
+            
+            # Store CDS regions as list of tuples for compatibility
+            self.cds_regions = list(zip(cds_df['start'], cds_df['end'], cds_df['strand']))
+            
+            # Calculate regulatory regions vectorized
+            pos_strand = cds_df['strand'] == '+'
+            neg_strand = cds_df['strand'] == '-'
+            
+            # For positive strand: 100bp upstream to 50bp downstream of start
+            pos_reg_start = np.maximum(1, cds_df.loc[pos_strand, 'start'] - 100)
+            pos_reg_end = cds_df.loc[pos_strand, 'start'] + 50
+            
+            # For negative strand: 50bp upstream to 100bp downstream of end
+            neg_reg_start = np.maximum(1, cds_df.loc[neg_strand, 'end'] - 50)
+            neg_reg_end = cds_df.loc[neg_strand, 'end'] + 100
+            
+            # Combine regulatory regions
+            reg_regions = []
+            if not pos_reg_start.empty:
+                reg_regions.extend(list(zip(pos_reg_start, pos_reg_end, ['+'] * len(pos_reg_start))))
+            if not neg_reg_start.empty:
+                reg_regions.extend(list(zip(neg_reg_start, neg_reg_end, ['-'] * len(neg_reg_start))))
+            
+            self.Gene_regulatory_regions = reg_regions
+            
+        except Exception as e:
+            print(f"Error reading GFF file {self.gff}: {e}")
+            # Fallback to original method
+            self.Gene_regulatory_regions = []
+            self.cds_regions = []
+            for line in open(self.gff, "r"):
+                if line.startswith("#"):
+                    continue
+                line = line.strip().split("\t")
+                if len(line) < 9:
+                    continue
+                if line[0] != self.genome:
+                    continue
+                if line[2] == "CDS":
+                    start = int(line[3])
+                    end = int(line[4])
+                    strand = line[6]
+                    self.cds_regions.append((start, end, strand))
+                    if strand == "+":
+                        reg_start = max(1, start - 100)
+                        reg_end = start + 50
+                        self.Gene_regulatory_regions.append((reg_start, reg_end, "+"))
+                    elif strand == "-":
+                        reg_start = max(1, end - 50)
+                        reg_end = end + 100
+                        self.Gene_regulatory_regions.append((reg_start, reg_end, "-"))
+        
+        return self.Gene_regulatory_regions
+
+    def read_modified_gff(self, modified_gff, min_score=30):
+        import pandas as pd
+        
+        try:
+            # Define column names for GFF format
+            gff_columns = ['seqname', 'source', 'feature', 'start', 'end', 'score', 'strand', 'frame', 'attribute']
+            
+            # Read the file, manually filtering out comment lines (# and ##)
+            valid_lines = []
+            with open(modified_gff, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        valid_lines.append(line.split('\t'))
+            
+            if not valid_lines:
+                return []
+            
+            # Create DataFrame from filtered lines
+            df = pd.DataFrame(valid_lines, columns=gff_columns)
+            df['start'] = pd.to_numeric(df['start'], errors='coerce')
+            df['score'] = pd.to_numeric(df['score'], errors='coerce')
+            
+            # Remove rows where start/score conversion failed
+            df = df.dropna(subset=['start', 'score'])
+            df['start'] = df['start'].astype(int)
+            df['score'] = df['score'].astype(float)
+            
+            # Filter in one operation
+            filtered_df = df[
+                (df['seqname'] == self.genome) & 
+                (df['feature'] == 'modified_base') & 
+                (df['score'] >= min_score)
+            ]
+            
+            if filtered_df.empty:
+                return []
+            
+            # Extract positions and strands as list of lists for compatibility
+            self.modified_regions = filtered_df[['start', 'strand']].values.tolist()
+            
+        except Exception as e:
+            print(f"Error reading modified GFF file {modified_gff}: {e}")
+            # Fallback to original method
+            modified_regions = []
+            for line in open(modified_gff, "r"):
+                if line.startswith("#"):
+                    continue
+                line = line.strip().split("\t")
+                if len(line) < 9:
+                    continue
+                if line[0] != self.genome:
+                    continue
+                if int(line[5]) < min_score:
+                    continue
+                if line[2] == "modified_base":
+                    pos = int(line[3])
+                    strand = line[6]
+                    self.modified_regions.append([pos, strand])
+
+        return self.modified_regions
+
+    def get_genome_len(self):
+        ## count from fai file
+        fai = open(self.genome_file + ".fai", "r")
+        total_length = 0
+        for line in fai:
+            line = line.strip().split("\t")
+            total_length += int(line[1])
+        fai.close()
+        return total_length
+
+
+    def intersect(self):
+
+        ## usse dict to record all these info, no need for positions
+        region_info = {"regulatory": {"count": 0},
+                       "cds": {"count": 0},
+                       "other": {"count": 0}}
+        total_regulatory_length = 0
+        total_cds_length = 0
+        for reg in self.Gene_regulatory_regions:
+            total_regulatory_length += (reg[1] - reg[0] + 1)
+        for cds in self.cds_regions:
+            total_cds_length += (cds[1] - cds[0] + 1)
+        genome_length = self.get_genome_len()
+        for mod in self.modified_regions:
+            pos = mod[0]
+            in_regulatory = False
+            in_cds = False
+            for reg in self.Gene_regulatory_regions:
+                if pos >= reg[0] and pos <= reg[1]:
+                    region_info["regulatory"]["count"] += 1
+                    in_regulatory = True
+                    break
+            if in_regulatory:
+                continue
+            for cds in self.cds_regions:
+                if pos >= cds[0] and pos <= cds[1]:
+                    region_info["cds"]["count"] += 1
+                    in_cds = True
+                    break
+            if in_cds:
+                continue
+            region_info["other"]["count"] += 1
+        # calculate frequencies
+        region_info["regulatory"]["frequency"] = region_info["regulatory"]["count"] / total_regulatory_length if total_regulatory_length > 0 else 0
+        region_info["cds"]["frequency"] = region_info["cds"]["count"] / total_cds_length if total_cds_length > 0 else 0
+        region_info["other"]["frequency"] = region_info["other"]["count"] / (genome_length - total_regulatory_length - total_cds_length) if (genome_length - total_regulatory_length - total_cds_length) > 0 else 0
+        ## transfer region_info to df, also add contig name, genome length
+        region_info["genome"] = self.genome
+        region_info["genome_length"] = genome_length
+        ## region_info to df
+        data = [self.genome, region_info["genome_length"], region_info["regulatory"]["count"], region_info["regulatory"]["frequency"],
+                region_info["cds"]["count"], region_info["cds"]["frequency"],
+                region_info["other"]["count"], region_info["other"]["frequency"],
+                ]
+
+        df = pd.DataFrame([data], columns=['genome', 'genome_length', 'regulatory_count', 'regulatory_frequency',
+                                           'cds_count', 'cds_frequency',
+                                           'other_count', 'other_frequency'])
+        return df
+
+
+if __name__ == "__main__":
+    pass
+    gff = "/home/shuaiw/borg/paper/gene_anno/meta/soil_1_129_C/prokka/soil_1_129_C.gff"
+    modified_gff = "/home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/gffs/soil_1_129_C.reprocess.gff"
+    genome_file = "/home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/contigs/soil_1_129_C.fa"
+    count_dir = "/home/shuaiw/borg/paper/gene_anno/meta/soil_1_129_C/count/"
+    count_file = os.path.join(count_dir, "soil_1_129_C_region_count.csv")   
+    ## mkdir count_dir if not exists
+    if not os.path.exists(count_dir):
+        os.makedirs(count_dir)
+    my_gene = My_gene(gff, "soil_1_129_C", genome_file)
+    my_gene.collect_regulation_region()
+    my_gene.read_modified_gff(modified_gff)
+    region_info = my_gene.intersect()
+    print(region_info)
+    region_info.to_csv(count_file, index=False)

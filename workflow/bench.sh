@@ -1838,3 +1838,12 @@ sbatch --job-name=gtdb \
   --cpus 64 \
   -x fa"
 
+
+
+sbatch --job-name=pyrodigal \
+  --partition standard \
+  --wrap "pyrodigal-gv -p meta -i /home/shuaiw/borg/paper/network/all_mge.fa  -j 64 -o /home/shuaiw/borg/paper/network/all_mge.gene.gff"
+
+ sbatch --job-name=prokka \
+  --partition standard \
+  --wrap "snakemake -s gene_anno.smk"
