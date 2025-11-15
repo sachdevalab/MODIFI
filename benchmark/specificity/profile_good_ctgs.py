@@ -1,3 +1,4 @@
+import glob
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -12,7 +13,7 @@ import sys
 from Bio.Seq import Seq
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
-from sample_object import get_unique_motifs, My_sample, get_ctg_taxa, classify_taxa, My_contig, Isolation_sample
+from sample_object import My_gene, get_unique_motifs, My_sample, get_ctg_taxa, classify_taxa, My_contig, Isolation_sample
 
 
 def get_best_ctg(depth_file, fai, min_len = 1000000):
@@ -731,33 +732,19 @@ def collect_iso_ctgsall_dir(iso_genome_list_file):
         for genome in iso_genome_list:
             f.write(genome + "\n")
 
-def main(fig_dir):
+def main(all_dir, fig_dir, sample_env_dict):
     all_data = []
     all_base_data = []
     genome_data = []
     genome_list = []
-    all_dir = "/home/shuaiw/borg/paper/run2/"
     ctg_taxa_dict = get_ctg_taxa(all_dir)
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
+
         if re.search("sludge", prefix):
             continue
-
         print (f"Processing {prefix}...")
-        work_dir = f"{all_dir}/{prefix}/{prefix}_methylation3"
-        fai = f"{all_dir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
-        
-        all_host_file = f"{all_dir}/{prefix}/all_host_ctgs.tsv"
-        depth_file = os.path.join(work_dir, "mean_depth.csv")
 
-
-        if not os.path.exists(fai):
-            print(f"Skipping {prefix} as fai file does not exist.")
-            continue
-        ## skip if all_host_file does not exist
-        if not os.path.exists(all_host_file):
-            print(f"Skipping {prefix} as all_host_file does not exist.")
-            continue
 
         sample_obj = My_sample(prefix, all_dir)
         sample_obj.read_depth()
@@ -800,18 +787,51 @@ def rerun(fig_dir):
     df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
     plot_motif_env(df_all_data, fig_dir)
 
+def main_gene(all_dir, meta_dir, sample_env_dict):
+    ctg_taxa_dict = get_ctg_taxa(all_dir)
+    ## for each file in /home/shuaiw/borg/paper/gene_anno/meta/*/prokka/*gff
+    for gff in glob.glob(f"{meta_dir}/*/prokka/*gff"):
+        contig = os.path.basename(gff).split(".")[0]
+        prefix = "_".join(os.path.basename(gff).split("_")[:-2])
+        environment = sample_env_dict[prefix]
+        ctg_lineage = ctg_taxa_dict[contig] if contig in ctg_taxa_dict else "Unknown"
+        ctg_phylum = classify_taxa(ctg_lineage, level='phylum')
+
+        print (contig)
+        sample_obj = My_contig(prefix, all_dir, contig)
+
+        modified_gff = sample_obj.reprocess_gff
+        genome_file = sample_obj.ctg_ref
+        count_dir = f"{meta_dir}/{contig}/count/"
+        count_file = os.path.join(count_dir, f"{contig}_region_count.csv")
+        ## mkdir count_dir if not exists
+        if not os.path.exists(count_dir):
+            os.makedirs(count_dir)
+        my_gene = My_gene(gff, contig, genome_file)
+        my_gene.collect_regulation_region()
+        my_gene.read_modified_gff(modified_gff)
+        region_info = my_gene.intersect()
+        region_info['sample'] = prefix
+        region_info['environment'] = environment
+        region_info['phylum'] = ctg_phylum
+        print(region_info)
+        region_info.to_csv(count_file, index=False)
+
 if __name__ == "__main__":
     meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
     fig_dir = "../../tmp/figures/multi_env_linkage/"
     genome_list_file =  "/home/shuaiw/borg/paper/specificity/genome.list"
     iso_genome_list_file = "/home/shuaiw/borg/paper/specificity/iso_genome.list"
-    # sample_env_dict = read_metadata(meta_file)
-    # main(fig_dir)
+    all_dir = "/home/shuaiw/borg/paper/run2/"
+    meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
+    sample_env_dict = read_metadata(meta_file)
+    # main(all_dir, fig_dir, sample_env_dict)
+    main_gene(all_dir, meta_dir, sample_env_dict)
     # rerun(fig_dir)
     # get_stastics()
     # jaccard()
     # jaccard_batch()
-    collect_iso_ctgsall_dir(iso_genome_list_file)
+    # collect_iso_ctgsall_dir(iso_genome_list_file)
 
 
 

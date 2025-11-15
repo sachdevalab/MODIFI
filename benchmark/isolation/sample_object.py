@@ -21,6 +21,7 @@ import seaborn as sns
 from scipy.cluster.hierarchy import linkage, leaves_list
 from sklearn.metrics import jaccard_score
 from sklearn.metrics.pairwise import cosine_similarity
+import pickle
 
 def get_unique_motifs(df_motif, min_frac=0.4, min_sites = 100):
     df_motif = df_motif[(df_motif['fraction'] >= min_frac) & (df_motif['nDetected'] >= min_sites)]
@@ -100,6 +101,10 @@ def classify_taxa(lineage, level="species"):
     return taxon
 
 def get_ctg_taxa(all_dir, data_type="meta"):
+    file_name = f"/home/shuaiw/borg/paper/gene_anno/{data_type}_ctg_taxa_dict.pkl"
+    if os.path.exists(file_name):
+        with open(file_name, "rb") as f:
+            return pickle.load(f)
     ctg_taxa_dict = {}
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
@@ -110,6 +115,10 @@ def get_ctg_taxa(all_dir, data_type="meta"):
         sample_taxa_dict = sample_obj.read_meta_gtdb()
         ctg_taxa_dict.update(sample_taxa_dict)
     print (len(ctg_taxa_dict), "contig taxa info collected")
+    ## save ctg_taxa_dict to a file
+    
+    with open(file_name, "wb") as f:
+        pickle.dump(ctg_taxa_dict, f)
     return ctg_taxa_dict
 
 class My_sample(object):
@@ -533,6 +542,7 @@ class My_contig(My_sample):
             self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
         self.ctg_ref = f"{self.work_dir}/contigs/{contig}.fa"
         self.gff = f"{self.work_dir}/gffs/{contig}.gff"
+        self.reprocess_gff = f"{self.work_dir}/gffs/{contig}.reprocess.gff"
         self.ipd_ratio_file = f"{self.work_dir}/ipd_ratio/{contig}.ipd3.csv"
         self.motif_file = f"{self.work_dir}/motifs/{contig}.motifs.csv"
 
@@ -675,6 +685,7 @@ class My_gene(object):
         self.Gene_regulatory_regions = None
         self.cds_regions = None
         self.modified_regions = None
+        self.genome_length = None
 
     def collect_regulation_region(self):
         import pandas as pd
@@ -833,12 +844,12 @@ class My_gene(object):
     def get_genome_len(self):
         ## count from fai file
         fai = open(self.genome_file + ".fai", "r")
-        total_length = 0
+        self.genome_length = 0
         for line in fai:
             line = line.strip().split("\t")
-            total_length += int(line[1])
+            self.genome_length += int(line[1])
         fai.close()
-        return total_length
+        return self.genome_length
 
 
     def intersect(self):
@@ -846,13 +857,7 @@ class My_gene(object):
         ## usse dict to record all these info, no need for positions
         region_info = {"regulatory": {"count": 0},
                        "cds": {"count": 0},
-                       "other": {"count": 0}}
-        total_regulatory_length = 0
-        total_cds_length = 0
-        for reg in self.Gene_regulatory_regions:
-            total_regulatory_length += (reg[1] - reg[0] + 1)
-        for cds in self.cds_regions:
-            total_cds_length += (cds[1] - cds[0] + 1)
+                       "non_coding": {"count": 0}}
         genome_length = self.get_genome_len()
         for mod in self.modified_regions:
             pos = mod[0]
@@ -863,33 +868,69 @@ class My_gene(object):
                     region_info["regulatory"]["count"] += 1
                     in_regulatory = True
                     break
-            if in_regulatory:
-                continue
+
             for cds in self.cds_regions:
                 if pos >= cds[0] and pos <= cds[1]:
                     region_info["cds"]["count"] += 1
                     in_cds = True
                     break
-            if in_cds:
-                continue
-            region_info["other"]["count"] += 1
+            if not in_cds:
+                region_info["non_coding"]["count"] += 1
         # calculate frequencies
+        non_coding_length, total_cds_length, total_regulatory_length = self.get_non_coding_length()
         region_info["regulatory"]["frequency"] = region_info["regulatory"]["count"] / total_regulatory_length if total_regulatory_length > 0 else 0
         region_info["cds"]["frequency"] = region_info["cds"]["count"] / total_cds_length if total_cds_length > 0 else 0
-        region_info["other"]["frequency"] = region_info["other"]["count"] / (genome_length - total_regulatory_length - total_cds_length) if (genome_length - total_regulatory_length - total_cds_length) > 0 else 0
+        region_info["non_coding"]["frequency"] = region_info["non_coding"]["count"] / non_coding_length if non_coding_length > 0 else 0
         ## transfer region_info to df, also add contig name, genome length
         region_info["genome"] = self.genome
         region_info["genome_length"] = genome_length
         ## region_info to df
-        data = [self.genome, region_info["genome_length"], region_info["regulatory"]["count"], region_info["regulatory"]["frequency"],
-                region_info["cds"]["count"], region_info["cds"]["frequency"],
-                region_info["other"]["count"], region_info["other"]["frequency"],
+        data = [self.genome, region_info["genome_length"], region_info["regulatory"]["count"], 
+                total_regulatory_length, region_info["regulatory"]["frequency"],
+                region_info["cds"]["count"], total_cds_length, region_info["cds"]["frequency"],
+                region_info["non_coding"]["count"], non_coding_length, region_info["non_coding"]["frequency"],
                 ]
 
-        df = pd.DataFrame([data], columns=['genome', 'genome_length', 'regulatory_count', 'regulatory_frequency',
-                                           'cds_count', 'cds_frequency',
-                                           'other_count', 'other_frequency'])
+        df = pd.DataFrame([data], columns=['genome', 'genome_length', 'regulatory_count', 'regulatory_length', 'regulatory_frequency',
+                                           'cds_count', 'cds_length', 'cds_frequency',
+                                           'non_coding_count', 'non_coding_length', 'non_coding_frequency'])
         return df
+
+    def get_non_coding_length(self):
+        ## as cds region might overlap with each other, first merge cds regions
+        merged_cds = []
+        sorted_cds = sorted(self.cds_regions, key=lambda x: x[0])
+        for cds in sorted_cds:
+            if not merged_cds:
+                merged_cds.append(cds)
+            else:
+                last_cds = merged_cds[-1]
+                if cds[0] <= last_cds[1]:
+                    # overlap
+                    merged_cds[-1] = (last_cds[0], max(last_cds[1], cds[1]), last_cds[2])
+                else:
+                    merged_cds.append(cds)
+        total_cds_length = 0
+        for cds in merged_cds:
+            total_cds_length += (cds[1] - cds[0] + 1)
+        non_coding_length = self.genome_length - total_cds_length
+        ## also merge regulatory regions to get total regulatory length
+        merged_regulatory = []
+        sorted_regulatory = sorted(self.Gene_regulatory_regions, key=lambda x: x[0])
+        for reg in sorted_regulatory:
+            if not merged_regulatory:
+                merged_regulatory.append(reg)
+            else:
+                last_reg = merged_regulatory[-1]
+                if reg[0] <= last_reg[1]:
+                    # overlap
+                    merged_regulatory[-1] = (last_reg[0], max(last_reg[1], reg[1]), last_reg[2])
+                else:
+                    merged_regulatory.append(reg)
+        total_regulatory_length = 0
+        for reg in merged_regulatory:
+            total_regulatory_length += (reg[1] - reg[0] + 1)
+        return non_coding_length, total_cds_length, total_regulatory_length
 
 
 if __name__ == "__main__":
