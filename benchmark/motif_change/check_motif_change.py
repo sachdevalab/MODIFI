@@ -573,7 +573,7 @@ def main_meta():
         plot_clade_size(clade_data, paper_fig_dir)
         print ("all done")
 
-if __name__ == "__main__":
+def main_iso():
     all_dir = "/home/shuaiw/borg/paper/isolation/batch2_results/"
     ctg_taxa_dict = get_ctg_taxa(all_dir, 'isolation')
     # print (ctg_taxa_dict)
@@ -649,3 +649,85 @@ if __name__ == "__main__":
         plot_similarity_dist(similarity_data, paper_fig_dir)
         plot_clade_size(clade_data, paper_fig_dir)
         print ("all done")
+
+def main_asthma():
+    all_dir = "/home/shuaiw/borg/paper/run2/"
+    ctg_taxa_dict = get_ctg_taxa(all_dir)
+
+    for ANI in [95 , 99]:
+    # for ANI in [99]:
+        drep_clu_file = f"/home/shuaiw/borg/paper/specificity/asthma_{ANI}_out/data_tables/Cdb.csv"
+        dereplicated_genomes_dir = f"/home/shuaiw/borg/paper/specificity/asthma_{ANI}_out/dereplicated_genomes/"
+        seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep_asthma/"
+        fig_dir = f"/home/shuaiw/borg/paper/motif_change/plot_asthma_drep2_{ANI}/"
+        tmp_res = f"/home/shuaiw/borg/paper/motif_change/result_asthma_drep2_{ANI}/"
+        paper_fig_dir = f"../../tmp/figures/strain_diff/asthma_drep_{ANI}/"
+        ## create fig_dir and tmp_res if not exist
+        os.makedirs(fig_dir, exist_ok=True)
+        os.makedirs(tmp_res, exist_ok=True)
+        os.makedirs(paper_fig_dir, exist_ok=True)
+
+
+        # depth_dict = depth_filter(all_dir, min_depth = 10)
+        drep_clu_dict = read_drep_cluster(drep_clu_file, {})
+        represent_ctg_set = collect_represent_ctgs(dereplicated_genomes_dir)
+        # drep_clu_dict = read_drep_cluster(drep_clu_file, depth_dict)
+        
+        print (len(drep_clu_dict), "drep clusters")
+        ## count how many clusters have more than 10 members
+        count = 0
+        cutoff = 1
+        for cluster, members in drep_clu_dict.items():
+            if len(members) > cutoff:
+                count += 1
+        print (count, f"clusters have more than {cutoff} members")
+
+        variation_data = []
+        similarity_data = []
+        clade_data = []
+        for cluster, members in drep_clu_dict.items():
+            # if cluster != "180_4":
+            #     continue
+            if len(members) > cutoff:
+                print ("cluster", cluster, len(members), len(variation_data))
+
+                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                                                fig_dir, tmp_res, min_frac=0.3, min_sites=100)
+                
+                # cluster_obj = My_cluster(cluster, members) 
+                # cluster_obj.load_df(tmp_res)
+                cluster_obj.manual_filter_motifs()
+
+                if len(cluster_obj.profile_df) < 2:
+                    print ("skip cluster with less than 2 contigs with motif profiles")
+                    continue
+
+                represent_ctg = select_represent(represent_ctg_set, members)
+                represent_ctg_lineage = ctg_taxa_dict[represent_ctg] if represent_ctg in ctg_taxa_dict else "NA"
+                cluster_phylum = classify_taxa(represent_ctg_lineage, "phylum")
+                cluster_species = classify_taxa(represent_ctg_lineage, "species")
+
+                motif_variation_flag = cluster_obj.check_diff_motifs()
+
+                
+                similarity_data_cluster, motif_clade_num = cluster_obj.pairwise_compare(bin_freq=0.6)
+                variation_data.append([cluster, len(members), motif_variation_flag])
+                similarity_data += similarity_data_cluster
+                clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
+                print ("###############################", represent_ctg_lineage)
+                if motif_variation_flag == "variation" or motif_clade_num > 1:
+                    plot_name = f"{fig_dir}/{cluster}.pdf"
+                    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+                # if len(variation_data) > 10:
+                #     break
+        plot_variation_fraction(variation_data, paper_fig_dir)
+        plot_similarity_dist(similarity_data, paper_fig_dir)
+        plot_clade_size(clade_data, paper_fig_dir)
+        print ("all done")
+
+
+if __name__ == "__main__":
+    # bioreactor()
+    # main_meta()
+    # main_iso()
+    main_asthma()

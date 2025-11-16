@@ -1,0 +1,19 @@
+dRep dereplicate \
+    -p 64 \
+    -g /home/shuaiw/borg/paper/specificity/asthma_genome.list \
+    -comp 50 \
+    -con 10 \
+    --S_algorithm skani \
+    -ms 10000 \
+    -sa 0.99 \
+    -nc 0.7 /home/shuaiw/borg/paper/specificity/asthma_99_out
+
+dRep dereplicate \
+    -p 64 \
+    -g /home/shuaiw/borg/paper/specificity/asthma_genome.list \
+    -comp 50 \
+    -con 10 \
+    --S_algorithm skani \
+    -ms 10000 \
+    -sa 0.95 \
+    -nc 0.7 /home/shuaiw/borg/paper/specificity/asthma_95_out

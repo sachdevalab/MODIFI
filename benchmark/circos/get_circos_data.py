@@ -106,7 +106,7 @@ def get_modified_ratio(gff):
         pos = int(line[3]) 
         strand = line[6]
         score = int(line[5])
-        if score <= score_cutoff:
+        if score < score_cutoff:
             continue
         modified_loci[ref + ":" + str(pos) + strand] = score
     print ("no. of modified loci", len(modified_loci))
@@ -177,10 +177,11 @@ def split_gff(gff2, contig, my_ref, out_dir):
     for record in SeqIO.parse(my_ref, "fasta"):
         if len(record.seq) > max_length:
             record.seq = record.seq[:max_length]
+        genome_length = len(record.seq)
         ## write the record to the new reference file
         SeqIO.write(record, new_ref, "fasta")
         break
-    
+    bin_size = genome_length // 1000 + 1
     # motif_list = ["CACAG", "GGAACG", "TACACG"]
     for motif in motif_list:
         # motif_gff = open(out_dir + contig + "_" + motif + ".gff", "w")
@@ -193,9 +194,14 @@ def split_gff(gff2, contig, my_ref, out_dir):
             line = line.strip().split("\t")
             if motif in line[8]:
                 # motif_gff.write(line[0] + "\t" + line[1] + "\t" + motif + "\t" + line[3] + "\t" + line[4] + "\t" + line[5] + "\t" + line[6] + "\t" + line[7] + "\t" + line[8] + "\n")
-                contig,type,start,stop,strand = line[0],motif,line[3],line[4],line[6]
+                contig,type,start,stop,strand,score = line[0],motif,line[3],line[4],line[6],int(line[5])
                 if int(start) >= max_length:
                     continue
+                # score = score/60
+                if score_cutoff >= score_cutoff:
+                    score = 1
+                else:
+                    score = 0
                 ## convert start and stop to bin
                 bin_index = int(start) // bin_size
                 start = round((bin_index + 0.25) * bin_size)
@@ -203,10 +209,10 @@ def split_gff(gff2, contig, my_ref, out_dir):
 
                 name = contig + ":" + str(start) + "-" + str(stop) + strand + "_" + motif
                 if name not in name_dict:
-                    data.append([name,contig,type,start,stop,strand])
+                    data.append([name,contig,type,start,stop,strand, score, "yes"])
                     name_dict[name] = 1
         # motif_gff.close()
-        df = pd.DataFrame(data, columns=["name", "contig", "type", "start", "stop", "strand"])
+        df = pd.DataFrame(data, columns=["name", "contig", "type", "start", "stop", "strand", "score", "legend"])
         df.to_csv(motif_csv, index=False)
 
 
@@ -273,18 +279,26 @@ def all_split_gff(out_dir):
         df.to_csv(new_csv, index=False)
 
 if __name__ == "__main__":
-    # motif_new = "CTGCAG"
-    # exact_pos = 5
     score_cutoff = 30
+    contig = "infant_2_3_C"
+    work_dir = f"/home/shuaiw/borg/paper/run2/infant_2/infant_2_methylation3/"
+    motif_list = ["ATGCAT", "CAANNNNNNRTGA", "CAYNNNNNNTAYG"]
+    my_ref = f"{work_dir}/contigs/{contig}.fa"
+    gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
+    ipd_ratio_file = f"{work_dir}/ipd_ratio/{contig}.ipd3.csv"
 
 
-    contig = "E_coli_H10407_6"
-    # contig = "B_cepacia_UCB-717_4"
-    motif_list = ["GATC", "CTTCAG"]
-    # motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
-    my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
-    gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
-    ipd_ratio_file = f"/home/shuaiw/borg/bench/zymo_new_ref_NM3/ipd_ratio/{contig}.ipd3.csv"
+    out_dir = "/home/shuaiw/borg/paper/circos/inversion/"
+    split_gff(gff2, contig, my_ref, out_dir)
+
+
+    # contig = "E_coli_H10407_6"
+    # # contig = "B_cepacia_UCB-717_4"
+    # motif_list = ["GATC", "CTTCAG"]
+    # # motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
+    # my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
+    # gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
+    # ipd_ratio_file = f"/home/shuaiw/borg/bench/zymo_new_ref_NM3/ipd_ratio/{contig}.ipd3.csv"
 
 
     # motif_list = ["CAGAC", "CCGG", "TGCCCA", "TCTANNNNNNNRTNG","GAANNNNNNTGGC"]
@@ -295,7 +309,7 @@ if __name__ == "__main__":
     # ipd_ratio_file = f"/home/shuaiw/borg/bench/soil/run1/ipd_ratio/{contig}.ipd3.csv"
 
 
-    out_dir = "/home/shuaiw/borg/paper/circos4/"
+    # out_dir = "/home/shuaiw/borg/paper/circos/inversion"
     # motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
     # contig_list = ["E_coli_H10407_1", "E_coli_H10407_2", "E_coli_H10407_3","E_coli_H10407_4","E_coli_H10407_5","E_coli_H10407_6"]
     # motif_list = ["GATC", "CGCATC"]  ## K_pneumoniae_BAA-2146_1
@@ -304,7 +318,7 @@ if __name__ == "__main__":
     # motif_list = ["TTGANNNNNNCCT", "CGTCGVNY", "ACAYNNNNNNNTGNG"]  
     # contig_list = ["B_cereus_971_1","B_multivorans_249_1"]
 
-    split_gff(gff2, contig, my_ref, out_dir)
+    # split_gff(gff2, contig, my_ref, out_dir)
     # all_split_gff(out_dir)
 
 

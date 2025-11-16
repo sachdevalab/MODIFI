@@ -787,7 +787,7 @@ def rerun(fig_dir):
     df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
     plot_motif_env(df_all_data, fig_dir)
 
-def main_gene(all_dir, meta_dir, sample_env_dict):
+def main_gene(all_dir, meta_dir, sample_env_dict, fig_dir):
     ctg_taxa_dict = get_ctg_taxa(all_dir)
     ## for each file in /home/shuaiw/borg/paper/gene_anno/meta/*/prokka/*gff
     for gff in glob.glob(f"{meta_dir}/*/prokka/*gff"):
@@ -817,6 +817,37 @@ def main_gene(all_dir, meta_dir, sample_env_dict):
         print(region_info)
         region_info.to_csv(count_file, index=False)
 
+def plot_coding( meta_dir, fig_dir):
+    whole_df = pd.DataFrame()
+    for count_csv in glob.glob(f"{meta_dir}/*/count/*_region_count.csv"):
+        df = pd.read_csv(count_csv)
+        whole_df = pd.concat([whole_df, df], ignore_index=True)
+    print (whole_df)
+    ## the data is like:
+    ##  genome  genome_length  regulatory_count  regulatory_length  regulatory_frequency  cds_count  ...  non_coding_count  non_coding_length  non_coding_frequency            sample  environment           phylum
+    ## plot boxplot, y is value, x is environment, hue is region_type
+    melted_df = pd.melt(whole_df, id_vars=['sample', 'environment', 'phylum'], value_vars=['regulatory_frequency', 'cds_frequency', 'non_coding_frequency'], var_name='region_type', value_name='frequency')
+    print (melted_df)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+
+    sns.boxplot(data=melted_df, x='environment', y='frequency', hue='region_type', palette='Set2', ax=ax1)
+    ax1.tick_params(axis='x', rotation=90)
+    ax1.set_title('Frequency of Modified Bases in Different Genomic Regions Across Environments')
+    ax1.set_xlabel('Environment')
+    ax1.set_ylabel('Frequency of Modified Bases')
+
+    sns.boxplot(data=melted_df, x='phylum', y='frequency', hue='region_type', palette='Set2', ax=ax2)
+    ax2.tick_params(axis='x', rotation=90)
+    ax2.set_title('Frequency of Modified Bases in Different Genomic Regions Across Phyla')
+    ax2.set_xlabel('Phylum')
+    ax2.set_ylabel('Frequency of Modified Bases')
+
+    plt.tight_layout()
+    plt.savefig(f"{fig_dir}/frequency_coding.png", dpi=300, bbox_inches='tight')
+    melted_df.to_csv(f"{fig_dir}/frequency_coding.csv", index=False)
+    
+
 if __name__ == "__main__":
     meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
     fig_dir = "../../tmp/figures/multi_env_linkage/"
@@ -826,7 +857,8 @@ if __name__ == "__main__":
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
     sample_env_dict = read_metadata(meta_file)
     # main(all_dir, fig_dir, sample_env_dict)
-    main_gene(all_dir, meta_dir, sample_env_dict)
+    main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
+    plot_coding( meta_dir, fig_dir)
     # rerun(fig_dir)
     # get_stastics()
     # jaccard()

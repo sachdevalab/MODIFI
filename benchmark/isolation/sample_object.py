@@ -884,16 +884,20 @@ class My_gene(object):
         ## transfer region_info to df, also add contig name, genome length
         region_info["genome"] = self.genome
         region_info["genome_length"] = genome_length
+        mod_count = len(self.modified_regions)
+        general_freq = mod_count / genome_length if genome_length > 0 else 0
         ## region_info to df
         data = [self.genome, region_info["genome_length"], region_info["regulatory"]["count"], 
                 total_regulatory_length, region_info["regulatory"]["frequency"],
                 region_info["cds"]["count"], total_cds_length, region_info["cds"]["frequency"],
                 region_info["non_coding"]["count"], non_coding_length, region_info["non_coding"]["frequency"],
+                mod_count, general_freq
                 ]
 
         df = pd.DataFrame([data], columns=['genome', 'genome_length', 'regulatory_count', 'regulatory_length', 'regulatory_frequency',
                                            'cds_count', 'cds_length', 'cds_frequency',
-                                           'non_coding_count', 'non_coding_length', 'non_coding_frequency'])
+                                           'non_coding_count', 'non_coding_length', 'non_coding_frequency',
+                                           'modified_count', 'general_frequency'])
         return df
 
     def get_non_coding_length(self):
@@ -935,6 +939,7 @@ class My_gene(object):
 
 if __name__ == "__main__":
     pass
+
     gff = "/home/shuaiw/borg/paper/gene_anno/meta/soil_1_129_C/prokka/soil_1_129_C.gff"
     modified_gff = "/home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/gffs/soil_1_129_C.reprocess.gff"
     genome_file = "/home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/contigs/soil_1_129_C.fa"
