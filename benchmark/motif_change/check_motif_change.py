@@ -26,7 +26,7 @@ def read_ref(ref):
         # return str(record.seq), record.id
     return REF
 
-def get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict):
+def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
     motif_len = len(motif_new)
     rev_exact_pos = motif_len - exact_pos + 1
     motif_sites = {}
@@ -37,7 +37,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict):
     for_modified_num = 0
     rev_modified_num = 0
 
-    motif_ipd_ratio = []
+    # motif_ipd_ratio = []
     record_modified_sites = {}
 
     for r, contig in REF.items():
@@ -55,8 +55,8 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict):
             if tag in modified_loci:
                 motif_modify_num += 1
                 for_modified_num += 1
-            if tag in ipd_ratio_dict:
-                motif_ipd_ratio.append(ipd_ratio_dict[tag][1])
+            # if tag in ipd_ratio_dict:
+            #     motif_ipd_ratio.append(ipd_ratio_dict[tag][1])
 
         for site in nt_search(str(contig), Seq(motif_new).reverse_complement())[
             1:
@@ -70,8 +70,8 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict):
             if tag in modified_loci:
                 motif_modify_num += 1
                 rev_modified_num += 1
-            if tag in ipd_ratio_dict:
-                motif_ipd_ratio.append(ipd_ratio_dict[tag][1])
+            # if tag in ipd_ratio_dict:
+            #     motif_ipd_ratio.append(ipd_ratio_dict[tag][1])
     # print ("for_loci_num", for_loci_num, for_modified_num, "forward modified ratio", for_modified_num/for_loci_num)
     # print ("rev_loci_num", rev_loci_num, rev_modified_num, "reverse modified ratio", rev_modified_num/rev_loci_num)
 
@@ -167,11 +167,11 @@ def bioreactor():
         # print (REF)
         modified_loci = get_modified_ratio(gff)
         # motifs = pd.read_csv(all_motifs)
-        ipd_ratio_dict = read_ipd_ratio(ipd_ratio_file)
+        # ipd_ratio_dict = read_ipd_ratio(ipd_ratio_file)
         
         for motif_new, exact_pos in motif_list:
             all_record = {}
-            motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict)
+            motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
             # print (motif_profile)
             data.append([contig,motif_new, motif_profile[-2]])
     df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction"])
@@ -654,14 +654,15 @@ def main_asthma():
     all_dir = "/home/shuaiw/borg/paper/run2/"
     ctg_taxa_dict = get_ctg_taxa(all_dir)
 
-    for ANI in [95 , 99]:
+    for ANI in [95]:
     # for ANI in [99]:
-        drep_clu_file = f"/home/shuaiw/borg/paper/specificity/asthma_{ANI}_out/data_tables/Cdb.csv"
-        dereplicated_genomes_dir = f"/home/shuaiw/borg/paper/specificity/asthma_{ANI}_out/dereplicated_genomes/"
-        seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep_asthma/"
-        fig_dir = f"/home/shuaiw/borg/paper/motif_change/plot_asthma_drep2_{ANI}/"
-        tmp_res = f"/home/shuaiw/borg/paper/motif_change/result_asthma_drep2_{ANI}/"
-        paper_fig_dir = f"../../tmp/figures/strain_diff/asthma_drep_{ANI}/"
+        drep_dir = f"/home/shuaiw/borg/paper/specificity/asthma_all_{ANI}_out/"
+        drep_clu_file = f"{drep_dir}/data_tables/Cdb.csv"
+        dereplicated_genomes_dir = f"{drep_dir}/dereplicated_genomes/"
+        seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep_asthma_all/"
+        fig_dir = f"/home/shuaiw/borg/paper/motif_change/plot_asthma_drep2_all_{ANI}/"
+        tmp_res = f"/home/shuaiw/borg/paper/motif_change/result_asthma_drep2_all_{ANI}/"
+        paper_fig_dir = f"../../tmp/figures/strain_diff/asthma_drep_all_{ANI}/"
         ## create fig_dir and tmp_res if not exist
         os.makedirs(fig_dir, exist_ok=True)
         os.makedirs(tmp_res, exist_ok=True)

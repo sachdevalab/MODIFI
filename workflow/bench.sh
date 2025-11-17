@@ -1872,3 +1872,7 @@ sbatch --job-name=d95 \
     -ms 10000 \
     -sa 0.95 \
     -nc 0.7 /home/shuaiw/borg/paper/specificity/asthma_all_95_out"
+
+sbatch --job-name=tree \
+--partition standard \
+--wrap "bash get_tree_robust.sh"

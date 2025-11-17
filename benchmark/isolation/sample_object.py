@@ -163,6 +163,13 @@ class My_sample(object):
         df = pd.read_csv(self.all_motif_file)
         return get_unique_motifs(df)
 
+    def simple_load_motifs(self):
+        if not os.path.exists(self.all_motif_file):
+            print (f"[⚠️] Motif file not found: {self.all_motif_file}")
+            return None
+        df = pd.read_csv(self.all_motif_file)
+        return df
+
     def read_MGE(self):
         if not os.path.exists(self.mge_file):
             print (f"[⚠️] MGE file not found: {self.mge_file}")
@@ -403,11 +410,13 @@ class My_sample(object):
         Get high depth contig list.
         """
         genome_list = []
+        contig_list = []
         for contig in self.depth_dict:
             if self.depth_dict[contig] >= min_depth and self.length_dict[contig] >= min_len:
                 genome = self.work_dir + "/contigs/" + contig + ".fa"
                 genome_list.append(genome)
-        return genome_list
+                contig_list.append(contig)
+        return genome_list, contig_list
 
     def read_meta_gtdb(self):
         """
@@ -437,6 +446,7 @@ class Linkage_object(object):
         self.cos_sim = None
         self.MGE_cov = None
         self.host_cov = None
+        self.mge_len = None
 
     def load_from_row(self, row):
         self.mge = row['MGE']
@@ -449,6 +459,7 @@ class Linkage_object(object):
         self.cos_sim = row['cos_sim']
         self.MGE_cov = row['MGE_cov']
         self.host_cov = row['host_cov']
+        self.mge_len = row['MGE_len']
 
 class Isolation_sample(My_sample):
 
@@ -463,8 +474,10 @@ class Isolation_sample(My_sample):
         self.motif_freq_file = os.path.join(self.work_dir, "motif_length_stats.csv")
         self.profile = os.path.join(self.work_dir, "motif_profile.csv")
         self.gtdb = os.path.join(self.work_dir, "../GTDB_2/gtdbtk.bac120.summary.tsv")
+        self.all_gtdb_ark = os.path.join(self.work_dir, "../GTDB/gtdbtk.ar53.summary.tsv")
         self.all_gtdb = os.path.join(self.work_dir, "../GTDB/gtdbtk.bac120.summary.tsv")
         self.all_motif_file = f"{self.work_dir}/all.motifs.csv"
+        self.checkm = os.path.join(self.work_dir, "../checkM2/quality_report.tsv")
 
     def get_phylum(self):
         isolation_taxa = self.read_isolation_gtdb()
@@ -475,7 +488,11 @@ class Isolation_sample(My_sample):
         """
         Read the GTDB summary file and return a dictionary of contig to bin mapping.
         """
-        gtdb_df = pd.read_csv(self.all_gtdb, sep='\t')
+        ## check if self.all_gtdb exists
+        if not os.path.exists(self.all_gtdb):
+            gtdb_df = pd.read_csv(self.all_gtdb_ark, sep='\t')
+        else:
+            gtdb_df = pd.read_csv(self.all_gtdb, sep='\t')
         isolation_taxa = {}
         for index, row in gtdb_df.iterrows():
             anno = row['classification']

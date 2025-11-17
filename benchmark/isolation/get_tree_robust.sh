@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # More robust GTDB-Tk pipeline with problematic genome handling
-source_dir="/groups/banfield/projects/multienv/methylation_temp/batch2_results"
+source_dir="/home/shuaiw/borg/paper/isolation/batch2_results"
 input_dir="/home/shuaiw/borg/paper/isolation//GTDB_tree/genomes"
 out_dir="/home/shuaiw/borg/paper/isolation//GTDB_tree/gtdb_tree3"
 
@@ -9,7 +9,7 @@ out_dir="/home/shuaiw/borg/paper/isolation//GTDB_tree/gtdb_tree3"
 mkdir -p $input_dir
 
 # Known problematic genomes (add more as needed)
-problematic_genomes=("ERR13656543")
+# problematic_genomes=("ERR13656543")
 
 echo "Creating symbolic links (excluding problematic genomes)..."
 total_files=0
@@ -28,14 +28,14 @@ for fasta_file in $source_dir/*/*.hifiasm.p_ctg.rename.fa; do
         
         # Check if this genome is in the problematic list
         skip_genome=false
-        for prob_genome in "${problematic_genomes[@]}"; do
-            if [ "$sample_id" == "$prob_genome" ]; then
-                echo "Skipping problematic genome: $sample_id"
-                skip_genome=true
-                excluded_files=$((excluded_files + 1))
-                break
-            fi
-        done
+        # for prob_genome in "${problematic_genomes[@]}"; do
+        #     if [ "$sample_id" == "$prob_genome" ]; then
+        #         echo "Skipping problematic genome: $sample_id"
+        #         skip_genome=true
+        #         excluded_files=$((excluded_files + 1))
+        #         break
+        #     fi
+        # done
         
         if [ "$skip_genome" = false ]; then
             # Create symbolic link with .fa extension

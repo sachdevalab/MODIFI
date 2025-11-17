@@ -262,6 +262,8 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
             node_rename = f"{species}_{bin_name}"
             Label_anno += f"{bin_name},{node_rename}\n"
             if sample_meta_dict[bin_name]['motif_num'] is not None:
+                if sample_meta_dict[bin_name]['motif_num'] > 1:
+                    sample_meta_dict[bin_name]['motif_num'] = 2
                 motif_num_anno += f"{bin_name} {sample_meta_dict[bin_name]['motif_num']}\n"
             if sample_meta_dict[bin_name]['mge_bool'] is not None:
                 mge_num_anno += f"{bin_name} {sample_meta_dict[bin_name]['mge_bool']}\n"
@@ -283,7 +285,7 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
 
 
 if __name__ == "__main__":
-    resultdir = f"/groups/banfield/projects/multienv/methylation_temp/batch2_results/"
+    resultdir = f"/home/shuaiw/borg/paper/isolation//batch2_results/"
     tree_results = "/home/shuaiw/borg/paper/isolation//GTDB_tree/anno/"
     run_taxa_dict, sample_meta_dict = single_run(resultdir)
     color_phylum(run_taxa_dict, tree_results, sample_meta_dict)

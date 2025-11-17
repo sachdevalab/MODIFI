@@ -163,16 +163,18 @@ def cal_jaccard(df_enhanced, depth_cutoff = 10, length_cutoff = 5000, bin_freq =
     # print (jaccard_scores)
     return pd.DataFrame(jaccard_scores), present_motifs
 
-def cross_sample_jaccard(present_motifs_all):
+def cross_sample_jaccard(present_motifs_all, random_ctg_num=500):
     mge_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'MGE'][['motifString', 'contig', 'prefix', 'phylum', 'lineage']]
     host_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'Host'][['motifString', 'contig', 'prefix', 'phylum', 'lineage']]
-
+    host_contig_list = host_motifs['contig'].unique()
     print(f"[✔] Found {len(mge_motifs)} MGE motifs and {len(host_motifs)} Host motifs with frequency = 1")
     
     jaccard_scores = []
     for mge_contig in mge_motifs['contig'].unique():
         mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
-        for host_contig in host_motifs['contig'].unique():
+        ## randomly select 100 host contigs
+        # for host_contig in np.random.choice(host_contig_list, size=min(random_ctg_num, len(host_contig_list)), replace=False):
+        for host_contig in host_contig_list:
             host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
             intersection = mge_motifs_set.intersection(host_motifs_set)
             union = mge_motifs_set.union(host_motifs_set)
@@ -487,55 +489,63 @@ def main(all_dir, fig_dir):
         depth_dict, length_dict = sample_obj.read_depth()
         pure_flag = sample_obj.check_pure2()
         unique_motif_num, unique_motifs = sample_obj.get_unique_motifs()
-        # sample_obj.explore_specific_motifs()
-        
-        # i += 1
-        # if pure_flag == "pure":
-        #     pure_num += 1
-        # else:
-        #     continue
-        # # print (f"{prefix} is {pure_flag}")
-        # if len(mge_dict) < 1:
-        #     continue
-        # else:
-        #     mge_num += 1
+        sample_obj.explore_specific_motifs()
 
-        # if unique_motifs == 0:
-        #     print(f"Skipping {prefix} as no motifs.")
-        #     continue
-        # else:
-        #     has_motif_num += 1
+        ### continue if line number < 2 sample_obj.profile
+        line_count = sum(1 for line in open(sample_obj.profile)) - 1  # Subtract 1 for header
+        if line_count < 2:
+            print(f"Skipping {prefix} as insufficient motif data.")
+            continue
         
-        # # Enhanced motif sharing analysis with additional annotations
-        # jaccard_scores, present_motifs = quantify_sharing(sample_obj, mge_dict, depth_dict, length_dict, unique_motifs)
-        # jaccard_scores['prefix'] = prefix
-        # jaccard_scores['phylum'] = sample_obj.phylum
+        i += 1
+        if pure_flag == "pure":
+            pure_num += 1
+        else:
+            continue
+        # print (f"{prefix} is {pure_flag}")
+        if len(mge_dict) < 1:
+            continue
+        else:
+            mge_num += 1
+
+        if unique_motifs == 0:
+            print(f"Skipping {prefix} as no motifs.")
+            continue
+        else:
+            has_motif_num += 1
         
-        # # Use robust concatenation that handles empty DataFrames
-        # if jaccard_all.empty:
-        #     jaccard_all = jaccard_scores.copy()
-        # else:
-        #     jaccard_all = pd.concat([jaccard_all, jaccard_scores], axis=0, ignore_index=True)
+
+        
+        # Enhanced motif sharing analysis with additional annotations
+        jaccard_scores, present_motifs = quantify_sharing(sample_obj, mge_dict, depth_dict, length_dict, unique_motifs)
+        jaccard_scores['prefix'] = prefix
+        jaccard_scores['phylum'] = sample_obj.phylum
+        
+        # Use robust concatenation that handles empty DataFrames
+        if jaccard_all.empty:
+            jaccard_all = jaccard_scores.copy()
+        else:
+            jaccard_all = pd.concat([jaccard_all, jaccard_scores], axis=0, ignore_index=True)
             
-        # if present_motifs_all.empty:
-        #     present_motifs_all = present_motifs.copy()
-        # else:
-        #     present_motifs_all = pd.concat([present_motifs_all, present_motifs], axis=0, ignore_index=True)
+        if present_motifs_all.empty:
+            present_motifs_all = present_motifs.copy()
+        else:
+            present_motifs_all = pd.concat([present_motifs_all, present_motifs], axis=0, ignore_index=True)
 
     
-    # same_sample_df = jaccard_all[jaccard_all['relation'] == 'same_sample']
-    # print (same_sample_df)
-    # # analyze_link(all_link_df)
-    # plot_jaccard(same_sample_df, fig_dir)
-    # gradient_plot(same_sample_df, fig_dir)
+    same_sample_df = jaccard_all[jaccard_all['relation'] == 'same_sample']
+    print (same_sample_df)
+    # analyze_link(all_link_df)
+    plot_jaccard(same_sample_df, fig_dir)
+    gradient_plot(same_sample_df, fig_dir)
     
 
-    # jaccard_all_sample = cross_sample_jaccard(present_motifs_all)
-    # cross_taxa_plot(jaccard_all_sample, fig_dir)
+    jaccard_all_sample = cross_sample_jaccard(present_motifs_all)
+    cross_taxa_plot(jaccard_all_sample, fig_dir)
     
-    # count_jaccard(same_sample_df, jaccard_all_sample)
-    # plot_jaccard_distribution(same_sample_df, fig_dir)
-    # print (f"Total {i} samples, {pure_num} pure samples, {mge_num} samples with MGEs, {has_motif_num} samples with motifs.")
+    count_jaccard(same_sample_df, jaccard_all_sample)
+    plot_jaccard_distribution(same_sample_df, fig_dir)
+    print (f"Total {i} samples, {pure_num} pure samples, {mge_num} samples with MGEs, {has_motif_num} samples with motifs.")
 
 if __name__ == "__main__":
     # meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"

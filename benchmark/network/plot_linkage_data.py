@@ -28,8 +28,8 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
     G = nx.Graph()
     for linkage_obj in linkage_info_list:
 
-        gc_data.append([linkage_obj.MGE_gc, linkage_obj.host_gc, linkage_obj.cos_sim, 
-                        linkage_obj.MGE_cov, linkage_obj.host_cov, environment, prefix])
+        gc_data.append([linkage_obj.mge, linkage_obj.host, linkage_obj.MGE_gc, linkage_obj.host_gc, linkage_obj.cos_sim, 
+                        linkage_obj.MGE_cov, linkage_obj.host_cov, environment, prefix, linkage_obj.mge_len])
 
         if linkage_obj.host in host_clu_dict:
             host_clu = host_clu_dict[linkage_obj.host]
@@ -324,7 +324,11 @@ if __name__ == "__main__":
     plot_network2(whole_G, paper_fig_dir)
     profile_network(whole_G, ctg_taxa_dict)
 
-    gc_df = pd.DataFrame(gc_data, columns=["MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample"])
+    gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample", "mge_len"])
+    ## sort gc_df by mge_len descending
+    gc_df = gc_df.sort_values(by='mge_len', ascending=False)
     ## save gc_df to a csv file
     gc_df.to_csv(f"{paper_fig_dir}/mge_host_gc_cov.csv", index=False)
     plot_gc(gc_df, paper_fig_dir)
+
+    

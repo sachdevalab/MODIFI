@@ -829,15 +829,25 @@ def plot_coding( meta_dir, fig_dir):
     melted_df = pd.melt(whole_df, id_vars=['sample', 'environment', 'phylum'], value_vars=['regulatory_frequency', 'cds_frequency', 'non_coding_frequency'], var_name='region_type', value_name='frequency')
     print (melted_df)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 6))
 
-    sns.boxplot(data=melted_df, x='environment', y='frequency', hue='region_type', palette='Set2', ax=ax1)
+    # Filter environments with > 50 values
+    env_counts = melted_df['environment'].value_counts()
+    env_with_enough_data = env_counts[env_counts > 50].index
+    melted_df_env = melted_df[melted_df['environment'].isin(env_with_enough_data)]
+    
+    # Filter phyla with > 50 values
+    phylum_counts = melted_df['phylum'].value_counts()
+    phylum_with_enough_data = phylum_counts[phylum_counts > 50].index
+    melted_df_phylum = melted_df[melted_df['phylum'].isin(phylum_with_enough_data)]
+    
+    sns.boxplot(data=melted_df_env, x='environment', y='frequency', hue='region_type', palette='Set2', ax=ax1)
     ax1.tick_params(axis='x', rotation=90)
     ax1.set_title('Frequency of Modified Bases in Different Genomic Regions Across Environments')
     ax1.set_xlabel('Environment')
     ax1.set_ylabel('Frequency of Modified Bases')
 
-    sns.boxplot(data=melted_df, x='phylum', y='frequency', hue='region_type', palette='Set2', ax=ax2)
+    sns.boxplot(data=melted_df_phylum, x='phylum', y='frequency', hue='region_type', palette='Set2', ax=ax2)
     ax2.tick_params(axis='x', rotation=90)
     ax2.set_title('Frequency of Modified Bases in Different Genomic Regions Across Phyla')
     ax2.set_xlabel('Phylum')
@@ -857,7 +867,7 @@ if __name__ == "__main__":
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
     sample_env_dict = read_metadata(meta_file)
     # main(all_dir, fig_dir, sample_env_dict)
-    main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
+    # main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
     plot_coding( meta_dir, fig_dir)
     # rerun(fig_dir)
     # get_stastics()
