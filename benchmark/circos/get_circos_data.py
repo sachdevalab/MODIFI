@@ -278,18 +278,71 @@ def all_split_gff(out_dir):
         df = pd.DataFrame(data, columns=["name", "contig", "type", "start", "stop", "strand"])
         df.to_csv(new_csv, index=False)
 
+
+def get_all_loci(gff2, contig_name, my_ref, out_dir):
+    modified_loci = get_modified_ratio(gff2)
+    new_ref = out_dir + contig_name + ".fa"
+    REF = read_ref(my_ref)
+
+    ## use seq IO to read the reference file
+    for record in SeqIO.parse(my_ref, "fasta"):
+
+        genome_length = len(record.seq)
+        ## write the record to the new reference file
+        SeqIO.write(record, new_ref, "fasta")
+        break
+    bin_size = genome_length // 1000 + 1
+
+
+
+    for motif_data in motif_list:
+        motif_new, exact_pos = motif_data
+        motif_csv = out_dir + contig_name + "_" + motif_new + ".csv"
+        data = []
+        
+        rev_exact_pos = len(motif_new) - exact_pos + 1
+        for r, contig in REF.items():
+            for site in nt_search(str(contig), motif_new)[1:]:
+                position = site + exact_pos
+                tag = r + ":" + str(position) + "+"
+                name = contig_name + ":" + str(position) + "-" + str(position) + "+" + "_" + motif_new
+                if tag in modified_loci:
+                    data.append([name,contig_name,motif_new,position,position,"+", 1, "yes"])
+                else:
+                    data.append([name,contig_name,motif_new,position,position,"+", 0.5, "no"])
+
+
+            for site in nt_search(str(contig), Seq(motif_new).reverse_complement())[
+                1:
+            ]:
+                position = site + rev_exact_pos
+                tag = r + ":" + str(position) + "-"
+                name = contig_name + ":" + str(position) + "-" + str(position) + "-" + "_" + motif_new
+                if tag in modified_loci:
+                    data.append([name,contig_name,motif_new,position,position,"-", 1, "yes"])
+                else:
+                    data.append([name,contig_name,motif_new,position,position,"-", 0.5, "no"])
+
+        df = pd.DataFrame(data, columns=["name", "contig", "type", "start", "stop", "strand", "score", "legend"])
+        df.to_csv(motif_csv, index=False)
+
 if __name__ == "__main__":
     score_cutoff = 30
-    contig = "infant_2_3_C"
-    work_dir = f"/home/shuaiw/borg/paper/run2/infant_2/infant_2_methylation3/"
-    motif_list = ["ATGCAT", "CAANNNNNNRTGA", "CAYNNNNNNTAYG"]
+    # contig = "infant_2_3_C"
+    sample = "infant_2"
+    contig = "infant_2_60_C"
+    work_dir = f"/home/shuaiw/borg/paper/run2/{sample}/{sample}_methylation3/"
+    # motif_list = ["ATGCAT", "CAANNNNNNRTGA", "CAYNNNNNNTAYG"]
+    motif_list = [["ATGCAT", 5], ["CAANNNNNNRTGA", 3], ["CAYNNNNNNTAYG", 2]]
     my_ref = f"{work_dir}/contigs/{contig}.fa"
     gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
     ipd_ratio_file = f"{work_dir}/ipd_ratio/{contig}.ipd3.csv"
 
 
     out_dir = "/home/shuaiw/borg/paper/circos/inversion/"
-    split_gff(gff2, contig, my_ref, out_dir)
+    # split_gff(gff2, contig, my_ref, out_dir)
+    get_all_loci(gff2, contig, my_ref, out_dir)
+    
 
 
     # contig = "E_coli_H10407_6"
