@@ -431,7 +431,8 @@ def count_motifs(best_ctgs, all_dir, prefix, environment, ctg_taxa_dict):
         motif_num_list.append(unique_motifs_num)
         ctg_lineage = ctg_taxa_dict[ctg] if ctg in ctg_taxa_dict else "Unknown"
         ctg_phylum = classify_taxa(ctg_lineage, level='phylum')
-        data.append([prefix, unique_motifs_num, environment,ctg, ctg_phylum])
+        ctg_domain = classify_taxa(ctg_lineage, level='domain')
+        data.append([prefix, unique_motifs_num, environment,ctg, ctg_phylum, ctg_domain, ctg_lineage])
 
     return data
 
@@ -610,6 +611,16 @@ def plot_motif_env(df_all_data, fig_dir):
     plt.ylabel('Number of Motifs')
     plt.savefig(f"{fig_dir}/motif_num_phylum.png", dpi=300, bbox_inches='tight')
 
+    ## also plot one with enviroment as x-axis and motif_num is on y-axis, and domain as hue
+    plt.figure(figsize=(12, 6))
+    order = df_all_data.groupby('environment')['motif_num'].median().sort_values().index
+    sns.boxplot(data=df_all_data, x='environment', y='motif_num', hue='domain', order=order, showfliers=False)
+    plt.xticks(rotation=90)
+    plt.xlabel('Environment')
+    plt.ylabel('Number of Motifs')
+    plt.legend(title='Domain', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.savefig(f"{fig_dir}/motif_num_env_domain.png", dpi=300, bbox_inches='tight')
+
 
 def plot_base(df_all_base_data, fig_dir):
     ### sort by sample
@@ -766,7 +777,7 @@ def main(all_dir, fig_dir, sample_env_dict):
         # all_base_data += count_modified_base(work_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
         # break
     print ("start plot...")
-    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum'])
+    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage'])
     df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
     df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
     plot_motif_env(df_all_data, fig_dir)
@@ -867,8 +878,8 @@ if __name__ == "__main__":
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
     sample_env_dict = read_metadata(meta_file)
     # main(all_dir, fig_dir, sample_env_dict)
-    # main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
-    plot_coding( meta_dir, fig_dir)
+    main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
+    plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)
     # get_stastics()
     # jaccard()

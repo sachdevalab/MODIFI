@@ -217,10 +217,10 @@ def profile_heatmap(prefix_list, motif_list, all_dir, tmp_res_file, cluster_obj,
         # print (REF)
         modified_loci = get_modified_ratio(ctg_obj.gff)
         # motifs = pd.read_csv(all_motifs)
-        ipd_ratio_dict = read_ipd_ratio(ctg_obj.ipd_ratio_file)
+        # ipd_ratio_dict = read_ipd_ratio(ctg_obj.ipd_ratio_file)
 
         for motif_new, exact_pos in motif_list:
-            motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci, ipd_ratio_dict)
+            motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
             # print (motif_profile)
             data.append([contig,motif_new + "_" + str(exact_pos), motif_profile[-2]])
     df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction"])
@@ -411,7 +411,7 @@ def plot_variation_fraction(variation_data, paper_fig_dir):
         cutoffs.append(cutoff)
         proportions.append(proportion)
         all_clusters.append([variation_clusters, total_clusters - variation_clusters])
-    plt.figure(figsize=(6,6))
+    plt.figure(figsize=(4,4))
     sns.barplot(x=cutoffs, y=proportions, color="skyblue")
     plt.xlabel("Cluster member cutoff")
     plt.ylabel("Proportion of clusters with motif variation")
@@ -419,7 +419,7 @@ def plot_variation_fraction(variation_data, paper_fig_dir):
     # plt.title("Proportion of clusters with motif variation vs. cluster member cutoff")
     plt.savefig(f"{paper_fig_dir}/motif_variation_proportion.pdf")
     ## also plot the stacked barplot of all clusters
-    plt.figure(figsize=(6,6))
+    plt.figure(figsize=(4,4))
     all_clusters_array = np.array(all_clusters)
     bottom = np.zeros(len(all_clusters_array))
     labels = ["Variation", "No Variation"]
@@ -436,7 +436,7 @@ def plot_similarity_dist(similarity_data, paper_fig_dir):
     ## similarity_data: list of [cosine_similarity, jaccard_similarity]
     cosine_similarities = [x[0] for x in similarity_data]
     jaccard_similarities = [x[1] for x in similarity_data]
-    plt.figure(figsize=(12,6))
+    plt.figure(figsize=(8,4))
     plt.subplot(1,2,1)
     sns.histplot(cosine_similarities, bins=30, kde=True, color="skyblue")
     plt.xlabel("Cosine Similarity")
@@ -453,7 +453,7 @@ def plot_similarity_dist(similarity_data, paper_fig_dir):
 def plot_clade_size(clade_data, paper_fig_dir):
     clade_df = pd.DataFrame(clade_data, columns=["clade_num", "cluster", "member_num", "phylum", "species"])
     ## plot distribution of clade sizes
-    plt.figure(figsize=(6,6))
+    plt.figure(figsize=(4,4))
     sns.histplot(clade_df['clade_num'], bins=30, kde=True, color="salmon")
     plt.xlabel("Number of Motif Clades")
     plt.ylabel("Frequency")
@@ -465,8 +465,8 @@ def plot_clade_size(clade_data, paper_fig_dir):
     
     # Create labels that include cluster name and member count
     top20_df['combined_label'] = top20_df.apply(lambda row: f"{row['species']}\n({row['cluster']}, n={row['member_num']})", axis=1)
-    
-    plt.figure(figsize=(12,8))
+
+    plt.figure(figsize=(8,4))
     ax = sns.barplot(x="clade_num", y="combined_label", data=top20_df, palette="viridis")
     
     # Adjust layout to accommodate longer labels
@@ -573,7 +573,7 @@ def main_meta():
         plot_clade_size(clade_data, paper_fig_dir)
         print ("all done")
 
-def main_iso():
+if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/isolation/batch2_results/"
     ctg_taxa_dict = get_ctg_taxa(all_dir, 'isolation')
     # print (ctg_taxa_dict)
@@ -649,86 +649,4 @@ def main_iso():
         plot_similarity_dist(similarity_data, paper_fig_dir)
         plot_clade_size(clade_data, paper_fig_dir)
         print ("all done")
-
-def main_asthma():
-    all_dir = "/home/shuaiw/borg/paper/run2/"
-    ctg_taxa_dict = get_ctg_taxa(all_dir)
-
-    for ANI in [95]:
-    # for ANI in [99]:
-        drep_dir = f"/home/shuaiw/borg/paper/specificity/asthma_all_{ANI}_out/"
-        drep_clu_file = f"{drep_dir}/data_tables/Cdb.csv"
-        dereplicated_genomes_dir = f"{drep_dir}/dereplicated_genomes/"
-        seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep_asthma_all/"
-        fig_dir = f"/home/shuaiw/borg/paper/motif_change/plot_asthma_drep2_all_{ANI}/"
-        tmp_res = f"/home/shuaiw/borg/paper/motif_change/result_asthma_drep2_all_{ANI}/"
-        paper_fig_dir = f"../../tmp/figures/strain_diff/asthma_drep_all_{ANI}/"
-        ## create fig_dir and tmp_res if not exist
-        os.makedirs(fig_dir, exist_ok=True)
-        os.makedirs(tmp_res, exist_ok=True)
-        os.makedirs(paper_fig_dir, exist_ok=True)
-
-
-        # depth_dict = depth_filter(all_dir, min_depth = 10)
-        drep_clu_dict = read_drep_cluster(drep_clu_file, {})
-        represent_ctg_set = collect_represent_ctgs(dereplicated_genomes_dir)
-        # drep_clu_dict = read_drep_cluster(drep_clu_file, depth_dict)
-        
-        print (len(drep_clu_dict), "drep clusters")
-        ## count how many clusters have more than 10 members
-        count = 0
-        cutoff = 1
-        for cluster, members in drep_clu_dict.items():
-            if len(members) > cutoff:
-                count += 1
-        print (count, f"clusters have more than {cutoff} members")
-
-        variation_data = []
-        similarity_data = []
-        clade_data = []
-        for cluster, members in drep_clu_dict.items():
-            # if cluster != "180_4":
-            #     continue
-            if len(members) > cutoff:
-                print ("cluster", cluster, len(members), len(variation_data))
-
-                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                                fig_dir, tmp_res, min_frac=0.3, min_sites=100)
-                
-                # cluster_obj = My_cluster(cluster, members) 
-                # cluster_obj.load_df(tmp_res)
-                cluster_obj.manual_filter_motifs()
-
-                if len(cluster_obj.profile_df) < 2:
-                    print ("skip cluster with less than 2 contigs with motif profiles")
-                    continue
-
-                represent_ctg = select_represent(represent_ctg_set, members)
-                represent_ctg_lineage = ctg_taxa_dict[represent_ctg] if represent_ctg in ctg_taxa_dict else "NA"
-                cluster_phylum = classify_taxa(represent_ctg_lineage, "phylum")
-                cluster_species = classify_taxa(represent_ctg_lineage, "species")
-
-                motif_variation_flag = cluster_obj.check_diff_motifs()
-
-                
-                similarity_data_cluster, motif_clade_num = cluster_obj.pairwise_compare(bin_freq=0.6)
-                variation_data.append([cluster, len(members), motif_variation_flag])
-                similarity_data += similarity_data_cluster
-                clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
-                print ("###############################", represent_ctg_lineage)
-                if motif_variation_flag == "variation" or motif_clade_num > 1:
-                    plot_name = f"{fig_dir}/{cluster}.pdf"
-                    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
-                # if len(variation_data) > 10:
-                #     break
-        plot_variation_fraction(variation_data, paper_fig_dir)
-        plot_similarity_dist(similarity_data, paper_fig_dir)
-        plot_clade_size(clade_data, paper_fig_dir)
-        print ("all done")
-
-
-if __name__ == "__main__":
-    # bioreactor()
-    # main_meta()
-    # main_iso()
-    main_asthma()
+# 

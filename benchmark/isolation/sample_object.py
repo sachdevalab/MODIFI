@@ -102,9 +102,9 @@ def classify_taxa(lineage, level="species"):
 
 def get_ctg_taxa(all_dir, data_type="meta"):
     file_name = f"/home/shuaiw/borg/paper/gene_anno/{data_type}_ctg_taxa_dict.pkl"
-    if os.path.exists(file_name):
-        with open(file_name, "rb") as f:
-            return pickle.load(f)
+    # if os.path.exists(file_name):
+    #     with open(file_name, "rb") as f:
+    #         return pickle.load(f)
     ctg_taxa_dict = {}
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
@@ -141,6 +141,7 @@ class My_sample(object):
         self.motif_freq_file = os.path.join(self.work_dir, "motif_length_stats.csv")
         self.profile = os.path.join(self.work_dir, "motif_profile.csv")
         self.gtdb = os.path.join(self.work_dir, "../GTDB/gtdbtk.bac120.summary.tsv")
+        self.arc_gtdb = os.path.join(self.work_dir, "../GTDB/gtdbtk.ar53.summary.tsv")
         self.checkm = os.path.join(self.work_dir, "../checkM2/quality_report.tsv")
         self.mge_file = f"{self.all_dir}/{self.prefix}/all_mge.tsv"
         self.all_motif_file = f"{self.work_dir}/all.motifs.csv"
@@ -422,14 +423,17 @@ class My_sample(object):
         """
         Read the GTDB summary file and return a dictionary of contig to bin mapping.
         """
-        if not os.path.exists(self.gtdb):
-            print (f"[⚠️] GTDB file not found: {self.gtdb}")
-            return {}
-        gtdb_df = pd.read_csv(self.gtdb, sep='\t')
         isolation_taxa = {}
-        for index, row in gtdb_df.iterrows():
-            anno = row['classification']
-            isolation_taxa[row['user_genome']] = anno
+        if os.path.exists(self.gtdb):
+            gtdb_df = pd.read_csv(self.gtdb, sep='\t')
+            for index, row in gtdb_df.iterrows():
+                anno = row['classification']
+                isolation_taxa[row['user_genome']] = anno
+        if os.path.exists(self.arc_gtdb):
+            arc_gtdb_df = pd.read_csv(self.arc_gtdb, sep='\t')
+            for index, row in arc_gtdb_df.iterrows():
+                anno = row['classification']
+                isolation_taxa[row['user_genome']] = anno
         return isolation_taxa
 
 class Linkage_object(object):
@@ -488,17 +492,22 @@ class Isolation_sample(My_sample):
         """
         Read the GTDB summary file and return a dictionary of contig to bin mapping.
         """
-        ## check if self.all_gtdb exists
-        if not os.path.exists(self.all_gtdb):
-            gtdb_df = pd.read_csv(self.all_gtdb_ark, sep='\t')
-        else:
-            gtdb_df = pd.read_csv(self.all_gtdb, sep='\t')
+            
         isolation_taxa = {}
-        for index, row in gtdb_df.iterrows():
-            anno = row['classification']
-            sra_id = row['user_genome']
-            isolation_taxa[sra_id] = anno
-            return isolation_taxa
+        if os.path.exists(self.all_gtdb):
+            gtdb_df = pd.read_csv(self.all_gtdb, sep='\t')
+            for index, row in gtdb_df.iterrows():
+                anno = row['classification']
+                sra_id = row['user_genome']
+                isolation_taxa[sra_id] = anno
+
+        if os.path.exists(self.all_gtdb_ark):
+            arc_gtdb_df = pd.read_csv(self.all_gtdb_ark, sep='\t')
+            for index, row in arc_gtdb_df.iterrows():
+                anno = row['classification']
+                sra_id = row['user_genome']
+                isolation_taxa[sra_id] = anno
+        return isolation_taxa
 
     def check_pure2(self):
         ## read checkm file

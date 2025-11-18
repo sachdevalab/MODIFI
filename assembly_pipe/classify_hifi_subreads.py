@@ -104,6 +104,8 @@ def batch_run(ccs_bam_dir, work_dir):
         if file.endswith(".ccs.bam"):
             ccs_bam = os.path.join(ccs_bam_dir, file)
             sra = file.split(".")[0]
+            if sra != "SRR19519931":
+                continue
             cmd =  f"""snakemake -s isolation.smk \\
                         --config hifi_bam={ccs_bam} \\
                         prefix={sra} \\
