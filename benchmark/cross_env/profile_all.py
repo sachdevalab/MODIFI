@@ -35,8 +35,6 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
-from concurrent.futures import ThreadPoolExecutor
-import threading
 
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
@@ -121,21 +119,12 @@ def start_profile(unique_motifs_df, all_genome_list, datafile):
         # motifs = pd.read_csv(all_motifs)
         # ipd_ratio_dict = read_ipd_ratio(ctg_obj.ipd_ratio_file)
 
-        # for motif_new, exact_pos in motif_list:
-        def process_motif(motif_data):
-            motif_new, exact_pos = motif_data
+        # Process motifs sequentially
+        for index, row in unique_motifs_df.iterrows():
+            motif_new = row['motifString']
+            exact_pos = row["centerPos"]
             motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
-            return [contig, motif_new + "_" + str(exact_pos), motif_profile[-2], environment, ctg_phylum]
-        
-        # Prepare motif data for threading
-        motif_data_list = [(row['motifString'], row["centerPos"]) for index, row in unique_motifs_df.iterrows()]
-        
-        # Process motifs using ThreadPoolExecutor with 10 threads
-        with ThreadPoolExecutor(max_workers=32) as executor:
-            results = list(executor.map(process_motif, motif_data_list))
-        
-        # Add results to data
-        data.extend(results)
+            data.append([contig, motif_new + "_" + str(exact_pos), motif_profile[-2], environment, ctg_phylum])
     df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction", "environment", "phylum"])
     df.to_csv(datafile, index=False, sep='\t')
     

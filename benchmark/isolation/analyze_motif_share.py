@@ -12,7 +12,7 @@ import re
 import sys
 from Bio.Seq import Seq
 
-from sample_object import My_sample, Isolation_sample
+from sample_object import My_sample, Isolation_sample, get_unique_motifs
 
 def read_motif_freq(motif_freq_file, prefix, all_motif_freq):
     motif_freq_df = pd.read_csv(motif_freq_file)
@@ -163,7 +163,7 @@ def cal_jaccard(df_enhanced, depth_cutoff = 10, length_cutoff = 5000, bin_freq =
     # print (jaccard_scores)
     return pd.DataFrame(jaccard_scores), present_motifs
 
-def cross_sample_jaccard(present_motifs_all, random_ctg_num=500):
+def cross_sample_jaccard(present_motifs_all, random_ctg_num=100):
     mge_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'MGE'][['motifString', 'contig', 'prefix', 'phylum', 'lineage']]
     host_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'Host'][['motifString', 'contig', 'prefix', 'phylum', 'lineage']]
     host_contig_list = host_motifs['contig'].unique()
@@ -173,13 +173,15 @@ def cross_sample_jaccard(present_motifs_all, random_ctg_num=500):
     for mge_contig in mge_motifs['contig'].unique():
         mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
         ## randomly select 100 host contigs
-        # for host_contig in np.random.choice(host_contig_list, size=min(random_ctg_num, len(host_contig_list)), replace=False):
-        for host_contig in host_contig_list:
+        for host_contig in np.random.choice(host_contig_list, size=min(random_ctg_num, len(host_contig_list)), replace=False):
+        # for host_contig in host_contig_list:
             host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
             intersection = mge_motifs_set.intersection(host_motifs_set)
             union = mge_motifs_set.union(host_motifs_set)
             if len(union) == 0:
                 jaccard = 0.0
+            # elif len(intersection) == 1:   ## only one motif shared, set jaccard as 0
+            #     jaccard = 0.0
             else:
                 jaccard = len(intersection) / len(union)
 
@@ -542,10 +544,112 @@ def main(all_dir, fig_dir):
 
     jaccard_all_sample = cross_sample_jaccard(present_motifs_all)
     cross_taxa_plot(jaccard_all_sample, fig_dir)
+    jaccard_all_sample.to_csv(f"{fig_dir}/jaccard_all_samples.csv", index=False)
     
     count_jaccard(same_sample_df, jaccard_all_sample)
     plot_jaccard_distribution(same_sample_df, fig_dir)
     print (f"Total {i} samples, {pure_num} pure samples, {mge_num} samples with MGEs, {has_motif_num} samples with motifs.")
+
+def get_new_host(plasmid_list):
+    plasmid_host_dict = {}
+    df = pd.read_csv(plasmid_list)
+    for index, row in df.iterrows():
+        plasmid = row['seq_name']
+        host_str = row['host']
+
+        plasmid_host_dict[plasmid] = ['', '', host_str.split(";")]
+    return plasmid_host_dict
+
+
+def main_96plex(fig_dir, bin_freq=0.3):
+    data_dir ="/home/shuaiw/borg/paper/linkage/pure/m64004_210929_143746.p100/"
+    plasmid_list_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"
+    my_96plex_data = []
+    plasmid_host_dict = get_new_host(plasmid_list_file)
+    motif_profile = os.path.join(data_dir, "motif_profile.csv")
+    profile_df = pd.read_csv(motif_profile)
+    
+    # Melt the profile_df from wide to long format
+    profile_df_melted = profile_df.melt(id_vars=['motifString'], 
+                                        var_name='contig', 
+                                        value_name='freq')
+    
+    ## binary profile_df with freq >= 0.3 as 1, else 0
+    profile_df_melted = profile_df_melted[profile_df_melted['freq'] >= bin_freq]
+
+    for my_MGE in plasmid_host_dict:
+        host = plasmid_host_dict[my_MGE][2][0]
+        print (my_MGE, host)
+        my_MGE_motif_file = os.path.join(data_dir, f"motifs/{my_MGE}.motifs.csv")
+        my_host_motif_file = os.path.join(data_dir, f"motifs/{host}.motifs.csv")
+        if not os.path.exists(my_MGE_motif_file) or not os.path.exists(my_host_motif_file):
+            continue
+
+        my_host_motif_df = pd.read_csv(my_host_motif_file)
+        host_motif_num, host_motifs = get_unique_motifs(my_host_motif_df)
+
+        ## get motif set for MGE and host, based on profile_df_melted,
+        # # only consider motifs in host_motifs
+        MGE_motif_set = set(profile_df_melted[
+            (profile_df_melted['contig'] == my_MGE) &
+            (profile_df_melted['motifString'].isin(host_motifs))
+        ]['motifString'])
+        host_motif_set = set(profile_df_melted[
+            (profile_df_melted['contig'] == host) &
+            (profile_df_melted['motifString'].isin(host_motifs))
+        ]['motifString'])
+
+
+        intersection = MGE_motif_set.intersection(host_motif_set)
+        union = MGE_motif_set.union(host_motif_set)
+        if len(union) == 0:
+            jaccard = 0.0
+        else:
+            jaccard = len(intersection) / len(union)
+        my_96plex_data.append([my_MGE, host, len(intersection), len(union), jaccard])
+    my_96plex_df = pd.DataFrame(my_96plex_data, columns=['MGE', 'host', 'shared_motif_num', 'total_motif_num', 'jaccard_similarity'])
+    print (my_96plex_df)
+    plot_96plex(my_96plex_df, fig_dir)
+    
+
+def plot_96plex(my_96plex_df, fig_dir):
+    ## plot the distribution of jaccard similarity using histogram
+    # Create subplot with histogram and barplot
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    
+    # Plot histogram of jaccard similarity
+    sns.histplot(my_96plex_df['jaccard_similarity'], bins=20, kde=True, color='lightcoral', ax=ax1)
+    ax1.set_xlabel('Jaccard Similarity', fontsize=14)
+    ax1.set_ylabel('Count', fontsize=14)
+    ax1.grid(axis='y', alpha=0.3)
+    ax1.set_title('Distribution of Jaccard Similarity', fontsize=14)
+    
+    # Plot barplot of shared motif number cutoff
+    max_shared = my_96plex_df['shared_motif_num'].max()
+    
+    # Check if max_shared is NaN or if dataframe is empty
+    if pd.isna(max_shared) or len(my_96plex_df) == 0:
+        print("Warning: No valid shared motif data found, skipping barplot")
+        ax2.text(0.5, 0.5, 'No Data Available', ha='center', va='center', transform=ax2.transAxes)
+        ax2.set_xlabel('Number of Shared Motifs', fontsize=14)
+        ax2.set_ylabel('Proportion of MGE-Host Pairs', fontsize=14)
+    else:
+        share_counts = []
+        for i in range(0, int(max_shared) + 1):
+            count = len(my_96plex_df[my_96plex_df['shared_motif_num'] >= i])
+            share_counts.append({'shared_motifs': i, 'count': count, 'proportion': count / len(my_96plex_df)})
+        share_counts_df = pd.DataFrame(share_counts)
+        
+        sns.barplot(data=share_counts_df, x='shared_motifs', y='proportion', color='steelblue', ax=ax2)
+        ax2.set_xlabel('Number of Shared Motifs', fontsize=14)
+        ax2.set_ylabel('Proportion of MGE-Host Pairs', fontsize=14)
+        ax2.grid(axis='y', alpha=0.3)
+        ax2.set_title('Shared Motifs Distribution', fontsize=14)
+    
+    plt.tight_layout()
+    plt.savefig(f"{fig_dir}/jaccard_similarity_distribution_96plex.pdf", dpi=300, bbox_inches="tight")
+    plt.close()
+    my_96plex_df.to_csv(f"{fig_dir}/jaccard_similarity_96plex.csv", index=False)
 
 if __name__ == "__main__":
     # meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
@@ -553,4 +657,5 @@ if __name__ == "__main__":
     # all_dir = "/home/shuaiw/borg/paper/isolation/bacteria/"
     all_dir = "/home/shuaiw/borg/paper/isolation//batch2_results/"
     fig_dir = "../../tmp/figures/motif_sharing/"
-    main(all_dir, fig_dir)
+    # main(all_dir, fig_dir)
+    main_96plex(fig_dir)
