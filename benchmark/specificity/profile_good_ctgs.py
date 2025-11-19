@@ -11,6 +11,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import re
 import sys
 from Bio.Seq import Seq
+from scipy.stats import ttest_ind
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 from sample_object import My_gene, get_unique_motifs, My_sample, get_ctg_taxa, classify_taxa, My_contig, Isolation_sample
@@ -432,7 +433,10 @@ def count_motifs(best_ctgs, all_dir, prefix, environment, ctg_taxa_dict):
         ctg_lineage = ctg_taxa_dict[ctg] if ctg in ctg_taxa_dict else "Unknown"
         ctg_phylum = classify_taxa(ctg_lineage, level='phylum')
         ctg_domain = classify_taxa(ctg_lineage, level='domain')
-        data.append([prefix, unique_motifs_num, environment,ctg, ctg_phylum, ctg_domain, ctg_lineage])
+        ctg_len = ctg_obj.get_ctg_len()
+        # if ctg_phylum == "Unknown":
+        #     os.system(f"cp {ctg_obj.ctg_ref} /home/shuaiw/borg/paper/specificity/ming_second_chr")
+        data.append([prefix, unique_motifs_num, environment,ctg, ctg_phylum, ctg_domain, ctg_lineage, ctg_len])
 
     return data
 
@@ -586,40 +590,54 @@ def plot_motif(df_all_data, fig_dir):
     plt.savefig(f"{fig_dir}/motif_num_distribution_all_samples.png", dpi=300, bbox_inches='tight')
 
 def plot_motif_env(df_all_data, fig_dir):
+    ctg_num_cutoff = 10
     ### sort by sample
     df_all_data = df_all_data.sort_values(by='environment')
     ## plot boxplot where sample is on x-axis and motif_num is on y-axis
 
     plt.figure(figsize=(6, 6))
-    order = df_all_data.groupby('environment')['motif_num'].median().sort_values().index
-    sns.boxplot(data=df_all_data, x='environment', y='motif_num', order=order, showfliers=False)
-    
+    env_counts = df_all_data['environment'].value_counts()
+    env_with_enough_data = env_counts[env_counts > ctg_num_cutoff].index
+    df_filtered_env = df_all_data[df_all_data['environment'].isin(env_with_enough_data)]
+
+    order = df_filtered_env.groupby('environment')['motif_num'].median().sort_values().index
+    sns.boxplot(data=df_filtered_env, x='environment', y='motif_num', order=order, showfliers=False)
+
     # Set y-axis limits to focus on the main distribution (exclude extreme outliers)
     plt.ylim(0, 13)
     ## sort the x axis by median motif_num
 
     plt.xticks(rotation=90)
-    plt.xlabel('Environment')
+    plt.xlabel(f'Environment (>{ctg_num_cutoff} contigs)')
     plt.ylabel('Number of Motifs')
-    plt.savefig(f"{fig_dir}/motif_num_env.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"{fig_dir}/motif_num_env_filtered.png", dpi=300, bbox_inches='tight')
+    
+    ## Filter phyla with > 50 values for better statistical validity
+    phylum_counts = df_all_data['phylum'].value_counts()
+    phylum_with_enough_data = phylum_counts[phylum_counts > ctg_num_cutoff].index
+    df_filtered_phylum = df_all_data[df_all_data['phylum'].isin(phylum_with_enough_data)]
+    
     ## also plot one with phylum is on x-axis and motif_num is on y-axis
     plt.figure(figsize=(10, 5))
-    order = df_all_data.groupby('phylum')['motif_num'].median().sort_values().index
-    sns.boxplot(data=df_all_data, x='phylum', y='motif_num', order=order, showfliers=False)
+    order = df_filtered_phylum.groupby('phylum')['motif_num'].median().sort_values().index
+    sns.boxplot(data=df_filtered_phylum, x='phylum', y='motif_num', order=order, showfliers=False)
     plt.xticks(rotation=90)
-    plt.xlabel('Phylum')
+    plt.xlabel(f'Phylum (>{ctg_num_cutoff} contigs)')
     plt.ylabel('Number of Motifs')
-    plt.savefig(f"{fig_dir}/motif_num_phylum.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"{fig_dir}/motif_num_phylum_filtered.png", dpi=300, bbox_inches='tight')
 
-    ## also plot one with enviroment as x-axis and motif_num is on y-axis, and domain as hue
-    plt.figure(figsize=(12, 6))
-    order = df_all_data.groupby('environment')['motif_num'].median().sort_values().index
-    sns.boxplot(data=df_all_data, x='environment', y='motif_num', hue='domain', order=order, showfliers=False)
+    ## Filter environments with > 50 values for better statistical validity
+
+    
+    ## also plot one with environment as x-axis and motif_num is on y-axis, and domain as hue
+    plt.figure(figsize=(8, 3))
+    order = df_filtered_env.groupby('environment')['motif_num'].median().sort_values().index
+    sns.boxplot(data=df_filtered_env, x='environment', y='motif_num', hue='domain', order=order, showfliers=False)
     plt.xticks(rotation=90)
-    plt.xlabel('Environment')
+    plt.xlabel(f'Environment (>{ctg_num_cutoff} samples)')
     plt.ylabel('Number of Motifs')
     plt.legend(title='Domain', bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.savefig(f"{fig_dir}/motif_num_env_domain.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"{fig_dir}/motif_num_env_domain_filtered.png", dpi=300, bbox_inches='tight')
 
 
 def plot_base(df_all_base_data, fig_dir):
@@ -751,11 +769,9 @@ def main(all_dir, fig_dir, sample_env_dict):
     ctg_taxa_dict = get_ctg_taxa(all_dir)
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
-
         if re.search("sludge", prefix):
             continue
         print (f"Processing {prefix}...")
-
 
         sample_obj = My_sample(prefix, all_dir)
         sample_obj.read_depth()
@@ -777,7 +793,7 @@ def main(all_dir, fig_dir, sample_env_dict):
         # all_base_data += count_modified_base(work_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
         # break
     print ("start plot...")
-    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage'])
+    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len'])
     df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
     df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
     plot_motif_env(df_all_data, fig_dir)
@@ -839,6 +855,8 @@ def plot_coding( meta_dir, fig_dir):
     ## plot boxplot, y is value, x is environment, hue is region_type
     melted_df = pd.melt(whole_df, id_vars=['sample', 'environment', 'phylum'], value_vars=['regulatory_frequency', 'cds_frequency', 'non_coding_frequency'], var_name='region_type', value_name='frequency')
     print (melted_df)
+    ## remove elements with regulatory_frequency
+    melted_df = melted_df[melted_df['region_type'] != 'regulatory_frequency']
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 6))
 
@@ -867,7 +885,57 @@ def plot_coding( meta_dir, fig_dir):
     plt.tight_layout()
     plt.savefig(f"{fig_dir}/frequency_coding.png", dpi=300, bbox_inches='tight')
     melted_df.to_csv(f"{fig_dir}/frequency_coding.csv", index=False)
+    ## also plot box plot coding vs non-coding and add the pvalue of t-test to  plot
+
+    coding_df = melted_df[melted_df['region_type'] == 'cds_frequency']
+    non_coding_df = melted_df[melted_df['region_type'] == 'non_coding_frequency']
+
+    # Filter out samples with insufficient data for robust statistics
+    print(f"Before filtering: Coding samples: {len(coding_df)}, Non-coding samples: {len(non_coding_df)}")
     
+    # Remove NaN values and ensure minimum sample sizes
+    coding_df_filtered = coding_df.dropna(subset=['frequency'])
+    non_coding_df_filtered = non_coding_df.dropna(subset=['frequency'])
+    
+    print(f"After NaN filtering: Coding samples: {len(coding_df_filtered)}, Non-coding samples: {len(non_coding_df_filtered)}")
+    
+    # Only perform t-test if we have sufficient samples (>= 30 for each group)
+    if len(coding_df_filtered) >= 30 and len(non_coding_df_filtered) >= 30:
+        # Perform t-test
+        t_stat, p_value = ttest_ind(coding_df_filtered['frequency'], non_coding_df_filtered['frequency'])
+        print(f"T-test between coding and non-coding: t-statistic = {t_stat:.4f}, p-value = {p_value:.2e}")
+        
+        # Create comparison plot for coding vs non-coding
+        plt.figure(figsize=(4, 4))
+        sns.boxplot(data=melted_df, x='region_type', y='frequency', palette='Set2')
+        plt.title(f'p={p_value:.2e}\n(n_coding={len(coding_df_filtered)}, n_non-coding={len(non_coding_df_filtered)})')
+        plt.ylabel('Frequency of Modified Bases')
+        plt.xticks([0, 1], ['CDS', 'Non-coding'])
+        
+        # Add significance annotation
+        if p_value < 0.001:
+            sig_text = "***"
+        elif p_value < 0.01:
+            sig_text = "**"
+        elif p_value < 0.05:
+            sig_text = "*"
+        else:
+            sig_text = "ns"
+        
+        # Add significance bar
+        y_max = max(coding_df_filtered['frequency'].max(), non_coding_df_filtered['frequency'].max())
+        plt.plot([0, 1], [y_max * 1.05, y_max * 1.05], 'k-', linewidth=1)
+        plt.text(0.5, y_max * 1.08, sig_text, ha='center', va='bottom', fontsize=14, fontweight='bold')
+        
+        plt.tight_layout()
+        plt.savefig(f"{fig_dir}/coding_vs_noncoding_comparison.pdf", dpi=300, bbox_inches='tight')
+        plt.show()
+    else:
+        print("Warning: Insufficient sample sizes for t-test. Need at least 30 samples per group.")
+        print(f"Current sample sizes - Coding: {len(coding_df_filtered)}, Non-coding: {len(non_coding_df_filtered)}")
+
+
+
 
 if __name__ == "__main__":
     meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
@@ -877,9 +945,9 @@ if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/run2/"
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
     sample_env_dict = read_metadata(meta_file)
-    # main(all_dir, fig_dir, sample_env_dict)
-    main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
-    plot_coding(meta_dir, fig_dir)
+    main(all_dir, fig_dir, sample_env_dict)
+    # main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
+    # plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)
     # get_stastics()
     # jaccard()

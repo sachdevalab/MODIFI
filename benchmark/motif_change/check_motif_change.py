@@ -573,7 +573,7 @@ def main_meta():
         plot_clade_size(clade_data, paper_fig_dir)
         print ("all done")
 
-if __name__ == "__main__":
+def main_isolation():
     all_dir = "/home/shuaiw/borg/paper/isolation/batch2_results/"
     ctg_taxa_dict = get_ctg_taxa(all_dir, 'isolation')
     # print (ctg_taxa_dict)
@@ -650,3 +650,6 @@ if __name__ == "__main__":
         plot_clade_size(clade_data, paper_fig_dir)
         print ("all done")
 # 
+
+if __name__ == "__main__":
+    main_meta()

@@ -86,6 +86,11 @@ def get_best_ctg(depth_file, fai, min_len = 1000000, min_dp = 10):
     return good_depth, length_dict
 
 def classify_taxa(lineage, level="species"):
+    if level == "domain":
+        if re.search(r'Unclassified Bacteria', lineage):
+            return "d__Bacteria"
+        if re.search(r'Unclassified Archaea', lineage):
+            return "d__Archaea"
     ## given a lineage string, return the taxa at the given level
     levels = ["domain", "phylum", "class", "order", "family", "genus", "species"]
     if lineage == "Unknown":
@@ -567,10 +572,12 @@ class My_contig(My_sample):
         else:
             self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
         self.ctg_ref = f"{self.work_dir}/contigs/{contig}.fa"
+        self.ctg_ref_fai = f"{self.work_dir}/contigs/{contig}.fa.fai"
         self.gff = f"{self.work_dir}/gffs/{contig}.gff"
         self.reprocess_gff = f"{self.work_dir}/gffs/{contig}.reprocess.gff"
         self.ipd_ratio_file = f"{self.work_dir}/ipd_ratio/{contig}.ipd3.csv"
         self.motif_file = f"{self.work_dir}/motifs/{contig}.motifs.csv"
+        self.ctg_len = None
 
     def read_motif(self, min_frac=0.3, min_sites=30):
         ## check if file exists
@@ -580,6 +587,19 @@ class My_contig(My_sample):
         motif_df = motif_df[(motif_df['fraction'] >= min_frac) & (motif_df['nDetected'] >= min_sites)]
         return motif_df
 
+    def get_ctg_len(self):
+        if self.ctg_len is not None:
+            return self.ctg_len
+        if not os.path.exists(self.ctg_ref_fai):
+            print (f"[⚠️] FAI file not found: {self.ctg_ref_fai}")
+            return 0
+        with open(self.ctg_ref_fai, "r") as f:
+            for line in f:
+                fields = line.strip().split("\t")
+                if fields[0] == self.contig:
+                    self.ctg_len = int(fields[1])
+                    return self.ctg_len
+        return 0
 
 
 class My_cluster(object):
