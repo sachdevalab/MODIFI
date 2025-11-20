@@ -63,28 +63,6 @@ def count_N50_size(fai):
             break
     return n50_size, total_length
 
-def get_best_ctg(depth_file, fai, min_len = 1000000, min_dp = 10):
-    """
-    Get the best contig based on length from a fasta file.
-    """
-    depth_df = pd.read_csv(depth_file)
-    good_depth = {}
-    length_dict = {}
-    for index, row in depth_df.iterrows():
-
-        if row['depth'] >= min_dp:
-            good_depth[row['contig']] = row['depth']
-    best_ctgs = {}
-    with open(fai, "r") as f:
-        for line in f:
-            ctg, length, _, _, _ = line.strip().split("\t")
-            length = int(length)
-            length_dict[ctg] = length
-            if ctg[-1] == "C" and length >= min_len and ctg in good_depth:
-                best_ctgs[ctg] = length
-    # print (f"Total {len(best_ctgs)} contigs with length >= {min_len} found.")
-    return good_depth, length_dict
-
 def classify_taxa(lineage, level="species"):
     if level == "domain":
         if re.search(r'Unclassified Bacteria', lineage):
@@ -104,6 +82,20 @@ def classify_taxa(lineage, level="species"):
     if len(taxon) == 3:
         return "Unknown"
     return taxon
+
+def get_detail_taxa_name(lineage):
+    if lineage == "Unknown":
+        detail_name = "Unknown"
+    else:
+        lineage = lineage.split(";")
+        for level in reversed(lineage):
+            if len(level.strip()) > 3:
+                detail_name = level.strip()
+                break
+        else:
+            detail_name = lineage[0].strip()
+    return detail_name
+
 
 def get_ctg_taxa(all_dir, data_type="meta"):
     file_name = f"/home/shuaiw/borg/paper/gene_anno/{data_type}_ctg_taxa_dict.pkl"
@@ -219,12 +211,6 @@ class My_sample(object):
                 contig_len[contig] = length
         return contig_len
 
-    # def read_host(self):
-    #     line_num = sum(1 for line in open(self.host_sum_file) if line.strip())
-    #     if line_num > 1:
-    #         host_sum = pd.read_csv(self.host_sum_file)
-    #         all_link_df = pd.concat([all_link_df, host_sum], axis=0)
-
     def read_host(self):
         # return 0
         print (f"Reading host summary file: {self.host_sum_file}")
@@ -314,6 +300,13 @@ class My_sample(object):
                 bin3c_cluster_list.append(line.split())
         return bin3c_cluster_list
 
+    def get_len_dict(self):
+        with open(self.fai, "r") as f:
+            for line in f:
+                ctg, length, _, _, _ = line.strip().split("\t")
+                length = int(length)
+                self.length_dict[ctg] = length
+        return self.length_dict
 
     def read_depth(self):
         self.depth_dict = {}
@@ -395,8 +388,7 @@ class My_sample(object):
         N50, genome_size = count_N50_size(self.fai)
         return N50, genome_size
 
-    def get_final_best_ctg(self):
-        good_depth, self.length_dict = get_best_ctg(self.depth_file, self.fai)
+    def get_final_best_ctg(self, min_dp = 10):
         """
         Read all host contigs from a file.
         """
@@ -406,14 +398,39 @@ class My_sample(object):
                 if line.startswith("#"):
                     continue
                 ctg, ctg, domain = line.strip().split("\t")
-                if ctg not in good_depth:
+                if self.depth_dict[ctg] < min_dp:
                     continue
                 best_ctgs[ctg] = domain
         return best_ctgs
+    
+    def get_final_best_ctg2(self, min_dp = 10):
+        """
+        serve as high-quality contigs to show the landscape 
+        of motif number distribution in envs
+        """
+        high_quality_ctgs = self.get_high_quality_ctgs()
+        circular_ctgs = self.get_circular_ctgs()
+        merged_ctgs = set(high_quality_ctgs) | set(circular_ctgs)
+        final_selection = []
+        taxa_dict = self.read_meta_gtdb()
+        ## next examine if they have classified phylum
+        for ctg in merged_ctgs:
+            if ctg not in taxa_dict:
+                continue
+            lineage = taxa_dict[ctg]
+            phylum = classify_taxa(lineage, level="phylum")
+            if phylum == "Unknown":
+                continue
+            if self.depth_dict[ctg] < min_dp:
+                continue
+            final_selection.append(ctg)
+        return final_selection
 
     def get_high_dp_ctg_list(self, min_depth=10, min_len=100000):
         """
         Get high depth contig list.
+        sever for drep, to explore motif variation 
+        among strains
         """
         genome_list = []
         contig_list = []
@@ -440,6 +457,32 @@ class My_sample(object):
                 anno = row['classification']
                 isolation_taxa[row['user_genome']] = anno
         return isolation_taxa
+
+    def get_high_quality_ctgs(self):
+        """
+        Get the high quality contigs from a CheckM report.
+        """
+        high_quality_ctgs = []
+        df = pd.read_csv(self.checkm, sep="\t", header=0)
+        df = df[df['Completeness'] >= 50]
+        df = df[df['Contamination'] <= 5]
+        for ctg in df['Name']:
+            high_quality_ctgs.append(ctg)
+
+        print (f"Total {len(high_quality_ctgs)} high quality contigs found.")
+        return high_quality_ctgs
+
+    def get_circular_ctgs(self):
+        """
+        Get the best contig based on length from a fasta file.
+        """
+        circular_ctgs = []
+        with open(self.fai, "r") as f:
+            for line in f:
+                ctg, length, _, _, _ = line.strip().split("\t")
+                if ctg[-1] == "C":
+                    circular_ctgs.append(ctg)
+        return circular_ctgs
 
 class Linkage_object(object):
 

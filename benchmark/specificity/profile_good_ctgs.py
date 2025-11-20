@@ -14,7 +14,7 @@ from Bio.Seq import Seq
 from scipy.stats import ttest_ind
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
-from sample_object import My_gene, get_unique_motifs, My_sample, get_ctg_taxa, classify_taxa, My_contig, Isolation_sample
+from sample_object import My_gene, get_unique_motifs, get_detail_taxa_name, My_sample, get_ctg_taxa, classify_taxa, My_contig, Isolation_sample
 
 
 def get_best_ctg(depth_file, fai, min_len = 1000000):
@@ -601,11 +601,7 @@ def plot_motif_env(df_all_data, fig_dir):
     df_filtered_env = df_all_data[df_all_data['environment'].isin(env_with_enough_data)]
 
     order = df_filtered_env.groupby('environment')['motif_num'].median().sort_values().index
-    sns.boxplot(data=df_filtered_env, x='environment', y='motif_num', order=order, showfliers=False)
-
-    # Set y-axis limits to focus on the main distribution (exclude extreme outliers)
-    plt.ylim(0, 13)
-    ## sort the x axis by median motif_num
+    sns.boxplot(data=df_filtered_env, x='environment', y='motif_num', order=order)
 
     plt.xticks(rotation=90)
     plt.xlabel(f'Environment (>{ctg_num_cutoff} contigs)')
@@ -620,7 +616,7 @@ def plot_motif_env(df_all_data, fig_dir):
     ## also plot one with phylum is on x-axis and motif_num is on y-axis
     plt.figure(figsize=(10, 5))
     order = df_filtered_phylum.groupby('phylum')['motif_num'].median().sort_values().index
-    sns.boxplot(data=df_filtered_phylum, x='phylum', y='motif_num', order=order, showfliers=False)
+    sns.boxplot(data=df_filtered_phylum, x='phylum', y='motif_num', order=order)
     plt.xticks(rotation=90)
     plt.xlabel(f'Phylum (>{ctg_num_cutoff} contigs)')
     plt.ylabel('Number of Motifs')
@@ -632,12 +628,37 @@ def plot_motif_env(df_all_data, fig_dir):
     ## also plot one with environment as x-axis and motif_num is on y-axis, and domain as hue
     plt.figure(figsize=(8, 3))
     order = df_filtered_env.groupby('environment')['motif_num'].median().sort_values().index
-    sns.boxplot(data=df_filtered_env, x='environment', y='motif_num', hue='domain', order=order, showfliers=False)
+    sns.boxplot(data=df_filtered_env, x='environment', y='motif_num', hue='domain', order=order)
     plt.xticks(rotation=90)
     plt.xlabel(f'Environment (>{ctg_num_cutoff} samples)')
     plt.ylabel('Number of Motifs')
     plt.legend(title='Domain', bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.savefig(f"{fig_dir}/motif_num_env_domain_filtered.png", dpi=300, bbox_inches='tight')
+
+def sort_genome_motif(df_all_data, fig_dir):
+    ## add column species to df_all_data based on the lineage column, get the last word after semicolon
+    df_all_data['species'] = df_all_data['lineage'].apply(get_detail_taxa_name)
+
+
+    top20_df = df_all_data.sort_values(by="motif_num", ascending=False).head(20)
+    
+    # Create labels that include cluster name and member count
+    top20_df['combined_label'] = top20_df.apply(lambda row: f"{row['species']}\n({row['contig']}, n={row['motif_num']})", axis=1)
+
+    plt.figure(figsize=(8,8))
+    ax = sns.barplot(x="motif_num", y="combined_label", data=top20_df, palette="viridis")
+    
+    # Adjust layout to accommodate longer labels
+    plt.subplots_adjust(left=0.4)  # Make more space for y-axis labels
+    
+    # Set font size for better readability
+    plt.tick_params(axis='y', labelsize=10)
+    plt.tick_params(axis='x', labelsize=10)
+    
+    plt.xlabel("Number of Motifs", fontsize=12)
+    plt.ylabel("Species (contig, motif number)", fontsize=12)
+    plt.tight_layout()
+    plt.savefig(f"{fig_dir}/top20_genome_motif.pdf", bbox_inches='tight')
 
 
 def plot_base(df_all_base_data, fig_dir):
@@ -762,49 +783,57 @@ def collect_iso_ctgsall_dir(iso_genome_list_file):
             f.write(genome + "\n")
 
 def main(all_dir, fig_dir, sample_env_dict):
-    all_data = []
-    all_base_data = []
-    genome_data = []
-    genome_list = []
-    ctg_taxa_dict = get_ctg_taxa(all_dir)
-    for my_dir in os.listdir(all_dir):
-        prefix = my_dir
-        if re.search("sludge", prefix):
-            continue
-        print (f"Processing {prefix}...")
+    # all_data = []
+    # all_base_data = []
+    # genome_data = []
+    # genome_list = []
+    # ctg_taxa_dict = get_ctg_taxa(all_dir)
+    # for my_dir in os.listdir(all_dir):
+    #     prefix = my_dir
+    #     if re.search("sludge", prefix):
+    #         continue
+    #     print (f"Processing {prefix}...")
 
-        sample_obj = My_sample(prefix, all_dir)
-        sample_obj.read_depth()
-        map_ratio = sample_obj.read_mapping()
-        linkage_num =  sample_obj.read_host()
-        regulate_motif_num = sample_obj.read_orphan()
-        N50, genome_size = sample_obj.get_N50_size()
-        print(f"{prefix}: N50 size: {N50}, Genome size: {genome_size}")
-        best_ctgs = sample_obj.get_final_best_ctg()
-        print ("best ctgs num:", len(best_ctgs))
-        genome_list += sample_obj.get_high_dp_ctg_list()
-        print (f">>>Total {len(genome_list)} high depth contigs collected so far.")
+    #     sample_obj = My_sample(prefix, all_dir)
+    #     sample_obj.read_depth()
+    #     map_ratio = sample_obj.read_mapping()
+    #     linkage_num =  sample_obj.read_host()
+    #     regulate_motif_num = sample_obj.read_orphan()
+    #     N50, genome_size = sample_obj.get_N50_size()
+    #     print(f"{prefix}: N50 size: {N50}, Genome size: {genome_size}")
+    #     best_ctgs = sample_obj.get_final_best_ctg()
+    #     print ("best ctgs num:", len(best_ctgs))
+    #     genome_list += sample_obj.get_high_dp_ctg_list()
+    #     print (f">>>Total {len(genome_list)} high depth contigs collected so far.")
 
-        genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix], map_ratio, linkage_num, \
-                            regulate_motif_num, len(best_ctgs)])
+    #     genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix], map_ratio, linkage_num, \
+    #                         regulate_motif_num, len(best_ctgs)])
 
-        # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
-        all_data += count_motifs(best_ctgs, all_dir, prefix, sample_env_dict[prefix], ctg_taxa_dict)
-        # all_base_data += count_modified_base(work_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
-        # break
-    print ("start plot...")
-    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len'])
-    df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
-    df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
+    #     # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
+    #     all_data += count_motifs(best_ctgs, all_dir, prefix, sample_env_dict[prefix], ctg_taxa_dict)
+    #     # all_base_data += count_modified_base(work_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
+    #     # break
+    # print ("start plot...")
+    # df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len'])
+    # df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
+    # df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
+
+    # df_genome_data.to_csv(f"{fig_dir}/genome_data_all_samples.csv", index = False)
+    # df_all_base_data.to_csv(f"{fig_dir}/base_count_all_samples.csv", index=False)
+    # df_all_data.to_csv(f"{fig_dir}/motif_num_all_samples.csv", index=False)    
+    
+    df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
+    df_genome_data = pd.read_csv(f"{fig_dir}/genome_data_all_samples.csv")
+    df_all_base_data = pd.read_csv(f"{fig_dir}/base_count_all_samples.csv")
+
     plot_motif_env(df_all_data, fig_dir)
+    sort_genome_motif(df_all_data, fig_dir)
     plot_motif(df_all_data, fig_dir)
     plot_genome(df_genome_data, fig_dir)
     plot_meta(df_genome_data, fig_dir)
     plot_base(df_all_base_data, fig_dir)
     # ## save genome data
-    df_genome_data.to_csv(f"{fig_dir}/genome_data_all_samples.csv", index = False)
-    df_all_base_data.to_csv(f"{fig_dir}/base_count_all_samples.csv", index=False)
-    df_all_data.to_csv(f"{fig_dir}/motif_num_all_samples.csv", index=False)
+
 
     # with open(genome_list_file, "w") as f:
     #     for genome in genome_list:
