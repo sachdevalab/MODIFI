@@ -13,7 +13,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
-from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa
+from sample_object import get_detail_taxa_name,get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa
 
 
 
@@ -28,8 +28,11 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
     G = nx.Graph()
     for linkage_obj in linkage_info_list:
 
+        host_lineage = ctg_taxa_dict[linkage_obj.host] if linkage_obj.host in ctg_taxa_dict else "NA"
+        host_taxa = get_detail_taxa_name(host_lineage)
+
         gc_data.append([linkage_obj.mge, linkage_obj.host, linkage_obj.MGE_gc, linkage_obj.host_gc, linkage_obj.cos_sim, 
-                        linkage_obj.MGE_cov, linkage_obj.host_cov, environment, prefix, linkage_obj.mge_len])
+                        linkage_obj.MGE_cov, linkage_obj.host_cov, environment, prefix, linkage_obj.mge_len, host_taxa])
 
         if linkage_obj.host in host_clu_dict:
             host_clu = host_clu_dict[linkage_obj.host]
@@ -241,8 +244,8 @@ def profile_network(whole_G, ctg_taxa_dict):
             node_label = whole_G.nodes[node].get('label', 'Unknown')
             represent_ctg_lineage = ctg_taxa_dict[node_label] if node_label in ctg_taxa_dict else "NA"
             ctg_species = classify_taxa(represent_ctg_lineage, "species")
-            ctg_genus = classify_taxa(represent_ctg_lineage, "genus")
-            print(f"{node} {node_label}: {degree} (Host annotation: {ctg_species}, {ctg_genus})")
+            ctg_taxa = get_detail_taxa_name(represent_ctg_lineage)
+            print(f"{node} {node_label}: {degree} (Host annotation: {ctg_species}, {ctg_taxa})")
     
     ## see which host has linked the most virus
     # host_virus_link_count = defaultdict(int)
@@ -324,7 +327,9 @@ if __name__ == "__main__":
     plot_network2(whole_G, paper_fig_dir)
     profile_network(whole_G, ctg_taxa_dict)
 
-    gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_gc", "host_gc", "cos_sim", "MGE_cov", "host_cov", "environment", "sample", "mge_len"])
+    gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_gc", "host_gc", 
+                                           "cos_sim", "MGE_cov", "host_cov", 
+                                           "environment", "sample", "mge_len", "host_taxa"])
     ## sort gc_df by mge_len descending
     gc_df = gc_df.sort_values(by='mge_len', ascending=False)
     ## save gc_df to a csv file

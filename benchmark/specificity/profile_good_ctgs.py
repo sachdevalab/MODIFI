@@ -656,7 +656,7 @@ def sort_genome_motif(df_all_data, fig_dir):
     plt.tick_params(axis='x', labelsize=10)
     
     plt.xlabel("Number of Motifs", fontsize=12)
-    plt.ylabel("Species (contig, motif number)", fontsize=12)
+    plt.ylabel("Taxa (contig, motif number)", fontsize=12)
     plt.tight_layout()
     plt.savefig(f"{fig_dir}/top20_genome_motif.pdf", bbox_inches='tight')
 
@@ -873,16 +873,19 @@ def main_gene(all_dir, meta_dir, sample_env_dict, fig_dir):
         print(region_info)
         region_info.to_csv(count_file, index=False)
 
-def plot_coding( meta_dir, fig_dir):
+def plot_coding( meta_dir, fig_dir, min_len = 1000000):
+    ctg_num_cutoff = 10
     whole_df = pd.DataFrame()
     for count_csv in glob.glob(f"{meta_dir}/*/count/*_region_count.csv"):
         df = pd.read_csv(count_csv)
         whole_df = pd.concat([whole_df, df], ignore_index=True)
-    print (whole_df)
+    ## filter genome_length >= min_len
+    whole_df = whole_df[whole_df['genome_length'] >= min_len]
+    print ("Total {0} genomes with length >= {1} bp.".format(len(whole_df), min_len))
     ## the data is like:
     ##  genome  genome_length  regulatory_count  regulatory_length  regulatory_frequency  cds_count  ...  non_coding_count  non_coding_length  non_coding_frequency            sample  environment           phylum
     ## plot boxplot, y is value, x is environment, hue is region_type
-    melted_df = pd.melt(whole_df, id_vars=['sample', 'environment', 'phylum'], value_vars=['regulatory_frequency', 'cds_frequency', 'non_coding_frequency'], var_name='region_type', value_name='frequency')
+    melted_df = pd.melt(whole_df, id_vars=['genome', 'sample', 'environment', 'phylum','genome_length'], value_vars=['regulatory_frequency', 'cds_frequency', 'non_coding_frequency'], var_name='region_type', value_name='frequency')
     print (melted_df)
     ## remove elements with regulatory_frequency
     melted_df = melted_df[melted_df['region_type'] != 'regulatory_frequency']
@@ -891,24 +894,24 @@ def plot_coding( meta_dir, fig_dir):
 
     # Filter environments with > 50 values
     env_counts = melted_df['environment'].value_counts()
-    env_with_enough_data = env_counts[env_counts > 50].index
+    env_with_enough_data = env_counts[env_counts > ctg_num_cutoff].index
     melted_df_env = melted_df[melted_df['environment'].isin(env_with_enough_data)]
     
     # Filter phyla with > 50 values
     phylum_counts = melted_df['phylum'].value_counts()
-    phylum_with_enough_data = phylum_counts[phylum_counts > 50].index
+    phylum_with_enough_data = phylum_counts[phylum_counts > ctg_num_cutoff].index
     melted_df_phylum = melted_df[melted_df['phylum'].isin(phylum_with_enough_data)]
     
     sns.boxplot(data=melted_df_env, x='environment', y='frequency', hue='region_type', palette='Set2', ax=ax1)
     ax1.tick_params(axis='x', rotation=90)
     ax1.set_title('Frequency of Modified Bases in Different Genomic Regions Across Environments')
-    ax1.set_xlabel('Environment')
+    ax1.set_xlabel(f'Environment (n>={ctg_num_cutoff})')
     ax1.set_ylabel('Frequency of Modified Bases')
 
     sns.boxplot(data=melted_df_phylum, x='phylum', y='frequency', hue='region_type', palette='Set2', ax=ax2)
     ax2.tick_params(axis='x', rotation=90)
     ax2.set_title('Frequency of Modified Bases in Different Genomic Regions Across Phyla')
-    ax2.set_xlabel('Phylum')
+    ax2.set_xlabel(f'Phylum (n>={ctg_num_cutoff})')
     ax2.set_ylabel('Frequency of Modified Bases')
 
     plt.tight_layout()
@@ -941,20 +944,10 @@ def plot_coding( meta_dir, fig_dir):
         plt.ylabel('Frequency of Modified Bases')
         plt.xticks([0, 1], ['CDS', 'Non-coding'])
         
-        # Add significance annotation
-        if p_value < 0.001:
-            sig_text = "***"
-        elif p_value < 0.01:
-            sig_text = "**"
-        elif p_value < 0.05:
-            sig_text = "*"
-        else:
-            sig_text = "ns"
         
         # Add significance bar
         y_max = max(coding_df_filtered['frequency'].max(), non_coding_df_filtered['frequency'].max())
         plt.plot([0, 1], [y_max * 1.05, y_max * 1.05], 'k-', linewidth=1)
-        plt.text(0.5, y_max * 1.08, sig_text, ha='center', va='bottom', fontsize=14, fontweight='bold')
         
         plt.tight_layout()
         plt.savefig(f"{fig_dir}/coding_vs_noncoding_comparison.pdf", dpi=300, bbox_inches='tight')
@@ -962,6 +955,18 @@ def plot_coding( meta_dir, fig_dir):
     else:
         print("Warning: Insufficient sample sizes for t-test. Need at least 30 samples per group.")
         print(f"Current sample sizes - Coding: {len(coding_df_filtered)}, Non-coding: {len(non_coding_df_filtered)}")
+
+    ## print top 10 genomes with highest coding frequency and also top 10 genomes with highest non-coding frequency
+    top10_coding = coding_df.sort_values(by='frequency', ascending=False).head(10)
+    top10_non_coding = non_coding_df.sort_values(by='frequency', ascending=False).head(10)
+    print ("Top 10 genomes with highest coding frequency:")
+    print (top10_coding[['genome', 'frequency', 'environment', 'phylum']])
+    print ("Top 10 genomes with highest non-coding frequency:")
+    print (top10_non_coding[['genome', 'frequency', 'environment', 'phylum']])
+    ## also report these with highest general frequency, whole_df has general_frequency column
+    top10_all = whole_df.sort_values(by='general_frequency', ascending=False).head(10)
+    print ("Top 10 genomes with highest general frequency:")
+    print (top10_all[['genome', 'general_frequency', 'environment', 'phylum']])
 
 
 
@@ -974,9 +979,9 @@ if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/run2/"
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
     sample_env_dict = read_metadata(meta_file)
-    main(all_dir, fig_dir, sample_env_dict)
-    # main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
-    # plot_coding(meta_dir, fig_dir)
+    # main(all_dir, fig_dir, sample_env_dict)
+    main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
+    plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)
     # get_stastics()
     # jaccard()
