@@ -570,6 +570,7 @@ class Isolation_sample(My_sample):
         super().__init__(prefix, all_dir)
         self.phylum = None
         self.lineages = None
+        self.average_dp = None
         self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
         self.depth_file = os.path.join(self.work_dir, "mean_depth.csv")
         self.host_sum_file = os.path.join(self.work_dir, "host_summary.csv")
@@ -654,6 +655,25 @@ class Isolation_sample(My_sample):
                 mge_specific_motifs = self.get_mge_specific_motif(mge_ctg, host_ctg)
                 if len(mge_specific_motifs) > 0:
                     print (f"{self.prefix}\t{mge_ctg}\t{host_ctg}\t{len(mge_specific_motifs)}\t{mge_specific_motifs}")
+
+    def get_average_depth(self):
+        ## depth is weighted by length
+        total_depth = 0
+        total_length = 0
+        df = pd.read_csv(self.depth_file)
+
+        for _, row in df.iterrows():
+            contig = row['contig']
+            depth = float(row['depth'])
+
+            length = int(row['length'])
+            total_depth += depth * length
+            total_length += length
+        if total_length == 0:
+            return 0
+        self.average_dp = total_depth / total_length
+        return self.average_dp
+
 
 
 class My_contig(My_sample):

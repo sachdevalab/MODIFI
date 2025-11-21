@@ -710,90 +710,7 @@ sbatch  --partition standard --wrap " python main.py \
 
 #!/bin/bash
 
-sbatch --partition standard --job-name=pf3 --wrap "python main.py \
-  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin \
-  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR.align.ccs.bam \
-  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
-  --read_type hifi \
-  --min_len 1000 \
-  --max_NM 3000 \
-  --min_cov 1 \
-  --min_frac 0.4 \
-  --min_score 30 \
-  --min_sites 30 \
-  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
-  --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
-  --clean \
-  --run_steps host \
-  --threads 64"
 
-sbatch --partition standard --job-name=pf4 --wrap "python main.py \
-  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_26_72h_NC_r4_LR_bin \
-  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_26_72h_NC_r4_LR.align.ccs.bam \
-  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
-  --read_type hifi \
-  --min_len 1000 \
-  --max_NM 3000 \
-  --min_cov 1 \
-  --min_frac 0.4 \
-  --min_score 30 \
-  --min_sites 30 \
-  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
-  --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
-  --clean \
-  --run_steps host \
-  --threads 64"
-
-sbatch --partition standard --job-name=pf5 --wrap "python main.py \
-  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_9_72h_NC_r2_HMW_LR_bin \
-  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_9_72h_NC_r2_HMW_LR.align.ccs.bam \
-  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
-  --read_type hifi \
-  --min_len 1000 \
-  --max_NM 3000 \
-  --min_cov 1 \
-  --min_frac 0.4 \
-  --min_score 30 \
-  --min_sites 30 \
-  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
-  --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
-  --clean \
-  --run_steps host \
-  --threads 64"
-
-sbatch --partition standard --job-name=pf6 --wrap "python main.py \
-  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_HMW_LR_bin \
-  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_Comb_RF_HMW_LR.align.ccs.bam \
-  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
-  --read_type hifi \
-  --min_len 1000 \
-  --max_NM 3000 \
-  --min_cov 1 \
-  --min_frac 0.4 \
-  --min_score 30 \
-  --min_sites 30 \
-  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
-  --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
-  --clean \
-  --run_steps host \
-  --threads 64"
-
-sbatch --partition standard --job-name=pf7 --wrap "python main.py \
-  --work_dir /home/shuaiw/borg/pengfan/RuReacBro_20230708_Comb_RF_LR_bin \
-  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_Comb_RF_LR.align.ccs.bam \
-  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
-  --read_type hifi \
-  --min_len 1000 \
-  --max_NM 3000 \
-  --min_cov 1 \
-  --min_frac 0.4 \
-  --min_score 30 \
-  --min_sites 30 \
-  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
-  --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
-  --clean \
-  --run_steps host \
-  --threads 64"
 
 
 sbatch --partition standard --wrap "MicrobeMod annotate_rm \
@@ -1878,17 +1795,92 @@ sbatch --job-name=tree \
 --wrap "bash get_tree_robust.sh"
 
 /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
-          --work_dir /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737_methylation2/ \
-          --whole_bam /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737.align.bam \
-          --whole_ref /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737.hifiasm.p_ctg.rename.fa \
-          --read_type hifi \
-          --min_len 1000 \
-          --min_cov 10 \
-          --min_frac 0.1 \
-          --min_score 30 \
-          --min_sites 10 \
-          --mge_file /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/all_mge.tsv \
-          --threads 3 \
-          --run_steps host \
-          --kmer_mean_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.mean.dat \
-          --kmer_num_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.num.dat
+    --work_dir /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737_methylation2/ \
+    --whole_bam /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737.align.bam \
+    --whole_ref /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737.hifiasm.p_ctg.rename.fa \
+    --read_type hifi \
+    --min_len 1000 \
+    --min_cov 10 \
+    --min_frac 0.1 \
+    --min_score 30 \
+    --min_sites 10 \
+    --mge_file /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/all_mge.tsv \
+    --threads 3 \
+    --run_steps host \
+    --kmer_mean_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.mean.dat \
+    --kmer_num_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.num.dat
+
+
+sbatch --partition standard --job-name=pf3 --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/pengfan/result_20251121/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin \
+  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --threads 64"
+
+sbatch --partition standard --job-name=pf4 --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/pengfan/result_20251121/RuReacBro_20230708_26_72h_NC_r4_LR_bin \
+  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_26_72h_NC_r4_LR.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --clean \
+  --threads 64"
+
+sbatch --partition standard --job-name=pf5 --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/pengfan/result_20251121/RuReacBro_20230708_9_72h_NC_r2_HMW_LR_bin \
+  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_9_72h_NC_r2_HMW_LR.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --clean \
+  --threads 64"
+
+sbatch --partition standard --job-name=pf6 --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/pengfan/result_20251121/RuReacBro_20230708_Comb_RF_HMW_LR_bin \
+  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_Comb_RF_HMW_LR.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --clean \
+  --threads 64"
+
+sbatch --partition standard --job-name=pf7 --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/pengfan/result_20251121/RuReacBro_20230708_Comb_RF_LR_bin \
+  --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_Comb_RF_LR.align.ccs.bam \
+  --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
+  --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --clean \
+  --threads 64"

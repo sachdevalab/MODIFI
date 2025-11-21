@@ -196,9 +196,11 @@ def single_run(resultdir):
         run_taxa_dict[prefix] = sample_obj.lineage
         motif_num, unique_motifs = sample_obj.get_unique_motifs()
         mge_bool = sample_obj.get_MGE_bool()
+        average_dp = sample_obj.get_average_depth()
         sample_meta_dict[prefix] = {
             "motif_num": motif_num,
-            "mge_bool": mge_bool
+            "mge_bool": mge_bool,
+            "average_dp": average_dp
         }
     print ("No. of runs (samples) processed:", len(run_taxa_dict))
     return run_taxa_dict, sample_meta_dict
@@ -247,6 +249,7 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
 
     motif_num_anno = gradient_header + "\n"
     mge_num_anno = gradient_header + "\n"
+    depth_anno = gradient_header + "\n"
     with open(f"{tree_results}/phylum_annotations.txt", "w") as f:
         f.write(f"{header}\n")
         for bin_name, taxa in run_taxa_dict.items():
@@ -267,6 +270,10 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
                 motif_num_anno += f"{bin_name} {sample_meta_dict[bin_name]['motif_num']}\n"
             if sample_meta_dict[bin_name]['mge_bool'] is not None:
                 mge_num_anno += f"{bin_name} {sample_meta_dict[bin_name]['mge_bool']}\n"
+            if sample_meta_dict[bin_name]['average_dp'] >= 10:
+                depth_anno += f"{bin_name} 1\n"
+            else:
+                depth_anno += f"{bin_name} 0\n"
             # Add to legend data
             # legend_data += f"{bin_name} {color} {phylum}\n"
     
@@ -282,6 +289,8 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
         f.write(motif_num_anno)
     with open(f"{tree_results}/mge_num_annotations.txt", "w") as f:
         f.write(mge_num_anno)
+    with open(f"{tree_results}/depth_annotations.txt", "w") as f:
+        f.write(depth_anno)
 
 
 if __name__ == "__main__":
