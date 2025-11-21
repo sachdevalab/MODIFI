@@ -1876,3 +1876,19 @@ sbatch --job-name=d95 \
 sbatch --job-name=tree \
 --partition standard \
 --wrap "bash get_tree_robust.sh"
+
+/home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
+          --work_dir /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737_methylation2/ \
+          --whole_bam /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737.align.bam \
+          --whole_ref /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737.hifiasm.p_ctg.rename.fa \
+          --read_type hifi \
+          --min_len 1000 \
+          --min_cov 10 \
+          --min_frac 0.1 \
+          --min_score 30 \
+          --min_sites 10 \
+          --mge_file /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/all_mge.tsv \
+          --threads 3 \
+          --run_steps host \
+          --kmer_mean_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.mean.dat \
+          --kmer_num_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.num.dat

@@ -445,10 +445,10 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
     print (f"### Processed bins for {plasmid_name}, total {len(data)} results.")
     ## convert the data to a df, and sort by final_score
     data = pd.DataFrame(data)
-    ## calculate a pvalue to indicate proportion of the final_score that are larger than the value for this plasmid only
-    data['self_pvalue']  = data['final_score'].apply(lambda x: sum(data['final_score'] >= x) / len(data) )
     final_score_list = []
     if len(data) > 0:
+        ## calculate a pvalue to indicate proportion of the final_score that are larger than the value for this plasmid only
+        data['self_pvalue']  = data['final_score'].apply(lambda x: sum(data['final_score'] >= x) / len(data) )
         # Separate rows with specificity < P_CUTOFF and others
         low_specificity = data[data['specificity'] < P_CUTOFF].sort_values(by='final_score', ascending=False, ignore_index=True)
         high_specificity = data[data['specificity'] >= P_CUTOFF].sort_values(by='final_score', ascending=False, ignore_index=True)

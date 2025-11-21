@@ -78,7 +78,8 @@ def get_ipd_ratio(csv, output, gff, figure_file, ref, min_cov=5, visu_flag: bool
     if len(df) == 0:
         print ("No data left after filtering")
         ## generate emplty figure_file, output
-        open(figure_file, 'a').close()
+        if visu_flag:
+            open(figure_file, 'a').close()
         open(output, 'a').close()
         open(gff, 'a').close()
         ## stop the program with no error
