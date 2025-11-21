@@ -600,7 +600,7 @@ def plot_motif_env(df_all_data, fig_dir):
     env_with_enough_data = env_counts[env_counts > ctg_num_cutoff].index
     df_filtered_env = df_all_data[df_all_data['environment'].isin(env_with_enough_data)]
 
-    order = df_filtered_env.groupby('environment')['motif_num'].median().sort_values().index
+    order = df_filtered_env.groupby('environment')['motif_num'].mean().sort_values().index
     sns.boxplot(data=df_filtered_env, x='environment', y='motif_num', order=order)
 
     plt.xticks(rotation=90)
@@ -615,7 +615,7 @@ def plot_motif_env(df_all_data, fig_dir):
     
     ## also plot one with phylum is on x-axis and motif_num is on y-axis
     plt.figure(figsize=(10, 5))
-    order = df_filtered_phylum.groupby('phylum')['motif_num'].median().sort_values().index
+    order = df_filtered_phylum.groupby('phylum')['motif_num'].mean().sort_values().index
     sns.boxplot(data=df_filtered_phylum, x='phylum', y='motif_num', order=order)
     plt.xticks(rotation=90)
     plt.xlabel(f'Phylum (>{ctg_num_cutoff} contigs)')
@@ -627,7 +627,7 @@ def plot_motif_env(df_all_data, fig_dir):
     
     ## also plot one with environment as x-axis and motif_num is on y-axis, and domain as hue
     plt.figure(figsize=(8, 3))
-    order = df_filtered_env.groupby('environment')['motif_num'].median().sort_values().index
+    order = df_filtered_env.groupby('environment')['motif_num'].mean().sort_values().index
     sns.boxplot(data=df_filtered_env, x='environment', y='motif_num', hue='domain', order=order)
     plt.xticks(rotation=90)
     plt.xlabel(f'Environment (>{ctg_num_cutoff} samples)')
@@ -885,12 +885,12 @@ def plot_coding( meta_dir, fig_dir, min_len = 1000000):
     ## the data is like:
     ##  genome  genome_length  regulatory_count  regulatory_length  regulatory_frequency  cds_count  ...  non_coding_count  non_coding_length  non_coding_frequency            sample  environment           phylum
     ## plot boxplot, y is value, x is environment, hue is region_type
-    melted_df = pd.melt(whole_df, id_vars=['genome', 'sample', 'environment', 'phylum','genome_length'], value_vars=['regulatory_frequency', 'cds_frequency', 'non_coding_frequency'], var_name='region_type', value_name='frequency')
-    print (melted_df)
+    melted_df_raw = pd.melt(whole_df, id_vars=['genome', 'sample', 'environment', 'phylum','genome_length'], value_vars=['regulatory_frequency', 'cds_frequency', 'non_coding_frequency','general_frequency'], var_name='region_type', value_name='frequency')
+    print (melted_df_raw)
     ## remove elements with regulatory_frequency
-    melted_df = melted_df[melted_df['region_type'] != 'regulatory_frequency']
+    melted_df = melted_df_raw[(melted_df_raw['region_type'] != 'regulatory_frequency') & (melted_df_raw['region_type'] != 'general_frequency')]
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 6))
+    fig, ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = plt.subplots(3, 2, figsize=(16, 16))
 
     # Filter environments with > 50 values
     env_counts = melted_df['environment'].value_counts()
@@ -900,7 +900,7 @@ def plot_coding( meta_dir, fig_dir, min_len = 1000000):
     # Filter phyla with > 50 values
     phylum_counts = melted_df['phylum'].value_counts()
     phylum_with_enough_data = phylum_counts[phylum_counts > ctg_num_cutoff].index
-    melted_df_phylum = melted_df[melted_df['phylum'].isin(phylum_with_enough_data)]
+    
     
     sns.boxplot(data=melted_df_env, x='environment', y='frequency', hue='region_type', palette='Set2', ax=ax1)
     ax1.tick_params(axis='x', rotation=90)
@@ -908,11 +908,51 @@ def plot_coding( meta_dir, fig_dir, min_len = 1000000):
     ax1.set_xlabel(f'Environment (n>={ctg_num_cutoff})')
     ax1.set_ylabel('Frequency of Modified Bases')
 
-    sns.boxplot(data=melted_df_phylum, x='phylum', y='frequency', hue='region_type', palette='Set2', ax=ax2)
+    ## plot a boxplot with envs as x-axis and general frequency as y-axis, sorted by mean frequency
+    general_freq_df = melted_df_raw[melted_df_raw['region_type'] == 'general_frequency']
+    # Sort environments by mean frequency
+    order = general_freq_df.groupby('environment')['frequency'].mean().sort_values().index
+    sns.boxplot(data=general_freq_df, x='environment', y='frequency', order=order, palette='Set2', ax=ax2)
     ax2.tick_params(axis='x', rotation=90)
-    ax2.set_title('Frequency of Modified Bases in Different Genomic Regions Across Phyla')
-    ax2.set_xlabel(f'Phylum (n>={ctg_num_cutoff})')
-    ax2.set_ylabel('Frequency of Modified Bases')
+    ax2.set_title('General Frequency of Modified Bases Across Environments')
+    ax2.set_xlabel(f'Environment (n>={ctg_num_cutoff})')
+    ax2.set_ylabel('Mod Frequency')
+
+    ## plot a boxplot with envs as x-axis and non-coding frequency as y-axis, sorted by mean frequency
+    non_coding_freq_df = melted_df_raw[melted_df_raw['region_type'] == 'non_coding_frequency']
+    # Sort environments by mean frequency
+    order = non_coding_freq_df.groupby('environment')['frequency'].mean().sort_values().index
+    sns.boxplot(data=non_coding_freq_df, x='environment', y='frequency', order=order, palette='Set2', ax=ax3)
+    ax3.tick_params(axis='x', rotation=90)
+    ax3.set_title('Non-coding Frequency of Modified Bases Across Environments')
+    ax3.set_xlabel(f'Environment (n>={ctg_num_cutoff})')
+    ax3.set_ylabel('Mod Frequency')
+
+    melted_df_phylum = general_freq_df[general_freq_df['phylum'].isin(phylum_with_enough_data)]
+    order = melted_df_phylum.groupby('phylum')['frequency'].mean().sort_values().index
+    sns.boxplot(data=melted_df_phylum, x='phylum', y='frequency', order=order, palette='Set2', ax=ax4)
+    ax4.tick_params(axis='x', rotation=90)
+    ax4.set_title('General Frequency of Modified Bases Across Phyla')
+    ax4.set_xlabel(f'Phylum (n>={ctg_num_cutoff})')
+    ax4.set_ylabel('Frequency of Modified Bases')
+
+    ## also plot two boxplots to regulatory_frequency across environment and phylum
+    regulatory_freq_df = melted_df_raw[melted_df_raw['region_type'] == 'regulatory_frequency']
+    # Sort environments by mean frequency
+    order = regulatory_freq_df.groupby('environment')['frequency'].mean().sort_values().index
+    sns.boxplot(data=regulatory_freq_df, x='environment', y='frequency', order=order, palette='Set2', ax=ax5)
+    ax5.tick_params(axis='x', rotation=90)
+    ax5.set_title('Regulatory Frequency of Modified Bases Across Environments')
+    ax5.set_xlabel(f'Environment (n>={ctg_num_cutoff})')
+    ax5.set_ylabel('Mod Frequency')
+
+    melted_df_phylum_reg = regulatory_freq_df[regulatory_freq_df['phylum'].isin(phylum_with_enough_data)]
+    order = melted_df_phylum_reg.groupby('phylum')['frequency'].mean().sort_values().index
+    sns.boxplot(data=melted_df_phylum_reg, x='phylum', y='frequency', order=order, palette='Set2', ax=ax6)
+    ax6.tick_params(axis='x', rotation=90)
+    ax6.set_title('Regulatory Frequency of Modified Bases Across Phyla')
+    ax6.set_xlabel(f'Phylum (n>={ctg_num_cutoff})')
+    ax6.set_ylabel('Frequency of Modified Bases')
 
     plt.tight_layout()
     plt.savefig(f"{fig_dir}/frequency_coding.png", dpi=300, bbox_inches='tight')
@@ -957,14 +997,14 @@ def plot_coding( meta_dir, fig_dir, min_len = 1000000):
         print(f"Current sample sizes - Coding: {len(coding_df_filtered)}, Non-coding: {len(non_coding_df_filtered)}")
 
     ## print top 10 genomes with highest coding frequency and also top 10 genomes with highest non-coding frequency
-    top10_coding = coding_df.sort_values(by='frequency', ascending=False).head(10)
-    top10_non_coding = non_coding_df.sort_values(by='frequency', ascending=False).head(10)
+    top10_coding = coding_df.sort_values(by='frequency', ascending=False).head(20)
+    top10_non_coding = non_coding_df.sort_values(by='frequency', ascending=False).head(20)
     print ("Top 10 genomes with highest coding frequency:")
     print (top10_coding[['genome', 'frequency', 'environment', 'phylum']])
     print ("Top 10 genomes with highest non-coding frequency:")
     print (top10_non_coding[['genome', 'frequency', 'environment', 'phylum']])
     ## also report these with highest general frequency, whole_df has general_frequency column
-    top10_all = whole_df.sort_values(by='general_frequency', ascending=False).head(10)
+    top10_all = whole_df.sort_values(by='general_frequency', ascending=False).head(20)
     print ("Top 10 genomes with highest general frequency:")
     print (top10_all[['genome', 'general_frequency', 'environment', 'phylum']])
 
@@ -980,7 +1020,7 @@ if __name__ == "__main__":
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
     sample_env_dict = read_metadata(meta_file)
     # main(all_dir, fig_dir, sample_env_dict)
-    main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
+    # main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
     plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)
     # get_stastics()

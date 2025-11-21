@@ -115,7 +115,7 @@ def batch_run(ccs_bam_dir, work_dir):
             if not os.path.exists(finish_file):
                 cmd_list.append(cmd)
     batch_file = "run_all_isolation.sh"
-    num_scripts = 9
+    num_scripts = 8
     f = open(batch_file, "w")
     for i in range(num_scripts):
         script_file = f"batch/run_isolation_part_{i}.sh"
