@@ -291,7 +291,11 @@ def load_ipd_parallel(args, paras):
 
 def get_control_parallele(args, paras):
 
-    get_contig_list(paras["ipd_dir"], paras["ctg_dir"], paras["ctg_list_file"])
+    ctg_num = get_contig_list(paras["ipd_dir"], paras["ctg_dir"], paras["ctg_list_file"])
+    ## if ctg_num is 0, report the ctg num is 0 and exit
+    if ctg_num == 0:
+        logger.warning("No contigs found with corresponding IPD files. Exiting.")
+        sys.exit(0)
     cmd = [
         paras["kmer_bin"],
         "--ipd_dir", paras["ipd_dir"],

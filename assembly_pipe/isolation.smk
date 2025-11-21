@@ -175,7 +175,7 @@ rule call_methylation:
         mge_file = f"{config['work_dir']}/all_mge.tsv",
     output:
         time=f"{config['work_dir']}/{config['prefix']}_methylation2/{config['prefix']}.methyl.time",
-        summary=f"{config['work_dir']}/{config['prefix']}_methylation2/summary.csv",
+        # summary=f"{config['work_dir']}/{config['prefix']}_methylation2/summary.csv",
         methy_finish = f"{config['work_dir']}/{config['prefix']}_methylation2/methylation.finish"
     threads: config["threads"]
     # conda: "methy3"

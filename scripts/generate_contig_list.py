@@ -10,6 +10,7 @@ import sys
 
 def get_contig_list(ipd_dir, ref_dir, list_file):
     f = open(list_file, "w")
+    ctg_num = 0
     for file in os.listdir(ipd_dir):
         if file.endswith(".ipd1.csv"):
             ## sample name
@@ -21,7 +22,9 @@ def get_contig_list(ipd_dir, ref_dir, list_file):
                 continue
             else:
                 f.write(contig + "\n")
+                ctg_num += 1
     f.close()
+    return ctg_num
     
 if __name__ == "__main__":
     work_dir = sys.argv[1]
