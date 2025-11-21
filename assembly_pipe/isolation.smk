@@ -106,7 +106,7 @@ rule checkM:
     threads: config["threads"]
     shell:
         """ 
-        mkdir {config[work_dir]}/bins/
+        mkdir -p {config[work_dir]}/bins/
         cp {input.fasta} {config[work_dir]}/bins/
         checkm2 predict --input {config[work_dir]}/bins/ --output-directory  {config[work_dir]}/checkM2 --force -x .fa --threads {threads}
         touch {output.finish}
@@ -211,7 +211,7 @@ rule checkM2:
     threads: config["threads"]
     shell:
         """ 
-        mkdir {config[work_dir]}/bins2/
+        mkdir -p {config[work_dir]}/bins2/
         python split_ctgs.py {input.fasta} {config[work_dir]}/bins2/
         checkm2 predict --input {config[work_dir]}/bins2/ --output-directory  {config[work_dir]}/checkM2_2 --force -x .fasta --threads {threads}
         touch {output.finish}

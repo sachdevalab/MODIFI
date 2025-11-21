@@ -71,7 +71,7 @@ def convert_hifi(folder, ccs_bam_dir):
             continue
         elif bam_type == "subreads":
             cmd = f'sbatch  --partition standard --job-name={sra} --wrap "/home/shuaiw/smrtlink/ccs {bam} {ccs_bam} --hifi-kinetics --min-rq 0.99 --min-passes 3  --num-threads 64" '
-            cmd = f'/home/shuaiw/smrtlink/ccs {bam} {ccs_bam} --hifi-kinetics --min-rq 0.99 --min-passes 3  --num-threads 10'
+            cmd = f'/home/shuaiw/smrtlink/ccs {bam} {ccs_bam} --hifi-kinetics --min-rq 0.99 --min-passes 3  --num-threads 64'
             if not os.path.exists(ccs_bam):
                 # os.system(cmd)
                 cmd_list.append(cmd)
@@ -99,13 +99,14 @@ def convert_hifi(folder, ccs_bam_dir):
 
 def batch_run(ccs_bam_dir, work_dir):
     ## get all ccs bam files
+    skip_sra = ["ERR13342925", "ERR13342926","ERR6536208","SRR13008124"]
     cmd_list = []
     for file in os.listdir(ccs_bam_dir):
         if file.endswith(".ccs.bam"):
             ccs_bam = os.path.join(ccs_bam_dir, file)
             sra = file.split(".")[0]
-            # if sra != "SRR19519931":
-            #     continue
+            if sra in skip_sra:
+                continue
             cmd =  f"""snakemake -s isolation.smk \\
                         --config hifi_bam={ccs_bam} \\
                         prefix={sra} \\
@@ -115,7 +116,7 @@ def batch_run(ccs_bam_dir, work_dir):
             if not os.path.exists(finish_file):
                 cmd_list.append(cmd)
     batch_file = "run_all_isolation.sh"
-    num_scripts = 8
+    num_scripts = 3
     f = open(batch_file, "w")
     for i in range(num_scripts):
         script_file = f"batch/run_isolation_part_{i}.sh"

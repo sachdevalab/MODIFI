@@ -97,6 +97,19 @@ def get_detail_taxa_name(lineage):
     return detail_name
 
 
+class mge_obj:
+
+    def __init__(self, name, type, length, method):
+        self.name = name
+        self.type = type
+        self.length = length
+        self.methods = [method]
+        self.classification = None
+    
+    def add_method(self, method):
+        if method not in self.methods:
+            self.methods.append(method)
+
 def get_ctg_taxa(all_dir, data_type="meta"):
     file_name = f"/home/shuaiw/borg/paper/gene_anno/{data_type}_ctg_taxa_dict.pkl"
     # if os.path.exists(file_name):
@@ -145,8 +158,11 @@ class My_sample(object):
         self.bin3c_cluster = f"{all_dir}/{prefix}/hic/bin3c_clust/clustering.mcl"
         self.contact_value_file = f"{all_dir}/{prefix}/hic/bin3c/contact_values.txt"
         self.spacer_linkage_file = f"{all_dir}/{prefix}/spacer/{prefix}_mge_spacer_hits.filter.tsv"
+        self.genomad_plasmid = f"{self.all_dir}/{self.prefix}/Genomad/{self.prefix}.hifiasm.p_ctg.rename_summary/{self.prefix}.hifiasm.p_ctg.rename_plasmid_summary.tsv"
+        self.genomad_virus = f"{self.all_dir}/{self.prefix}/Genomad/{self.prefix}.hifiasm.p_ctg.rename_summary/{self.prefix}.hifiasm.p_ctg.rename_virus_summary.tsv"
         
         self.mge_dict = None
+        self.mge_genomad_dict = None
         self.depth_dict = None
         self.length_dict = None
         self.depth_cutoff = 10
@@ -417,6 +433,8 @@ class My_sample(object):
         for ctg in merged_ctgs:
             if ctg not in taxa_dict:
                 continue
+            if ctg in self.mge_dict:
+                continue
             lineage = taxa_dict[ctg]
             phylum = classify_taxa(lineage, level="phylum")
             if phylum == "Unknown":
@@ -483,6 +501,39 @@ class My_sample(object):
                 if ctg[-1] == "C":
                     circular_ctgs.append(ctg)
         return circular_ctgs
+
+    def read_genomad(self, genomad_plasmid, mge_type="plasmid"):
+        print (f"Reading {genomad_plasmid}...")
+        genomad_dict = {}
+        genomad = pd.read_csv(genomad_plasmid, sep = "\t")
+        for i, row in genomad.iterrows():
+            
+            if re.search('\|provirus', row['seq_name']):
+                continue
+            if row['seq_name'] == 'seq_name':
+                continue
+            mge = mge_obj(
+                name=row['seq_name'],
+                type=mge_type,
+                length=row['length'],
+                method="genomad"
+            )
+            genomad_dict[row['seq_name']] = mge
+        return genomad_dict
+
+    def collect_all_mges(self):
+        if os.path.exists(self.genomad_plasmid):
+            genomad_plasmid = self.read_genomad(self.genomad_plasmid, mge_type="plasmid")
+        else:
+            print(f"Warning: {self.genomad_plasmid} does not exist. Skipping Genomad plasmid classification.")
+            genomad_plasmid = {}
+        if os.path.exists(self.genomad_virus):
+            genomad_virus = self.read_genomad(self.genomad_virus, mge_type="virus")
+        else:
+            print(f"Warning: {self.genomad_virus} does not exist. Skipping Genomad virus classification.")
+            genomad_virus = {}
+        self.mge_genomad_dict = {**genomad_plasmid, **genomad_virus}
+        return self.mge_genomad_dict
 
 class Linkage_object(object):
 
