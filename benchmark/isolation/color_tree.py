@@ -181,10 +181,8 @@ DATA
 #LEAF1|LEAF2 11000"""
 
   
-def single_run(resultdir):
-    
-    run_taxa_dict = {}
-    sample_meta_dict = {}
+def single_run(resultdir, genome_dir):
+    data = []
     for folder in os.listdir(resultdir):
         prefix = folder
         sample_obj = Isolation_sample(prefix, resultdir)
@@ -192,18 +190,54 @@ def single_run(resultdir):
         if not os.path.exists(sample_obj.gtdb):
             print (f"GTDB file not found for {prefix}, skipping...")
             continue
+        pure_anno = sample_obj.check_pure2()
+
         sample_obj.get_phylum()
-        run_taxa_dict[prefix] = sample_obj.lineage
         motif_num, unique_motifs = sample_obj.get_unique_motifs()
         mge_bool = sample_obj.get_MGE_bool()
         average_dp = sample_obj.get_average_depth()
-        sample_meta_dict[prefix] = {
-            "motif_num": motif_num,
-            "mge_bool": mge_bool,
-            "average_dp": average_dp
+
+        data.append([prefix, sample_obj.lineage, motif_num, mge_bool, pure_anno, average_dp, sample_obj.reference_fasta])
+
+    df = pd.DataFrame(data, columns=["Sample", "Lineage", "Motif_Num", "MGE_bool", "Pure_anno", "Average_DP", "genome"])
+    df.to_csv(f"{tree_results}/isolation_sample_summary.tsv", sep="\t", index=False)
+    df = filter_df(df, min_dp = 10)
+    run_taxa_dict = {}
+    sample_meta_dict = {}
+    for index, row in df.iterrows():
+        run_taxa_dict[row["Sample"]] = row["Lineage"]
+        sample_meta_dict[row["Sample"]] = {
+            "motif_num": row["Motif_Num"],
+            "mge_bool": row["MGE_bool"],
+            "average_dp": row["Average_DP"]
         }
-    print ("No. of runs (samples) processed:", len(run_taxa_dict))
+        ## ln -s genome to genome_dir
+        src = row["genome"]
+        dst = os.path.join(genome_dir, os.path.basename(row["Sample"] + ".fa"))
+        if not os.path.exists(dst):
+            os.symlink(src, dst)
+        
     return run_taxa_dict, sample_meta_dict
+
+def filter_df(df, min_dp = 10):
+    """
+    count how many in original df, and filter by pure, and filter by min_dp
+    And after pure, how many have motif_num > 0, and how many have MGE_bool = True 
+    """
+    original_num = df.shape[0]
+    print (f"Original samples: {original_num}")
+    df_pure = df[df['Pure_anno'] == "pure"]
+    pure_num = df_pure.shape[0]
+    print (f"Pure samples: {pure_num} ({pure_num/original_num:.2%})")
+    df_dp = df_pure[df_pure['Average_DP'] >= min_dp]
+    dp_num = df_dp.shape[0]
+    print (f"Pure samples with DP >= {min_dp}: {dp_num} ({dp_num/pure_num:.2%})")
+    motif_positive_num = df_dp[df_dp['Motif_Num'] > 0].shape[0]
+    print (f"Pure samples with DP >= {min_dp} and Motif_Num > 0: {motif_positive_num} ({motif_positive_num/dp_num:.2%})")
+    mge_positive_num = df_dp[df_dp['MGE_bool'] == 1].shape[0]
+    print (f"Pure samples with DP >= {min_dp} and MGE_bool = 1: {mge_positive_num} ({mge_positive_num/dp_num:.2%})")
+    
+    return df_dp
 
 def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
     ## in iTol, color by phylum using general colors
@@ -296,5 +330,6 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
 if __name__ == "__main__":
     resultdir = f"/home/shuaiw/borg/paper/isolation//batch2_results/"
     tree_results = "/home/shuaiw/borg/paper/isolation//GTDB_tree/anno/"
-    run_taxa_dict, sample_meta_dict = single_run(resultdir)
+    genome_dir = "/home/shuaiw/borg/paper/isolation//GTDB_tree/genomes"
+    run_taxa_dict, sample_meta_dict = single_run(resultdir, genome_dir)
     color_phylum(run_taxa_dict, tree_results, sample_meta_dict)

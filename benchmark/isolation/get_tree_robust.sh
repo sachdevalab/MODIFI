@@ -1,61 +1,9 @@
 #!/bin/bash
 
-# More robust GTDB-Tk pipeline with problematic genome handling
-source_dir="/home/shuaiw/borg/paper/isolation/batch2_results"
 input_dir="/home/shuaiw/borg/paper/isolation//GTDB_tree/genomes"
 out_dir="/home/shuaiw/borg/paper/isolation//GTDB_tree/gtdb_tree3"
 
-# Create the genomes directory if it doesn't exist
-mkdir -p $input_dir
 
-# Known problematic genomes (add more as needed)
-# problematic_genomes=("ERR13656543")
-
-echo "Creating symbolic links (excluding problematic genomes)..."
-total_files=0
-excluded_files=0
-
-for fasta_file in $source_dir/*/*.hifiasm.p_ctg.rename.fa; do
-    if [ -f "$fasta_file" ] && [ -s "$fasta_file" ]; then
-        # Check if file has FASTA content (starts with >)
-        if ! head -1 "$fasta_file" | grep -q "^>"; then
-            echo "Skipping invalid FASTA file (no header): $fasta_file"
-            continue
-        fi
-        
-        # Extract the sample ID from the path
-        sample_id=$(basename $(dirname "$fasta_file"))
-        
-        # Check if this genome is in the problematic list
-        skip_genome=false
-        # for prob_genome in "${problematic_genomes[@]}"; do
-        #     if [ "$sample_id" == "$prob_genome" ]; then
-        #         echo "Skipping problematic genome: $sample_id"
-        #         skip_genome=true
-        #         excluded_files=$((excluded_files + 1))
-        #         break
-        #     fi
-        # done
-        
-        if [ "$skip_genome" = false ]; then
-            # Create symbolic link with .fa extension
-            target_link="$input_dir/${sample_id}.fa"
-            
-            if [ ! -e "$target_link" ]; then
-                ln -s "$fasta_file" "$target_link"
-                echo "Created link: $target_link -> $fasta_file"
-            else
-                echo "Link already exists: $target_link"
-            fi
-            total_files=$((total_files + 1))
-        fi
-    fi
-done
-
-echo "Symbolic link creation completed."
-echo "Total FASTA files: $total_files"
-echo "Excluded problematic files: $excluded_files"
-echo "Files ready for GTDB-Tk: $(ls -1 $input_dir/*.fa 2>/dev/null | wc -l)"
 
 
 # Step 1: Run GTDB-Tk identify
