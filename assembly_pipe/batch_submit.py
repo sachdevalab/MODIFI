@@ -162,6 +162,7 @@ def batch_asthma(cmd_file, prefix_table, outdir):
     """
     prefix_dict = read_prefix_table(prefix_table)
     w = open(cmd_file, 'w')
+    borg = open("run_borg.sh", 'w')
     i = 1
     with open(prefix_table, 'r') as f:
         for line in f:
@@ -216,22 +217,11 @@ def batch_asthma(cmd_file, prefix_table, outdir):
                 --job-name=sue_{i}
             """
 
-            cmd = f"""
-                python /home/shuaiw/mGlu/main.py \\
-                --work_dir {outdir}/{prefix}/{prefix}_methylation3 \\
-                --whole_bam {outdir}/{prefix}/{prefix}.align.bam \\
-                --whole_ref {outdir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
-                --read_type hifi \\
-                --min_len 2000 \\
-                --min_cov 3 \\
-                --min_iden 0.97 \\
-                --min_frac 0.3 \\
-                --min_score 30 \\
-                --min_sites 100 \\
-                --run_steps anno \\
-                --mge_file {outdir}/{prefix}/all_mge.tsv \\
-                --threads 64
+            borg_cmd = f"""
+            nohup python /home/shuaiw/mGlu/assembly_pipe/../benchmark/borg/find_borg.py  /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
+                /home/shuaiw/borg/paper/run2/{prefix}/borg/ --prefix {prefix} &
             """
+            print (borg_cmd, file=borg)
 
 
             # if i   in [9]:
@@ -241,6 +231,7 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
             i += 1
     w.close()
+    borg.close()
 
 
 
@@ -252,5 +243,5 @@ if __name__ == "__main__":
 
     outdir = "/home/shuaiw/borg/paper/run2/"
     cmd_file = "run_asthma.sh"
-    prefix_table = "prefix_table2.tab"
+    prefix_table = "prefix_table.tab"
     batch_asthma(cmd_file, prefix_table, outdir)

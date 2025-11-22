@@ -14,7 +14,7 @@ from scipy.cluster.hierarchy import linkage, leaves_list
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa
 
-score_cutoff = 30
+
 
 
 def read_ref(ref):
@@ -110,7 +110,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
             rev_loci_num, rev_modified_num, rev_ratio,\
             motif_loci_num, motif_modify_num, ratio, proportion_all_modified], record_modified_sites
 
-def get_modified_ratio(gff):
+def get_modified_ratio(gff, score_cutoff = 30):
     ## read the gff file
     f = open(gff, "r")
     modified_loci = {}
@@ -206,7 +206,7 @@ def find_species(closed_genome, GTDB_file, outdir, prefix):
             motif_set.add(motif)
     return motif_set, contig_list
 
-def profile_heatmap(prefix_list, motif_list, all_dir, tmp_res_file, cluster_obj, data_type="meta"):
+def profile_heatmap(prefix_list, motif_list, all_dir, tmp_res_file, cluster_obj, data_type="meta", score_cutoff = 30):
     data = []
     for prefix, contig in prefix_list:
         ctg_obj = My_contig(prefix, all_dir, contig, data_type)
@@ -215,7 +215,7 @@ def profile_heatmap(prefix_list, motif_list, all_dir, tmp_res_file, cluster_obj,
             continue
         REF = read_ref(ctg_obj.ctg_ref)
         # print (REF)
-        modified_loci = get_modified_ratio(ctg_obj.gff)
+        modified_loci = get_modified_ratio(ctg_obj.gff, score_cutoff)
         # motifs = pd.read_csv(all_motifs)
         # ipd_ratio_dict = read_ipd_ratio(ctg_obj.ipd_ratio_file)
 
@@ -330,7 +330,7 @@ def find_species_drep(contig, all_dir, prefix, data_type="meta", min_frac=0.3, m
     return motif_set, contig_list
 
 def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir, 
-                       tmp_res, data_type="meta", min_frac=0.3, min_sites=100):
+                       tmp_res, data_type="meta", min_frac=0.3, min_sites=100, score_cutoff = 30):
     
     all_motif_set = set()
     all_contig_list = []
@@ -338,6 +338,7 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
     tmp_res_file = f"{tmp_res}/{cluster}.csv"
     cluster_obj = My_cluster(cluster, members)
     for contig in members:
+        print (contig)
         prefix = "_".join(contig.split("_")[:-2])
         ctg_obj = My_contig(prefix, all_dir, contig, data_type)
         ref = ctg_obj.ctg_ref
@@ -369,7 +370,7 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
     print ("motif_list", motif_list)
     print ("all_contig_list", all_contig_list)
     # if len(all_contig_list) > 1:
-    cluster_obj = profile_heatmap(all_contig_list, motif_list, all_dir, tmp_res_file, cluster_obj,data_type)
+    cluster_obj = profile_heatmap(all_contig_list, motif_list, all_dir, tmp_res_file, cluster_obj,data_type, score_cutoff)
     
     return cluster_obj
 

@@ -14,6 +14,9 @@ import argparse
 from pathlib import Path
 import re
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
+from sample_object import My_sample, Isolation_sample
+
 def create_output_directory(work_dir):
     """Create output directory if it doesn't exist."""
     Path(work_dir).mkdir(parents=True, exist_ok=True)
@@ -129,7 +132,7 @@ def parse_paf_file(paf_file, min_identity=0.8, min_coverage=0.5):
         print(f"✗ Error parsing PAF file: {e}")
         return pd.DataFrame()
 
-def identify_borg_contigs(df_alignments, output_file):
+def identify_borg_contigs(df_alignments, output_file, prefix):
     """
     Identify and save potential BORG contigs.
     
@@ -143,28 +146,31 @@ def identify_borg_contigs(df_alignments, output_file):
     if df_alignments.empty:
         print("⚠ No BORG contigs identified")
         return []
-    
+    sample_obj = My_sample(prefix, all_dir )
+    sample_obj.read_depth()
     # Group by target (assembly contig) and get best alignment per contig
     borg_contigs = []
     contig_summary = []
     
     for target_name, group in df_alignments.groupby('target_name'):
         best_alignment = group.loc[group['identity'].idxmax()]
+        my_type = "BORG"
         if re.search("Methanoperedens", target_name):
-            print ("find host, skip", target_name)
-            continue
+            my_type = "HOST"
+            # print ("find host, skip", target_name)
+            # continue
         borg_contigs.append(target_name)
         contig_summary.append({
             'borg_ref': target_name,
-            'type': 'BORG',
+            'type': my_type,
             'seq_name': best_alignment['query_name'],
             'identity': round(best_alignment['identity'], 3),
             'query_coverage': round(best_alignment['query_coverage'], 3),
             'target_coverage': round(best_alignment['target_coverage'], 3),
             'alignment_length': best_alignment['alignment_length'],
-            'length': best_alignment['target_length']
+            'length': best_alignment['target_length'],
+            'ctg_depth': sample_obj.depth_dict.get(best_alignment['query_name'], 'NA')
         })
-    
     # Save summary
     summary_df = pd.DataFrame(contig_summary)
     summary_df = summary_df.sort_values('identity', ascending=False)
@@ -172,10 +178,11 @@ def identify_borg_contigs(df_alignments, output_file):
 
     print(f"✓ Identified {len(borg_contigs)} potential BORG contigs")
     print(f"✓ Summary saved to: {output_file}")
+    print (summary_df)
     
     return borg_contigs
 
-def find_borg_func(assembly_fasta, work_dir, borg_ref, threads=10, 
+def find_borg_func(assembly_fasta, work_dir, borg_ref, prefix, threads=10, 
                    min_identity=0.8, min_coverage=0.5):
     """
     Main function to find BORG sequences in assembly.
@@ -204,7 +211,7 @@ def find_borg_func(assembly_fasta, work_dir, borg_ref, threads=10,
     
     # Identify BORG contigs
     output_file = os.path.join(work_dir, "borg_contigs_summary.tsv")
-    borg_contigs = identify_borg_contigs(df_alignments, output_file)
+    borg_contigs = identify_borg_contigs(df_alignments, output_file, prefix)
     
     # Save simple list
     borg_list_file = os.path.join(work_dir, "borg_contigs.txt")
@@ -229,6 +236,8 @@ def main():
     parser.add_argument("--borg_ref", 
                        default="/home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa",
                        help="Path to BORG reference FASTA file")
+    parser.add_argument("--prefix", 
+                       help="prefix")
     parser.add_argument("--threads", type=int, default=10, 
                        help="Number of threads for minimap2")
     parser.add_argument("--min_identity", type=float, default=0.8,
@@ -243,17 +252,18 @@ def main():
         assembly_fasta=args.assembly,
         work_dir=args.output_dir,
         borg_ref=args.borg_ref,
+        prefix=args.prefix,
         threads=args.threads,
         min_identity=args.min_identity,
         min_coverage=args.min_coverage
     )
     
-    if borg_contigs:
-        print(f"\n📋 Found {len(borg_contigs)} BORG contigs:")
-        for contig in borg_contigs[:10]:  # Show first 10
-            print(f"  • {contig}")
-        if len(borg_contigs) > 10:
-            print(f"  ... and {len(borg_contigs) - 10} more")
+    # if borg_contigs:
+    #     print(f"\n📋 Found {len(borg_contigs)} BORG contigs:")
+    #     for contig in borg_contigs[:10]:  # Show first 10
+    #         print(f"  • {contig}")
+    #     if len(borg_contigs) > 10:
+    #         print(f"  ... and {len(borg_contigs) - 10} more")
 
 if __name__ == "__main__":
     # Default parameters for backward compatibility
@@ -267,4 +277,5 @@ if __name__ == "__main__":
         find_borg_func(assembly_fasta, work_dir, borg_ref)
     else:
         # Use command line interface
+        all_dir = "/home/shuaiw/borg/paper/run2/"
         main()
