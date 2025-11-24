@@ -366,7 +366,7 @@ class My_sample(object):
         except Exception as e:
             print(f"[⚠️] Error reading depth file {self.depth_file}: {str(e)}")
             return {}, {}
-        
+        self.length_dict = self.get_len_dict()
         return self.depth_dict, self.length_dict
 
     def read_mapping(self):

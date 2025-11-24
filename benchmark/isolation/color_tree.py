@@ -180,11 +180,28 @@ DATA
 #9606 10000
 #LEAF1|LEAF2 11000"""
 
+
+def collect_iso_ctgsall_dir(all_dir, iso_genome_list_file, filtered_df):
+    iso_genome_list = []
+    prefix_list = filtered_df['Sample'].tolist()
+    print (f"Collecting isolation genomes for {len(prefix_list)} samples...")
+    for prefix in prefix_list:
+        isolation_obj = Isolation_sample(prefix, all_dir)
+        isolation_obj.read_depth()
+        genome_list, contig_list = isolation_obj.get_high_dp_ctg_list()
+        iso_genome_list += genome_list
+    with open(iso_genome_list_file, "w") as f:
+        for genome in iso_genome_list:
+            f.write(genome + "\n")
+    print (f"Total isolation contigs collected: {len(iso_genome_list)}")
   
 def single_run(resultdir, genome_dir):
     data = []
+    archea_list = ["SRR27457941", "SRR31014709"]
     for folder in os.listdir(resultdir):
         prefix = folder
+        if prefix in archea_list:
+            continue
         sample_obj = Isolation_sample(prefix, resultdir)
 
         if not os.path.exists(sample_obj.gtdb):
@@ -217,7 +234,7 @@ def single_run(resultdir, genome_dir):
         if not os.path.exists(dst):
             os.symlink(src, dst)
         
-    return run_taxa_dict, sample_meta_dict
+    return run_taxa_dict, sample_meta_dict, df
 
 def filter_df(df, min_dp = 10):
     """
@@ -331,5 +348,7 @@ if __name__ == "__main__":
     resultdir = f"/home/shuaiw/borg/paper/isolation//batch2_results/"
     tree_results = "/home/shuaiw/borg/paper/isolation//GTDB_tree/anno/"
     genome_dir = "/home/shuaiw/borg/paper/isolation//GTDB_tree/genomes"
-    run_taxa_dict, sample_meta_dict = single_run(resultdir, genome_dir)
+    genome_list = "/home/shuaiw/borg/paper/specificity/iso_genome.list"  ## for drep
+    run_taxa_dict, sample_meta_dict, filtered_df = single_run(resultdir, genome_dir)
+    collect_iso_ctgsall_dir(resultdir, genome_list, filtered_df)
     color_phylum(run_taxa_dict, tree_results, sample_meta_dict)

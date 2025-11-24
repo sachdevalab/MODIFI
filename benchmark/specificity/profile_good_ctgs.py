@@ -770,18 +770,6 @@ def read_metadata(meta_file):
             sample_env_dict[sample] = env
     return sample_env_dict
 
-def collect_iso_ctgsall_dir(iso_genome_list_file):
-    all_dir= "/home/shuaiw/borg/paper/isolation/batch2_results/"
-    iso_genome_list = []
-    for my_dir in os.listdir(all_dir):
-        prefix = my_dir
-        isolation_obj = Isolation_sample(prefix, all_dir)
-        isolation_obj.read_depth()
-        iso_genome_list += isolation_obj.get_high_dp_ctg_list()
-    with open(iso_genome_list_file, "w") as f:
-        for genome in iso_genome_list:
-            f.write(genome + "\n")
-
 def main(all_dir, fig_dir, sample_env_dict):
     all_data = []
     all_base_data = []
@@ -1016,18 +1004,16 @@ if __name__ == "__main__":
     meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
     fig_dir = "../../tmp/figures/multi_env_linkage/"
     genome_list_file =  "/home/shuaiw/borg/paper/specificity/genome.list"
-    iso_genome_list_file = "/home/shuaiw/borg/paper/specificity/iso_genome.list"
     all_dir = "/home/shuaiw/borg/paper/run2/"
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
-    sample_env_dict = read_metadata(meta_file)
-    main(all_dir, fig_dir, sample_env_dict)
+    # sample_env_dict = read_metadata(meta_file)
+    # main(all_dir, fig_dir, sample_env_dict)
     # main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
     # plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)
     # get_stastics()
     # jaccard()
     # jaccard_batch()
-    # collect_iso_ctgsall_dir(iso_genome_list_file)
 
 
 

@@ -653,4 +653,5 @@ def main_isolation():
 # 
 
 if __name__ == "__main__":
-    main_meta()
+    # main_meta()
+    main_isolation()
