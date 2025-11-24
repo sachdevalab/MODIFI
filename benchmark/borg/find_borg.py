@@ -258,12 +258,6 @@ def main():
         min_coverage=args.min_coverage
     )
     
-    # if borg_contigs:
-    #     print(f"\n📋 Found {len(borg_contigs)} BORG contigs:")
-    #     for contig in borg_contigs[:10]:  # Show first 10
-    #         print(f"  • {contig}")
-    #     if len(borg_contigs) > 10:
-    #         print(f"  ... and {len(borg_contigs) - 10} more")
 
 if __name__ == "__main__":
     # Default parameters for backward compatibility

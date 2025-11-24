@@ -95,7 +95,7 @@ def personal_plot(cluster_obj):
 
         y_labels.append(label)
     
-    fig, ax = plt.subplots(figsize=(16, 12))
+    fig, ax = plt.subplots(figsize=(20, 12))
     
     # Create heatmap
     sns.heatmap(pivot_df, cmap="YlGnBu", annot=False, fmt=".2f", 
@@ -105,7 +105,7 @@ def personal_plot(cluster_obj):
     # Set labels and formatting
     ax.set_xlabel("Motif String", fontsize=12)
     ax.set_ylabel("Contig", fontsize=12)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha='right', fontsize=8)
     ax.set_yticklabels(y_labels, rotation=0, fontsize=8)
     ax.set_title(f"{cluster_species}", fontsize=14, pad=20)
     
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     
     # Load BORG data
     borg_data = My_Borg(borg_file)
-    high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
+    high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=1.0)
     
     members = []
     borg_anno_dict = {}
@@ -177,16 +177,17 @@ if __name__ == "__main__":
     plot_name = os.path.join(seq_dir, f"borg_motif_profile.pdf")
     cluster_species = "borg & hosts"
 
-    # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-    #                                 seq_dir, seq_dir, min_frac=0.3, 
-    #                                 min_sites=10, score_cutoff = 30)
-    # cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+    cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                                    seq_dir, seq_dir, min_frac=0.2, 
+                                    min_sites=10, score_cutoff = 20)
+    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
-    cluster_obj = My_cluster(cluster, members) 
-    cluster_obj.load_df(seq_dir)
+    # cluster_obj = My_cluster(cluster, members) 
+    # cluster_obj.load_df(seq_dir)
 
     ## remove all rows with motifstring contains GATCH_4
-    cluster_obj.profile_df = cluster_obj.profile_df[cluster_obj.profile_df['motifString'] != 'GATCH_4']
+    remove_motifs = ['GATCH_4','BATC_2','RGAYCY_3','YGATCB_3','BGATATC_5']
+    cluster_obj.profile_df = cluster_obj.profile_df[~cluster_obj.profile_df['motifString'].isin(remove_motifs)]
 
     ## add a column to indicate borg_ref
     cluster_obj.profile_df['BORG_Ref'] = cluster_obj.profile_df['contig'].apply(lambda x: borg_anno_dict[x][1] if x in borg_anno_dict else 'NA')

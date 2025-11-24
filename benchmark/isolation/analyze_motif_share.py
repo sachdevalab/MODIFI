@@ -159,7 +159,7 @@ def cal_jaccard(df_enhanced, depth_cutoff = 10, length_cutoff = 5000, bin_freq =
     # print (jaccard_scores)
     return pd.DataFrame(jaccard_scores), present_motifs
 
-def cross_sample_jaccard(present_motifs_all, random_ctg_num=100):
+def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100):
     mge_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'MGE'][['motifString', 'contig', 
                                                                                  'prefix', 'phylum', 'lineage','mge_type']]
     host_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'Host'][['motifString', 'contig', 
@@ -171,7 +171,7 @@ def cross_sample_jaccard(present_motifs_all, random_ctg_num=100):
     ## count how many prefix in present_motifs_all
     print (f"[✔] Total unique prefixes: {len(present_motifs_all['prefix'].unique())}")
 
-    
+    test = 0
     jaccard_scores = []
     for mge_contig in mge_motifs['contig'].unique():
         mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
@@ -201,6 +201,12 @@ def cross_sample_jaccard(present_motifs_all, random_ctg_num=100):
                     mge_motifs[mge_motifs['contig'] == mge_contig]['lineage'].values[0],
                     host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0]
                 )
+                if relation == "same_species":
+                    # check if they are in the same drep cluster
+                    if est_strain(clu_prefix_dict, mge_prefix, host_prefix):
+                        test += 1
+                        # print (f"[!] Found same strain pair: MGE {mge_contig} ({mge_prefix}) and Host {host_contig} ({host_prefix})")
+                        relation = 'same_strain'
             mge_type = mge_motifs[mge_motifs['contig'] == mge_contig]['mge_type'].values[0]
             jaccard_scores.append({
                 'mge_contig': mge_contig,
@@ -211,6 +217,8 @@ def cross_sample_jaccard(present_motifs_all, random_ctg_num=100):
                 'all_num': len(union),
                 'relation': relation,
             })
+        # if test > 20:
+        #     break
 
     return pd.DataFrame(jaccard_scores)
 
@@ -222,7 +230,11 @@ def get_strain_prefix(drep_clu_dict):
             clu_prefix_dict[clu_id].add(genome.split("_")[0])
     return clu_prefix_dict
             
-
+def est_strain(clu_prefix_dict, mge_prefix, host_prefix):
+    for clu_id in clu_prefix_dict:
+        if mge_prefix in clu_prefix_dict[clu_id] and host_prefix in clu_prefix_dict[clu_id]:
+            return True
+    return False
 
 def esti_relation(lineage1, lineage2):
     """
@@ -497,18 +509,67 @@ def gradient_plot(jaccard_all, fig_dir):
 def cross_taxa_plot(jaccard_all, fig_dir):
     ## box plot hue to relation with ordered x-axis
     # Define the desired order from most closely related to least related
-    relation_order = ['same_sample', 'same_species', 'same_genus', 'same_family', 'same_order', 
+    relation_order = ['same_sample', 'same_strain','same_species', 'same_genus', 'same_family', 'same_order', 
                      'same_class', 'same_phylum', 'same_domain']
     
-    plt.figure(figsize=(5, 5))
+    # Create a figure with two subplots side by side
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    print ("Total pairs:", len(jaccard_all))
+    # Left subplot: All data
     sns.boxplot(data=jaccard_all, x='relation', y='jaccard_similarity', 
-                hue='relation', palette='Set2', legend=False, order=relation_order)
-    # plt.title('Jaccard Similarity between MGE and Host by Taxonomic Relation', fontsize=16, fontweight='bold')
-    plt.xlabel('Taxonomic Relation', fontsize=14)
-    plt.ylabel('Jaccard Similarity', fontsize=14)
-    plt.xticks(rotation=45, ha='right')
-    plt.grid(axis='y', alpha=0.3)
+                hue='relation', palette='Set2', legend=False, order=relation_order, ax=ax1)
+    ax1.set_xlabel('Taxonomic Relation', fontsize=14)
+    ax1.set_ylabel('Jaccard Similarity', fontsize=14)
+    ax1.tick_params(axis='x', rotation=45)
+    ax1.grid(axis='y', alpha=0.3)
+    ax1.set_title('All Data', fontsize=14)
+    
+    # Right subplot: Filtered data (all_num > 1)
+    filtered_data = jaccard_all[jaccard_all['all_num'] > 1]
+    print (len(filtered_data), "pairs with union motif num > 1")
+    sns.boxplot(data=filtered_data, x='relation', y='jaccard_similarity', 
+                hue='relation', palette='Set2', legend=False, order=relation_order, ax=ax2)
+    ax2.set_xlabel('Taxonomic Relation', fontsize=14)
+    ax2.set_ylabel('Jaccard Similarity', fontsize=14)
+    ax2.tick_params(axis='x', rotation=45)
+    ax2.grid(axis='y', alpha=0.3)
+    ax2.set_title('Union motif Num > 1', fontsize=14)
+    
+    plt.tight_layout()
     plt.savefig(f"{fig_dir}/jaccard_similarity_by_taxa_relation.pdf", dpi=300, bbox_inches="tight")
+    plt.close()
+
+    ## also plot a violin plot with two subplot, one for plasmid, and one for phage
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    # Subplot 1: Plasmid
+    plasmid_data = jaccard_all[jaccard_all['mge_type'] == 'plasmid']
+    if not plasmid_data.empty:      
+        sns.violinplot(data=plasmid_data, x='relation', y='jaccard_similarity', 
+                      ax=axes[0], palette='Set3', order=relation_order)
+        # Add mean markers
+        for i, relation in enumerate(relation_order):
+            mean_val = plasmid_data[plasmid_data['relation'] == relation]['jaccard_similarity'].mean()
+            axes[0].scatter(i, mean_val, color='red', s=50, marker='D', zorder=10)
+        axes[0].set_title('Plasmid')
+        axes[0].set_xlabel('Taxonomic Relation')
+        axes[0].set_ylabel('Jaccard Similarity')
+        axes[0].tick_params(axis='x', rotation=45)
+        axes[0].grid(axis='y', alpha=0.3)
+    # Subplot 2: Phage
+    phage_data = jaccard_all[jaccard_all['mge_type'] == 'virus']
+    if not phage_data.empty:    
+        sns.violinplot(data=phage_data, x='relation', y='jaccard_similarity', 
+                      ax=axes[1], palette='Set3', order=relation_order)
+        # Add mean markers
+        for i, relation in enumerate(relation_order):
+            mean_val = phage_data[phage_data['relation'] == relation]['jaccard_similarity'].mean()
+            axes[1].scatter(i, mean_val, color='red', s=50, marker='D', zorder=10)
+        axes[1].set_title('Virus')
+        axes[1].set_xlabel('Taxonomic Relation')
+        axes[1].set_ylabel('Jaccard Similarity')
+        axes[1].tick_params(axis='x', rotation=45)
+        axes[1].grid(axis='y', alpha=0.3)
+    plt.savefig(f"{fig_dir}/jaccard_similarity_by_taxa_relation_violin.pdf", dpi=300, bbox_inches="tight")
     plt.close()
 
 def count_jaccard(same_sample_df, jaccard_all_sample):
@@ -594,9 +655,11 @@ def main(all_dir, fig_dir, drep_clu_file):
     jaccard_all = pd.DataFrame()
     present_motifs_all = pd.DataFrame()
     archea_list = ["SRR27457941", "SRR31014709"]
-    # drep_clu_dict = read_drep_cluster(drep_clu_file, {})
-    # clu_prefix_dict = get_strain_prefix(drep_clu_dict)
+    drep_clu_dict = read_drep_cluster(drep_clu_file, {})
+    clu_prefix_dict = get_strain_prefix(drep_clu_dict)
     # print (clu_prefix_dict)
+    # print (est_strain(clu_prefix_dict, 'SRR32364911', 'SRR32364914'))
+    
     for prefix in os.listdir(all_dir):
         if prefix in archea_list:
             continue
@@ -665,9 +728,13 @@ def main(all_dir, fig_dir, drep_clu_file):
     gradient_plot(same_sample_df, fig_dir)
     plot_jaccard_distribution(same_sample_df, fig_dir)
     
-    jaccard_all_sample = cross_sample_jaccard(present_motifs_all, random_ctg_num=500)
-    cross_taxa_plot(jaccard_all_sample, fig_dir)
+    jaccard_all_sample = cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=1000)
     jaccard_all_sample.to_csv(f"{fig_dir}/jaccard_all_samples.csv", index=False)
+
+    jaccard_all_sample = pd.read_csv(f"{fig_dir}/jaccard_all_samples.csv")
+
+    cross_taxa_plot(jaccard_all_sample, fig_dir)
+    
     
     count_jaccard(same_sample_df, jaccard_all_sample)
     
