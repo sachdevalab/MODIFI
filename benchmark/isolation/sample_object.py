@@ -428,7 +428,9 @@ class My_sample(object):
         circular_ctgs = self.get_circular_ctgs()
         merged_ctgs = set(high_quality_ctgs) | set(circular_ctgs)
         final_selection = []
+        genome_list = []
         taxa_dict = self.read_meta_gtdb()
+        self.read_MGE()
         ## next examine if they have classified phylum
         for ctg in merged_ctgs:
             if ctg not in taxa_dict:
@@ -442,7 +444,9 @@ class My_sample(object):
             if self.depth_dict[ctg] < min_dp:
                 continue
             final_selection.append(ctg)
-        return final_selection
+            genome = self.work_dir + "/contigs/" + ctg + ".fa"
+            genome_list.append(genome)
+        return genome_list, final_selection
 
     def get_high_dp_ctg_list(self, min_depth=10, min_len=100000):
         """

@@ -1683,31 +1683,6 @@ sbatch --job-name=d99 \
     -sa 0.99 \
     -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_99_out"
 
-  sbatch --job-name=d98 \
-  --partition standard \
-  --wrap "dRep dereplicate \
-    -p 64 \
-    -g /home/shuaiw/borg/paper/specificity/genome.list \
-    -comp 50 \
-    -con 10 \
-    --S_algorithm skani \
-    -ms 10000 \
-    -sa 0.98 \
-    -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_98_out"
-  
-  sbatch --job-name=d97 \
-  --partition standard \
-  --wrap "dRep dereplicate \
-    -p 64 \
-    -g /home/shuaiw/borg/paper/specificity/genome.list \
-    -comp 50 \
-    -con 10 \
-    --S_algorithm skani \
-    -ms 10000 \
-    -sa 0.97 \
-    -nc 0.7 /home/shuaiw/borg/paper/specificity/dRep_97_out"
-
-
 
   sbatch --job-name=d95 \
   --partition standard \
@@ -1732,18 +1707,6 @@ sbatch --job-name=d99 \
     -ms 10000 \
     -sa 0.99 \
     -nc 0.7 /home/shuaiw/borg/paper/specificity/iso_99_out"
-
-sbatch --job-name=all95 \
-  --partition standard \
-  --wrap "dRep dereplicate \
-    -p 64 \
-    -g /home/shuaiw/borg/paper/specificity/all_genome.list \
-    -comp 50 \
-    -con 10 \
-    --S_algorithm skani \
-    -ms 10000 \
-    -sa 0.95 \
-    -nc 0.7 /home/shuaiw/borg/paper/specificity/all_95_out"
 
 
 sbatch --job-name=gtdb \

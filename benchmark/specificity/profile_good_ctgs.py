@@ -766,21 +766,23 @@ def main(all_dir, fig_dir, sample_env_dict):
     ctg_taxa_dict = get_ctg_taxa(all_dir)
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
-        if re.search("sludge", prefix):
+        if re.search("sludge", prefix) or re.search("human", prefix):
             continue
-        print (f"Processing {prefix}...")
-
         sample_obj = My_sample(prefix, all_dir)
+        if not os.path.exists(sample_obj.depth_file):
+            print (f"Skipping {prefix} as depth file not found.")
+            continue
+        
+        print (f"Processing {prefix}...")
         sample_obj.read_depth()
         map_ratio = sample_obj.read_mapping()
         linkage_num =  sample_obj.read_host()
         regulate_motif_num = sample_obj.read_orphan()
         N50, genome_size = sample_obj.get_N50_size()
-        sample_obj.read_MGEs()
         print(f"{prefix}: N50 size: {N50}, Genome size: {genome_size}")
-        best_ctgs = sample_obj.get_final_best_ctg2()
+        my_genome_list, best_ctgs = sample_obj.get_final_best_ctg2()
         print ("best ctgs num:", len(best_ctgs))
-        genome_list += sample_obj.get_high_dp_ctg_list()
+        genome_list += my_genome_list
         print (f">>>Total {len(genome_list)} high depth contigs collected so far.")
 
         genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix], map_ratio, linkage_num, \
@@ -788,7 +790,7 @@ def main(all_dir, fig_dir, sample_env_dict):
 
         # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
         all_data += count_motifs(best_ctgs, all_dir, prefix, sample_env_dict[prefix], ctg_taxa_dict)
-        # all_base_data += count_modified_base(all_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
+        all_base_data += count_modified_base(all_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
         # break
     print ("start plot...")
     df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len'])
@@ -812,9 +814,9 @@ def main(all_dir, fig_dir, sample_env_dict):
     # ## save genome data
 
 
-    # with open(genome_list_file, "w") as f:
-    #     for genome in genome_list:
-    #         f.write(genome + "\n")
+    with open(genome_list_file, "w") as f:
+        for genome in genome_list:
+            f.write(genome + "\n")
 
 def rerun(fig_dir):
     df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
