@@ -220,14 +220,14 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
             borg_cmd = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
-                --work_dir /home/shuaiw/borg/paper/borg_data/methy/{prefix}/{prefix}_methylation3 \\
+                --work_dir /home/shuaiw/borg/paper/borg_data/methy2/{prefix}/{prefix}_methylation3 \\
                 --unaligned_bam {hifi_bam} \\
                 --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg.fa \\
                 --read_type hifi \\
                 --min_len 1000 \\
                 --min_cov 3 \\
                 --min_ctg_cov 3 \\
-                --min_iden 0.97 \\
+                --min_iden 0.90 \\
                 --min_frac 0.2 \\
                 --min_score 30 \\
                 --min_sites 100 \\

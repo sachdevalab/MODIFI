@@ -17,6 +17,179 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 from sample_object import My_gene, get_unique_motifs, get_detail_taxa_name, My_sample, get_ctg_taxa, classify_taxa, My_contig, Isolation_sample
 
 
+header = """TREE_COLORS
+#use this template to define branch colors and styles, colored ranges and label colors/font styles/backgrounds
+#lines starting with a hash are comments and ignored during parsing
+
+#=================================================================#
+#                    MANDATORY SETTINGS                           #
+#=================================================================#
+#select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throughout this file.
+
+#SEPARATOR TAB
+SEPARATOR SPACE
+#SEPARATOR COMMA
+
+#First 3 fields define the node, type and color
+#Possible types are:
+#'range': defines a colored range (colored background for labels/clade)
+#'clade': defines color/style for all branches in a clade
+#'branch': defines color/style for a single branch
+#'label': defines font color/style for the leaf label
+#'label_background': defines the leaf label background color
+
+#The following additional fields are required:
+#for 'range', field 4 defines the colored range label (used in the legend)
+
+#The following additional fields are optional:
+#for 'label', field 4 defines the font style ('normal',''bold', 'italic' or 'bold-italic') and field 5 defines the numeric scale factor for the font size (eg. with value 2, font size for that label will be 2x the standard size)
+#for 'clade' and 'branch', field 4 defines the branch style ('normal' or 'dashed') and field 5 defines the branch width scale factor (eg. with value 0.5, branch width for that clade will be 0.5 the standard width)
+
+#Internal tree nodes can be specified using IDs directly, or using the 'last common ancestor' method described in iTOL help pages
+#=================================================================#
+#       Actual data follows after the "DATA" keyword              #
+#=================================================================#
+DATA
+#NODE_ID TYPE COLOR LABEL_OR_STYLE SIZE_FACTOR
+"""
+
+Label_header = """LABELS
+#use this template to change the leaf labels, or define/change the internal node names
+#additionally, you can specify a custom class for internal nodes, which can be used to automatically collapse them
+#lines starting with a hash are comments and ignored during parsing
+
+#=================================================================#
+#                    MANDATORY SETTINGS                           #
+#=================================================================#
+#select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throughout this file.
+
+#SEPARATOR TAB
+#SEPARATOR SPACE
+SEPARATOR COMMA
+
+#Internal tree nodes can be specified using IDs directly, or using the 'last common ancestor' method described in iTOL help pages
+#=================================================================#
+#       Actual data follows after the "DATA" keyword              #
+#=================================================================#
+DATA
+#NODE_ID,LABEL,CLASS
+
+#Examples
+
+#note that the class field is optional
+
+#define a name and class for an internal node. Class 'kingdom' will be available when using the #automatic clade collapsing function
+#9031|9606,Metazoa,kingdom
+
+#change the label for leaf node 9606\n"""
+
+gradient_header="""
+DATASET_GRADIENT
+#In gradient datasets, each ID is associated to a single numeric value which is converted to a colored box based on the gradient defined.
+
+#lines starting with a hash are comments and ignored during parsing
+
+#=================================================================#
+#                    MANDATORY SETTINGS                           #
+#=================================================================#
+#select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throught this file.
+#SEPARATOR TAB
+SEPARATOR SPACE
+#SEPARATOR COMMA
+
+#label is used in the legend table (can be changed later)
+DATASET_LABEL label 1
+
+#dataset color (can be changed later)
+COLOR #ff0000
+
+#=================================================================#
+#                    OPTIONAL SETTINGS                            #
+#=================================================================#
+
+#=================================================================#
+#     all other optional settings can be set or changed later     #
+#           in the web interface (under 'Datasets' tab)           #
+#=================================================================#
+
+
+#Each dataset can have a legend, which is defined using LEGEND_XXX fields below
+#For each row in the legend, there should be one shape, color and label.
+#Optionally, you can define an exact legend position using LEGEND_POSITION_X and LEGEND_POSITION_Y. To use automatic legend positioning, do NOT define these values
+#Optionally, shape scaling can be present (LEGEND_SHAPE_SCALES). For each shape, you can define a scaling factor between 0 and 1.
+#To order legend entries horizontally instead of vertically, set LEGEND_HORIZONTAL to 1
+#Shape should be a number between 1 and 6, or any protein domain shape definition.
+#1: square
+#2: circle
+#3: star
+#4: right pointing triangle
+#5: left pointing triangle
+#6: checkmark
+
+
+#LEGEND_TITLE Dataset legend
+#LEGEND_SCALE 1
+#LEGEND_POSITION_X 100
+#LEGEND_POSITION_Y 100
+#LEGEND_HORIZONTAL 0
+#LEGEND_SHAPES 1 2 3
+#LEGEND_COLORS #ff0000 #00ff00 #0000ff
+#LEGEND_LABELS value1 value2 value3
+#LEGEND_SHAPE_SCALES 1 1 0.5
+
+#width of the gradient strip
+#STRIP_WIDTH 25
+
+#left margin, used to increase/decrease the spacing to the next dataset. Can be negative, causing datasets to overlap.
+#MARGIN 0
+
+#border width; if set above 0, a border of specified width (in pixels) will be drawn around the gradient strip
+#BORDER_WIDTH 0
+
+#border color; used when BORDER_WIDTH is above 0
+#BORDER_COLOR #0000ff
+
+#automatically create and display a legend based on the color gradient defined below
+#AUTO_LEGEND 1
+
+#define the gradient colors. Values in the dataset will be mapped onto the corresponding color gradient.
+#COLOR_MIN #ff0000
+#COLOR_MAX #0000ff
+
+#you can specify a gradient with three colors (e.g red to yellow to green) by setting 'USE_MID_COLOR' to 1, and specifying the midpoint color
+#USE_MID_COLOR 1
+#COLOR_MID #ffff00
+
+#always show internal values; if set, values associated to internal nodes will be displayed even if these nodes are not collapsed. It could cause overlapping in the dataset display.
+#SHOW_INTERNAL 1
+
+#display or hide the dataset label above the gradient strip
+#SHOW_LABELS 1
+
+#text label size factor
+#SIZE_FACTOR 1
+
+#text label rotation
+#LABEL_ROTATION 0
+
+#text label shift in pixels (positive or negative)
+#LABEL_SHIFT 0
+
+#align the dataset label to the tree circle; only applies in circular display mode
+#LABEL_ALIGN_TO_TREE,0
+
+#Internal tree nodes can be specified using IDs directly, or using the 'last common ancestor' method described in iTOL help pages
+#=================================================================#
+#       Actual data follows after the "DATA" keyword              #
+#=================================================================#
+DATA
+#ID2 value2
+#9606 10000
+#LEAF1|LEAF2 11000"""
+
+
+
+
 def get_best_ctg(depth_file, fai, min_len = 1000000):
     """
     Get the best contig based on length from a fasta file.
@@ -987,7 +1160,51 @@ def plot_coding( meta_dir, fig_dir, min_len = 1000000):
     print ("Top 10 genomes with highest general frequency:")
     print (top10_all[['genome', 'general_frequency', 'environment', 'phylum']])
 
+def color_tree(tree_results):
+    df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
 
+
+    motif_num_anno = gradient_header + "\n"
+    env_anno = header + "\n"
+    phylum_anno = header + "\n"
+
+    ## prepare phylum color map
+    phylum_list = df_all_data['phylum'].unique().tolist()
+    phylum_color = {}
+    color_palette = sns.color_palette("Set1", n_colors=len(phylum_list))
+    for i, phylum in enumerate(phylum_list):
+        if phylum == "unknown":
+            phylum_color[phylum] = "#808080"  # gray for unknown
+        else:
+            rgb = color_palette[i]
+            hex_color = '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
+            phylum_color[phylum] = hex_color
+    
+    ## prepare environment color map
+    env_list = df_all_data['environment'].unique().tolist()
+    env_color = {}
+    color_palette_env = sns.color_palette("Set2", n_colors=len(env_list))
+    for i, env in enumerate(env_list):
+        rgb = color_palette_env[i]
+        hex_color = '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
+        env_color[env] = hex_color
+    
+    for index, row in df_all_data.iterrows():
+        ctg_name = row['contig']
+        phylum_anno += f"{ctg_name} range {phylum_color[row['phylum']]} {row['phylum']}\n"
+
+        if row['motif_num'] > 1:
+            motif_num_anno += f"{ctg_name} 2\n"
+        else:
+            motif_num_anno += f"{ctg_name} {row['motif_num']}\n"
+        env_anno += f"{ctg_name} range {env_color[row['environment']]} {row['environment']}\n"
+        
+    with open(f"{tree_results}/motif_num_annotations.txt", "w") as f:
+        f.write(motif_num_anno)
+    with open(f"{tree_results}/env_annotations.txt", "w") as f:
+        f.write(env_anno)
+    with open(f"{tree_results}/phylum_annotations.txt", "w") as f:
+        f.write(phylum_anno)
 
 
 if __name__ == "__main__":
@@ -996,8 +1213,10 @@ if __name__ == "__main__":
     genome_list_file =  "/home/shuaiw/borg/paper/specificity/genome.list"
     all_dir = "/home/shuaiw/borg/paper/run2/"
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
-    sample_env_dict = read_metadata(meta_file)
-    main(all_dir, fig_dir, sample_env_dict)
+    tree_results = "/home/shuaiw/borg/paper/specificity/tree/"
+    color_tree(tree_results)
+    # sample_env_dict = read_metadata(meta_file)
+    # main(all_dir, fig_dir, sample_env_dict)
     # main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
     # plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)

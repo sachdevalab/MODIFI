@@ -1729,30 +1729,6 @@ sbatch --job-name=pyrodigal \
   --wrap "snakemake -s gene_anno.smk"
 
 
-sbatch --job-name=d99 \
---partition standard \
---wrap "dRep dereplicate \
-    -p 64 \
-    -g /home/shuaiw/borg/paper/specificity/asthma_all_genome.list \
-    -comp 50 \
-    -con 10 \
-    --S_algorithm skani \
-    -ms 10000 \
-    -sa 0.99 \
-    -nc 0.7 /home/shuaiw/borg/paper/specificity/asthma_all_99_out"
-
-sbatch --job-name=d95 \
---partition standard \
---wrap "dRep dereplicate \
-    -p 64 \
-    -g /home/shuaiw/borg/paper/specificity/asthma_all_genome.list \
-    -comp 50 \
-    -con 10 \
-    --S_algorithm skani \
-    -ms 10000 \
-    -sa 0.95 \
-    -nc 0.7 /home/shuaiw/borg/paper/specificity/asthma_all_95_out"
-
 sbatch --job-name=tree \
 --partition standard \
 --wrap "bash get_tree_robust.sh"
@@ -1847,3 +1823,9 @@ sbatch --partition standard --job-name=pf7 --wrap "python /home/shuaiw/mGlu/main
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
   --threads 64"
+
+
+
+sbatch --job-name=tree \
+--partition standard \
+--wrap "bash get_tree_robust_meta.sh"
