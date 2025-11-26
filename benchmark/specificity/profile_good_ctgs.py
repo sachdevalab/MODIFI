@@ -491,27 +491,15 @@ def plot_MT_motif():
     plt.ylabel('Number of Motifs')
     plt.savefig(os.path.join("../../tmp/results", "MT_motif_num_distribution.png"), dpi=300, bbox_inches='tight')
 
-def count_modified_base(work_dir, prefix, best_ctgs, length_dict, env, score_cutoff = 30):
+def count_modified_base(all_dir, prefix, best_ctgs, length_dict, env, score_cutoff = 30):
     base_data = []
     for ctg in best_ctgs:
         length = length_dict[ctg]
-        gff = f"{work_dir}/gffs/{ctg}.reprocess.gff"
-        modified_num = 0
-        modified_motif_num = 0
-        if os.path.exists(gff):
-            for line in open(gff, "r"):
-                if line.startswith("#"):
-                    continue
-                fields = line.strip().split("\t")
-                if int(fields[5]) < score_cutoff:
-                    continue
-                modified_num += 1
-                if re.search(";motif=", fields[8]):
-                    modified_motif_num += 1
-        modified_ratio = modified_num / length
-        modified_motif_ratio = modified_motif_num/ length
-        motif_ratio =  modified_motif_num / modified_num if modified_num > 0 else 0
-        base_data.append([prefix, ctg, length, modified_num, modified_motif_num, modified_ratio, modified_motif_ratio, motif_ratio, env])
+        ctg_obj = My_contig(prefix, all_dir, ctg)
+        ctg_obj.get_mod_ratio(score_cutoff)
+        base_data.append([prefix, ctg, length, ctg_obj.modified_num, 
+                          ctg_obj.modified_motif_num, ctg_obj.modified_ratio, 
+                          ctg_obj.modified_motif_ratio, ctg_obj.motif_ratio, env])
     return base_data
 
 def get_stastics():
@@ -800,7 +788,7 @@ def main(all_dir, fig_dir, sample_env_dict):
 
         # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
         all_data += count_motifs(best_ctgs, all_dir, prefix, sample_env_dict[prefix], ctg_taxa_dict)
-        # all_base_data += count_modified_base(work_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
+        # all_base_data += count_modified_base(all_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
         # break
     print ("start plot...")
     df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len'])
@@ -1006,8 +994,8 @@ if __name__ == "__main__":
     genome_list_file =  "/home/shuaiw/borg/paper/specificity/genome.list"
     all_dir = "/home/shuaiw/borg/paper/run2/"
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
-    # sample_env_dict = read_metadata(meta_file)
-    # main(all_dir, fig_dir, sample_env_dict)
+    sample_env_dict = read_metadata(meta_file)
+    main(all_dir, fig_dir, sample_env_dict)
     # main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
     # plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)

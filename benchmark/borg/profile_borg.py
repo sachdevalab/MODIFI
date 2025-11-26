@@ -140,11 +140,31 @@ def collect_host_genus(all_dir):
             # print (ctg_genus)
             if ctg_genus == "g__Methanoperedens":
                 print (ctg, ctg_lineage, ctg_len)
+                # os.system(f"cp {ctg_obj.ctg_ref} /home/shuaiw/borg/paper/borg_data/align/refs")
                 members.append(ctg)
                 anno_dict[ctg] = taxon
     print (f"Total host contigs collected: {len(members)}")
     return members, anno_dict
 
+def count_mod_freq(all_dir, borg_anno_dict, score_cutoff = 30):
+    data = []
+    for ctg in borg_anno_dict:
+        prefix = "_".join(ctg.split('_')[:-2])
+        print (f"Processing {ctg} from sample {prefix}...")
+        ctg_obj = My_contig(prefix, all_dir, ctg)
+        if not os.path.exists(ctg_obj.ctg_ref):
+            print (f"[!] fasta file not found for {ctg}, skipping...")
+            continue
+        ctg_type, ctg_anno = borg_anno_dict[ctg]
+        ctg_obj.get_mod_ratio(score_cutoff)
+        data.append([ctg, prefix, ctg_type, ctg_anno, ctg_obj.ctg_len, ctg_obj.modified_num, ctg_obj.modified_motif_num, 
+                     ctg_obj.modified_ratio, ctg_obj.modified_motif_ratio, ctg_obj.motif_ratio])
+    df = pd.DataFrame(data, columns=['contig', 'sample', 'type', 'annotation', 'length', 'modified_num', 'modified_motif_num', 
+                                     'modified_ratio', 'modified_motif_ratio', 'motif_ratio'])
+    ## sort by modified_ratio descending
+    df = df.sort_values(by='modified_ratio', ascending=False)
+    print (df)
+    return df
 
 if __name__ == "__main__":
     borg_file = "all_borg_contigs_summary.tsv"
@@ -164,7 +184,8 @@ if __name__ == "__main__":
         borg_anno_dict[entry.seq_name] = [entry.type, entry.borg_ref]
     print (members)
     # members = ["soil_1_1336_L", "soil_s4_1_109_C"]
-
+    
+    
     all_members, all_anno_dict = collect_host_genus(all_dir)
     ## if member in all members not in members, add to members, also update borg_anno_dict
     for member in all_members:
@@ -172,18 +193,20 @@ if __name__ == "__main__":
             members.append(member)
             borg_anno_dict[member] = ['HOST', all_anno_dict[member]]
     print (borg_anno_dict)
+    # count_mod_freq(all_dir, borg_anno_dict)
+    """
     seq_dir = "/home/shuaiw/borg/paper/borg_data/profile/"
     cluster = "profile"
     plot_name = os.path.join(seq_dir, f"borg_motif_profile.pdf")
-    cluster_species = "borg & hosts"
+    cluster_species = "borg"
 
-    cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                    seq_dir, seq_dir, min_frac=0.2, 
-                                    min_sites=10, score_cutoff = 20)
-    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+    # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+    #                                 seq_dir, seq_dir, min_frac=0.2, 
+    #                                 min_sites=10, score_cutoff = 20)
+    # cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
-    # cluster_obj = My_cluster(cluster, members) 
-    # cluster_obj.load_df(seq_dir)
+    cluster_obj = My_cluster(cluster, members) 
+    cluster_obj.load_df(seq_dir)
 
     ## remove all rows with motifstring contains GATCH_4
     remove_motifs = ['GATCH_4','BATC_2','RGAYCY_3','YGATCB_3','BGATATC_5']
@@ -193,6 +216,7 @@ if __name__ == "__main__":
     cluster_obj.profile_df['BORG_Ref'] = cluster_obj.profile_df['contig'].apply(lambda x: borg_anno_dict[x][1] if x in borg_anno_dict else 'NA')
     print (cluster_obj.profile_df)
     personal_plot(cluster_obj)
+    """
 
 
 

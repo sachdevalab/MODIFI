@@ -692,6 +692,11 @@ class My_contig(My_sample):
         self.ipd_ratio_file = f"{self.work_dir}/ipd_ratio/{contig}.ipd3.csv"
         self.motif_file = f"{self.work_dir}/motifs/{contig}.motifs.csv"
         self.ctg_len = None
+        self.modified_ratio = None
+        self.modified_motif_ratio = None
+        self.motif_ratio = None
+        self.modified_num = None
+        self.modified_motif_num = None
 
     def read_motif(self, min_frac=0.3, min_sites=30):
         ## check if file exists
@@ -714,6 +719,26 @@ class My_contig(My_sample):
                     self.ctg_len = int(fields[1])
                     return self.ctg_len
         return 0
+
+    def get_mod_ratio(self, score_cutoff = 30):
+        self.get_ctg_len()
+        self.modified_num = 0
+        self.modified_motif_num = 0
+        if os.path.exists(self.reprocess_gff):
+            for line in open(self.reprocess_gff, "r"):
+                if line.startswith("#"):
+                    continue
+                fields = line.strip().split("\t")
+                if int(fields[5]) < score_cutoff:
+                    continue
+                self.modified_num += 1
+                if re.search(";motif=", fields[8]):
+                    self.modified_motif_num += 1
+        self.modified_ratio = self.modified_num / self.ctg_len
+        self.modified_motif_ratio = self.modified_motif_num/ self.ctg_len
+        self.motif_ratio =  self.modified_motif_num / self.modified_num if self.modified_num > 0 else 0
+        return self.modified_num, self.modified_motif_num, self.modified_ratio, self.modified_motif_ratio, self.motif_ratio
+
 
 
 class My_cluster(object):

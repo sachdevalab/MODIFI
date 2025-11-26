@@ -328,18 +328,25 @@ def get_all_loci(gff2, contig_name, my_ref, out_dir):
 
 if __name__ == "__main__":
     score_cutoff = 30
-    # contig = "infant_2_3_C"
-    sample = "infant_2"
-    contig = "infant_2_60_C"
+
+    # sample = "infant_2"
+    # contig = "infant_2_60_C"
+    # out_dir = "/home/shuaiw/borg/paper/circos/inversion/"
+    # motif_list = [["ATGCAT", 5], ["CAANNNNNNRTGA", 3], ["CAYNNNNNNTAYG", 2]]
+
+    sample = "soil_s4_1"
+    contig = "soil_s4_1_2981_L"
+
+    sample = "soil_s1_2"
+    contig = "soil_s1_2_55_L"
+    out_dir = "/home/shuaiw/borg/paper/circos/borg/"
+    motif_list = [["GATATC", 4], ["GATC", 2], ["GACGGA", 6], ["AYCNNNNNNNTCGC", 1]]
+
     work_dir = f"/home/shuaiw/borg/paper/run2/{sample}/{sample}_methylation3/"
-    # motif_list = ["ATGCAT", "CAANNNNNNRTGA", "CAYNNNNNNTAYG"]
-    motif_list = [["ATGCAT", 5], ["CAANNNNNNRTGA", 3], ["CAYNNNNNNTAYG", 2]]
+    
     my_ref = f"{work_dir}/contigs/{contig}.fa"
     gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
     ipd_ratio_file = f"{work_dir}/ipd_ratio/{contig}.ipd3.csv"
-
-
-    out_dir = "/home/shuaiw/borg/paper/circos/inversion/"
     # split_gff(gff2, contig, my_ref, out_dir)
     get_all_loci(gff2, contig, my_ref, out_dir)
     
