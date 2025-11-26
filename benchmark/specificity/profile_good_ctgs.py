@@ -187,6 +187,137 @@ DATA
 #9606 10000
 #LEAF1|LEAF2 11000"""
 
+strip_heaer="""DATASET_COLORSTRIP
+#In colored strip datasets, each ID is associated to a color box/strip and can have an optional label. Color can be specified in hexadecimal, RGB or RGBA notation. When using RGB or RGBA notation, you cannot use COMMA as the dataset separator
+
+#lines starting with a hash are comments and ignored during parsing
+
+#=================================================================#
+#                    MANDATORY SETTINGS                           #
+#=================================================================#
+#select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throughout this file.
+
+#SEPARATOR TAB
+#SEPARATOR COMMA
+SEPARATOR SPACE
+
+#label is used in the legend table (can be changed later)
+DATASET_LABEL label1
+
+#dataset color (can be changed later)
+COLOR #ff0000
+
+#=================================================================#
+#                    OPTIONAL SETTINGS                            #
+#=================================================================#
+
+#If COLOR_BRANCHES is set to 1, branches of the tree will be colored according to the colors of the strips above the leaves.
+#When all children of a node have the same color, it will be colored the same, ie. the color will propagate inwards towards the root.
+COLOR_BRANCHES 0
+
+
+#=================================================================#
+#     all other optional settings can be set or changed later     #
+#           in the web interface (under 'Datasets' tab)           #
+#=================================================================#
+
+#Each dataset can have a legend, which is defined using LEGEND_XXX fields below
+#For each row in the legend, there should be one shape, color and label.
+#Optionally, you can define an exact legend position using LEGEND_POSITION_X and LEGEND_POSITION_Y. To use automatic legend positioning, do NOT define these values
+#Optionally, shape scaling can be present (LEGEND_SHAPE_SCALES). For each shape, you can define a scaling factor between 0 and 1.
+#To order legend entries horizontally instead of vertically, set LEGEND_HORIZONTAL to 1
+#Shape should be a number between 1 and 6, or any protein domain shape definition.
+#1: square
+#2: circle
+#3: star
+#4: right pointing triangle
+#5: left pointing triangle
+#6: checkmark
+
+#LEGEND_TITLE Dataset_legend
+#LEGEND_SCALE 1
+#LEGEND_POSITION_X 100
+#LEGEND_POSITION_Y 100
+#LEGEND_HORIZONTAL 0
+#LEGEND_SHAPES 1 1 2 2
+#LEGEND_COLORS #ff0000 #00ff00 rgba(0,255,0,0.5) #0000ff
+#LEGEND_LABELS value1 value2 value3 value4
+#LEGEND_SHAPE_SCALES 1 1 0.5 1
+
+#width of the colored strip
+#STRIP_WIDTH 25
+
+#left margin, used to increase/decrease the spacing to the next dataset. Can be negative, causing datasets to overlap.
+#MARGIN 0
+
+#border width; if set above 0, a border of specified width (in pixels) will be drawn around the color strip 
+#BORDER_WIDTH 0
+
+#border color; used when BORDER_WIDTH is above 0
+#BORDER_COLOR #0000ff
+
+#if set to 1, border will be drawn completely around each colored strip box
+#COMPLETE_BORDER 0
+
+#always show internal values; if set, values associated to internal nodes will be displayed even if these nodes are not collapsed. It could cause overlapping in the dataset display.
+#SHOW_INTERNAL 0
+
+
+#display or hide the individual label inside each colored strip (when defined in the data below)
+#SHOW_STRIP_LABELS 1
+
+#position of the strip label within the box; 'top', 'center' or 'bottom'
+#STRIP_LABEL_POSITION center
+
+#strip label size factor (relative to the tree leaf labels)
+#STRIP_LABEL_SIZE_FACTOR 1
+
+
+#rotation of the strip labels; used only in rectangular tree display mode
+#STRIP_LABEL_ROTATION 0
+
+#strip label shift in pixels (positive or negative)
+#STRIP_LABEL_SHIFT 0
+
+#STRIP_LABEL_COLOR #000000
+
+#draw a black outline around the text (width in pixels)
+#STRIP_LABEL_OUTLINE 0.5
+
+#calculate the label color automatically (black or white), based on the darkness of the color strip
+#STRIP_LABEL_AUTO_COLOR 0
+
+#display or hide the dataset label above the colored strip
+#SHOW_LABELS 1
+
+#dataset label size factor
+#SIZE_FACTOR 1
+
+#dataset label rotation
+#LABEL_ROTATION 0
+
+#dataset label shift in pixels (positive or negative)
+#LABEL_SHIFT 0
+
+#align the dataset label to the tree circle; only applies in circular display mode
+#LABEL_ALIGN_TO_TREE,0
+
+#Internal tree nodes can be specified using IDs directly, or using the 'last common ancestor' method described in iTOL help pages
+
+#=================================================================#
+#       Actual data follows after the "DATA" keyword              #
+#=================================================================#
+DATA
+
+#Examples:
+#assign a red colored strip to leaf 9606, with label 'Human'
+#9606 #ff0000 Human
+
+#assign a green, semi-transparent (alpha 0.5) strip to an internal node, without any label. If 'Show internal values' is set to 'No', this will only be displayed if the node is collapsed. 
+#9606|5664 rgba(0,255,0,0.5)
+
+#soil_1_886_C #377eb8 Soil
+"""
 
 
 
@@ -986,7 +1117,6 @@ def main(all_dir, fig_dir, sample_env_dict):
     plot_base(df_all_base_data, fig_dir)
     # ## save genome data
 
-
     with open(genome_list_file, "w") as f:
         for genome in genome_list:
             f.write(genome + "\n")
@@ -1162,42 +1292,49 @@ def plot_coding( meta_dir, fig_dir, min_len = 1000000):
 
 def color_tree(tree_results):
     df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
-
-
     motif_num_anno = gradient_header + "\n"
-    env_anno = header + "\n"
+    env_anno = strip_heaer + "\n"
     phylum_anno = header + "\n"
 
-    ## prepare phylum color map
-    phylum_list = df_all_data['phylum'].unique().tolist()
-    phylum_color = {}
-    color_palette = sns.color_palette("Set1", n_colors=len(phylum_list))
-    for i, phylum in enumerate(phylum_list):
-        if phylum == "unknown":
-            phylum_color[phylum] = "#808080"  # gray for unknown
-        else:
-            rgb = color_palette[i]
-            hex_color = '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
-            phylum_color[phylum] = hex_color
+    ## prepare phylum color map - only color top 6 phyla
+    phylum_counts = df_all_data['phylum'].value_counts()
+    top_6_phyla = phylum_counts.head(9).index.tolist()
     
+    phylum_color = {}
+    color_palette = sns.color_palette("Set2", n_colors=9)
+    
+    for i, phylum in enumerate(top_6_phyla):
+        rgb = color_palette[i]
+        hex_color = '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
+        phylum_color[phylum] = hex_color
+    
+    # All other phyla get the same gray color
+    all_phyla = df_all_data['phylum'].unique()
+    for phylum in all_phyla:
+        if phylum not in phylum_color:
+            phylum_color[phylum] = "#808080"  # gray for others
+    print (phylum_color)
     ## prepare environment color map
     env_list = df_all_data['environment'].unique().tolist()
     env_color = {}
-    color_palette_env = sns.color_palette("Set2", n_colors=len(env_list))
+    color_palette_env = sns.color_palette("Set1", n_colors=len(env_list))
     for i, env in enumerate(env_list):
         rgb = color_palette_env[i]
         hex_color = '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
         env_color[env] = hex_color
-    
+    print (env_color)
     for index, row in df_all_data.iterrows():
         ctg_name = row['contig']
-        phylum_anno += f"{ctg_name} range {phylum_color[row['phylum']]} {row['phylum']}\n"
+        if row['phylum'] not in top_6_phyla:
+            phylum_anno += f"{ctg_name} range {phylum_color[row['phylum']]} Others\n"
+        else:
+            phylum_anno += f"{ctg_name} range {phylum_color[row['phylum']]} {row['phylum'][3:]}\n"
 
         if row['motif_num'] > 1:
             motif_num_anno += f"{ctg_name} 2\n"
         else:
             motif_num_anno += f"{ctg_name} {row['motif_num']}\n"
-        env_anno += f"{ctg_name} range {env_color[row['environment']]} {row['environment']}\n"
+        env_anno += f"{ctg_name} {env_color[row['environment']]} {row['environment']}\n"
         
     with open(f"{tree_results}/motif_num_annotations.txt", "w") as f:
         f.write(motif_num_anno)
@@ -1206,6 +1343,41 @@ def color_tree(tree_results):
     with open(f"{tree_results}/phylum_annotations.txt", "w") as f:
         f.write(phylum_anno)
 
+def plot_motif_len(fig_dir):
+    df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
+    
+    # Create motif number bins
+    max_motif = df_all_data['motif_num'].max()
+    df_all_data['motif_bin'] = pd.cut(df_all_data['motif_num'], 
+                                      bins=range(0, max_motif + 2), 
+                                      right=False, 
+                                      labels=[f"{i}" for i in range(max_motif + 1)])
+    
+    # Filter out bins with very few samples (less than 5)
+    bin_counts = df_all_data['motif_bin'].value_counts()
+    valid_bins = bin_counts[bin_counts >= 5].index
+    df_filtered = df_all_data[df_all_data['motif_bin'].isin(valid_bins)]
+    
+    # Create subplot
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+    
+    # Scatter plot
+    sns.scatterplot(data=df_all_data, x='ctg_len', y='motif_num', hue='environment', 
+                   palette='Set2', alpha=0.6, ax=ax1)
+    ax1.set_xlabel('Contig Length')
+    ax1.set_ylabel('Motif Number')
+    ax1.set_title('Motif Number vs Contig Length')
+    ax1.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    # Box plot of length distribution by motif number bins
+    sns.boxplot(data=df_filtered, x='motif_bin', y='ctg_len', ax=ax2)
+    ax2.set_xlabel('Motif Number Bin')
+    ax2.set_ylabel('Contig Length')
+    ax2.set_title('Contig Length Distribution by Motif Number Bins')
+    ax2.set_yscale('log')
+    
+    plt.tight_layout()
+    plt.savefig(f"{fig_dir}/motif_num_vs_contig_length.png", dpi=300, bbox_inches='tight')
 
 if __name__ == "__main__":
     meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
@@ -1215,6 +1387,7 @@ if __name__ == "__main__":
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
     tree_results = "/home/shuaiw/borg/paper/specificity/tree/"
     color_tree(tree_results)
+    # plot_motif_len(fig_dir)
     # sample_env_dict = read_metadata(meta_file)
     # main(all_dir, fig_dir, sample_env_dict)
     # main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
