@@ -146,21 +146,21 @@ The MGE-host linkage prediction results contain the following columns:
 | Column | Description |
 |--------|-------------|
 | `MGE` | Mobile genetic element (MGE) contig name |
-| `MGE_len` | Length of the MGE contig (0 indicates circular element) |
-| `host` | Predicted host contig name |
+| `MGE_len` | Length of the MGE contig |
+| `host` | Predicted host contig (bin) name |
 | `final_score` | Overall linkage confidence score (0-1, higher = more confident) |
-| `specificity` | Specificity p-value for MGE-host association |
+| `specificity` | Specificity for MGE-host association |
 | `pvalue` | Statistical significance p-value for the linkage |
 | `self_pvalue` | Self-comparison p-value (control) |
 | `MGE_gc` | GC content of the MGE contig |
 | `host_gc` | GC content of the host contig |
-| `cos_sim` | Cosine similarity between MGE and host methylation profiles |
+| `cos_sim` | Cosine similarity between MGE and host 4-mer frequency |
 | `MGE_cov` | Sequencing coverage depth of the MGE |
 | `host_cov` | Sequencing coverage depth of the host |
-| `host_motif_num` | Number of methylation motifs detected in the host |
+| `host_motif_num` | Number of modification motifs detected in the host |
 | `confidence` | Overall confidence score for the prediction |
 | `motif_confidence` | Confidence score specific to motif-based evidence |
-| `total_sites` | Total number of methylated sites used in the analysis |
+| `total_sites` | Total number of modified sites used in the analysis |
 | `motif_info` | Detailed motif information (format: motif:length:sites:coverage:score:position) |
 
 ---
