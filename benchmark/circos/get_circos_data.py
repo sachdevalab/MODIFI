@@ -6,6 +6,7 @@ import pandas as pd
 from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
 import sys
+import os
 
 
 def read_ref(ref):
@@ -281,7 +282,7 @@ def all_split_gff(out_dir):
 
 def get_all_loci(gff2, contig_name, my_ref, out_dir):
     modified_loci = get_modified_ratio(gff2)
-    new_ref = out_dir + contig_name + ".fa"
+    new_ref = os.path.join(out_dir, contig_name + ".fa")
     REF = read_ref(my_ref)
 
     ## use seq IO to read the reference file
@@ -297,7 +298,7 @@ def get_all_loci(gff2, contig_name, my_ref, out_dir):
 
     for motif_data in motif_list:
         motif_new, exact_pos = motif_data
-        motif_csv = out_dir + contig_name + "_" + motif_new + ".csv"
+        motif_csv = os.path.join(out_dir, contig_name + "_" + motif_new + ".csv")
         data = []
         
         rev_exact_pos = len(motif_new) - exact_pos + 1
@@ -328,21 +329,69 @@ def get_all_loci(gff2, contig_name, my_ref, out_dir):
 
 if __name__ == "__main__":
     score_cutoff = 30
+    out_dir = "/home/shuaiw/borg/paper/circos/borg/"
 
     # sample = "infant_2"
     # contig = "infant_2_60_C"
     # out_dir = "/home/shuaiw/borg/paper/circos/inversion/"
     # motif_list = [["ATGCAT", 5], ["CAANNNNNNRTGA", 3], ["CAYNNNNNNTAYG", 2]]
 
+    # sample = "soil_s4_1"
+    # contig = "soil_s4_1_2981_L"
+
+    # sample = "soil_s1_2"
+    # contig = "soil_s1_2_55_L"
+    # out_dir = "/home/shuaiw/borg/paper/circos/borg/"
+    # motif_list = [["GATATC", 4], ["GATC", 2], ["GACGGA", 6], ["AYCNNNNNNNTCGC", 1]]
+
+    # work_dir = f"/home/shuaiw/borg/paper/run2/{sample}/{sample}_methylation3/"
+
+
     sample = "soil_s4_1"
-    contig = "soil_s4_1_2981_L"
+    contig = "BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR"
+    out_dir = os.path.join(out_dir, sample)
+    motif_list = [["GATATC", 4], ["GATC", 2], ["YCTB", 2]]
 
-    sample = "soil_s1_2"
-    contig = "soil_s1_2_55_L"
-    out_dir = "/home/shuaiw/borg/paper/circos/borg/"
-    motif_list = [["GATATC", 4], ["GATC", 2], ["GACGGA", 6], ["AYCNNNNNNNTCGC", 1]]
+    # sample = "soil_1"
+    # contig = "Green_Borg_SRVP_2020_100_cm_2_FINAL-FINAL"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GGNCC", 5], ["YCTB", 2]]
 
-    work_dir = f"/home/shuaiw/borg/paper/run2/{sample}/{sample}_methylation3/"
+    # sample = "soil_s4_2"
+    # contig = "Iris_Borg_SR-VP_9_9_2021_87_5B_1_2m_2_curated"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["YCT", 2], ["ACC", 1]]
+
+    # sample = "soil_s3_2"
+    # contig = "BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GATATC", 4], ["GATC", 2], ["YCTB", 2]]
+
+    # sample = "soil_s3_1"
+    # contig = "BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GATATC", 4], ["GATC", 2], ["YCTB", 2]]
+
+    # sample = "soil_s1_2"
+    # contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GAA", 3],['YCTB',2],['GATC',2],['GGAGAA',6]]
+
+    # sample = "soil_s1_2"
+    # contig = "BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GATATC", 4], ["GATC", 2], ["YCTB", 2]]
+
+    # sample = "soil_1"
+    # contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GAA", 3],['YCTB',2],['GATC',2],['GGAGAA',6]]
+
+    ## makdir out_dir if not exists
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    print (out_dir)
+    work_dir = f"/home/shuaiw/borg/paper/borg_data/methy2/{sample}/{sample}_methylation3/"
     
     my_ref = f"{work_dir}/contigs/{contig}.fa"
     gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"

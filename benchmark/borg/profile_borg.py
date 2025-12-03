@@ -192,8 +192,8 @@ if __name__ == "__main__":
         if member not in members:
             members.append(member)
             borg_anno_dict[member] = ['HOST', all_anno_dict[member]]
-    print (borg_anno_dict)
-    # count_mod_freq(all_dir, borg_anno_dict)
+    # print (borg_anno_dict)
+    count_mod_freq(all_dir, borg_anno_dict)
     """
     seq_dir = "/home/shuaiw/borg/paper/borg_data/profile/"
     cluster = "profile"

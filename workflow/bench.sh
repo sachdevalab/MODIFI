@@ -1829,3 +1829,17 @@ sbatch --partition standard --job-name=pf7 --wrap "python /home/shuaiw/mGlu/main
 sbatch --job-name=tree \
 --partition standard \
 --wrap "bash get_tree_robust_meta.sh"
+
+sbatch --partition standard --job-name=s4_1 --wrap "/home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
+    --work_dir /home/shuaiw/borg/paper/borg_data/run2/s4_1_black \
+    --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2022.bam \
+    --whole_ref /home/shuaiw/borg/paper/borg_data/align/BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.fa \
+    --read_type hifi \
+    --min_len 1000 \
+    --min_cov 3 \
+    --min_frac 0.1 \
+    --min_score 30 \
+    --min_sites 10 \
+    --threads 64 \
+    --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1_methylation3/control/control_db.up7.down3.mean.dat \
+    --kmer_num_db /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1_methylation3/control/control_db.up7.down3.num.dat"

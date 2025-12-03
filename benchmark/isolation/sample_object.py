@@ -678,8 +678,6 @@ class Isolation_sample(My_sample):
         self.average_dp = total_depth / total_length
         return self.average_dp
 
-
-
 class My_contig(My_sample):
 
     def __init__(self, prefix, all_dir, contig, data_type="meta"):
@@ -695,12 +693,14 @@ class My_contig(My_sample):
         self.reprocess_gff = f"{self.work_dir}/gffs/{contig}.reprocess.gff"
         self.ipd_ratio_file = f"{self.work_dir}/ipd_ratio/{contig}.ipd3.csv"
         self.motif_file = f"{self.work_dir}/motifs/{contig}.motifs.csv"
+        self.RM_file = f"{self.work_dir}/RM_systems/{contig}.RM.csv"
         self.ctg_len = None
         self.modified_ratio = None
         self.modified_motif_ratio = None
         self.motif_ratio = None
         self.modified_num = None
         self.modified_motif_num = None
+        self.RM_dict = None
 
     def read_motif(self, min_frac=0.3, min_sites=30):
         ## check if file exists
@@ -743,6 +743,25 @@ class My_contig(My_sample):
         self.motif_ratio =  self.modified_motif_num / self.modified_num if self.modified_num > 0 else 0
         return self.modified_num, self.modified_motif_num, self.modified_ratio, self.modified_motif_ratio, self.motif_ratio
 
+    def load_RM(self):
+        self.RM_dict = defaultdict(list)
+        if not os.path.exists(self.RM_file):
+            print (f"[⚠️] RM file not found: {self.RM_file}")
+            return self.RM_dict
+        f = open(self.RM_file, "r")
+        for line in f:
+            if line.startswith("#"):
+                continue
+            fields = line.strip().split("\t")
+            if len(fields) < 2:
+                continue
+            system_name = fields[0]
+            if not re.search("RM Operon #",system_name) and not re.search("Singleton #", system_name):
+                continue
+            gene_name = fields[1]
+            self.RM_dict[system_name].append(gene_name)
+        f.close()
+        return self.RM_dict
 
 
 class My_cluster(object):
