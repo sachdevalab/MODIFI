@@ -1762,6 +1762,7 @@ sbatch --partition standard --job-name=pf3 --wrap "python /home/shuaiw/mGlu/main
   --min_sites 30 \
   --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
+  --run_steps host \
   --threads 64"
 
 sbatch --partition standard --job-name=pf4 --wrap "python /home/shuaiw/mGlu/main.py \
@@ -1777,6 +1778,7 @@ sbatch --partition standard --job-name=pf4 --wrap "python /home/shuaiw/mGlu/main
   --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
+  --run_steps host \
   --threads 64"
 
 sbatch --partition standard --job-name=pf5 --wrap "python /home/shuaiw/mGlu/main.py \
@@ -1792,6 +1794,7 @@ sbatch --partition standard --job-name=pf5 --wrap "python /home/shuaiw/mGlu/main
   --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
+  --run_steps host \
   --threads 64"
 
 sbatch --partition standard --job-name=pf6 --wrap "python /home/shuaiw/mGlu/main.py \
@@ -1807,6 +1810,7 @@ sbatch --partition standard --job-name=pf6 --wrap "python /home/shuaiw/mGlu/main
   --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
+  --run_steps host \
   --threads 64"
 
 sbatch --partition standard --job-name=pf7 --wrap "python /home/shuaiw/mGlu/main.py \

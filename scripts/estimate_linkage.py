@@ -290,6 +290,10 @@ def merge_bin_motif_file(ctg_motif_dict, bin_name, bin_ctg_dict, min_frac, min_d
 
 def drep_bin_motif(bin_motif, motif_cluster_dict):
     ### if two motif has the same cluster ID, then only keep one with highest nDetected
+    # Handle empty DataFrame case
+    if bin_motif.empty or len(bin_motif.columns) == 0:
+        return pd.DataFrame()
+    
     bin_motif['cluster_id'] = bin_motif.apply(
         lambda row: motif_cluster_dict.get(row['motifString'])[0] if row['motifString'] in motif_cluster_dict else None, axis=1
     )
