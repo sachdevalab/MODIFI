@@ -645,7 +645,121 @@ def plot_jaccard_distribution(same_sample_df, fig_dir):
     plt.savefig(f"{fig_dir}/jaccard_similarity_distribution_by_mge_type.pdf", dpi=300, bbox_inches="tight")
     plt.close()
 
+def plot_MTase(df_all_data, fig_dir):
+    ##scatter plot and box plot for MTase num vs motif num
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+    
+    # Scatter plot with regression line
+    sns.scatterplot(data=df_all_data, x='RM_num', y='motif_num', 
+                   palette='Set2', alpha=0.6, s=40, ax=ax1)
+    # Add regression line
+    sns.regplot(data=df_all_data, x='RM_num', y='motif_num', scatter=False, 
+                color='red', ax=ax1)
+    ax1.set_title('MTase Number vs Motif Number (Scatter)')
+    ax1.set_xlabel('MTase Number')
+    ax1.set_ylabel('Motif Number')
+    ax1.legend(title='x', bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    # Box plot - each x shows a number of MTase, y shows number of motifs
+    # Sort the RM_num values and create ordered categories
+    rm_order = sorted(df_all_data['RM_num'].unique())
+    df_all_data['RM_num_str'] = df_all_data['RM_num'].astype(str)
+    sns.boxplot(data=df_all_data, x='RM_num_str', y='motif_num',
+                order=[str(x) for x in rm_order], ax=ax2)
+    ax2.set_title('Motif Number Distribution by MTase Count')
+    ax2.set_xlabel('MTase Number')
+    ax2.set_ylabel('Motif Number')
+    ax2.tick_params(axis='x', rotation=45)
+    
+    plt.tight_layout()
+    plt.savefig(f"{fig_dir}/MTase_vs_motif_num.png", dpi=300, bbox_inches='tight')
+    plt.close()
 
+def plot_motif_num(df_all_data, fig_dir):
+    ## box plot, x is phylum, y is motif num
+    plt.figure(figsize=(8, 6))
+    sns.boxplot(data=df_all_data, x='phylum', y='motif_num', palette='Set3')
+    plt.xlabel('Phylum', fontsize=14)
+    plt.ylabel('Motif Number', fontsize=14)
+    plt.xticks(rotation=45, ha='right')
+    plt.grid(axis='y', alpha=0.3)
+    plt.savefig(f"{fig_dir}/motif_num_by_phylum.pdf", dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+def main_profile(all_dir, fig_dir):
+    """
+    samples: bacteria, pure, high average depth >= 10x, has MGEs, has motifs
+    """
+    i = 0
+    pure_num, mge_num, has_motif_num = 0, 0, 0
+    jaccard_all = pd.DataFrame()
+    present_motifs_all = pd.DataFrame()
+    archea_list = ["SRR27457941", "SRR31014709"]
+    drep_clu_dict = read_drep_cluster(drep_clu_file, {})
+    clu_prefix_dict = get_strain_prefix(drep_clu_dict)
+    profile_data = []
+    potential_megaP_all = []
+    # print (clu_prefix_dict)
+    # print (est_strain(clu_prefix_dict, 'SRR32364911', 'SRR32364914'))
+    
+    for prefix in os.listdir(all_dir):
+        if prefix in archea_list:
+            continue
+        i += 1
+        sample_obj = Isolation_sample(prefix, all_dir)
+
+
+        sample_obj.get_phylum()
+        mge_dict = sample_obj.read_MGE()
+        depth_dict, length_dict = sample_obj.read_depth()
+        pure_flag = sample_obj.check_pure2()
+        average_dp = sample_obj.get_average_depth()
+        unique_motif_num, unique_motifs = sample_obj.get_unique_motifs()
+        potential_megaP = sample_obj.search_megaP()
+        
+        # sample_obj.explore_specific_motifs()
+        sample_obj.load_isolation_RM()
+        MT_num = len(sample_obj.isolation_RM_dict)
+
+        if pure_flag == "pure":
+            pure_num += 1
+        else:
+            continue
+        if average_dp < 10:
+            print(f"Skipping {prefix} as low average depth: {average_dp}")
+            continue
+        # if len(mge_dict) < 1:
+        #     continue
+        # else:
+        #     mge_num += 1
+
+        if unique_motifs == 0:
+            print(f"Skipping {prefix} as no motifs.")
+            continue
+        else:
+            has_motif_num += 1
+
+        if not os.path.exists(sample_obj.profile):
+            continue
+        line_count = sum(1 for line in open(sample_obj.profile)) - 1  # Subtract 1 for header
+        if line_count < 2:
+            print(f"Skipping {prefix} as insufficient motif data.")
+            continue
+        
+        profile_data.append([prefix, sample_obj.phylum, unique_motif_num, MT_num])
+    profile_df = pd.DataFrame(profile_data, columns=['sample', 'phylum', 'motif_num', 'RM_num'])
+    profile_df.to_csv(f"{fig_dir}/isolation_samples_motif_profile.csv", index=False)
+    potential_megaP_all += potential_megaP
+
+    print (len(potential_megaP_all), "potential megaP contigs found:")
+    for contig in potential_megaP_all:
+        print (contig)
+
+    # profile_df = pd.read_csv(f"{fig_dir}/isolation_samples_motif_profile.csv")
+    # plot_MTase(profile_df, fig_dir)
+    # plot_motif_num(profile_df, fig_dir)
+   
 def main(all_dir, fig_dir, drep_clu_file):
     """
     samples: bacteria, pure, high average depth >= 10x, has MGEs, has motifs
@@ -657,6 +771,7 @@ def main(all_dir, fig_dir, drep_clu_file):
     archea_list = ["SRR27457941", "SRR31014709"]
     drep_clu_dict = read_drep_cluster(drep_clu_file, {})
     clu_prefix_dict = get_strain_prefix(drep_clu_dict)
+    profile_data = []
     # print (clu_prefix_dict)
     # print (est_strain(clu_prefix_dict, 'SRR32364911', 'SRR32364914'))
     
@@ -848,9 +963,12 @@ if __name__ == "__main__":
     # all_dir = "/home/shuaiw/borg/paper/isolation/bacteria/"
     all_dir = "/home/shuaiw/borg/paper/isolation//batch2_results/"
     fig_dir = "../../tmp/figures/motif_sharing/"
+    profile_fig_dir = "../../tmp/figures/iso_profile/"
 
     ANI=99
     drep_clu_file = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/data_tables/Cdb.csv"
 
-    main(all_dir, fig_dir, drep_clu_file)
+    # main(all_dir, fig_dir, drep_clu_file)
     # main_96plex(fig_dir)
+    
+    main_profile(all_dir, profile_fig_dir)

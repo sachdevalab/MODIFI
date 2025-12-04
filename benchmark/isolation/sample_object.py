@@ -587,6 +587,30 @@ class Isolation_sample(My_sample):
         self.all_gtdb = os.path.join(self.work_dir, "../GTDB/gtdbtk.bac120.summary.tsv")
         self.all_motif_file = f"{self.work_dir}/all.motifs.csv"
         self.checkm = os.path.join(self.work_dir, "../checkM2/quality_report.tsv")
+        self.isolation_RM_file = f"{self.work_dir}/RM_systems/all_ctgs_RM.rm.genes.tsv"
+        self.isolation_RM_dict = None
+
+    def load_isolation_RM(self):
+        self.isolation_RM_dict = defaultdict(list)
+        if not os.path.exists(self.isolation_RM_file):
+            print (f"[⚠️] RM file not found: {self.isolation_RM_file}")
+            return self.isolation_RM_dict
+        f = open(self.isolation_RM_file, "r")
+        for line in f:
+            if line.startswith("#"):
+                continue
+            fields = line.strip().split("\t")
+            if len(fields) < 2:
+                continue
+            if fields[3] == "RE" or fields[3] == "SP":
+                continue
+            system_name = fields[0]
+            if not re.search("RM Operon #",system_name) and not re.search("Singleton #", system_name):
+                continue
+            gene_name = fields[1]
+            self.isolation_RM_dict[system_name].append(gene_name)
+        f.close()
+        return self.isolation_RM_dict
 
     def get_phylum(self):
         isolation_taxa = self.read_isolation_gtdb()
@@ -678,6 +702,15 @@ class Isolation_sample(My_sample):
             return 0
         self.average_dp = total_depth / total_length
         return self.average_dp
+
+    def search_megaP(self, length_cutoff=500000):
+        potential_megaP = []
+        for mge in self.mge_dict:
+            mge_length = self.length_dict.get(mge, 0)
+            if mge_length >= length_cutoff:
+                potential_megaP.append((mge, mge_length, self.mge_dict[mge]))
+        return potential_megaP
+
 
 class My_contig(My_sample):
 
