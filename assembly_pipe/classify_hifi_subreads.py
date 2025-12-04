@@ -134,6 +134,7 @@ def methy_run(results_dir):
         prefix = folder
         aligned_bam = os.path.join(results_dir, folder, f"{prefix}.aligned.bam")
         finish_file = os.path.join(results_dir, folder, f"{prefix}_methylation2/methylation.finish")
+        rm_file = os.path.join(results_dir, folder, f"{prefix}_methylation2//RM_systems/all_ctgs_RM.rm.genes.tsv")
         if not os.path.exists(finish_file):
 
             cmd =  f"""snakemake -s methy_isolation.smk --config prefix={prefix} \
@@ -150,6 +151,31 @@ def methy_run(results_dir):
         print (f"nohup bash {script_file} &", file = f)
     f.close()
 
+def RM_run(results_dir):
+    ## get all ccs bam files
+    cmd_list = []
+    for folder in os.listdir(results_dir):
+        prefix = folder
+        aligned_bam = os.path.join(results_dir, folder, f"{prefix}.aligned.bam")
+        finish_file = os.path.join(results_dir, folder, f"{prefix}_methylation2/methylation.finish")
+        rm_file = os.path.join(results_dir, folder, f"{prefix}_methylation2/RM_systems/all_ctgs_RM.rm.genes.tsv")
+        if not os.path.exists(rm_file):
+
+            cmd =  f"""snakemake -s methy_isolation.smk --config prefix={prefix} \
+                work_dir={results_dir}/{prefix} -j 64"""
+            cmd_list.append(cmd)
+    batch_file = "run_methy_isolation.sh"
+    num_scripts = 9
+    f = open(batch_file, "w")
+    for i in range(num_scripts):
+        script_file = f"batch/methy_isolation_part_{i}.sh"
+        with open(script_file, "w") as sf:
+            for j in range(i, len(cmd_list), num_scripts):
+                sf.write(cmd_list[j] + "\n")
+        print (f"sbatch  --partition standard --wrap 'bash {script_file}'  --job-name=iso_{i}", file = f)
+    f.close()
+    print (len(cmd_list))
+
 # bam = "/home/shuaiw/borg/paper/aws/isolate/bacteria/set1/ERR10087071/demultiplex.bc1053T__bc1053T.bam"
 # folder = "/home/shuaiw/borg/paper/aws/isolate/bacteria/set1/"
 # ccs_bam_dir = "/home/shuaiw/borg/paper/aws/isolate/bacteria/ccs_bams/"
@@ -157,7 +183,8 @@ def methy_run(results_dir):
 folder = "/home/shuaiw/borg/paper/isolation/aws_methylation2/"
 ccs_bam_dir = "/home/shuaiw/borg/paper/isolation/batch2_ccs_bam/"
 results_dir = "/home/shuaiw/borg/paper/isolation/batch2_results/"
-batch_run(ccs_bam_dir, results_dir)
+# batch_run(ccs_bam_dir, results_dir)
 # convert_hifi(folder, ccs_bam_dir)
 # methy_run(results_dir)
+RM_run(results_dir)
 

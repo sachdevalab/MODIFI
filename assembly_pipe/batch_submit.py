@@ -15,18 +15,14 @@ def read_list(bam_list, cmd_file, prefix_table):
     spacer = open("run_spacer.sh", 'w')
     # h = open(prefix_table, 'w')
     i = 1
-    with open(bam_list, 'r') as f:
+    with open(prefix_table, 'r') as f:
         for line in f:
-            hifi_bam = line.strip()
-            field = hifi_bam.split("/")[-1].split(".")
-            prefix = field[0]
-            if re.search("soil", hifi_bam) and prefix != "XRSBK_20221007_S64018_PL100268287-1_C01":
-                prefix = f"{field[0]}_{field[-2]}"
-            ## replace prefix with the one in the prefix table
-            if prefix in prefix_dict:
-                prefix = prefix_dict[prefix]
-            else:
-                print(f"Warning: {prefix} not found in prefix table, using original prefix.")
+            items = line.strip().split()
+            raw_prefix = items[0]
+            prefix = items[1]
+            hifi_bam = items[2]
+            # print (items)
+            environment = items[3]
             work_dir = os.path.join("/home/shuaiw/borg/paper/run2", prefix)
 
             prokka = f"{work_dir}/prokka/{prefix}.gff"
@@ -149,7 +145,7 @@ def read_prefix_table(prefix_table):
         for line in f:
             if line.startswith("#"):
                 continue
-            items = line.strip().split("\t")
+            items = line.strip().split()
             raw_prefix = items[0]
             prefix = items[1]
             hifi_bam = items[2]
@@ -279,12 +275,12 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
 
 if __name__ == "__main__":
-    # bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
-    # cmd_file = "run.sh"
-    # prefix_table = "prefix_table.tab"
-    # read_list(bam_list, cmd_file, prefix_table)
-
-    outdir = "/home/shuaiw/borg/paper/run2/"
-    cmd_file = "run_asthma.sh"
+    bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
+    cmd_file = "run.sh"
     prefix_table = "prefix_table.tab"
-    batch_asthma(cmd_file, prefix_table, outdir)
+    read_list(bam_list, cmd_file, prefix_table)
+
+    # outdir = "/home/shuaiw/borg/paper/run2/"
+    # cmd_file = "run_asthma.sh"
+    # prefix_table = "prefix_table.tab"
+    # batch_asthma(cmd_file, prefix_table, outdir)

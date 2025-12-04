@@ -717,6 +717,7 @@ def main_profile(all_dir, fig_dir):
         average_dp = sample_obj.get_average_depth()
         unique_motif_num, unique_motifs = sample_obj.get_unique_motifs()
         potential_megaP = sample_obj.search_megaP()
+        potential_megaP_all += potential_megaP
         
         # sample_obj.explore_specific_motifs()
         sample_obj.load_isolation_RM()
@@ -750,11 +751,11 @@ def main_profile(all_dir, fig_dir):
         profile_data.append([prefix, sample_obj.phylum, unique_motif_num, MT_num])
     profile_df = pd.DataFrame(profile_data, columns=['sample', 'phylum', 'motif_num', 'RM_num'])
     profile_df.to_csv(f"{fig_dir}/isolation_samples_motif_profile.csv", index=False)
-    potential_megaP_all += potential_megaP
+    
 
     print (len(potential_megaP_all), "potential megaP contigs found:")
-    for contig in potential_megaP_all:
-        print (contig)
+    for contig_info in potential_megaP_all:
+        print (contig_info)
 
     # profile_df = pd.read_csv(f"{fig_dir}/isolation_samples_motif_profile.csv")
     # plot_MTase(profile_df, fig_dir)

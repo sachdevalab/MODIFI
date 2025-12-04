@@ -45,7 +45,8 @@ m84039_230626_214113_s4_bc2022	soil_s4_1	/home/shuaiw/borg/paper/aws/soil/m84039
 m84039_230626_214113_s4_bc2024	soil_s4_2	/home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2024.bam   soil
 m84039_230626_221130_s1_bc2025	soil_s1_1	/home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2025.bam   soil
 m84039_230626_221130_s1_bc2026	soil_s1_2	/home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2026.bam   soil
-XRSBK_20221007_S64018_PL100268287-1_C01	soil_1	/home/shuaiw/borg/paper/aws/soil/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam   soil
+XRSBK_20221007_S64018_PL100268287-1_C01	soil_1	/home/shuaiw/borg/paper/aws/soil/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam    soil
+XRSBK_20221007_S64018_PL100268288-1_D01 soil_2  /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268288-1_D01.ccs.bam   soil
 SRR14074352	SRR14074352_human	/home/shuaiw/borg/paper/aws/SRR14074352/SRR14074352.ccs.bam   human
 SRR23446539	SRR23446539_sugarcane	/home/shuaiw/borg/paper/aws/SRR23446539/SRR23446539.ccs.bam   sugarcane
 SRR23446540	SRR23446540_sugarcane	/home/shuaiw/borg/paper/aws/SRR23446540/SRR23446540.ccs.bam   sugarcane

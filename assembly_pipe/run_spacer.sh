@@ -240,6 +240,11 @@
             
 
                 python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                soil_2 \
+                 /home/shuaiw/borg/paper/run2/soil_2/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
                 SRR14074352_human \
                  /home/shuaiw/borg/paper/run2/SRR14074352_human/
             
@@ -252,4 +257,104 @@
                 python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
                 SRR23446540_sugarcane \
                  /home/shuaiw/borg/paper/run2/SRR23446540_sugarcane/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_1 \
+                 /home/shuaiw/borg/paper/run2/asthma_1/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_2 \
+                 /home/shuaiw/borg/paper/run2/asthma_2/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_3 \
+                 /home/shuaiw/borg/paper/run2/asthma_3/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_4 \
+                 /home/shuaiw/borg/paper/run2/asthma_4/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_5 \
+                 /home/shuaiw/borg/paper/run2/asthma_5/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_6 \
+                 /home/shuaiw/borg/paper/run2/asthma_6/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_7 \
+                 /home/shuaiw/borg/paper/run2/asthma_7/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_8 \
+                 /home/shuaiw/borg/paper/run2/asthma_8/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_9 \
+                 /home/shuaiw/borg/paper/run2/asthma_9/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_10 \
+                 /home/shuaiw/borg/paper/run2/asthma_10/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_11 \
+                 /home/shuaiw/borg/paper/run2/asthma_11/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_12 \
+                 /home/shuaiw/borg/paper/run2/asthma_12/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_13 \
+                 /home/shuaiw/borg/paper/run2/asthma_13/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_14 \
+                 /home/shuaiw/borg/paper/run2/asthma_14/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_15 \
+                 /home/shuaiw/borg/paper/run2/asthma_15/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_16 \
+                 /home/shuaiw/borg/paper/run2/asthma_16/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_17 \
+                 /home/shuaiw/borg/paper/run2/asthma_17/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_18 \
+                 /home/shuaiw/borg/paper/run2/asthma_18/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_19 \
+                 /home/shuaiw/borg/paper/run2/asthma_19/
+            
+
+                python /home/shuaiw/Methy/benchmark/spacer/spacer_match.py \
+                asthma_20 \
+                 /home/shuaiw/borg/paper/run2/asthma_20/
             

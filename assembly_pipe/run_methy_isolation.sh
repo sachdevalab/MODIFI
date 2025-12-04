@@ -1,10 +1,9 @@
-nohup bash batch/methy_isolation_part_0.sh &
-nohup bash batch/methy_isolation_part_1.sh &
-nohup bash batch/methy_isolation_part_2.sh &
-nohup bash batch/methy_isolation_part_3.sh &
-nohup bash batch/methy_isolation_part_4.sh &
-nohup bash batch/methy_isolation_part_5.sh &
-nohup bash batch/methy_isolation_part_6.sh &
-nohup bash batch/methy_isolation_part_7.sh &
-nohup bash batch/methy_isolation_part_8.sh &
-nohup bash batch/methy_isolation_part_9.sh &
+sbatch  --partition standard --wrap 'bash batch/methy_isolation_part_0.sh'  --job-name=iso_0
+sbatch  --partition standard --wrap 'bash batch/methy_isolation_part_1.sh'  --job-name=iso_1
+sbatch  --partition standard --wrap 'bash batch/methy_isolation_part_2.sh'  --job-name=iso_2
+sbatch  --partition standard --wrap 'bash batch/methy_isolation_part_3.sh'  --job-name=iso_3
+sbatch  --partition standard --wrap 'bash batch/methy_isolation_part_4.sh'  --job-name=iso_4
+sbatch  --partition standard --wrap 'bash batch/methy_isolation_part_5.sh'  --job-name=iso_5
+sbatch  --partition standard --wrap 'bash batch/methy_isolation_part_6.sh'  --job-name=iso_6
+sbatch  --partition standard --wrap 'bash batch/methy_isolation_part_7.sh'  --job-name=iso_7
+sbatch  --partition standard --wrap 'bash batch/methy_isolation_part_8.sh'  --job-name=iso_8
