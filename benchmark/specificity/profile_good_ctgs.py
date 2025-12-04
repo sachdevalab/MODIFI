@@ -476,7 +476,7 @@ def plot_drep_similarity_vs_cos_sim(df):
     drep_sim_df = pd.DataFrame(drep_sim_list, columns=['ctg1', 'ctg2', 'cos_sim', 'drep_sim'])
     ### plot scatter plot of dRep similarity vs Euclidean distance
     plt.figure(figsize=(7, 6))
-    sns.scatterplot(data=drep_sim_df, x='cos_sim', y='drep_sim', alpha=0.5)
+    sns.scatterplot(data=drep_sim_df, x='cos_sim', y='drep_sim', alpha=0.3, s=25)
     plt.xlabel('Cosine Similarity')
     plt.ylabel('dRep Similarity')
     plt.savefig("../../tmp/results/drep_similarity_vs_cos_sim.png", dpi=300, bbox_inches='tight')
@@ -739,7 +739,7 @@ def count_motifs(best_ctgs, all_dir, prefix, environment, ctg_taxa_dict):
         ctg_domain = classify_taxa(ctg_lineage, level='domain')
         ctg_len = ctg_obj.get_ctg_len()
         ctg_RM_dict = ctg_obj.load_RM()
-        print (ctg_RM_dict)
+        # print (ctg_RM_dict)
         ctg_RM_num = len(ctg_RM_dict)
         # if ctg_phylum == "Unknown":
         #     os.system(f"cp {ctg_obj.ctg_ref} /home/shuaiw/borg/paper/specificity/ming_second_chr")
@@ -759,44 +759,6 @@ def count_MT_num(anno_file):
         if row['Gene type'] == 'MT':
             ctg_MT_num[row['contig']].add(row['HMM'])
     return ctg_MT_num
-
-def plot_MT_motif():
-    ctg_MT_num = count_MT_num(anno_file)
-    depth_df = pd.read_csv(depth_file)
-    good_depth = {}
-    for index, row in depth_df.iterrows():
-        if row['depth'] >= 10:
-            good_depth[row['contig']] = row['depth']
-    best_depth_ctg = []
-    for ctg in best_ctgs:
-        if ctg in good_depth:
-            best_depth_ctg.append(ctg)
-    print(f"Total {len(best_depth_ctg)} contigs with depth >= 10 found.")
-    has_motif_ctg_num = 0
-    motif_num_list = []
-    data = []
-    for ctg in best_depth_ctg:
-        motif_file = os.path.join(work_dir,"motifs", f"{ctg}.motifs.csv")
-        # print (motif_file)
-        if os.path.exists(motif_file):
-            df_motif = pd.read_csv(motif_file)
-            ## only keep themotifs with fraction >= 0.4, and nDetected >=100
-            unique_motifs_num, unique_motifs = get_unique_motifs(df_motif)
-            data.append({
-                'contig': ctg,
-                'motif_num': unique_motifs_num,
-                'MT_num': len(ctg_MT_num[ctg]) if ctg in ctg_MT_num else 0
-            })
-        else:
-            print(f"No motifs found for {ctg}.")
-    df_data = pd.DataFrame(data)
-    ## plot dot plot with seaborn
-    plt.figure(figsize=(7, 6))
-    sns.scatterplot(data=df_data, x='MT_num', y='motif_num', palette='viridis', s=100)
-    plt.title('MTase Number vs Motif Number in Best Contigs')
-    plt.xlabel('Number of MTases')
-    plt.ylabel('Number of Motifs')
-    plt.savefig(os.path.join("../../tmp/results", "MT_motif_num_distribution.png"), dpi=300, bbox_inches='tight')
 
 def count_modified_base(all_dir, prefix, best_ctgs, length_dict, env, score_cutoff = 30):
     base_data = []
@@ -1052,6 +1014,41 @@ def plot_genome(df_genome_data, fig_dir):
     plt.tight_layout()
     plt.savefig(f"{fig_dir}/genome_size_N50_all_samples.png", dpi=300, bbox_inches='tight')
 
+def plot_MTase(df_all_data, fig_dir):
+    ##scatter plot and box plot for MTase num vs motif num
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+    
+    # Scatter plot with regression line
+    sns.scatterplot(data=df_all_data, x='RM_num', y='motif_num', hue='environment', 
+                   palette='Set2', alpha=0.6, s=40, ax=ax1)
+    # Add regression line
+    sns.regplot(data=df_all_data, x='RM_num', y='motif_num', scatter=False, 
+                color='red', ax=ax1)
+    ax1.set_title('MTase Number vs Motif Number (Scatter)')
+    ax1.set_xlabel('MTase Number')
+    ax1.set_ylabel('Motif Number')
+    ax1.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    # Box plot - each x shows a number of MTase, y shows number of motifs
+    # Sort the RM_num values and create ordered categories
+    rm_order = sorted(df_all_data['RM_num'].unique())
+    df_all_data['RM_num_str'] = df_all_data['RM_num'].astype(str)
+    sns.boxplot(data=df_all_data, x='RM_num_str', y='motif_num',
+                order=[str(x) for x in rm_order], ax=ax2)
+    ax2.set_title('Motif Number Distribution by MTase Count')
+    ax2.set_xlabel('MTase Number')
+    ax2.set_ylabel('Motif Number')
+    ax2.tick_params(axis='x', rotation=45)
+    
+    plt.tight_layout()
+    plt.savefig(f"{fig_dir}/MTase_vs_motif_num.png", dpi=300, bbox_inches='tight')
+
+    ## print all the rows with motif_num > RM_num
+    df_motif_more = df_all_data[df_all_data['motif_num'] > df_all_data['RM_num']]
+    ## output all the rows with motif_num > RM_num
+    ## sort column order, first sample then motif_num and RM_num
+    df_motif_more = df_motif_more[['sample', 'motif_num', 'RM_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len']]
+    df_motif_more.to_csv(f"{fig_dir}/motif_num_greater_than_MTase_num.csv", index=False)
 
 def read_metadata(meta_file):
     sample_env_dict = {}
@@ -1112,17 +1109,18 @@ def main(all_dir, fig_dir, sample_env_dict):
     # df_genome_data = pd.read_csv(f"{fig_dir}/genome_data_all_samples.csv")
     # df_all_base_data = pd.read_csv(f"{fig_dir}/base_count_all_samples.csv")
 
-    plot_motif_env(df_all_data, fig_dir)
-    sort_genome_motif(df_all_data, fig_dir)
-    plot_motif(df_all_data, fig_dir)
-    plot_genome(df_genome_data, fig_dir)
-    plot_meta(df_genome_data, fig_dir)
-    plot_base(df_all_base_data, fig_dir)
+    # plot_motif_env(df_all_data, fig_dir)
+    # sort_genome_motif(df_all_data, fig_dir)
+    # plot_motif(df_all_data, fig_dir)
+    # plot_genome(df_genome_data, fig_dir)
+    # plot_meta(df_genome_data, fig_dir)
+    # plot_base(df_all_base_data, fig_dir)
+    plot_MTase(df_all_data, fig_dir)
     # ## save genome data
 
-    with open(genome_list_file, "w") as f:
-        for genome in genome_list:
-            f.write(genome + "\n")
+    # with open(genome_list_file, "w") as f:
+    #     for genome in genome_list:
+    #         f.write(genome + "\n")
 
 def rerun(fig_dir):
     df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
@@ -1364,9 +1362,9 @@ def plot_motif_len(fig_dir):
     # Create subplot
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
     
-    # Scatter plot
+    # Scatter plot with reduced overlap
     sns.scatterplot(data=df_all_data, x='ctg_len', y='motif_num', hue='environment', 
-                   palette='Set2', alpha=0.6, ax=ax1)
+                   palette='Set2', alpha=0.5, s=30, ax=ax1)
     ax1.set_xlabel('Contig Length')
     ax1.set_ylabel('Motif Number')
     ax1.set_title('Motif Number vs Contig Length')

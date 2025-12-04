@@ -539,6 +539,7 @@ class My_sample(object):
         self.mge_genomad_dict = {**genomad_plasmid, **genomad_virus}
         return self.mge_genomad_dict
 
+
 class Linkage_object(object):
 
 
@@ -754,6 +755,8 @@ class My_contig(My_sample):
                 continue
             fields = line.strip().split("\t")
             if len(fields) < 2:
+                continue
+            if fields[3] == "RE" or fields[3] == "SP":
                 continue
             system_name = fields[0]
             if not re.search("RM Operon #",system_name) and not re.search("Singleton #", system_name):
