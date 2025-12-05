@@ -757,9 +757,9 @@ def main_profile(all_dir, fig_dir):
     for contig_info in potential_megaP_all:
         print (contig_info)
 
-    # profile_df = pd.read_csv(f"{fig_dir}/isolation_samples_motif_profile.csv")
-    # plot_MTase(profile_df, fig_dir)
-    # plot_motif_num(profile_df, fig_dir)
+    profile_df = pd.read_csv(f"{fig_dir}/isolation_samples_motif_profile.csv")
+    plot_MTase(profile_df, fig_dir)
+    plot_motif_num(profile_df, fig_dir)
    
 def main(all_dir, fig_dir, drep_clu_file):
     """
