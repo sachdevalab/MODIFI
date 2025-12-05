@@ -735,6 +735,8 @@ class My_contig(My_sample):
         self.modified_num = None
         self.modified_motif_num = None
         self.RM_dict = None
+        self.modified_loci = None
+        self.REF = None
 
     def read_motif(self, min_frac=0.3, min_sites=30):
         ## check if file exists
@@ -776,6 +778,120 @@ class My_contig(My_sample):
         self.modified_motif_ratio = self.modified_motif_num/ self.ctg_len
         self.motif_ratio =  self.modified_motif_num / self.modified_num if self.modified_num > 0 else 0
         return self.modified_num, self.modified_motif_num, self.modified_ratio, self.modified_motif_ratio, self.motif_ratio
+
+    def get_borg_mod_ratio(self, max_len=float('inf'), score_cutoff = 30):
+        # self.get_ctg_len()
+        print (self.reprocess_gff)
+        self.ctg_len = max_len
+        self.modified_num = 0
+        self.modified_motif_num = 0
+        modified_sites = set()
+        if os.path.exists(self.reprocess_gff):
+            for line in open(self.reprocess_gff, "r"):
+                if line.startswith("#"):
+                    continue
+                fields = line.strip().split("\t")
+                if int(fields[3]) >= max_len:
+                    break
+                if int(fields[5]) < score_cutoff:
+                    continue
+                self.modified_num += 1
+                if re.search(";motif=", fields[8]):
+                    self.modified_motif_num += 1
+                    modified_sites.add(fields[3])
+        self.modified_ratio = self.modified_num / self.ctg_len
+        self.modified_motif_ratio = self.modified_motif_num/ self.ctg_len
+        self.motif_ratio =  self.modified_motif_num / self.modified_num if self.modified_num > 0 else 0
+        return modified_sites
+
+    def get_modified_loci(self, score_cutoff = 30):
+        ## read the gff file
+        f = open(self.reprocess_gff, "r")
+        self.modified_loci = {}
+        for line in f:
+            if line[0] == "#":
+                continue
+            line = line.strip().split("\t")
+
+            ref = line[0]
+            pos = int(line[3]) 
+            strand = line[6]
+            score = int(line[5])
+            if score <= score_cutoff:
+                continue
+            self.modified_loci[ref + ":" + str(pos) + strand] = score
+        print ("no. of modified loci", len(self.modified_loci))
+        return self.modified_loci
+
+    def read_ref(self, max_len=float('inf')):
+        self.REF = {}
+        for record in SeqIO.parse(self.ctg_ref, "fasta"):
+        #     seq_dict[record.id] = record.seq
+        # return seq_dict
+            self.REF[record.id] = record.seq[:max_len]
+            # return str(record.seq), record.id
+        return self.REF
+
+    def count_mod_frac_in_motif(self, motif_new, exact_pos, score_cutoff=30):
+        motif_len = len(motif_new)
+        rev_exact_pos = motif_len - exact_pos + 1
+        motif_sites = {}
+        motif_loci_num = 0
+        motif_modify_num = 0
+        for_loci_num = 0
+        rev_loci_num = 0
+        for_modified_num = 0
+        rev_modified_num = 0
+
+        # motif_ipd_ratio = []
+        record_modified_sites = {}
+
+        for r, contig in self.REF.items():
+            for site in nt_search(str(contig), motif_new)[1:]:
+                tag = r + ":" + str(site+exact_pos) + "+"
+                record_modified_sites[tag] = motif_new
+
+                motif_loci_num += 1
+                for_loci_num += 1
+                if tag in self.modified_loci:
+                    motif_modify_num += 1
+                    for_modified_num += 1
+
+
+            for site in nt_search(str(contig), Seq(motif_new).reverse_complement())[
+                1:
+            ]:
+                tag = r + ":" + str(site+rev_exact_pos) + "-"
+                record_modified_sites[tag] = motif_new
+                # for i in range(site-100, site+100):
+                #     record_modified_sites[r + ":" + str(i) + "+"] = motif_new
+                motif_loci_num += 1
+                rev_loci_num += 1
+                if tag in self.modified_loci:
+                    motif_modify_num += 1
+                    rev_modified_num += 1
+
+        if motif_loci_num == 0:
+            ratio = 0
+        else:
+            ratio = motif_modify_num/motif_loci_num
+        if for_loci_num == 0:
+            for_ratio = 0
+        else:
+            for_ratio = for_modified_num/for_loci_num
+        if rev_loci_num == 0:
+            rev_ratio = 0
+        else:
+            rev_ratio = rev_modified_num/rev_loci_num
+        if len(self.modified_loci) == 0:
+            proportion_all_modified = 0
+        else:
+            proportion_all_modified = motif_modify_num/len(self.modified_loci)
+
+        # return [for_loci_num, for_modified_num,for_ratio,\
+        #         rev_loci_num, rev_modified_num, rev_ratio,\
+        #         motif_loci_num, motif_modify_num, ratio, proportion_all_modified], record_modified_sites
+        return motif_loci_num, motif_modify_num, ratio
 
     def load_RM(self):
         self.RM_dict = defaultdict(list)

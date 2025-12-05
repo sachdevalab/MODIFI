@@ -347,10 +347,15 @@ if __name__ == "__main__":
     # work_dir = f"/home/shuaiw/borg/paper/run2/{sample}/{sample}_methylation3/"
 
 
-    sample = "soil_s4_1"
-    contig = "BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR"
-    out_dir = os.path.join(out_dir, sample)
-    motif_list = [["GATATC", 4], ["GATC", 2], ["YCTB", 2]]
+    # sample = "soil_s4_1"
+    # contig = "BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GATATC", 4], ["GATC", 2], ["YCTB", 2]]
+
+    # sample = "soil_s4_2"
+    # contig = "ORANGE_SR-VP_26_10_2019_2_100cm_FINAL"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["YCT", 2], ["GCC", 2]]
 
     # sample = "soil_1"
     # contig = "Green_Borg_SRVP_2020_100_cm_2_FINAL-FINAL"
@@ -373,11 +378,6 @@ if __name__ == "__main__":
     # motif_list = [["GATATC", 4], ["GATC", 2], ["YCTB", 2]]
 
     # sample = "soil_s1_2"
-    # contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
-    # out_dir = os.path.join(out_dir, sample)
-    # motif_list = [["GAA", 3],['YCTB',2],['GATC',2],['GGAGAA',6]]
-
-    # sample = "soil_s1_2"
     # contig = "BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR"
     # out_dir = os.path.join(out_dir, sample)
     # motif_list = [["GATATC", 4], ["GATC", 2], ["YCTB", 2]]
@@ -385,7 +385,28 @@ if __name__ == "__main__":
     # sample = "soil_1"
     # contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
     # out_dir = os.path.join(out_dir, sample)
-    # motif_list = [["GAA", 3],['YCTB',2],['GATC',2],['GGAGAA',6]]
+    # motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
+
+    sample = "soil_2"
+    contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
+    out_dir = os.path.join(out_dir, sample)
+    motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
+
+    # sample = "soil_s3_1"
+    # contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
+
+    # sample = "soil_1"
+    # contig = "Amber_Borg_SR-VP_9_9_2021_87_5B_1_2m_2_complete"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GAA", 3],['YCTB',2],['AGAA',4]]
+
+    # sample = "soil_s4_2"
+    # contig = "SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_723848_L"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["YCT", 2], ["GCC", 2]]
+
 
     ## makdir out_dir if not exists
     if not os.path.exists(out_dir):
