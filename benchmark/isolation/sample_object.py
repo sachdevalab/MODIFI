@@ -823,16 +823,16 @@ class My_contig(My_sample):
         print ("no. of modified loci", len(self.modified_loci))
         return self.modified_loci
 
-    def read_ref(self, max_len=float('inf')):
+    def read_ref(self):
         self.REF = {}
         for record in SeqIO.parse(self.ctg_ref, "fasta"):
         #     seq_dict[record.id] = record.seq
         # return seq_dict
-            self.REF[record.id] = record.seq[:max_len]
+            self.REF[record.id] = record.seq
             # return str(record.seq), record.id
         return self.REF
 
-    def count_mod_frac_in_motif(self, motif_new, exact_pos, score_cutoff=30):
+    def count_mod_frac_in_motif(self, motif_new, exact_pos, start, end, score_cutoff=30):
         motif_len = len(motif_new)
         rev_exact_pos = motif_len - exact_pos + 1
         motif_sites = {}
@@ -847,7 +847,7 @@ class My_contig(My_sample):
         record_modified_sites = {}
 
         for r, contig in self.REF.items():
-            for site in nt_search(str(contig), motif_new)[1:]:
+            for site in nt_search(str(contig)[start:end], motif_new)[1:]:
                 tag = r + ":" + str(site+exact_pos) + "+"
                 record_modified_sites[tag] = motif_new
 
@@ -858,7 +858,7 @@ class My_contig(My_sample):
                     for_modified_num += 1
 
 
-            for site in nt_search(str(contig), Seq(motif_new).reverse_complement())[
+            for site in nt_search(str(contig)[start:end], Seq(motif_new).reverse_complement())[
                 1:
             ]:
                 tag = r + ":" + str(site+rev_exact_pos) + "-"
@@ -883,15 +883,36 @@ class My_contig(My_sample):
             rev_ratio = 0
         else:
             rev_ratio = rev_modified_num/rev_loci_num
-        if len(self.modified_loci) == 0:
-            proportion_all_modified = 0
-        else:
-            proportion_all_modified = motif_modify_num/len(self.modified_loci)
 
-        # return [for_loci_num, for_modified_num,for_ratio,\
-        #         rev_loci_num, rev_modified_num, rev_ratio,\
-        #         motif_loci_num, motif_modify_num, ratio, proportion_all_modified], record_modified_sites
+
         return motif_loci_num, motif_modify_num, ratio
+
+    def count_mod_dist(self, motif_new, exact_pos, start, end):
+
+        motif_len = len(motif_new)
+        rev_exact_pos = motif_len - exact_pos + 1
+
+        for_loci_num = 0
+        rev_loci_num = 0
+
+        for r, contig in self.REF.items():
+            for site in nt_search(str(contig)[start:end], motif_new)[1:]:
+                tag = r + ":" + str(site+exact_pos) + "+"
+                for_loci_num += 1
+
+            for site in nt_search(str(contig)[start:end], Seq(motif_new).reverse_complement())[
+                1:
+            ]:
+                tag = r + ":" + str(site+rev_exact_pos) + "-"
+                rev_loci_num += 1
+        total_loci = for_loci_num + rev_loci_num
+        total_ratio = total_loci / (end - start)
+        for_ratio = for_loci_num / (end - start)
+        rev_ratio = rev_loci_num / (end - start)
+        print (f"Motif: {motif_new}, Total loci: {total_loci} ({for_loci_num} forward, \
+               {rev_loci_num} reverse) in range {start}-{end}\
+                , Ratios: {total_ratio:.4f} ({for_ratio:.4f} forward, {rev_ratio:.4f} reverse)")
+
 
     def load_RM(self):
         self.RM_dict = defaultdict(list)
