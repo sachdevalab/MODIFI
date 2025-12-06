@@ -142,7 +142,7 @@ class My_sample(object):
             self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
 
         self.reference_fasta = f"{self.all_dir}/{self.prefix}/{self.prefix}.hifiasm.p_ctg.rename.fa"
-        self.fai = f"{self.all_dir}/{self.prefix}/{self.prefix}.hifiasm.p_ctg.rename.fa.fai"
+        self.fai = f"{self.reference_fasta}.fai"
         self.map_sum = f"{self.all_dir}/{self.prefix}/{self.prefix}.align.count.csv"
         self.all_host_file = f"{self.all_dir}/{self.prefix}/all_host_ctgs.tsv"
         self.depth_file = os.path.join(self.work_dir, "mean_depth.csv")

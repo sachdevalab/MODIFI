@@ -389,6 +389,12 @@
                 prefix=soil_2 \
                 work_dir=/home/shuaiw/borg/paper/run2/soil_2 -j 64" \
                 --job-name=soil_2
+
+            sbatch --partition standard --wrap "snakemake -s annotation.smk --config \
+                hifi_bam=/home/shuaiw/borg/XRSBK_20221007_S64018_PL100268288-1_D01.ccs.bam \
+                prefix=soil_2 \
+                work_dir=/home/shuaiw/borg/paper/run2/soil_2 -j 64" \
+                --job-name=soil_2
             
 
             #### number 50

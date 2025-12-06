@@ -275,12 +275,12 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
 
 if __name__ == "__main__":
-    # bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
-    # cmd_file = "run.sh"
-    # prefix_table = "prefix_table.tab"
-    # read_list(bam_list, cmd_file, prefix_table)
-
-    outdir = "/home/shuaiw/borg/paper/run2/"
-    cmd_file = "run_asthma.sh"
+    bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
+    cmd_file = "run.sh"
     prefix_table = "prefix_table.tab"
-    batch_asthma(cmd_file, prefix_table, outdir)
+    read_list(bam_list, cmd_file, prefix_table)
+
+    # outdir = "/home/shuaiw/borg/paper/run2/"
+    # cmd_file = "run_asthma.sh"
+    # prefix_table = "prefix_table.tab"
+    # batch_asthma(cmd_file, prefix_table, outdir)
