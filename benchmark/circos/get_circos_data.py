@@ -7,6 +7,23 @@ from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
 import sys
 import os
+import profile
+from Bio.SeqUtils import nt_search
+from Bio import SeqIO
+from Bio.Seq import Seq
+import xml.etree.ElementTree as ET
+import pandas as pd
+from scipy.stats import pearsonr
+import matplotlib.pyplot as plt
+import sys, os, re
+import numpy as np
+from collections import defaultdict
+import seaborn as sns
+from scipy.cluster.hierarchy import linkage, leaves_list
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
+from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa
+
+
 
 
 def read_ref(ref):
@@ -280,7 +297,7 @@ def all_split_gff(out_dir):
         df.to_csv(new_csv, index=False)
 
 
-def get_all_loci(gff2, contig_name, my_ref, out_dir):
+def get_all_loci(gff2, contig_name, my_ref, out_dir,motif_list):
     modified_loci = get_modified_ratio(gff2)
     new_ref = os.path.join(out_dir, contig_name + ".fa")
     REF = read_ref(my_ref)
@@ -327,8 +344,7 @@ def get_all_loci(gff2, contig_name, my_ref, out_dir):
         df = pd.DataFrame(data, columns=["name", "contig", "type", "start", "stop", "strand", "score", "legend"])
         df.to_csv(motif_csv, index=False)
 
-if __name__ == "__main__":
-    score_cutoff = 30
+def manual_main():
     out_dir = "/home/shuaiw/borg/paper/circos/borg/"
 
     # sample = "infant_2"
@@ -419,6 +435,56 @@ if __name__ == "__main__":
     ipd_ratio_file = f"{work_dir}/ipd_ratio/{contig}.ipd3.csv"
     # split_gff(gff2, contig, my_ref, out_dir)
     get_all_loci(gff2, contig, my_ref, out_dir)
+
+def auto_main():
+    out_dir = "/home/shuaiw/borg/paper/circos/borg2/"
+    all_dir = "/home/shuaiw/borg/paper/run2/"
+
+    ## makdir out_dir if not exists
+
+
+    sample = "soil_1"
+    sample_obj = My_sample(sample, all_dir)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    # print (out_dir)
+    # sample_obj.reference_fasta = "/home/shuaiw/borg/paper/curated_genome/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.soil_1.fa"
+    # sample_obj.fai = sample_obj.reference_fasta + ".fai"
+    sample_obj.read_depth()
+    isolation_taxa = sample_obj.read_meta_gtdb()
+    ## sort the contigs by depth
+    sorted_contigs = sorted(sample_obj.depth_dict.items(), key=lambda x: x[1], reverse=True)
+    for contig, depth in sorted_contigs[:10000]:
+        if contig not in isolation_taxa:
+            continue
+        if contig[-1] != "C":
+            continue
+        taxa = isolation_taxa[contig]
+        ## check bacteria
+        if re.search("bacteria", taxa.lower()) or re.search("archaea", taxa.lower()):
+            continue
+        # if sample_obj.length_dict[contig] > 1000000:
+        #     continue
+        print (contig, taxa)
+        ctg_obj = My_contig(sample, all_dir, contig)
+        motif_df = ctg_obj.read_motif()
+        motif_list = []
+        for _, row in motif_df.iterrows():
+            if row['fraction'] < 0.8:
+                motif_list.append([row['motifString'], row['centerPos']])
+            if len(motif_list) >= 3:
+                break
+
+        work_dir = f"{all_dir}/{sample}/{sample}_methylation3/"
+        my_ref = f"{work_dir}/contigs/{contig}.fa"
+        gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
+        ipd_ratio_file = f"{work_dir}/ipd_ratio/{contig}.ipd3.csv"
+        # split_gff(gff2, contig, my_ref, out_dir)
+        get_all_loci(gff2, contig, my_ref, out_dir,motif_list)
+
+if __name__ == "__main__":
+    score_cutoff = 30
+    auto_main()
     
 
 
