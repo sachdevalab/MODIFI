@@ -443,7 +443,7 @@ def auto_main():
     ## makdir out_dir if not exists
 
 
-    sample = "soil_1"
+    sample = "soil_2"
     sample_obj = My_sample(sample, all_dir)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
