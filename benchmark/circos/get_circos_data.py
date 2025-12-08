@@ -360,7 +360,7 @@ def manual_main():
     # out_dir = "/home/shuaiw/borg/paper/circos/borg/"
     # motif_list = [["GATATC", 4], ["GATC", 2], ["GACGGA", 6], ["AYCNNNNNNNTCGC", 1]]
 
-    # work_dir = f"/home/shuaiw/borg/paper/run2/{sample}/{sample}_methylation3/"
+    # 
 
 
     # sample = "soil_s4_1"
@@ -403,10 +403,10 @@ def manual_main():
     # out_dir = os.path.join(out_dir, sample)
     # motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
 
-    sample = "soil_2"
-    contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
-    out_dir = os.path.join(out_dir, sample)
-    motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
+    # sample = "soil_2"
+    # contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
 
     # sample = "soil_s3_1"
     # contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
@@ -423,18 +423,23 @@ def manual_main():
     # out_dir = os.path.join(out_dir, sample)
     # motif_list = [["YCT", 2], ["GCC", 2]]
 
+    sample = "soil_1"
+    contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_11358_C"
+    out_dir = os.path.join(out_dir, sample)
+    motif_list = [["GANTC", 2],['TTAA',4],['CGCCAA',6],['GTCGAC',5]]
 
     ## makdir out_dir if not exists
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     print (out_dir)
-    work_dir = f"/home/shuaiw/borg/paper/borg_data/methy2/{sample}/{sample}_methylation3/"
+    # work_dir = f"/home/shuaiw/borg/paper/borg_data/methy2/{sample}/{sample}_methylation3/"
+    work_dir = f"/home/shuaiw/borg/paper/run3/{sample}/{sample}_methylation3/"
     
     my_ref = f"{work_dir}/contigs/{contig}.fa"
     gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
     ipd_ratio_file = f"{work_dir}/ipd_ratio/{contig}.ipd3.csv"
     # split_gff(gff2, contig, my_ref, out_dir)
-    get_all_loci(gff2, contig, my_ref, out_dir)
+    get_all_loci(gff2, contig, my_ref, out_dir,motif_list)
 
 def auto_main():
     out_dir = "/home/shuaiw/borg/paper/circos/borg2/"
@@ -484,8 +489,8 @@ def auto_main():
 
 if __name__ == "__main__":
     score_cutoff = 30
-    auto_main()
-    
+    # auto_main()
+    manual_main()
 
 
     # contig = "E_coli_H10407_6"

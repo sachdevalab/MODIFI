@@ -45,6 +45,9 @@ class My_Borg:
             for line in f:
                 if line.strip():  # Skip empty lines
                     try:
+                        ## skip the header line
+                        if line.startswith("borg_ref"):
+                            continue
                         borg_entry = Borg_Entry(line)
                         self.borg_entries.append(borg_entry)
                     except ValueError as e:
@@ -194,19 +197,19 @@ if __name__ == "__main__":
             borg_anno_dict[member] = ['HOST', all_anno_dict[member]]
     # print (borg_anno_dict)
     count_mod_freq(all_dir, borg_anno_dict)
-    """
+    # """
     seq_dir = "/home/shuaiw/borg/paper/borg_data/profile/"
     cluster = "profile"
     plot_name = os.path.join(seq_dir, f"borg_motif_profile.pdf")
     cluster_species = "borg"
 
-    # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-    #                                 seq_dir, seq_dir, min_frac=0.2, 
-    #                                 min_sites=10, score_cutoff = 20)
-    # cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+    cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                                    seq_dir, seq_dir, min_frac=0.2, 
+                                    min_sites=10, score_cutoff = 20)
+    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
-    cluster_obj = My_cluster(cluster, members) 
-    cluster_obj.load_df(seq_dir)
+    # cluster_obj = My_cluster(cluster, members) 
+    # cluster_obj.load_df(seq_dir)
 
     ## remove all rows with motifstring contains GATCH_4
     remove_motifs = ['GATCH_4','BATC_2','RGAYCY_3','YGATCB_3','BGATATC_5']
@@ -216,7 +219,7 @@ if __name__ == "__main__":
     cluster_obj.profile_df['BORG_Ref'] = cluster_obj.profile_df['contig'].apply(lambda x: borg_anno_dict[x][1] if x in borg_anno_dict else 'NA')
     print (cluster_obj.profile_df)
     personal_plot(cluster_obj)
-    """
+    # """
 
 
 

@@ -1,8 +1,8 @@
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-                --work_dir /home/shuaiw/borg/paper/borg_data/methy3/soil_s3_1/soil_s3_1_methylation3 \
+                --work_dir /home/shuaiw/borg/paper/borg_data/methy4/soil_s3_1/soil_s3_1_methylation3 \
                 --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2021.bam \
-                --whole_ref /home/shuaiw/borg/paper/borg_data/jill_borgs/borg_set2.fa \
+                --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg2.fa \
                 --read_type hifi \
                 --min_len 1000 \
                 --min_cov 3 \
@@ -19,9 +19,9 @@
             
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-                --work_dir /home/shuaiw/borg/paper/borg_data/methy3/soil_s3_2/soil_s3_2_methylation3 \
+                --work_dir /home/shuaiw/borg/paper/borg_data/methy4/soil_s3_2/soil_s3_2_methylation3 \
                 --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2023.bam \
-                --whole_ref /home/shuaiw/borg/paper/borg_data/jill_borgs/borg_set2.fa \
+                --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg2.fa \
                 --read_type hifi \
                 --min_len 1000 \
                 --min_cov 3 \
@@ -38,9 +38,9 @@
             
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-                --work_dir /home/shuaiw/borg/paper/borg_data/methy3/soil_s4_1/soil_s4_1_methylation3 \
+                --work_dir /home/shuaiw/borg/paper/borg_data/methy4/soil_s4_1/soil_s4_1_methylation3 \
                 --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2022.bam \
-                --whole_ref /home/shuaiw/borg/paper/borg_data/jill_borgs/borg_set2.fa \
+                --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg2.fa \
                 --read_type hifi \
                 --min_len 1000 \
                 --min_cov 3 \
@@ -57,9 +57,9 @@
             
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-                --work_dir /home/shuaiw/borg/paper/borg_data/methy3/soil_s4_2/soil_s4_2_methylation3 \
+                --work_dir /home/shuaiw/borg/paper/borg_data/methy4/soil_s4_2/soil_s4_2_methylation3 \
                 --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2024.bam \
-                --whole_ref /home/shuaiw/borg/paper/borg_data/jill_borgs/borg_set2.fa \
+                --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg2.fa \
                 --read_type hifi \
                 --min_len 1000 \
                 --min_cov 3 \
@@ -76,9 +76,9 @@
             
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-                --work_dir /home/shuaiw/borg/paper/borg_data/methy3/soil_s1_1/soil_s1_1_methylation3 \
+                --work_dir /home/shuaiw/borg/paper/borg_data/methy4/soil_s1_1/soil_s1_1_methylation3 \
                 --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2025.bam \
-                --whole_ref /home/shuaiw/borg/paper/borg_data/jill_borgs/borg_set2.fa \
+                --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg2.fa \
                 --read_type hifi \
                 --min_len 1000 \
                 --min_cov 3 \
@@ -95,9 +95,9 @@
             
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-                --work_dir /home/shuaiw/borg/paper/borg_data/methy3/soil_s1_2/soil_s1_2_methylation3 \
+                --work_dir /home/shuaiw/borg/paper/borg_data/methy4/soil_s1_2/soil_s1_2_methylation3 \
                 --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2026.bam \
-                --whole_ref /home/shuaiw/borg/paper/borg_data/jill_borgs/borg_set2.fa \
+                --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg2.fa \
                 --read_type hifi \
                 --min_len 1000 \
                 --min_cov 3 \
@@ -114,9 +114,9 @@
             
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-                --work_dir /home/shuaiw/borg/paper/borg_data/methy3/soil_1/soil_1_methylation3 \
+                --work_dir /home/shuaiw/borg/paper/borg_data/methy4/soil_1/soil_1_methylation3 \
                 --unaligned_bam /home/shuaiw/borg/paper/aws/soil/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam \
-                --whole_ref /home/shuaiw/borg/paper/borg_data/jill_borgs/borg_set2.fa \
+                --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg2.fa \
                 --read_type hifi \
                 --min_len 1000 \
                 --min_cov 3 \
@@ -133,9 +133,9 @@
             
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-                --work_dir /home/shuaiw/borg/paper/borg_data/methy3/soil_2/soil_2_methylation3 \
+                --work_dir /home/shuaiw/borg/paper/borg_data/methy4/soil_2/soil_2_methylation3 \
                 --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268288-1_D01.ccs.bam \
-                --whole_ref /home/shuaiw/borg/paper/borg_data/jill_borgs/borg_set2.fa \
+                --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg2.fa \
                 --read_type hifi \
                 --min_len 1000 \
                 --min_cov 3 \

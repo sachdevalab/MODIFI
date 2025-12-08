@@ -214,31 +214,11 @@ def batch_asthma(cmd_file, prefix_table, outdir):
                 --job-name=sue_{i}
             """
 
-            # borg_cmd = f"""
-            #     sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
-            #     --work_dir /home/shuaiw/borg/paper/borg_data/methy2/{prefix}/{prefix}_methylation3 \\
-            #     --unaligned_bam {hifi_bam} \\
-            #     --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg.fa \\
-            #     --read_type hifi \\
-            #     --min_len 1000 \\
-            #     --min_cov 3 \\
-            #     --min_ctg_cov 3 \\
-            #     --min_iden 0.90 \\
-            #     --min_frac 0.2 \\
-            #     --min_score 30 \\
-            #     --min_sites 100 \\
-            #     --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.mean.dat \\
-            #     --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.num.dat \\
-            #     --mge_file /home/shuaiw/borg/paper/borg_data/align/borg.tsv \\
-            #     --threads 64" \\
-            #     --job-name=borg_{i}
-            # """
-
             borg_cmd = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
-                --work_dir /home/shuaiw/borg/paper/borg_data/methy3/{prefix}/{prefix}_methylation3 \\
+                --work_dir /home/shuaiw/borg/paper/borg_data/methy4/{prefix}/{prefix}_methylation3 \\
                 --unaligned_bam {hifi_bam} \\
-                --whole_ref /home/shuaiw/borg/paper/borg_data/jill_borgs/borg_set2.fa \\
+                --whole_ref /home/shuaiw/borg/paper/borg_data/align/all_host_borg2.fa \\
                 --read_type hifi \\
                 --min_len 1000 \\
                 --min_cov 3 \\
@@ -253,6 +233,26 @@ def batch_asthma(cmd_file, prefix_table, outdir):
                 --threads 64" \\
                 --job-name=borg_{i}
             """
+
+            # borg_cmd = f"""
+            #     sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
+            #     --work_dir /home/shuaiw/borg/paper/borg_data/methy3/{prefix}/{prefix}_methylation3 \\
+            #     --unaligned_bam {hifi_bam} \\
+            #     --whole_ref /home/shuaiw/borg/paper/borg_data/jill_borgs/borg_set2.fa \\
+            #     --read_type hifi \\
+            #     --min_len 1000 \\
+            #     --min_cov 3 \\
+            #     --min_ctg_cov 3 \\
+            #     --min_iden 0.90 \\
+            #     --min_frac 0.2 \\
+            #     --min_score 30 \\
+            #     --min_sites 100 \\
+            #     --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.mean.dat \\
+            #     --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.num.dat \\
+            #     --mge_file /home/shuaiw/borg/paper/borg_data/align/borg.tsv \\
+            #     --threads 64" \\
+            #     --job-name=borg_{i}
+            # """
 
             # borg_cmd = f"""
             # nohup python /home/shuaiw/mGlu/assembly_pipe/../benchmark/borg/find_borg.py  /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
@@ -275,12 +275,12 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
 
 if __name__ == "__main__":
-    bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
-    cmd_file = "run.sh"
-    prefix_table = "prefix_table.tab"
-    read_list(bam_list, cmd_file, prefix_table)
-
-    # outdir = "/home/shuaiw/borg/paper/run2/"
-    # cmd_file = "run_asthma.sh"
+    # bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
+    # cmd_file = "run.sh"
     # prefix_table = "prefix_table.tab"
-    # batch_asthma(cmd_file, prefix_table, outdir)
+    # read_list(bam_list, cmd_file, prefix_table)
+
+    outdir = "/home/shuaiw/borg/paper/run2/"
+    cmd_file = "run_asthma.sh"
+    prefix_table = "prefix_table.tab"
+    batch_asthma(cmd_file, prefix_table, outdir)
