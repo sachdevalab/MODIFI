@@ -1385,7 +1385,7 @@ if __name__ == "__main__":
     fig_dir = "../../tmp/figures/multi_env_linkage/"
     genome_list_file =  "/home/shuaiw/borg/paper/specificity/genome.list"
     all_dir = "/home/shuaiw/borg/paper/run2/"
-    meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"
+    meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"   ## get by gene_anno.smk from assembly_pipe/
     tree_results = "/home/shuaiw/borg/paper/specificity/tree/"
     # color_tree(tree_results)
     # plot_motif_len(fig_dir)

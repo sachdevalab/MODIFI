@@ -503,8 +503,8 @@ def main_meta():
     ctg_taxa_dict = get_ctg_taxa(all_dir)
     # print (ctg_taxa_dict)
     # ANI = 95
-    for ANI in [95, 97, 98, 99]:
-    # for ANI in [99]:
+    # for ANI in [95, 97, 98, 99]:
+    for ANI in [99]:
         drep_clu_file = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/data_tables/Cdb.csv"
         dereplicated_genomes_dir = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/dereplicated_genomes/"
         seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep/"
@@ -540,11 +540,11 @@ def main_meta():
             if len(members) > cutoff:
                 print ("cluster", cluster, len(members), len(variation_data))
 
-                # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                #                                 fig_dir, tmp_res, min_frac=0.3, min_sites=100)
+                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                                                fig_dir, tmp_res, min_frac=0.3, min_sites=100)
                 
-                cluster_obj = My_cluster(cluster, members) 
-                cluster_obj.load_df(tmp_res)
+                # cluster_obj = My_cluster(cluster, members) 
+                # cluster_obj.load_df(tmp_res)
                 cluster_obj.manual_filter_motifs()
 
                 if len(cluster_obj.profile_df) < 2:
@@ -651,7 +651,26 @@ def main_isolation():
         plot_clade_size(clade_data, paper_fig_dir)
         print ("all done")
 # 
+def main_asthma():
+    all_dir = "/home/shuaiw/borg/paper/run2/"
+    seq_dir = "/home/shuaiw/borg/paper/asthma/B_longum"
+    B_longum_list = "/home/shuaiw/borg/paper/asthma/test/B_longum.list"
+    members = []
+    for line in open(B_longum_list):
+        contig = line.strip().split("\t")[0]
+        members.append(contig)
+
+    # members = ["asthma_11_4_C"]
+    cluster = "profile"
+    plot_name = os.path.join(seq_dir, f"borg_motif_profile.pdf")
+    cluster_species = "B_longum"
+
+    cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                                    seq_dir, seq_dir, min_frac=0.2, 
+                                    min_sites=10, score_cutoff = 20)
+    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
 if __name__ == "__main__":
     # main_meta()
-    main_isolation()
+    # main_isolation()
+    main_asthma()

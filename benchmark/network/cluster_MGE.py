@@ -5,7 +5,7 @@ from Bio import SeqIO
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 from sample_object import get_unique_motifs, My_sample, Isolation_sample
 
-def cluster_mge_95ani(input_mge, output_dir, threads=8, ani_threshold=95, min_tcov=0.85):
+def cluster_mge_95ani(input_mge, output_dir, threads=64, ani_threshold=95, min_tcov=0.85):
     """
     Cluster MGE sequences based on 95% ANI similarity.
     
@@ -87,10 +87,10 @@ def merge_mge(all_dir, input_mge):
 
 if __name__ == "__main__":
     # Example usage
-    input_mge = "/home/shuaiw/borg/paper/network/all_mge.fa"
+    input_mge = "/home/shuaiw/borg/paper/network/all_mge.fa"   ## each mge.fa obtained from spacer
     output_dir = "/home/shuaiw/borg/paper/MGE/cluster"
     all_dir = "/home/shuaiw/borg/paper/run2/"
     fig_dir = "../../tmp/figures/multi_env_linkage/"
-    # merge_mge(all_dir, input_mge)
+    merge_mge(all_dir, input_mge)
     results = cluster_mge_95ani(input_mge, output_dir, threads=32)
     print("Output files:", results)
