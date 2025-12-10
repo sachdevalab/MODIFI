@@ -273,6 +273,34 @@ def batch_asthma(cmd_file, prefix_table, outdir):
     borg.close()
 
 
+def batch_soil():
+    """
+    Read a list of BAM files from a given file.
+    """
+    outdir = "/home/shuaiw/borg/paper/gg_run/"
+    prefix_table = "prefix_table_soil.tab"
+    w = open("run_soil.sh", 'w')
+    i = 1
+    with open(prefix_table, 'r') as f:
+        for line in f:
+            items = line.strip().split()
+            ref = items[0]
+            prefix = items[1]
+            hifi_bam = items[2]
+            # print (items)
+            environment = items[3]
+
+            work_dir = os.path.join(outdir, prefix)
+            cmd = f"""
+            sbatch  --partition standard --wrap "snakemake -s soil_ggkbase.smk --config \\
+                hifi_bam={hifi_bam} \\
+                prefix={prefix} \\
+                work_dir={work_dir} \\
+                ref={ref} -j 64 "  --job-name={prefix}
+            """
+            print(cmd, file=w)
+    w.close()
+
 
 if __name__ == "__main__":
     # bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
@@ -280,7 +308,9 @@ if __name__ == "__main__":
     # prefix_table = "prefix_table.tab"
     # read_list(bam_list, cmd_file, prefix_table)
 
-    outdir = "/home/shuaiw/borg/paper/run2/"
-    cmd_file = "run_asthma.sh"
-    prefix_table = "prefix_table.tab"
-    batch_asthma(cmd_file, prefix_table, outdir)
+    # outdir = "/home/shuaiw/borg/paper/run2/"
+    # cmd_file = "run_asthma.sh"
+    # prefix_table = "prefix_table.tab"
+    # batch_asthma(cmd_file, prefix_table, outdir)
+
+    batch_soil()

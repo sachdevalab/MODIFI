@@ -234,11 +234,11 @@ def main():
     parser.add_argument("assembly", help="Path to assembly FASTA file")
     parser.add_argument("output_dir", help="Output directory for results")
     parser.add_argument("--borg_ref", 
-                       default="/home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa",
+                       default="/home/shuaiw/borg/paper/borg_data/all_borgs_host_test.fa",
                        help="Path to BORG reference FASTA file")
     parser.add_argument("--prefix", 
                        help="prefix")
-    parser.add_argument("--threads", type=int, default=10, 
+    parser.add_argument("--threads", type=int, default=30, 
                        help="Number of threads for minimap2")
     parser.add_argument("--min_identity", type=float, default=0.8,
                        help="Minimum alignment identity (0-1)")

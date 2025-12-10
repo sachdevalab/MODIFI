@@ -12,7 +12,7 @@ from collections import defaultdict
 import seaborn as sns
 from scipy.cluster.hierarchy import linkage, leaves_list
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
-from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa
+from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa,get_detail_taxa_name
 
 
 
@@ -540,11 +540,11 @@ def main_meta():
             if len(members) > cutoff:
                 print ("cluster", cluster, len(members), len(variation_data))
 
-                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                                fig_dir, tmp_res, min_frac=0.3, min_sites=100)
+                # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                #                                 fig_dir, tmp_res, min_frac=0.3, min_sites=100)
                 
-                # cluster_obj = My_cluster(cluster, members) 
-                # cluster_obj.load_df(tmp_res)
+                cluster_obj = My_cluster(cluster, members) 
+                cluster_obj.load_df(tmp_res)
                 cluster_obj.manual_filter_motifs()
 
                 if len(cluster_obj.profile_df) < 2:
@@ -555,6 +555,7 @@ def main_meta():
                 represent_ctg_lineage = ctg_taxa_dict[represent_ctg] if represent_ctg in ctg_taxa_dict else "NA"
                 cluster_phylum = classify_taxa(represent_ctg_lineage, "phylum")
                 cluster_species = classify_taxa(represent_ctg_lineage, "species")
+                cluster_name = get_detail_taxa_name(represent_ctg_lineage)
 
                 motif_variation_flag = cluster_obj.check_diff_motifs()
 
@@ -562,11 +563,11 @@ def main_meta():
                 similarity_data_cluster, motif_clade_num = cluster_obj.pairwise_compare(bin_freq=0.6)
                 variation_data.append([cluster, len(members), motif_variation_flag])
                 similarity_data += similarity_data_cluster
-                clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
+                clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_name]]
                 print ("###############################", represent_ctg_lineage)
                 if motif_variation_flag == "variation" or motif_clade_num > 1:
                     plot_name = f"{fig_dir}/{cluster}.pdf"
-                    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+                    cluster_obj.plot_profile(cluster, plot_name, cluster_name)
                 # if len(variation_data) > 10:
                 #     break
         plot_variation_fraction(variation_data, paper_fig_dir)
@@ -671,6 +672,6 @@ def main_asthma():
     cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
 if __name__ == "__main__":
-    # main_meta()
+    main_meta()
     # main_isolation()
-    main_asthma()
+    # main_asthma()

@@ -98,7 +98,7 @@ def personal_plot(cluster_obj):
 
         y_labels.append(label)
     
-    fig, ax = plt.subplots(figsize=(20, 12))
+    fig, ax = plt.subplots(figsize=(20, 15))
     
     # Create heatmap
     sns.heatmap(pivot_df, cmap="YlGnBu", annot=False, fmt=".2f", 
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     # """
     seq_dir = "/home/shuaiw/borg/paper/borg_data/profile/"
     cluster = "profile"
-    plot_name = os.path.join(seq_dir, f"borg_motif_profile.pdf")
+    plot_name = os.path.join(seq_dir, f"borg_motif_profile_all.pdf")
     cluster_species = "borg"
 
     cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
