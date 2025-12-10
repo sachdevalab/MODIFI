@@ -1875,3 +1875,34 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --min_sites 100 \
   --threads 64" \
   --job-name=soil_2_m
+
+sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/run3/soil_1/soil_1_methylation3 \
+  --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam \
+  --whole_ref /home/shuaiw/borg/paper/curated_genome/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.soil_1.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 3 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 100 \
+  --run_steps host \
+  --mge_file /home/shuaiw/borg/paper/curated_genome/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.soil_1.borg_list.txt \
+  --threads 64" \
+  --job-name=soil_1
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/run3/soil_2/soil_2_methylation3 \
+  --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268288-1_D01.ccs.bam \
+  --whole_ref /home/shuaiw/borg/paper/curated_genome/SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META.soil_2.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 3 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 100 \
+  --run_steps host \
+   --mge_file  /home/shuaiw/borg/paper/curated_genome/SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META.soil_2.borg_list.txt \
+  --threads 64" \
+  --job-name=soil_2_m

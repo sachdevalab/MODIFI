@@ -132,7 +132,7 @@ def parse_paf_file(paf_file, min_identity=0.8, min_coverage=0.5):
         print(f"✗ Error parsing PAF file: {e}")
         return pd.DataFrame()
 
-def identify_borg_contigs(df_alignments, output_file, prefix):
+def identify_borg_contigs(df_alignments, output_file, prefix, all_dir):
     """
     Identify and save potential BORG contigs.
     
@@ -182,7 +182,7 @@ def identify_borg_contigs(df_alignments, output_file, prefix):
     
     return borg_contigs
 
-def find_borg_func(assembly_fasta, work_dir, borg_ref, prefix, threads=10, 
+def find_borg_func(assembly_fasta, work_dir, borg_ref, prefix,all_dir, ece_type, threads=10, 
                    min_identity=0.8, min_coverage=0.5):
     """
     Main function to find BORG sequences in assembly.
@@ -210,17 +210,17 @@ def find_borg_func(assembly_fasta, work_dir, borg_ref, prefix, threads=10,
     df_alignments = parse_paf_file(paf_file, min_identity, min_coverage)
     
     # Identify BORG contigs
-    output_file = os.path.join(work_dir, "borg_contigs_summary.tsv")
-    borg_contigs = identify_borg_contigs(df_alignments, output_file, prefix)
+    output_file = os.path.join(work_dir, f"{ece_type}_contigs_summary.tsv")
+    borg_contigs = identify_borg_contigs(df_alignments, output_file, prefix, all_dir)
     
     # Save simple list
-    borg_list_file = os.path.join(work_dir, "borg_contigs.txt")
+    borg_list_file = os.path.join(work_dir, f"{ece_type}_contigs.txt")
     with open(borg_list_file, 'w') as f:
         for contig in borg_contigs:
             f.write(f"{contig}\n")
     
-    print(f"✓ BORG contig list saved to: {borg_list_file}")
-    print(f"🎉 BORG detection completed!")
+    print(f"✓ {ece_type} contig list saved to: {borg_list_file}")
+    print(f"🎉 {ece_type} detection completed!")
     
     return borg_contigs
 
@@ -268,7 +268,12 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         # Run with default parameters if no arguments provided
         print("Running with default parameters...")
-        find_borg_func(assembly_fasta, work_dir, borg_ref)
+        borg_ref = "/home/shuaiw/borg/paper/borg_data/jumbo_phage.fa"
+        all_dir = "/home/shuaiw/borg/paper/run2/"
+        for prefix in ["soil_1", "soil_2", "soil_s1_1","soil_s1_2","soil_s3_1","soil_s3_2","soil_s4_1","soil_s4_2"]:
+            work_dir = f"/home/shuaiw/borg/paper/run2/{prefix}/borg/"
+            assembly_fasta = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa"
+            find_borg_func(assembly_fasta, work_dir, borg_ref, prefix, all_dir, ece_type="jumbo")
     else:
         # Use command line interface
         all_dir = "/home/shuaiw/borg/paper/run2/"

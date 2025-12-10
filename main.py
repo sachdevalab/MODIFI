@@ -139,7 +139,7 @@ def parse_arguments():
     parser.add_argument("--min_score", type=int, default=30,
                         help="Minimum score for modification calling.")
     parser.add_argument("--mge_file", type=str, default="NA",
-                        help="MGE list, can be output of Genomad, with at least one column with header: seq_name.")
+                        help="MGE table file (sep by tab), can be output of Genomad, with at least one column with header: seq_name.")
     parser.add_argument("--bin_file", type=str, required=False, default=None,
                         help="Path to the binning file containing contig-to-bin mappings.")
     parser.add_argument("--threads", type=int, default=64,
@@ -703,12 +703,14 @@ if __name__ == "__main__":
         align_bam_dir = os.path.join(args.work_dir, "align_bam")
         os.makedirs(align_bam_dir, exist_ok=True)
         aligned_bam_path = os.path.join(align_bam_dir, "aligned.bam")
-        
-        record_resource_usage(
-            "Aligning BAM with pbmm2",
-            align_bam_with_pbmm2,
-            args.unaligned_bam, args.whole_ref, aligned_bam_path, args.read_type, args.threads
-        )
+        if not os.path.exists(aligned_bam_path):
+            record_resource_usage(
+                "Aligning BAM with pbmm2",
+                align_bam_with_pbmm2,
+                args.unaligned_bam, args.whole_ref, aligned_bam_path, args.read_type, args.threads
+            )
+        else:
+            logger.info(f"Aligned BAM already exists at {aligned_bam_path}, skipping alignment.")
         
         # Set the aligned BAM as the whole_bam for the rest of the pipeline
         args.whole_bam = aligned_bam_path

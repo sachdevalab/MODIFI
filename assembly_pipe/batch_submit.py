@@ -216,14 +216,14 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
             borg_cmd = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
-                --work_dir /home/shuaiw/borg/paper/borg_data/all/{prefix}/{prefix}_methylation3 \\
+                --work_dir /home/shuaiw/borg/paper/borg_data/jumbo_phage/{prefix}/{prefix}_methylation3 \\
                 --unaligned_bam {hifi_bam} \\
-                --whole_ref /home/shuaiw/borg/paper/borg_data/all_borgs.fa \\
+                --whole_ref /home/shuaiw/borg/paper/borg_data/jumbo_phage.fa \\
                 --read_type hifi \\
                 --min_len 1000 \\
                 --min_cov 2 \\
                 --min_ctg_cov 2 \\
-                --min_iden 0.90 \\
+                --min_iden 0.95 \\
                 --min_frac 0.1 \\
                 --min_score 30 \\
                 --min_sites 100 \\
@@ -292,7 +292,7 @@ def batch_soil():
 
             work_dir = os.path.join(outdir, prefix)
             cmd = f"""
-            sbatch  --partition standard --wrap "snakemake -s soil_ggkbase.smk --config \\
+            sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_opt.smk --config \\
                 hifi_bam={hifi_bam} \\
                 prefix={prefix} \\
                 work_dir={work_dir} \\
@@ -308,9 +308,9 @@ if __name__ == "__main__":
     # prefix_table = "prefix_table.tab"
     # read_list(bam_list, cmd_file, prefix_table)
 
-    # outdir = "/home/shuaiw/borg/paper/run2/"
-    # cmd_file = "run_asthma.sh"
-    # prefix_table = "prefix_table.tab"
-    # batch_asthma(cmd_file, prefix_table, outdir)
+    outdir = "/home/shuaiw/borg/paper/run2/"
+    cmd_file = "run_asthma.sh"
+    prefix_table = "prefix_table.tab"
+    batch_asthma(cmd_file, prefix_table, outdir)
 
-    batch_soil()
+    # batch_soil()

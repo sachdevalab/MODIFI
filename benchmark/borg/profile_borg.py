@@ -170,8 +170,16 @@ def count_mod_freq(all_dir, borg_anno_dict, score_cutoff = 30):
     return df
 
 if __name__ == "__main__":
-    borg_file = "all_borg_contigs_summary.tsv"
+    
     all_dir = "/home/shuaiw/borg/paper/run2/"
+    seq_dir = "/home/shuaiw/borg/paper/borg_data/profile/"
+    cluster = "profile"
+
+    cluster_species = "jumbo"
+    borg_file = f"all_{cluster_species}_contigs_summary.tsv"
+    os.system(f"cat {all_dir}/*/borg/{cluster_species}_contigs_summary.tsv > {borg_file}")
+    plot_name = os.path.join(seq_dir, f"{cluster_species}_motif_profile_all.pdf")
+    
 
     
     
@@ -198,10 +206,7 @@ if __name__ == "__main__":
     # print (borg_anno_dict)
     count_mod_freq(all_dir, borg_anno_dict)
     # """
-    seq_dir = "/home/shuaiw/borg/paper/borg_data/profile/"
-    cluster = "profile"
-    plot_name = os.path.join(seq_dir, f"borg_motif_profile_all.pdf")
-    cluster_species = "borg"
+
 
     cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
                                     seq_dir, seq_dir, min_frac=0.2, 

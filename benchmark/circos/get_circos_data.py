@@ -445,7 +445,7 @@ def auto_main():
     out_dir = "/home/shuaiw/borg/paper/circos/borg2/"
     all_dir = "/home/shuaiw/borg/paper/run2/"
 
-    sample = "soil_2"
+    sample = "soil_s3_1"
     sample_obj = My_sample(sample, all_dir)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -456,26 +456,28 @@ def auto_main():
     isolation_taxa = sample_obj.read_meta_gtdb()
     ## sort the contigs by depth
     sorted_contigs = sorted(sample_obj.depth_dict.items(), key=lambda x: x[1], reverse=True)
-    for contig, depth in sorted_contigs[:10000]:
-        if contig not in isolation_taxa:
-            continue
-        if contig[-1] != "C":
-            continue
-        taxa = isolation_taxa[contig]
-        ## check bacteria
-        if re.search("bacteria", taxa.lower()) or re.search("archaea", taxa.lower()):
-            continue
+    for contig, depth in sorted_contigs:
+        # if contig not in isolation_taxa:
+        #     continue
+        # if contig[-1] != "C":
+        #     continue
+        # taxa = isolation_taxa[contig]
+        # ## check bacteria
+        # if re.search("bacteria", taxa.lower()) or re.search("archaea", taxa.lower()):
+        #     continue
         # if sample_obj.length_dict[contig] > 1000000:
         #     continue
-        print (contig, taxa)
+        # print (contig, taxa)
+        if contig != "soil_s3_1_2132_C":
+            continue
         ctg_obj = My_contig(sample, all_dir, contig)
         motif_df = ctg_obj.read_motif()
         motif_list = []
         for _, row in motif_df.iterrows():
-            if row['fraction'] < 0.8:
+            if row['fraction'] > 0.1 and row["nDetected"] > 20:
                 motif_list.append([row['motifString'], row['centerPos']])
-            if len(motif_list) >= 3:
-                break
+            # if len(motif_list) >= 3:
+            #     break
 
         work_dir = f"{all_dir}/{sample}/{sample}_methylation3/"
         my_ref = f"{work_dir}/contigs/{contig}.fa"
@@ -483,6 +485,55 @@ def auto_main():
         ipd_ratio_file = f"{work_dir}/ipd_ratio/{contig}.ipd3.csv"
         # split_gff(gff2, contig, my_ref, out_dir)
         get_all_loci(gff2, contig, my_ref, out_dir,motif_list)
+
+def auto_main_jumbo():
+    out_dir = "/home/shuaiw/borg/paper/circos/jumbo/"
+    all_dir = "/home/shuaiw/borg/paper/run2/"
+    jumbo_file = "/home/shuaiw/mGlu/benchmark/borg/all_jumbo_contigs_summary.tsv"
+
+    select_jumbo = []
+    for line in open(jumbo_file):
+        if line.startswith("borg_ref"):
+            continue
+        fields = line.strip().split('\t')
+        borg_ref = fields[0]
+        ctg_depth = float(fields[8])
+        seq_name = fields[2]
+        sample_name = "_".join(seq_name.split('_')[:-2])
+        if ctg_depth >= 5:
+            select_jumbo.append([borg_ref, sample_name, seq_name, ctg_depth])
+
+    for jumbo_info in select_jumbo:
+        borg_ref, sample, seq_name, ctg_depth = jumbo_info
+        print (borg_ref, sample, seq_name, ctg_depth)
+        sample_obj = My_sample(sample, all_dir)
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        sample_obj.read_depth()
+        isolation_taxa = sample_obj.read_meta_gtdb()
+        ## sort the contigs by depth
+        sorted_contigs = sorted(sample_obj.depth_dict.items(), key=lambda x: x[1], reverse=True)
+        for contig, depth in sorted_contigs:
+
+            if contig != seq_name:
+                continue
+            ctg_obj = My_contig(sample, all_dir, contig)
+            motif_df = ctg_obj.read_motif()
+            motif_list = []
+            for _, row in motif_df.iterrows():
+                if row['fraction'] > 0.1 and row["nDetected"] > 20:
+                    motif_list.append([row['motifString'], row['centerPos']])
+                # if len(motif_list) >= 3:
+                #     break
+
+            work_dir = f"{all_dir}/{sample}/{sample}_methylation3/"
+            my_ref = f"{work_dir}/contigs/{contig}.fa"
+            gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
+            ipd_ratio_file = f"{work_dir}/ipd_ratio/{contig}.ipd3.csv"
+            # split_gff(gff2, contig, my_ref, out_dir)
+            get_all_loci(gff2, contig, my_ref, out_dir,motif_list)
+
 
 def auto_main_borg():
     out_dir = "/home/shuaiw/borg/paper/circos/mini_borg/"
@@ -539,8 +590,9 @@ def auto_main_borg():
 if __name__ == "__main__":
     score_cutoff = 30
     # auto_main()
+    auto_main_jumbo()
     # manual_main()
-    auto_main_borg()
+    # auto_main_borg()
 
 
     # contig = "E_coli_H10407_6"
