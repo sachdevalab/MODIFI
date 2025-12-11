@@ -216,7 +216,7 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
             borg_cmd_for = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
-                --work_dir /home/shuaiw/borg/paper/borg_data/borg_for/{prefix}/{prefix}_methylation3 \\
+                --work_dir /home/shuaiw/borg/paper/borg_data/borg_for2/{prefix}/{prefix}_methylation3 \\
                 --unaligned_bam {hifi_bam} \\
                 --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa \\
                 --read_type hifi \\
@@ -236,7 +236,7 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
             borg_cmd_rev = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
-                --work_dir /home/shuaiw/borg/paper/borg_data/borg_rev/{prefix}/{prefix}_methylation3 \\
+                --work_dir /home/shuaiw/borg/paper/borg_data/borg_rev2/{prefix}/{prefix}_methylation3 \\
                 --unaligned_bam {hifi_bam} \\
                 --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.revcomp.fa \\
                 --read_type hifi \\
