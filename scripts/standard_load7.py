@@ -251,13 +251,6 @@ def load_IPD(each_ref, contig_bam, ipd_file, fasta, max_mismatch, ref_seq, compl
 
 def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, complement_ref_seq, start, end, max_mismatch, factor=1.0):
     t0 = time.time()
-    # (start, end) = (0, each_ref.Length)
-
-    MIN_IDENTITY = 0.0  
-    MIN_READLENGTH = 50
-    # samfile = pysam.AlignmentFile(contig_bam, "rb", check_sq=False)
-    # hits = [hit for hit in samfile.fetch("SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_105_C",
-    #                                                     max(start, 0), end)]
 
     hits = [hit for hit in alignments.fetch(each_ref,
                                                         max(start, 0), end)]
@@ -280,8 +273,6 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, com
 
     # for aln in alignments.readsInRange(refGroupId, start, end):
     for aln in hits:
-        if aln.get_tag("NM") > max_mismatch:
-            continue
         forward_IPD_info = np.array(aln.get_tag("fi")[::-1]) * factor  ## weired, why need to reverse
         reverse_IPD_info = np.array(aln.get_tag("ri")) * factor
         ## check if the IPD info is empty
@@ -296,24 +287,6 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, com
         rev_rawIpd = np.zeros(len(aln.query_sequence))
         rev_matched = np.zeros(len(aln.query_sequence), dtype=bool)
         rev_referencePositions = np.zeros(len(aln.query_sequence), dtype=int)
-
-        """
-        # Get aligned positions on the reference for each read base
-        aligned_pairs = aln.get_aligned_pairs(matches_only=True, with_seq=False)
-
-        for query_pos, ref_pos in aligned_pairs:
-            if ref_pos is not None:
-                if forward_IPD_info[query_pos] != 0:
-                    if ref_pos >= start and ref_pos < end:
-                        rawIpd[query_pos] = forward_IPD_info[query_pos]
-                        matched[query_pos] = True
-                        referencePositions[query_pos] = ref_pos 
-                if reverse_IPD_info[query_pos] != 0:
-                    if ref_pos >= start and ref_pos < end:
-                        rev_rawIpd[query_pos] = reverse_IPD_info[query_pos]
-                        rev_matched[query_pos] = True
-                        rev_referencePositions[query_pos] = ref_pos
-        """
 
         # Get aligned positions on the reference for each read base
         aligned_pairs = np.array(aln.get_aligned_pairs(matches_only=True, with_seq=False))
