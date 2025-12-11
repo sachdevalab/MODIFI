@@ -138,17 +138,37 @@ def visu(df, figure_path):
             return
         
         sns.set(style="whitegrid")
-        fig, axs = plt.subplots(2, 2, figsize=(20, 10))
-        ## first row is covergae, second is tMean, third is control, fourth is ipd_ratio
-        ## plot for each strand separately
-        sns.histplot(df, x="coverage", hue="strand", multiple="stack", ax=axs[0, 0])
-        sns.histplot(df, x="tMean", hue="strand", multiple="stack", ax=axs[0, 1])
-        sns.histplot(df, x="control", hue="strand", multiple="stack", ax=axs[1, 0])
-        sns.histplot(df, x="ipd_ratio", hue="strand", multiple="stack", ax=axs[1, 1])
-        ## save the plot
-
-        ## add a dashed line at x=1
-        axs[1, 1].axvline(x=1, color='red', linestyle='--')
+        fig, axs = plt.subplots(2, 4, figsize=(28, 10))
+        ## first row is strand 0, second row is strand 1
+        ## columns: coverage, tMean, control, ipd_ratio
+        
+        # Separate data by strand
+        df_strand0 = df[df['strand'] == 0]
+        df_strand1 = df[df['strand'] == 1]
+        
+        # Strand 0 plots (first row) - Blue color
+        sns.histplot(df_strand0, x="coverage", ax=axs[0, 0], color='blue')
+        axs[0, 0].set_title("Coverage - Strand 0")
+        sns.histplot(df_strand0, x="tMean", ax=axs[0, 1], color='blue')
+        axs[0, 1].set_title("tMean - Strand 0")
+        sns.histplot(df_strand0, x="control", ax=axs[0, 2], color='blue')
+        axs[0, 2].set_title("Control - Strand 0")
+        sns.histplot(df_strand0, x="ipd_ratio", ax=axs[0, 3], color='blue')
+        axs[0, 3].set_title("IPD Ratio - Strand 0")
+        axs[0, 3].axvline(x=1, color='red', linestyle='--')
+        
+        # Strand 1 plots (second row) - Orange color
+        sns.histplot(df_strand1, x="coverage", ax=axs[1, 0], color='orange')
+        axs[1, 0].set_title("Coverage - Strand 1")
+        sns.histplot(df_strand1, x="tMean", ax=axs[1, 1], color='orange')
+        axs[1, 1].set_title("tMean - Strand 1")
+        sns.histplot(df_strand1, x="control", ax=axs[1, 2], color='orange')
+        axs[1, 2].set_title("Control - Strand 1")
+        sns.histplot(df_strand1, x="ipd_ratio", ax=axs[1, 3], color='orange')
+        axs[1, 3].set_title("IPD Ratio - Strand 1")
+        axs[1, 3].axvline(x=1, color='red', linestyle='--')
+        
+        plt.tight_layout()
 
         plt.savefig(figure_path)
         plt.close()

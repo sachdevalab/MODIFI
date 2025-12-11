@@ -524,9 +524,9 @@ def profile_parallel(args, paras):
             ipd_ratio = os.path.join(paras["ipd_ratio"], f"{ctg_name}.ipd3.csv")
 
             ## skip if the profile file already exists
-            if os.path.exists(profile):
-                # logger.info(f"Profile file {profile} already exists. Skipping...")
-                continue
+            # if os.path.exists(profile):
+            #     logger.info(f"Profile file {profile} already exists. Skipping...")
+            #     continue
 
             
             future = executor.submit(

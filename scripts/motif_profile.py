@@ -256,7 +256,7 @@ def read_ipd_ratio(ipd_ratio_file):
         #     ipd_info_dict [tag] = row
     return ipd_info_dict
 
-def count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file):
+def count_ipd_ratio( motif_sites, ipd_ratio_file):
     data = []
     # df_ipd = pd.read_csv(ipd_ratio_file)
     # for index, row in df_ipd.iterrows():
@@ -265,12 +265,13 @@ def count_ipd_ratio(ipd_info_dict, motif_sites, ipd_ratio_file):
     #     else:
     #         strand_string = "+"
     #     tag = row['refName'] + ":" + str(row['tpl']+1) + strand_string
+    ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
     for tag in ipd_info_dict:
         if tag in motif_sites:
             row = ipd_info_dict[tag]
             data.append([row['refName'], str(row['tpl']+1) , row['strand'], motif_sites[tag], row['ipd_ratio']])
     site_df = pd.DataFrame(data, columns = ["refName", "tpl", "strand", "motif", "ipd_ratio"])
-    # print (site_df)
+    print ("###", site_df)
     ### plot the site df using subplot using seaborn
     if len(site_df) > 0:
         ## tpl is numeric, convert it to int
@@ -400,8 +401,6 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
         REF = read_ref(my_ref)
         all_modified_loci = get_modified_ratio(gff, score_cutoff)
         # ipd_info_dict = read_ipd_ratio(ipd_ratio_file)
-        ipd_info_dict = {}
-        print ("ipd ratio is loaded", flush=True)
 
         data = []
         for index, motif in motifs.iterrows():
@@ -412,7 +411,7 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
             #     print (index, my_ref, motif, "motifs processed", flush=True)
             motif_new = motif["motifString"]
             exact_pos = motif["centerPos"]
-            motif_profile, all_modified_loci = get_motif_sites(REF, motif_new, exact_pos, all_modified_loci, min_cov, ipd_info_dict)
+            motif_profile, all_modified_loci = get_motif_sites(REF, motif_new, exact_pos, all_modified_loci, min_cov, ipd_info_dict={})
             data.append([motif_new, exact_pos] + motif_profile)
 
         df = pd.DataFrame(data, columns = ["motifString", "centerPos", "for_loci_num", "for_modified_num", "for_modified_ratio",\
@@ -425,6 +424,17 @@ def motif_profile_worker(my_ref, gff, all_motifs, profile, ipd_ratio_file, min_f
         # anno = count_motifs(modified_loci, all_modified_loci, score_cutoff)
         anno = ''
         get_reprocess_gff(gff, all_modified_loci, anno)
+
+        ## filter df, keep the motifs with motif_modified_num > 1000
+        df = df[df["motif_modified_num"] >= min_sites]
+        df = df[df["motif_modified_ratio"] >= min_frac]
+        print (len(df), "motifs left after filtering for ipdratio line", flush=True)
+        if len(df) > 0:
+            if misassembly: ## detect misassembly, plot ipd_ratio line    
+                motif_sites = reload_motif_sites(REF, df)
+                count_ipd_ratio(motif_sites, ipd_ratio_file)
+        else:
+            print ("no motif sites left after filtering for ipdratio line", flush=True)
 
         print ("profiling finished", profile, flush=True)
         return 0

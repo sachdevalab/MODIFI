@@ -214,7 +214,7 @@ def batch_asthma(cmd_file, prefix_table, outdir):
                 --job-name=sue_{i}
             """
 
-            borg_cmd = f"""
+            borg_cmd_for = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
                 --work_dir /home/shuaiw/borg/paper/borg_data/borg_for/{prefix}/{prefix}_methylation3 \\
                 --unaligned_bam {hifi_bam} \\
@@ -230,11 +230,11 @@ def batch_asthma(cmd_file, prefix_table, outdir):
                 --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.mean.dat \\
                 --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.num.dat \\
                 --mge_file /home/shuaiw/borg/paper/borg_data/align/borg.tsv \\
-                --threads 64 --visu_ipd" \\
+                --threads 64 --visu_ipd --detect_misassembly" \\
                 --job-name=borg_{i}
             """
 
-            borg_cmd = f"""
+            borg_cmd_rev = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
                 --work_dir /home/shuaiw/borg/paper/borg_data/borg_rev/{prefix}/{prefix}_methylation3 \\
                 --unaligned_bam {hifi_bam} \\
@@ -250,7 +250,7 @@ def batch_asthma(cmd_file, prefix_table, outdir):
                 --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.mean.dat \\
                 --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.num.dat \\
                 --mge_file /home/shuaiw/borg/paper/borg_data/align/borg.tsv \\
-                --threads 64 --visu_ipd" \\
+                --threads 64 --visu_ipd --detect_misassembly" \\
                 --job-name=borg_{i}
             """
 
@@ -280,7 +280,8 @@ def batch_asthma(cmd_file, prefix_table, outdir):
             # """
 
             if environment == "soil":
-                print (borg_cmd, file=borg)
+                print (borg_cmd_for, file=borg)
+                print (borg_cmd_rev, file=borg)
 
 
             # if i   in [9]:
