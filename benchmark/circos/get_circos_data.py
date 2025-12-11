@@ -20,6 +20,8 @@ import numpy as np
 from collections import defaultdict
 import seaborn as sns
 from scipy.cluster.hierarchy import linkage, leaves_list
+from matplotlib.backends.backend_pdf import PdfPages
+import seaborn as sns
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 from sample_object import get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa
 
@@ -247,6 +249,7 @@ def all_split_gff(out_dir):
     
     ## remove new_ref if it exists
     import os
+
     if os.path.exists(new_ref):
         os.remove(new_ref)
     
@@ -297,7 +300,7 @@ def all_split_gff(out_dir):
         df.to_csv(new_csv, index=False)
 
 
-def get_all_loci(gff2, contig_name, my_ref, out_dir,motif_list):
+def get_all_loci(gff2, contig_name, my_ref, out_dir,motif_list, depth="NA"):
     modified_loci = get_modified_ratio(gff2)
     new_ref = os.path.join(out_dir, contig_name + ".fa")
     REF = read_ref(my_ref)
@@ -312,7 +315,7 @@ def get_all_loci(gff2, contig_name, my_ref, out_dir,motif_list):
     bin_size = genome_length // 1000 + 1
 
 
-
+    all_data = []
     for motif_data in motif_list:
         motif_new, exact_pos = motif_data
         motif_csv = os.path.join(out_dir, contig_name + "_" + motif_new + ".csv")
@@ -341,11 +344,128 @@ def get_all_loci(gff2, contig_name, my_ref, out_dir,motif_list):
                 else:
                     data.append([name,contig_name,motif_new,position,position,"-", 0.5, "no"])
 
+        all_data.extend(data)   
         df = pd.DataFrame(data, columns=["name", "contig", "type", "start", "stop", "strand", "score", "legend"])
         df.to_csv(motif_csv, index=False)
+    all_df = pd.DataFrame(all_data, columns=["name", "contig", "type", "start", "stop", "strand", "score", "legend"])
+    plot_line(all_df, out_dir, new_ref, contig_name, depth=depth)
+
+def calculate_gc_skew(sequence, window_size=1000):
+    """Calculate GC skew for a sequence with sliding window"""
+    gc_skew = []
+    positions = []
+    
+    for i in range(0, len(sequence) - window_size + 1, window_size // 2):
+        window = sequence[i:i + window_size]
+        g_count = window.count('G') + window.count('g')
+        c_count = window.count('C') + window.count('c')
+        
+        if g_count + c_count > 0:
+            skew = (g_count - c_count) / (g_count + c_count)
+        else:
+            skew = 0
+            
+        gc_skew.append(skew)
+        positions.append(i + window_size // 2)
+    
+    return positions, gc_skew
+
+def plot_line(df, out_dir, new_ref, contig_name, depth="NA"):
+    ## for each motif, for each strand, plot a barplot
+    ## the y is the score, save the plot
+    import matplotlib.pyplot as plt
+    
+    sns.set(style="whitegrid")
+    out_dir = out_dir + "/figs"
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    
+    with PdfPages(os.path.join(out_dir, contig_name + "_motif_plots.pdf")) as pdf:
+        # Get genome length for consistent x-axis scaling
+        genome_length = 0
+        for record in SeqIO.parse(new_ref, "fasta"):
+            genome_length = len(record.seq)
+            positions, gc_skew = calculate_gc_skew(str(record.seq))
+            
+            plt.figure(figsize=(25, 2))
+            
+            # Convert to numpy arrays for easier manipulation
+            positions_array = np.array(positions)
+            gc_skew_array = np.array(gc_skew)
+            
+            # Fill positive values (above zero) in green
+            plt.fill_between(positions_array, 0, gc_skew_array, 
+                           where=(gc_skew_array >= 0), 
+                           color='green', alpha=0.7, label='Positive GC Skew')
+            
+            # Fill negative values (below zero) in purple/magenta
+            plt.fill_between(positions_array, 0, gc_skew_array, 
+                           where=(gc_skew_array < 0), 
+                           color='purple', alpha=0.7, label='Negative GC Skew')
+            
+            # Add zero line
+            plt.axhline(y=0, color='black', linestyle='-', alpha=0.8, linewidth=0.5)
+            
+            plt.title(f"GC Skew - {record.id} (Depth: {depth})")
+            plt.ylabel("GC Skew")
+            plt.grid(True, alpha=0.3)
+            plt.legend()
+            
+            # Set consistent x-axis limits and ticks
+            plt.xlim(0, genome_length)
+            ax = plt.gca()
+            x_ticks = np.linspace(0, genome_length, 21)  # 20 intervals = 21 ticks
+            ax.set_xticks(x_ticks)
+            ax.set_xticklabels([f"{int(x):,}" for x in x_ticks], rotation=45)
+            
+            pdf.savefig(bbox_inches='tight')
+            plt.close()
+            break  # Only process first sequence
+
+        for strand in df['strand'].unique():
+            for motif in df['type'].unique():
+                subset = df[(df['type'] == motif) & (df['strand'] == strand)]
+                print (strand, motif, len(subset))
+                if len(subset) > 0:  # Only plot if there's data
+                    plt.figure(figsize=(25, 2))
+                    
+                    # Use scatter plot with different colors for better visualization
+                    modified = subset[subset['score'] == 1]
+                    unmodified = subset[subset['score'] == 0.5]
+                    
+                    if len(unmodified) > 0:
+                        plt.scatter(unmodified['start'], unmodified['score'], 
+                                  color='blue', alpha=0.6, s=10, label='Unmodified')
+                    if len(modified) > 0:
+                        plt.scatter(modified['start'], modified['score'], 
+                                  color='red', alpha=0.8, s=15, label='Modified')
+                    
+                    plt.title(f"Motif: {motif}, Strand: {strand} (n={len(subset)})")
+                    plt.ylabel("Modification Score")
+                    plt.ylim(0.3, 1.2)  # Add some padding around the discrete values
+                    
+                    if len(modified) > 0 and len(unmodified) > 0:
+                        plt.legend()
+                    
+                    # Set same x-axis scale as GC skew plot
+                    plt.xlim(0, genome_length)
+                    # ax = plt.gca()
+                    # x_ticks = np.linspace(0, genome_length, 21)  # 20 intervals = 21 ticks
+                    # ax.set_xticks(x_ticks)
+                    # ax.set_xticklabels([f"{int(x):,}" for x in x_ticks], rotation=45)
+                    ## remove x lables
+                    plt.xlabel("")
+                    y_ticks = np.linspace(0, 1, 2)  
+                    ax = plt.gca()
+                    ax.set_yticks(y_ticks)
+                    
+                    pdf.savefig(bbox_inches='tight')
+                    plt.close()
+            #         break
+            # break
 
 def manual_main():
-    out_dir = "/home/shuaiw/borg/paper/circos/borg/"
+    out_dir = "/home/shuaiw/borg/paper/circos/jumbo2/"
 
     # sample = "infant_2"
     # contig = "infant_2_60_C"
@@ -423,10 +543,10 @@ def manual_main():
     # out_dir = os.path.join(out_dir, sample)
     # motif_list = [["YCT", 2], ["GCC", 2]]
 
-    sample = "soil_1"
-    contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_11358_C"
+    sample = "soil_2"
+    contig = "SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META_1061_C"
     out_dir = os.path.join(out_dir, sample)
-    motif_list = [["GANTC", 2],['TTAA',4],['CGCCAA',6],['GTCGAC',5]]
+    motif_list = [["GATC", 2],['AAAT',3],['GAYATC',4],['SATCAG',5],["ATGGAV",5],["CACCAG",5],["TTCGAA",6]]
 
     ## makdir out_dir if not exists
     if not os.path.exists(out_dir):
@@ -471,7 +591,7 @@ def auto_main():
         if contig != "soil_s3_1_2132_C":
             continue
         ctg_obj = My_contig(sample, all_dir, contig)
-        motif_df = ctg_obj.read_motif()
+        motif_df = ctg_obj.read_motif(min_frac=0, min_sites=0)
         motif_list = []
         for _, row in motif_df.iterrows():
             if row['fraction'] > 0.1 and row["nDetected"] > 20:
@@ -487,10 +607,16 @@ def auto_main():
         get_all_loci(gff2, contig, my_ref, out_dir,motif_list)
 
 def auto_main_jumbo():
-    out_dir = "/home/shuaiw/borg/paper/circos/jumbo/"
     all_dir = "/home/shuaiw/borg/paper/run2/"
+
+    out_dir = "/home/shuaiw/borg/paper/circos/jumbo/"
     jumbo_file = "/home/shuaiw/mGlu/benchmark/borg/all_jumbo_contigs_summary.tsv"
 
+    out_dir = "/home/shuaiw/borg/paper/circos/borg3/"
+    jumbo_file = "/home/shuaiw/mGlu/benchmark/borg/all_borg_contigs_summary.tsv"
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     select_jumbo = []
     for line in open(jumbo_file):
         if line.startswith("borg_ref"):
@@ -500,7 +626,7 @@ def auto_main_jumbo():
         ctg_depth = float(fields[8])
         seq_name = fields[2]
         sample_name = "_".join(seq_name.split('_')[:-2])
-        if ctg_depth >= 5:
+        if ctg_depth >= 3:
             select_jumbo.append([borg_ref, sample_name, seq_name, ctg_depth])
 
     for jumbo_info in select_jumbo:
@@ -519,10 +645,12 @@ def auto_main_jumbo():
             if contig != seq_name:
                 continue
             ctg_obj = My_contig(sample, all_dir, contig)
-            motif_df = ctg_obj.read_motif()
+            motif_df = ctg_obj.read_motif(min_frac=0, min_sites=0)
+            if motif_df is None:
+                continue
             motif_list = []
             for _, row in motif_df.iterrows():
-                if row['fraction'] > 0.1 and row["nDetected"] > 20:
+                if row['fraction'] > 0.08 and row["nDetected"] > 50:
                     motif_list.append([row['motifString'], row['centerPos']])
                 # if len(motif_list) >= 3:
                 #     break
@@ -532,7 +660,7 @@ def auto_main_jumbo():
             gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
             ipd_ratio_file = f"{work_dir}/ipd_ratio/{contig}.ipd3.csv"
             # split_gff(gff2, contig, my_ref, out_dir)
-            get_all_loci(gff2, contig, my_ref, out_dir,motif_list)
+            get_all_loci(gff2, contig, my_ref, out_dir,motif_list, depth=depth)
 
 
 def auto_main_borg():

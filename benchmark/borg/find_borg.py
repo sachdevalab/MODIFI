@@ -262,18 +262,16 @@ def main():
 if __name__ == "__main__":
     # Default parameters for backward compatibility
     borg_ref = "/home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa"
-    work_dir = "/home/shuaiw/borg/paper/run2/soil_1/borg/"
-    assembly_fasta = "/home/shuaiw/borg/paper/run2/soil_1/soil_1.hifiasm.p_ctg.rename.fa"
     
     if len(sys.argv) == 1:
         # Run with default parameters if no arguments provided
         print("Running with default parameters...")
-        borg_ref = "/home/shuaiw/borg/paper/borg_data/jumbo_phage.fa"
+        # borg_ref = "/home/shuaiw/borg/paper/borg_data/jumbo_phage.fa"
         all_dir = "/home/shuaiw/borg/paper/run2/"
         for prefix in ["soil_1", "soil_2", "soil_s1_1","soil_s1_2","soil_s3_1","soil_s3_2","soil_s4_1","soil_s4_2"]:
             work_dir = f"/home/shuaiw/borg/paper/run2/{prefix}/borg/"
             assembly_fasta = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa"
-            find_borg_func(assembly_fasta, work_dir, borg_ref, prefix, all_dir, ece_type="jumbo")
+            find_borg_func(assembly_fasta, work_dir, borg_ref, prefix, all_dir, ece_type="borg")
     else:
         # Use command line interface
         all_dir = "/home/shuaiw/borg/paper/run2/"

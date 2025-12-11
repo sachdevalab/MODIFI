@@ -175,7 +175,7 @@ if __name__ == "__main__":
     seq_dir = "/home/shuaiw/borg/paper/borg_data/profile/"
     cluster = "profile"
 
-    cluster_species = "jumbo"
+    cluster_species = "borg"
     borg_file = f"all_{cluster_species}_contigs_summary.tsv"
     os.system(f"cat {all_dir}/*/borg/{cluster_species}_contigs_summary.tsv > {borg_file}")
     plot_name = os.path.join(seq_dir, f"{cluster_species}_motif_profile_all.pdf")
@@ -193,18 +193,18 @@ if __name__ == "__main__":
         print(f"{i+1}. {entry}")
         members.append(entry.seq_name)
         borg_anno_dict[entry.seq_name] = [entry.type, entry.borg_ref]
-    print (members)
+    # print (members)
     # members = ["soil_1_1336_L", "soil_s4_1_109_C"]
     
     
-    all_members, all_anno_dict = collect_host_genus(all_dir)
-    ## if member in all members not in members, add to members, also update borg_anno_dict
-    for member in all_members:
-        if member not in members:
-            members.append(member)
-            borg_anno_dict[member] = ['HOST', all_anno_dict[member]]
-    # print (borg_anno_dict)
-    count_mod_freq(all_dir, borg_anno_dict)
+    # all_members, all_anno_dict = collect_host_genus(all_dir)
+    # ## if member in all members not in members, add to members, also update borg_anno_dict
+    # for member in all_members:
+    #     if member not in members:
+    #         members.append(member)
+    #         borg_anno_dict[member] = ['HOST', all_anno_dict[member]]
+    # # print (borg_anno_dict)
+    # count_mod_freq(all_dir, borg_anno_dict)
     # """
 
 

@@ -20,7 +20,7 @@ total_count = 0
 
 for record in SeqIO.parse(fasta, "fasta"):
     total_count += 1
-    if "Borg" in record.description:
+    if "Borg" in record.description or "Jumbo" in record.description or "Phage" in record.description:
         length = len(record.seq)
         data.append([record.id, record.description, length])
 
