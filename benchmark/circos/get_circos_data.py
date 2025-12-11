@@ -465,7 +465,7 @@ def plot_line(df, out_dir, new_ref, contig_name, depth="NA"):
             # break
 
 def manual_main():
-    out_dir = "/home/shuaiw/borg/paper/circos/jumbo2/"
+    out_dir = "/home/shuaiw/borg/paper/circos/borg_rev/"
 
     # sample = "infant_2"
     # contig = "infant_2_60_C"
@@ -528,6 +528,11 @@ def manual_main():
     # out_dir = os.path.join(out_dir, sample)
     # motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
 
+    sample = "soil_s1_2"
+    contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
+    out_dir = os.path.join(out_dir, sample)
+    motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
+
     # sample = "soil_s3_1"
     # contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
     # out_dir = os.path.join(out_dir, sample)
@@ -543,17 +548,17 @@ def manual_main():
     # out_dir = os.path.join(out_dir, sample)
     # motif_list = [["YCT", 2], ["GCC", 2]]
 
-    sample = "soil_2"
-    contig = "SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META_1061_C"
-    out_dir = os.path.join(out_dir, sample)
-    motif_list = [["GATC", 2],['AAAT',3],['GAYATC',4],['SATCAG',5],["ATGGAV",5],["CACCAG",5],["TTCGAA",6]]
+    # sample = "soil_2"
+    # contig = "SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META_1061_C"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GATC", 2],['AAAT',3],['GAYATC',4],['SATCAG',5],["ATGGAV",5],["CACCAG",5],["TTCGAA",6]]
 
     ## makdir out_dir if not exists
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     print (out_dir)
-    # work_dir = f"/home/shuaiw/borg/paper/borg_data/methy2/{sample}/{sample}_methylation3/"
-    work_dir = f"/home/shuaiw/borg/paper/run3/{sample}/{sample}_methylation3/"
+    work_dir = f"/home/shuaiw/borg/paper/borg_data/borg_rev/{sample}/{sample}_methylation3/"
+    # work_dir = f"/home/shuaiw/borg/paper/run3/{sample}/{sample}_methylation3/"
     
     my_ref = f"{work_dir}/contigs/{contig}.fa"
     gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
@@ -718,8 +723,8 @@ def auto_main_borg():
 if __name__ == "__main__":
     score_cutoff = 30
     # auto_main()
-    auto_main_jumbo()
-    # manual_main()
+    # auto_main_jumbo()
+    manual_main()
     # auto_main_borg()
 
 

@@ -234,6 +234,26 @@ def batch_asthma(cmd_file, prefix_table, outdir):
                 --job-name=borg_{i}
             """
 
+            borg_cmd = f"""
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
+                --work_dir /home/shuaiw/borg/paper/borg_data/borg_rev/{prefix}/{prefix}_methylation3 \\
+                --unaligned_bam {hifi_bam} \\
+                --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.revcomp.fa \\
+                --read_type hifi \\
+                --min_len 1000 \\
+                --min_cov 2 \\
+                --min_ctg_cov 2 \\
+                --min_iden 0.95 \\
+                --min_frac 0.1 \\
+                --min_score 30 \\
+                --min_sites 100 \\
+                --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.mean.dat \\
+                --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.num.dat \\
+                --mge_file /home/shuaiw/borg/paper/borg_data/align/borg.tsv \\
+                --threads 64 --visu_ipd" \\
+                --job-name=borg_{i}
+            """
+
             # borg_cmd = f"""
             #     sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
             #     --work_dir /home/shuaiw/borg/paper/borg_data/methy3/{prefix}/{prefix}_methylation3 \\
