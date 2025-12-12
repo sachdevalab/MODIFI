@@ -144,6 +144,9 @@ def cal_mean(s0dict, s1dict, ref_Name, capValue, ref_seq, complement_ref_seq, st
     # ref_Name = each_ref.Name
     ref_Name = ref_Name
 
+    for x in range(2125, 2131):
+        print (x, complement_ref_seq[x], s0dict[x], ref_seq[x], s1dict[x])
+
     # s0Ipds, s1Ipds = [], []
     result = []
     for pos in range(start, end):
@@ -273,8 +276,12 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, com
 
     # for aln in alignments.readsInRange(refGroupId, start, end):
     for aln in hits:
-        forward_IPD_info = np.array(aln.get_tag("fi")[::-1]) * factor  ## weired, why need to reverse
-        reverse_IPD_info = np.array(aln.get_tag("ri")) * factor
+        if aln.is_reverse:
+            forward_IPD_info = np.array(aln.get_tag("fi")[::-1]) * factor  ## weired, why need to reverse
+            reverse_IPD_info = np.array(aln.get_tag("ri")) * factor
+        else:
+            forward_IPD_info = np.array(aln.get_tag("fi")) * factor  ## weired, why need to reverse
+            reverse_IPD_info = np.array(aln.get_tag("ri")[::-1]) * factor
         ## check if the IPD info is empty
         if len(forward_IPD_info) == 0 or len(reverse_IPD_info) == 0:
             print ("empty IPD info", aln.query_name, len(forward_IPD_info), len(reverse_IPD_info))
@@ -321,11 +328,18 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, com
         ipdVect += list(ipd)
         ipdVect += list(rev_ipd)
 
-        for tpl_val, ipd_val in zip(tpl, ipd):
-            s1dict[tpl_val].append(ipd_val)
+        if aln.is_reverse:
+            for tpl_val, ipd_val in zip(tpl, ipd):
+                s1dict[tpl_val].append(ipd_val)
 
-        for tpl_val, ipd_val in zip(rev_tpl, rev_ipd):
-            s0dict[tpl_val].append(ipd_val)
+            for tpl_val, ipd_val in zip(rev_tpl, rev_ipd):
+                s0dict[tpl_val].append(ipd_val)
+        else:
+            for tpl_val, ipd_val in zip(tpl, ipd):
+                s0dict[tpl_val].append(ipd_val)
+
+            for tpl_val, ipd_val in zip(rev_tpl, rev_ipd):
+                s1dict[tpl_val].append(ipd_val)
 
     print ("load takes", round(time.time()-t0))
     if len(ipdVect) < 10:
@@ -337,6 +351,7 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, com
         capValue = np.percentile(ipdVect, 99)
     print ("capValue", capValue)
     print ("pos num", len(s0dict), len(s1dict))
+
     return cal_mean(s0dict, s1dict, each_ref, capValue, ref_seq, complement_ref_seq, start, end, t0, 1)
 
 def norm(rawIpd, referencePositions, matched, aln):

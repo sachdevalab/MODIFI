@@ -557,7 +557,7 @@ def manual_main():
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     print (out_dir)
-    work_dir = f"/home/shuaiw/borg/paper/borg_data/borg_rev/{sample}/{sample}_methylation3/"
+    work_dir = f"/home/shuaiw/borg/paper/borg_data/borg_for4/{sample}/{sample}_methylation3/"
     # work_dir = f"/home/shuaiw/borg/paper/run3/{sample}/{sample}_methylation3/"
     
     my_ref = f"{work_dir}/contigs/{contig}.fa"

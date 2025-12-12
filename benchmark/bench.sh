@@ -1909,9 +1909,27 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
 
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-                --work_dir /home/shuaiw/borg/paper/borg_data/borg_rev3/soil_1/soil_1_methylation3 \
+                --work_dir /home/shuaiw/borg/paper/borg_data/borg_rev4/soil_1/soil_1_methylation3 \
                 --whole_bam /home/shuaiw/borg/paper/borg_data/borg_rev/soil_1/soil_1_methylation3/bams/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.bam \
-                --whole_ref  /home/shuaiw/borg/paper/borg_data/borg_for/soil_1/soil_1_methylation3/contigs/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.fa \
+                --whole_ref  /home/shuaiw/borg/paper/borg_data/borg_rev/soil_1/soil_1_methylation3/contigs/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --min_cov 2 \
+                --min_ctg_cov 2 \
+                --min_iden 0.95 \
+                --min_frac 0.1 \
+                --min_score 30 \
+                --min_sites 100 \
+                --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.mean.dat \
+                --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.num.dat \
+                --mge_file /home/shuaiw/borg/paper/borg_data/align/borg.tsv \
+                --threads 64 --visu_ipd --detect_misassembly" \
+                --job-name=borg_47
+
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /home/shuaiw/borg/paper/borg_data/borg_rev4/soil_s1_2/soil_s1_2_methylation3 \
+                --whole_bam /home/shuaiw/borg/paper/borg_data/borg_rev/soil_s1_2/soil_s1_2_methylation3/bams/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.bam \
+                --whole_ref  /home/shuaiw/borg/paper/borg_data/borg_rev/soil_1/soil_1_methylation3/contigs/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.fa \
                 --read_type hifi \
                 --min_len 1000 \
                 --min_cov 2 \
@@ -1928,9 +1946,27 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
             
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-                --work_dir /home/shuaiw/borg/paper/borg_data/borg_for3/soil_1/soil_1_methylation3 \
+                --work_dir /home/shuaiw/borg/paper/borg_data/borg_for4/soil_1/soil_1_methylation3 \
                 --whole_bam /home/shuaiw/borg/paper/borg_data/borg_for/soil_1/soil_1_methylation3/bams/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.bam \
                 --whole_ref  /home/shuaiw/borg/paper/borg_data/borg_for/soil_1/soil_1_methylation3/contigs/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.fa \
+                --read_type hifi \
+                --min_len 1000 \
+                --min_cov 2 \
+                --min_ctg_cov 2 \
+                --min_iden 0.95 \
+                --min_frac 0.1 \
+                --min_score 30 \
+                --min_sites 100 \
+                --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.mean.dat \
+                --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/control/control_db.up7.down3.num.dat \
+                --mge_file /home/shuaiw/borg/paper/borg_data/align/borg.tsv \
+                --threads 64 --visu_ipd --detect_misassembly" \
+                --job-name=borg_48
+
+                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                --work_dir /home/shuaiw/borg/paper/borg_data/borg_for4/soil_s1_2/soil_s1_2_methylation3 \
+                --whole_bam /home/shuaiw/borg/paper/borg_data/borg_for/soil_s1_2/soil_s1_2_methylation3/bams/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.bam \
+                --whole_ref  /home/shuaiw/borg/paper/borg_data/borg_for/soil_s1_2/soil_s1_2_methylation3/contigs/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.fa \
                 --read_type hifi \
                 --min_len 1000 \
                 --min_cov 2 \
