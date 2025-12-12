@@ -21,7 +21,7 @@ from sample_object import get_unique_motifs, My_sample, Isolation_sample
 
 def assess_linage(bin3c_cluster_list, sample_obj):
     
-    our_linkages, our_ctg_linkages = sample_obj.read_linkage_dict()
+    our_linkages, our_ctg_linkages,linkage_info_list = sample_obj.read_linkage_dict()
     consistent_num = 0
     inconsistent_num = 0
     for mge in our_linkages:
@@ -171,8 +171,9 @@ if __name__ == "__main__":
     data = []
     all_dir = "/home/shuaiw/borg/paper/run2/"
     fig_dir = "../../tmp/figures/link_accuracy/"
-    for prefix in ["cow_bioreactor_1", "cow_bioreactor_4", "cow_bioreactor_5"]:
-        sample_obj = My_sample(prefix, all_dir)
+    # for prefix in ["cow_bioreactor_1", "cow_bioreactor_4", "cow_bioreactor_5"]:
+    for prefix in ["cow_bioreactor_1"]:
+        sample_obj = My_sample(prefix, all_dir, methy_v=4)
         bin3c_cluster_list = sample_obj.read_bin3c()
         our_linkages = assess_linage(bin3c_cluster_list, sample_obj)
         contact_values = read_contact_values(sample_obj.contact_value_file)

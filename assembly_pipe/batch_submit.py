@@ -29,7 +29,7 @@ def read_list(bam_list, cmd_file, prefix_table):
 
             cmd = f"""
             #### number {i}
-            sbatch --partition standard --wrap "snakemake -s assembly.smk --config \\
+            sbatch --partition standard --wrap "snakemake -s methylation.smk --config \\
                 hifi_bam={hifi_bam} \\
                 prefix={prefix} \\
                 work_dir={work_dir} -j 64" \\
@@ -298,7 +298,7 @@ def batch_soil():
     """
     Read a list of BAM files from a given file.
     """
-    outdir = "/home/shuaiw/borg/paper/gg_run/"
+    outdir = "/home/shuaiw/borg/paper/gg_run2/"
     prefix_table = "prefix_table_soil.tab"
     w = open("run_soil.sh", 'w')
     i = 1
@@ -329,9 +329,9 @@ if __name__ == "__main__":
     # prefix_table = "prefix_table.tab"
     # read_list(bam_list, cmd_file, prefix_table)
 
-    outdir = "/home/shuaiw/borg/paper/run2/"
-    cmd_file = "run_asthma.sh"
-    prefix_table = "prefix_table.tab"
-    batch_asthma(cmd_file, prefix_table, outdir)
+    # outdir = "/home/shuaiw/borg/paper/run2/"
+    # cmd_file = "run_asthma.sh"
+    # prefix_table = "prefix_table.tab"
+    # batch_asthma(cmd_file, prefix_table, outdir)
 
-    # batch_soil()
+    batch_soil()

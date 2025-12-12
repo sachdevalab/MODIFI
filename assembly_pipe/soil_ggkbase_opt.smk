@@ -10,7 +10,7 @@ rule all_annotation:
         genomad_finish=f"{config['work_dir']}/genomad.done",
         ctg_mge = f"{config['work_dir']}/ctg_mge.done",
         checkv_finish=f"{config['work_dir']}/checkV.done",
-        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation3/host_summary.csv",
+        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation4/host_summary.csv",
         methy_finish=f"{config['work_dir']}/{config['prefix']}.methy.finish",
 
 
@@ -23,7 +23,7 @@ rule call_methy:
     shell:
         """
         /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
-          --work_dir {config[work_dir]}/{config[prefix]}_methylation3 \
+          --work_dir {config[work_dir]}/{config[prefix]}_methylation4 \
           --unaligned_bam {config[hifi_bam]} \
           --whole_ref {input.fa} \
           --read_type hifi \
@@ -127,12 +127,12 @@ rule call_host:
         fa=f"{config['ref']}",
         mge_file = f"{config['work_dir']}/all_mge.tsv",
     output:
-        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation3/host_summary.csv"
+        host_summary = f"{config['work_dir']}/{config['prefix']}_methylation4/host_summary.csv"
     threads: config["threads"]
     shell:
         """
         /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
-          --work_dir {config[work_dir]}/{config[prefix]}_methylation3 \
+          --work_dir {config[work_dir]}/{config[prefix]}_methylation4 \
           --unaligned_bam {config[hifi_bam]} \
           --whole_ref {input.fa} \
           --read_type hifi \

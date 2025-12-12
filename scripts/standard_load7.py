@@ -144,8 +144,8 @@ def cal_mean(s0dict, s1dict, ref_Name, capValue, ref_seq, complement_ref_seq, st
     # ref_Name = each_ref.Name
     ref_Name = ref_Name
 
-    for x in range(2125, 2131):
-        print (x, complement_ref_seq[x], s0dict[x], ref_seq[x], s1dict[x])
+    # for x in range(2125, 2131):
+    #     print (x, complement_ref_seq[x], s0dict[x], ref_seq[x], s1dict[x])
 
     # s0Ipds, s1Ipds = [], []
     result = []

@@ -132,12 +132,15 @@ def get_ctg_taxa(all_dir, data_type="meta"):
     return ctg_taxa_dict
 
 class My_sample(object):
-    def __init__(self, prefix, all_dir, data_type="meta"):
+    def __init__(self, prefix, all_dir, data_type="meta", methy_v=3):
         self.prefix = prefix
         self.all_dir = all_dir
 
         if data_type == "meta":
-            self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation3"
+            if methy_v == 3:
+                self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation3"
+            elif methy_v == 4:
+                self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation4"
         else:
             self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
 

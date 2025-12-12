@@ -237,19 +237,19 @@ if __name__ == "__main__":
     genomad_virus = f"{workdir}/Genomad/{prefix}.hifiasm.p_ctg.rename_summary/{prefix}.hifiasm.p_ctg.rename_virus_summary.tsv"
     virsorter2 = f"{workdir}/virsorter2/final-viral-score.tsv"
     virbrant = f"{workdir}/vibrant/VIBRANT_{prefix}.hifiasm.p_ctg.rename/VIBRANT_phages_{prefix}.hifiasm.p_ctg.rename/{prefix}.hifiasm.p_ctg.rename.phages_combined.fna"
-    all_mge_file = f"{workdir}/all_mge.tsv"
+    all_mge_file = f"{workdir}/all_mge2.tsv"
 
 
-    if os.path.exists(virbrant):
-        vibrant_virus = read_vibrant(virbrant)
-    else:
-        print(f"Warning: {virbrant} does not exist. Skipping VIBRANT classification.")
-        vibrant_virus = {}
-    if os.path.exists(virsorter2):
-        virsorter2_virus = read_virsorter2(virsorter2)
-    else:
-        print(f"Warning: {virsorter2} does not exist. Skipping VirSorter2 classification.")
-        virsorter2_virus = {}
+    # if os.path.exists(virbrant):
+    #     vibrant_virus = read_vibrant(virbrant)
+    # else:
+    #     print(f"Warning: {virbrant} does not exist. Skipping VIBRANT classification.")
+    #     vibrant_virus = {}
+    # if os.path.exists(virsorter2):
+    #     virsorter2_virus = read_virsorter2(virsorter2)
+    # else:
+    #     print(f"Warning: {virsorter2} does not exist. Skipping VirSorter2 classification.")
+    #     virsorter2_virus = {}
     if os.path.exists(genomad_plasmid):
         genomad_plasmid = read_genomad(genomad_plasmid, mge_type="plasmid")
     else:
@@ -263,4 +263,4 @@ if __name__ == "__main__":
         
     novel_dict = get_novel_elements(novel_elements)
 
-    get_mge_union(all_mge_file, classification_dict, vibrant_virus, virsorter2_virus, genomad_virus, genomad_plasmid, novel_dict)
+    get_mge_union(all_mge_file, classification_dict, {}, {}, genomad_virus, genomad_plasmid, novel_dict)
