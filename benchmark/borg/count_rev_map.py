@@ -6,6 +6,11 @@ Given a BAM file, count how many reads are mapped in reverse orientation
 import pysam
 import sys
 from collections import defaultdict
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
 
 def count_reverse_mappings(bam_file):
     """
@@ -53,7 +58,7 @@ def count_reverse_mappings(bam_file):
     samfile.close()
     return stats
 
-def print_statistics(stats):
+def print_statistics(stats, bam_file):
     """Print detailed statistics about read orientations"""
     
     print("\n" + "="*50)
@@ -64,39 +69,98 @@ def print_statistics(stats):
     print(f"Mapped reads: {stats['mapped_reads']:,}")
     print(f"Unmapped reads: {stats['unmapped_reads']:,}")
     
-    if stats['mapped_reads'] > 0:
+    data= []
+    if stats['mapped_reads'] > 1000:
         forward_pct = (stats['forward_mapped'] / stats['mapped_reads']) * 100
         reverse_pct = (stats['reverse_mapped'] / stats['mapped_reads']) * 100
         
-        print(f"\nMapped Read Orientations:")
-        print(f"  Forward strand (+): {stats['forward_mapped']:,} ({forward_pct:.1f}%)")
-        print(f"  Reverse strand (-): {stats['reverse_mapped']:,} ({reverse_pct:.1f}%)")
+        # print(f"\nMapped Read Orientations:")
+        # print(f"  Forward strand (+): {stats['forward_mapped']:,} ({forward_pct:.1f}%)")
+        # print(f"  Reverse strand (-): {stats['reverse_mapped']:,} ({reverse_pct:.1f}%)")
         
         # Print per-reference statistics
-        if len(stats['by_reference']) > 1:
-            print(f"\nPer-reference statistics:")
-            print(f"{'Reference':<30} {'Forward':<10} {'Reverse':<10} {'Total':<10} {'% Reverse':<10}")
-            print("-" * 80)
+        if len(stats['by_reference']) > 0:
+            # print(f"\nPer-reference statistics:")
+            # print(f"{'Reference':<30} {'Forward':<10} {'Reverse':<10} {'Total':<10} {'% Reverse':<10}")
+            # print("-" * 80)
             
             for ref_name in sorted(stats['by_reference'].keys()):
                 ref_stats = stats['by_reference'][ref_name]
                 total_ref = ref_stats['forward'] + ref_stats['reverse']
                 reverse_pct_ref = (ref_stats['reverse'] / total_ref * 100) if total_ref > 0 else 0
                 
-                print(f"{ref_name:<30} {ref_stats['forward']:<10} {ref_stats['reverse']:<10} "
-                      f"{total_ref:<10} {reverse_pct_ref:<10.1f}%")
+                # print(f"{ref_name:<30} {ref_stats['forward']:<10} {ref_stats['reverse']:<10} "
+                #       f"{total_ref:<10} {reverse_pct_ref:<10.1f}%")
+                data.append([ref_name, ref_stats['forward'], ref_stats['reverse'], total_ref, reverse_pct_ref])
+    
+    # Plot distribution of reverse percentage across references
+    if data:
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import pandas as pd
+        
+        df = pd.DataFrame(data, columns=['reference', 'forward', 'reverse', 'total', 'reverse_pct'])
+        
+        # Create distribution plot
+        plt.figure(figsize=(12, 6))
+        
+        # Subplot 1: Histogram of reverse percentages
+        plt.subplot(1, 2, 1)
+        plt.hist(df['reverse_pct'], bins=20, alpha=0.7, color='skyblue', edgecolor='black')
+        plt.xlabel('Reverse Percentage (%)')
+        plt.ylabel('Number of References')
+        plt.title('Distribution of Reverse Read Percentages')
+        plt.grid(True, alpha=0.3)
+        
+        # Add statistics on the plot
+        mean_pct = df['reverse_pct'].mean()
+        median_pct = df['reverse_pct'].median()
+        plt.axvline(mean_pct, color='red', linestyle='--', label=f'Mean: {mean_pct:.1f}%')
+        plt.axvline(median_pct, color='orange', linestyle='--', label=f'Median: {median_pct:.1f}%')
+        plt.legend()
+        
+        # Subplot 2: Box plot
+        plt.subplot(1, 2, 2)
+        plt.boxplot(df['reverse_pct'])
+        plt.ylabel('Reverse Percentage (%)')
+        plt.title('Box Plot of Reverse Read Percentages')
+        plt.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        
+        # Save the plot
+        output_file = bam_file.replace('.bam', '_reverse_distribution.png')
+        plt.savefig(output_file, dpi=300, bbox_inches='tight')
+        print(f"\nDistribution plot saved to: {output_file}")
+        
+        # Print summary statistics
+        print(f"\nSummary Statistics:")
+        print(f"Mean reverse %: {mean_pct:.2f}%")
+        print(f"Median reverse %: {median_pct:.2f}%")
+        print(f"Std deviation: {df['reverse_pct'].std():.2f}%")
+        print(f"Min reverse %: {df['reverse_pct'].min():.2f}%")
+        print(f"Max reverse %: {df['reverse_pct'].max():.2f}%")
+        
+        plt.show()
+    ## print top ten genomes with highest or lowest reverse_pct_ref
+        top10_highest = df.nlargest(10, 'reverse_pct')
+        top10_lowest = df.nsmallest(10, 'reverse_pct')
+        print("\nTop 10 genomes with highest reverse %:")
+        print(top10_highest[['reference', 'reverse_pct']])
+        print("\nTop 10 genomes with lowest reverse %:")
+        print(top10_lowest[['reference', 'reverse_pct']])
 
-def main():
-    if len(sys.argv) != 2:
+
+def main(bam_file):
+    if not bam_file:
         print("Usage: python count_rev_map.py <bam_file>")
         print("Example: python count_rev_map.py reads.bam")
         sys.exit(1)
     
-    bam_file = sys.argv[1]
     
     try:
         stats = count_reverse_mappings(bam_file)
-        print_statistics(stats)
+        print_statistics(stats, bam_file)
         
     except FileNotFoundError:
         print(f"Error: BAM file '{bam_file}' not found")
@@ -105,16 +169,15 @@ def main():
         print(f"Error processing BAM file: {e}")
         sys.exit(1)
 
-# Default BAM file for testing
-sample="soil_2"
-# default_bam = "/home/shuaiw/borg/paper/borg_data/borg_for/soil_1/soil_1_methylation3/bams/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.bam"
-default_bam = f"/home/shuaiw/borg/paper/borg_data/borg_for/{sample}/{sample}_methylation3/bams/Methanoperedens_44_19-type_SR-VP_26_10_2019_1_100cm_part_1.bam"
+# # Default BAM file for testing
+# sample="soil_60"
+# # default_bam = "/home/shuaiw/borg/paper/borg_data/borg_for/soil_1/soil_1_methylation3/bams/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.bam"
+# default_bam = f"/home/shuaiw/borg/paper/gg_run/{sample}/{sample}_methylation3/align_bam/aligned.bam"
+# # default_bam = f"/home/shuaiw/borg/paper/borg_data/borg_for/{sample}/{sample}_methylation3/align_bam/aligned.bam"
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        # Use default BAM file if no argument provided
-        print("No BAM file provided, using default...")
-        sys.argv.append(default_bam)
-    main()
+    for sample in ["soil_60", "soil_80","soil_90","soil_100","soil_110","soil_115","soil_1","soil_2"]:
+        default_bam = f"/home/shuaiw/borg/paper/gg_run/{sample}/{sample}_methylation3/align_bam/aligned.bam"
+        main(default_bam)
 
 

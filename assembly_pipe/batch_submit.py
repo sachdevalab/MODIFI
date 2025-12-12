@@ -281,7 +281,7 @@ def batch_asthma(cmd_file, prefix_table, outdir):
 
             if environment == "soil":
                 print (borg_cmd_for, file=borg)
-                print (borg_cmd_rev, file=borg)
+                # print (borg_cmd_rev, file=borg)
 
 
             # if i   in [9]:
