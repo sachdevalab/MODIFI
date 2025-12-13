@@ -321,6 +321,7 @@ def find_species_drep(contig, all_dir, prefix, data_type="meta", min_frac=0.3, m
     motif_set = set()
     for contig in species_contigs:
         ctg_obj = My_contig(prefix, all_dir, contig, data_type)
+        print (ctg_obj.motif_file)
         motif_df = ctg_obj.read_motif(min_frac=0.3, min_sites=100)
         if motif_df is None:
             continue
@@ -337,9 +338,12 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
     plot_name = f"{fig_dir}/{cluster}.pdf"
     tmp_res_file = f"{tmp_res}/{cluster}.csv"
     cluster_obj = My_cluster(cluster, members)
-    for contig in members:
-        print (contig)
-        prefix = "_".join(contig.split("_")[:-2])
+    if len(members[0]) == 1:
+        new_members = [(contig,"_".join(contig.split("_")[:-2])) for contig in members]
+        members = new_members
+    for contig, prefix in members:
+        # print (contig)
+        # prefix = "_".join(contig.split("_")[:-2])
         ctg_obj = My_contig(prefix, all_dir, contig, data_type)
         ref = ctg_obj.ctg_ref
 
@@ -368,7 +372,7 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
     #                         ["infant_3", "infant_3_289_C"], ["infant_3", "infant_3_287_C"],\
     #                         ["infant_4", "infant_4_271_C"], ["infant_4", "infant_4_61_C"]]
     print ("motif_list", motif_list)
-    print ("all_contig_list", all_contig_list)
+    # print ("all_contig_list", all_contig_list)
     # if len(all_contig_list) > 1:
     cluster_obj = profile_heatmap(all_contig_list, motif_list, all_dir, tmp_res_file, cluster_obj,data_type, score_cutoff)
     

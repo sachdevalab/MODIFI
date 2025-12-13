@@ -316,14 +316,31 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
             node_rename = f"{species}_{bin_name}"
             Label_anno += f"{bin_name},{node_rename}\n"
             if sample_meta_dict[bin_name]['motif_num'] is not None:
-                if sample_meta_dict[bin_name]['motif_num'] > 1:
-                    sample_meta_dict[bin_name]['motif_num'] = 2
-                motif_num_anno += f"{bin_name} {sample_meta_dict[bin_name]['motif_num']}\n"
+                try:
+                    motif_num = float(sample_meta_dict[bin_name]['motif_num'])
+                    if motif_num > 1:
+                        motif_num = 2
+                    motif_num_anno += f"{bin_name} {motif_num}\n"
+                except (ValueError, TypeError):
+                    print(f"Warning: could not convert motif_num to float for {bin_name}: {sample_meta_dict[bin_name]['motif_num']}")
+                    motif_num_anno += f"{bin_name} 0\n"
+            
             if sample_meta_dict[bin_name]['mge_bool'] is not None:
-                mge_num_anno += f"{bin_name} {sample_meta_dict[bin_name]['mge_bool']}\n"
-            if sample_meta_dict[bin_name]['average_dp'] >= 10:
-                depth_anno += f"{bin_name} 1\n"
-            else:
+                try:
+                    mge_bool = float(sample_meta_dict[bin_name]['mge_bool'])
+                    mge_num_anno += f"{bin_name} {mge_bool}\n"
+                except (ValueError, TypeError):
+                    print(f"Warning: could not convert mge_bool to float for {bin_name}: {sample_meta_dict[bin_name]['mge_bool']}")
+                    mge_num_anno += f"{bin_name} 0\n"
+            
+            try:
+                average_dp = float(sample_meta_dict[bin_name]['average_dp'])
+                if average_dp >= 10:
+                    depth_anno += f"{bin_name} 1\n"
+                else:
+                    depth_anno += f"{bin_name} 0\n"
+            except (ValueError, TypeError):
+                print(f"Warning: could not convert average_dp to float for {bin_name}: {sample_meta_dict[bin_name]['average_dp']}")
                 depth_anno += f"{bin_name} 0\n"
             # Add to legend data
             # legend_data += f"{bin_name} {color} {phylum}\n"

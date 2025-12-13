@@ -132,7 +132,7 @@ def parse_paf_file(paf_file, min_identity=0.8, min_coverage=0.5):
         print(f"✗ Error parsing PAF file: {e}")
         return pd.DataFrame()
 
-def identify_borg_contigs(df_alignments, output_file, prefix, all_dir):
+def identify_borg_contigs(df_alignments, output_file, prefix, all_dir, assembly_fasta):
     """
     Identify and save potential BORG contigs.
     
@@ -146,7 +146,9 @@ def identify_borg_contigs(df_alignments, output_file, prefix, all_dir):
     if df_alignments.empty:
         print("⚠ No BORG contigs identified")
         return []
-    sample_obj = My_sample(prefix, all_dir )
+    sample_obj = My_sample(prefix, all_dir,methy_v=4 )
+    sample_obj.reference_fasta = assembly_fasta
+    sample_obj.fai = assembly_fasta + ".fai"
     sample_obj.read_depth()
     # Group by target (assembly contig) and get best alignment per contig
     borg_contigs = []
@@ -169,6 +171,7 @@ def identify_borg_contigs(df_alignments, output_file, prefix, all_dir):
             'target_coverage': round(best_alignment['target_coverage'], 3),
             'alignment_length': best_alignment['alignment_length'],
             'length': best_alignment['target_length'],
+            'sample_name': prefix,
             'ctg_depth': sample_obj.depth_dict.get(best_alignment['query_name'], 'NA')
         })
     # Save summary
@@ -211,7 +214,7 @@ def find_borg_func(assembly_fasta, work_dir, borg_ref, prefix,all_dir, ece_type,
     
     # Identify BORG contigs
     output_file = os.path.join(work_dir, f"{ece_type}_contigs_summary.tsv")
-    borg_contigs = identify_borg_contigs(df_alignments, output_file, prefix, all_dir)
+    borg_contigs = identify_borg_contigs(df_alignments, output_file, prefix, all_dir, assembly_fasta)
     
     # Save simple list
     borg_list_file = os.path.join(work_dir, f"{ece_type}_contigs.txt")
@@ -257,20 +260,37 @@ def main():
         min_identity=args.min_identity,
         min_coverage=args.min_coverage
     )
-    
+
+def find_assembly():
+    ## for soil
+    fasta_dict = {}
+    meta = "/home/shuaiw/mGlu/assembly_pipe/prefix_table_soil.tab" 
+    for line in open(meta) :
+        field = line.strip().split()
+        fasta = field[0]
+        sample = field[1]
+        fasta_dict[sample] = fasta
+    return fasta_dict
 
 if __name__ == "__main__":
     # Default parameters for backward compatibility
     borg_ref = "/home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa"
-    
+    all_dir = "/home/shuaiw/borg/paper/gg_run2/"
+
     if len(sys.argv) == 1:
         # Run with default parameters if no arguments provided
         print("Running with default parameters...")
-        # borg_ref = "/home/shuaiw/borg/paper/borg_data/jumbo_phage.fa"
-        all_dir = "/home/shuaiw/borg/paper/run2/"
-        for prefix in ["soil_1", "soil_2", "soil_s1_1","soil_s1_2","soil_s3_1","soil_s3_2","soil_s4_1","soil_s4_2"]:
-            work_dir = f"/home/shuaiw/borg/paper/run2/{prefix}/borg/"
-            assembly_fasta = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa"
+        borg_ref = "/home/shuaiw/borg/paper/borg_data/all_borg_mini_jumbo.fa"
+        
+        # all_dir = "/home/shuaiw/borg/paper/borg_data/borg_for2/"
+        all_dir = "/home/shuaiw/borg/paper/gg_run2/"
+        fasta_dict = find_assembly()
+        # for prefix in ["soil_1", "soil_2", "soil_s1_1","soil_s1_2","soil_s3_1","soil_s3_2","soil_s4_1","soil_s4_2"]:
+        #     work_dir = f"{all_dir}/{prefix}/borg/"
+        #     assembly_fasta = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa"
+        for prefix in fasta_dict:
+            assembly_fasta = fasta_dict[prefix]
+            work_dir = f"{all_dir}/{prefix}/borg/"
             find_borg_func(assembly_fasta, work_dir, borg_ref, prefix, all_dir, ece_type="borg")
     else:
         # Use command line interface

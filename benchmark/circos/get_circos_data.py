@@ -669,63 +669,47 @@ def auto_main_jumbo():
 
 
 def auto_main_borg():
-    out_dir = "/home/shuaiw/borg/paper/circos/mini_borg/"
-    all_dir = "/home/shuaiw/borg/paper/borg_data/mini_borg/"
 
-    ## makdir out_dir if not exists
+    # sample = "soil_1"
+    def handle_each_sample(sample, out_dir, all_dir):
+        sample_obj = My_sample(sample, all_dir)
+        out_dir = os.path.join(out_dir, sample)
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+        # sample_obj.reference_fasta = "/home/shuaiw/borg/paper/borg_data/mp_ece.contigs.fa"
+        sample_obj.reference_fasta = "/home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa"
+        sample_obj.fai = sample_obj.reference_fasta + ".fai"
+        sample_obj.read_depth()
 
+        sorted_contigs = sorted(sample_obj.depth_dict.items(), key=lambda x: x[1], reverse=True)
+        for contig, depth in sorted_contigs:
 
-    sample = "soil_1"
-    sample_obj = My_sample(sample, all_dir)
-    out_dir = os.path.join(out_dir, sample)
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    sample_obj.reference_fasta = "/home/shuaiw/borg/paper/borg_data/mp_ece.contigs.fa"
-    sample_obj.fai = sample_obj.reference_fasta + ".fai"
-    sample_obj.read_depth()
+            ctg_obj = My_contig(sample, all_dir, contig)
+            motif_df = ctg_obj.read_motif(min_frac=0, min_sites=0)
+            if motif_df is None:
+                continue
+            motif_list = []
+            for _, row in motif_df.iterrows():
+                if row['fraction'] > 0.1 and row["nDetected"] > 20:
+                    motif_list.append([row['motifString'], row['centerPos']])
+            print (motif_list)
+            work_dir = f"{all_dir}/{sample}/{sample}_methylation3/"
+            my_ref = f"{work_dir}/contigs/{contig}.fa"
+            gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
 
-    sorted_contigs = sorted(sample_obj.depth_dict.items(), key=lambda x: x[1], reverse=True)
-    for contig, depth in sorted_contigs:
+            get_all_loci(gff2, contig, my_ref, out_dir,motif_list)
 
-        if contig not in ["Saturn_mini-Borg_41kb_SR-VP_26_10_2019_2_90cm_33_22",\
-                          "Uranus_mini-Borg_55kb_SR-VP_9_9_2021_81_5A_0_75m_35_16_complete",\
-                          "SR-VP_26_10_2019_1_90cm_scaffold_8229",\
-                          "SR-VP_26_10_2019_2_90cm_scaffold_29557",\
-                            "Saturn_mini-Borg_75kb_SRVP18_trench_6_60cm_34_20_near_complete",\
-                                "SR-VP_26_10_2019_2_90cm_scaffold_28500",\
-                                    "SR-VP_0-2_scaffold_141_3651159",\
-                                        "SR-VP_26_10_2020_1_100CM_scaffold_3695492",\
-                                            "SRVP18_hole-7m-from-trench_1_20cm_scaffold_8051",\
-                                                "SRVP18_hole-7m-from-trench_1_20cm_scaffold_3869",\
-                                                    "SRVP18_hole-7m-from-trench_1_20cm_scaffold_1996",\
-                                                        "SR-VP_26_10_2019_2_100cm_scaffold_2211", \
-                                                            "SR-VP_26_10_2020_1_100CM_scaffold_6826853",\
-                                                                "Uranus_mini-Borg_69kb_SR-VP_26_10_2020_2_100CM_33_33",\
-                                                                    "Saturn_mini-Borg_94kb_SR-VP_9_9_2021_87_5B_1_2m_33_10_near_complete",\
-                                                                        "Venus_mini-Borg_106kb_SRVP18_hole-7m-from-trench_1_80cm_34_23_complete"]:
-            continue
-
-        ctg_obj = My_contig(sample, all_dir, contig)
-        motif_df = ctg_obj.read_motif(min_frac=0, min_sites=0)
-        if motif_df is None:
-            continue
-        motif_list = []
-        for _, row in motif_df.iterrows():
-            if row['fraction'] > 0.1 and row["nDetected"] > 20:
-                motif_list.append([row['motifString'], row['centerPos']])
-        print (motif_list)
-        work_dir = f"{all_dir}/{sample}/{sample}_methylation3/"
-        my_ref = f"{work_dir}/contigs/{contig}.fa"
-        gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
-
-        get_all_loci(gff2, contig, my_ref, out_dir,motif_list)
+    out_dir = "/home/shuaiw/borg/paper/circos/borg_new/"
+    all_dir = "/home/shuaiw/borg/paper/borg_data/borg_for2//"
+    for sample in ["soil_1", "soil_2", "soil_s1_1","soil_s1_2","soil_s3_1","soil_s3_2","soil_s4_1","soil_s4_2"]:
+        handle_each_sample(sample, out_dir, all_dir)
 
 if __name__ == "__main__":
     score_cutoff = 30
     # auto_main()
     # auto_main_jumbo()
-    manual_main()
-    # auto_main_borg()
+    # manual_main()
+    auto_main_borg()
 
 
     # contig = "E_coli_H10407_6"

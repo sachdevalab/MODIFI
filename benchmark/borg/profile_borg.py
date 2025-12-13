@@ -24,7 +24,8 @@ class Borg_Entry:
             self.target_coverage = float(fields[5])
             self.alignment_length = int(fields[6])
             self.length = int(fields[7])
-            self.ctg_depth = float(fields[8])
+            self.ctg_depth = float(fields[9])
+            self.sample_name = fields[8]
         else:
             raise ValueError(f"Invalid line format: {line}")
 
@@ -171,7 +172,7 @@ def count_mod_freq(all_dir, borg_anno_dict, score_cutoff = 30):
 
 if __name__ == "__main__":
     
-    all_dir = "/home/shuaiw/borg/paper/run2/"
+    all_dir = "/home/shuaiw/borg/paper/gg_run2/"
     seq_dir = "/home/shuaiw/borg/paper/borg_data/profile/"
     cluster = "profile"
 
@@ -185,15 +186,14 @@ if __name__ == "__main__":
     
     # Load BORG data
     borg_data = My_Borg(borg_file)
-    high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=1.0)
+    high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
     
     members = []
     borg_anno_dict = {}
     for i, entry in enumerate(high_dp_borgs):
-        print(f"{i+1}. {entry}")
-        members.append(entry.seq_name)
+        # print(f"{i+1}. {entry}")
+        members.append((entry.seq_name, entry.sample_name))
         borg_anno_dict[entry.seq_name] = [entry.type, entry.borg_ref]
-    # print (members)
     # members = ["soil_1_1336_L", "soil_s4_1_109_C"]
     
     
@@ -209,8 +209,8 @@ if __name__ == "__main__":
 
 
     cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                    seq_dir, seq_dir, min_frac=0.2, 
-                                    min_sites=10, score_cutoff = 20)
+                                    seq_dir, seq_dir, min_frac=0.3, 
+                                    min_sites=50, score_cutoff = 20)
     cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
     # cluster_obj = My_cluster(cluster, members) 

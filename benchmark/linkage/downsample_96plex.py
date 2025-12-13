@@ -12,8 +12,24 @@ def subsample(out_dir, full_bam, run_cmd):
             samtools index {out_bam}
         """
         # os.system(cmd)
+        # run = f"""
+        #     sbatch  --partition standard --wrap " /usr/bin/time -v -o {out_dir}/{prefix}.time python /home/shuaiw/mGlu/main.py \\
+        #     --work_dir {out_dir}/{prefix} \\
+        #     --whole_bam {out_bam} \\
+        #     --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \\
+        #     --read_type hifi \\
+        #     --min_len 1000 \\
+        #     --min_cov 1 \\
+        #     --min_frac 0.3 \\
+        #     --min_score 30 \\
+        #     --min_sites 100 \\
+        #     --min_iden 0.97 \\
+        #     --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \\
+        #     --threads 64 " \\
+        #     --job-name=p{p}_pure
+        # """
         run = f"""
-            sbatch  --partition standard --wrap " /usr/bin/time -v -o {out_dir}/{prefix}.time python /home/shuaiw/Methy/main.py \\
+            python /home/shuaiw/mGlu/main.py \\
             --work_dir {out_dir}/{prefix} \\
             --whole_bam {out_bam} \\
             --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \\
@@ -25,8 +41,7 @@ def subsample(out_dir, full_bam, run_cmd):
             --min_sites 100 \\
             --min_iden 0.97 \\
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \\
-            --threads 64 --run_steps host" \\
-            --job-name=p{p}_pure
+            --threads 64 
         """
         print (run, file = f)
     f.close()
@@ -34,7 +49,7 @@ def subsample(out_dir, full_bam, run_cmd):
 def pure_main():
     full_bam = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/align/m64004_210929_143746.align.ccs.bam"
     out_dir = "/home/shuaiw/borg/paper/linkage/"
-    out_dir = "/home/shuaiw/borg/paper/linkage/pure"
+    out_dir = "/home/shuaiw/borg/paper/linkage/pure2"
     run_cmd = "run_dp.sh"
     subsample(out_dir, full_bam, run_cmd)
 
@@ -66,7 +81,7 @@ def meta_subsample(out_dir, raw_96, soil):
         align_bam = f"/home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p{p}.align.bam"
         prefix = f"/home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p{p}"
         run = f"""
-            sbatch  --partition standard --wrap "/usr/bin/time -v -o {prefix}.run.time python /home/shuaiw/Methy/main.py \\
+            sbatch  --partition standard --wrap "/usr/bin/time -v -o {prefix}.run.time python /home/shuaiw/mGlu/main.py \\
             --work_dir {prefix}/ \\
             --whole_bam {align_bam} \\
             --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \\
@@ -112,7 +127,7 @@ def meta_subsample2(out_dir, raw_96, soil):
         align_bam = f"/home/shuaiw/borg/paper/linkage/meta_infant_14/m64004_210929_143746.p{p}.align.bam"
         prefix = f"/home/shuaiw/borg/paper/linkage/meta_infant_14/m64004_210929_143746.p{p}"
         run = f"""
-            sbatch  --partition standard --wrap "/usr/bin/time -v -o {prefix}.run.time python /home/shuaiw/Methy/main.py \\
+            sbatch  --partition standard --wrap "/usr/bin/time -v -o {prefix}.run.time python /home/shuaiw/mGlu/main.py \\
             --work_dir {prefix}/ \\
             --whole_bam {align_bam} \\
             --whole_ref /home/shuaiw/borg/paper/linkage/meta_infant_14/96plex_infant.fa \\
@@ -135,10 +150,10 @@ def meta_subsample2(out_dir, raw_96, soil):
 # out_dir = "/home/shuaiw/borg/paper/linkage/meta"
 # meta_subsample(out_dir, raw_96, soil)
 
-soil = "/home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_5G1_pacbio.bam"
-raw_96 = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam"
-out_dir = "/home/shuaiw/borg/paper/linkage/meta_infant_14/"
-meta_subsample2(out_dir, raw_96, soil)
+# soil = "/home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_5G1_pacbio.bam"
+# raw_96 = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam"
+# out_dir = "/home/shuaiw/borg/paper/linkage/meta_infant_14/"
+# meta_subsample2(out_dir, raw_96, soil)
 
-# pure_main()
+pure_main()
 

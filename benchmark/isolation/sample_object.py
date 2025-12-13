@@ -132,7 +132,7 @@ def get_ctg_taxa(all_dir, data_type="meta"):
     return ctg_taxa_dict
 
 class My_sample(object):
-    def __init__(self, prefix, all_dir, data_type="meta", methy_v=3):
+    def __init__(self, prefix, all_dir, data_type="meta", methy_v=4):
         self.prefix = prefix
         self.all_dir = all_dir
 
@@ -721,7 +721,7 @@ class My_contig(My_sample):
         super().__init__(prefix, all_dir, data_type)
         self.contig = contig
         if data_type == "meta":
-            self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation3"
+            self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation4"
         else:
             self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
         self.ctg_ref = f"{self.work_dir}/contigs/{contig}.fa"
@@ -740,6 +740,11 @@ class My_contig(My_sample):
         self.RM_dict = None
         self.modified_loci = None
         self.REF = None
+
+    # def sample_name_corr(self):
+    #     soil_dict = {
+    #         "":"soil_1"
+    #     }
 
     def read_motif(self, min_frac=0.3, min_sites=30):
         ## check if file exists
