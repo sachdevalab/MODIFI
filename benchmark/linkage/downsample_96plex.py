@@ -125,7 +125,7 @@ def meta_subsample2(out_dir, raw_96, soil):
         # """
         # print (alignment, file = f)
         align_bam = f"/home/shuaiw/borg/paper/linkage/meta_infant_14/m64004_210929_143746.p{p}.align.bam"
-        prefix = f"/home/shuaiw/borg/paper/linkage/meta_infant_14/m64004_210929_143746.p{p}"
+        prefix = f"/home/shuaiw/borg/paper/linkage/meta_infant_14_v2/m64004_210929_143746.p{p}"
         run = f"""
             sbatch  --partition standard --wrap "/usr/bin/time -v -o {prefix}.run.time python /home/shuaiw/mGlu/main.py \\
             --work_dir {prefix}/ \\
@@ -142,6 +142,21 @@ def meta_subsample2(out_dir, raw_96, soil):
             --threads 64 " \\
             --job-name=p{p}
         """
+        run = f"""
+            python /home/shuaiw/mGlu/main.py \\
+            --work_dir {prefix}/ \\
+            --whole_bam {align_bam} \\
+            --whole_ref /home/shuaiw/borg/paper/linkage/meta_infant_14/96plex_infant.fa \\
+            --read_type hifi \\
+            --min_len 1000 \\
+            --min_cov 1 \\
+            --min_frac 0.4 \\
+            --min_score 30 \\
+            --min_sites 100 \\
+            --min_iden 0.97 \\
+            --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \\
+            --threads 64 
+        """
         print (run, file = f)
     f.close()
 
@@ -150,10 +165,10 @@ def meta_subsample2(out_dir, raw_96, soil):
 # out_dir = "/home/shuaiw/borg/paper/linkage/meta"
 # meta_subsample(out_dir, raw_96, soil)
 
-# soil = "/home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_5G1_pacbio.bam"
-# raw_96 = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam"
-# out_dir = "/home/shuaiw/borg/paper/linkage/meta_infant_14/"
-# meta_subsample2(out_dir, raw_96, soil)
+soil = "/home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_5G1_pacbio.bam"
+raw_96 = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam"
+out_dir = "/home/shuaiw/borg/paper/linkage/meta_infant_14/"
+meta_subsample2(out_dir, raw_96, soil)
 
-pure_main()
+# pure_main()
 

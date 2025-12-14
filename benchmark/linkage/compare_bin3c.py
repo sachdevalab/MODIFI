@@ -171,8 +171,8 @@ if __name__ == "__main__":
     data = []
     all_dir = "/home/shuaiw/borg/paper/run2/"
     fig_dir = "../../tmp/figures/link_accuracy/"
-    # for prefix in ["cow_bioreactor_1", "cow_bioreactor_4", "cow_bioreactor_5"]:
-    for prefix in ["cow_bioreactor_1"]:
+    for prefix in ["cow_bioreactor_1", "cow_bioreactor_4", "cow_bioreactor_5"]:
+    # for prefix in ["cow_bioreactor_1"]:
         sample_obj = My_sample(prefix, all_dir, methy_v=4)
         bin3c_cluster_list = sample_obj.read_bin3c()
         our_linkages = assess_linage(bin3c_cluster_list, sample_obj)

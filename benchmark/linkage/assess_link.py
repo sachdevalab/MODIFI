@@ -456,7 +456,7 @@ def cal_AUC_pure():
 
     for p in ["10", "20", "30", "50", "05", "100"]:
         prefix = f"m64004_210929_143746.p{p}"
-        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/pure", prefix, "hosts")
+        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/pure2", prefix, "hosts")
         recall, precision = assess_linkage(result_dir, cutoff, plasmid_host_dict)
         dp_df = get_depth(result_dir)
         ## add column which is p for all dp_df
@@ -582,8 +582,8 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-# cal_AUC_pure()
-cal_AUC_meta()
+cal_AUC_pure()
+# cal_AUC_meta()
 
 
 

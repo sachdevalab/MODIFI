@@ -313,11 +313,11 @@ def batch_soil():
 
             work_dir = os.path.join(outdir, prefix)
             cmd = f"""
-            sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_opt.smk --config \\
+            sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_gtdb.smk --config \\
                 hifi_bam={hifi_bam} \\
                 prefix={prefix} \\
                 work_dir={work_dir} \\
-                ref={ref} -j 64 "  --job-name={prefix}
+                ref={ref} -j 64"  --job-name={prefix}
             """
             print(cmd, file=w)
     w.close()

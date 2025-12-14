@@ -1924,6 +1924,21 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64" \
   --job-name=soil_115_m
 
+sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/gg_run2/soil_110/soil_110_methylation4 \
+  --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268288-1_D01.ccs.bam \
+  --whole_ref /home/shuaiw/borg/paper/curated_genome/SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI.contigs.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 3 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 100 \
+  --run_steps host \
+   --mge_file /home/shuaiw/borg/paper/curated_genome/SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI.contigs.borg_list.txt \
+  --threads 64" \
+  --job-name=soil_60_m
+
 
                 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
                 --work_dir /home/shuaiw/borg/paper/borg_data/borg_rev4/soil_1/soil_1_methylation3 \
