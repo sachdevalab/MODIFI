@@ -338,9 +338,11 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
     plot_name = f"{fig_dir}/{cluster}.pdf"
     tmp_res_file = f"{tmp_res}/{cluster}.csv"
     cluster_obj = My_cluster(cluster, members)
-    if len(members[0]) == 1:
+    if isinstance(members[0], str):
         new_members = [(contig,"_".join(contig.split("_")[:-2])) for contig in members]
+        # print ("&&&", new_members)
         members = new_members
+    print (members)
     for contig, prefix in members:
         # print (contig)
         # prefix = "_".join(contig.split("_")[:-2])
@@ -544,12 +546,12 @@ def main_meta():
             if len(members) > cutoff:
                 print ("cluster", cluster, len(members), len(variation_data))
 
-                # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                #                                 fig_dir, tmp_res, min_frac=0.3, min_sites=100)
+                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                                                fig_dir, tmp_res, min_frac=0.3, min_sites=100)
                 
-                cluster_obj = My_cluster(cluster, members) 
-                cluster_obj.load_df(tmp_res)
-                cluster_obj.manual_filter_motifs()
+                # cluster_obj = My_cluster(cluster, members) 
+                # cluster_obj.load_df(tmp_res)
+                # cluster_obj.manual_filter_motifs()
 
                 if len(cluster_obj.profile_df) < 2:
                     print ("skip cluster with less than 2 contigs with motif profiles")

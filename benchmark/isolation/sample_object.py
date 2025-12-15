@@ -723,7 +723,7 @@ class My_contig(My_sample):
         if data_type == "meta":
             self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation4"
         else:
-            self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
+            self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation4"
         self.ctg_ref = f"{self.work_dir}/contigs/{contig}.fa"
         self.ctg_ref_fai = f"{self.work_dir}/contigs/{contig}.fa.fai"
         self.gff = f"{self.work_dir}/gffs/{contig}.gff"
