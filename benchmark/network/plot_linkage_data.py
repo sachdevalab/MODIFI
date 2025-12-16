@@ -31,8 +31,7 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
         host_lineage = ctg_taxa_dict[linkage_obj.host] if linkage_obj.host in ctg_taxa_dict else "NA"
         host_taxa = get_detail_taxa_name(host_lineage)
 
-        gc_data.append([linkage_obj.mge, linkage_obj.host, linkage_obj.MGE_gc, linkage_obj.host_gc, linkage_obj.cos_sim, 
-                        linkage_obj.MGE_cov, linkage_obj.host_cov, environment, prefix, linkage_obj.mge_len, host_taxa])
+
 
         if linkage_obj.host in host_clu_dict:
             host_clu = host_clu_dict[linkage_obj.host]
@@ -41,6 +40,9 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
         if linkage_obj.mge in MGE_type_dict:
             # G.add_node(row['MGE'], label=row['MGE'], type=MGE_type_dict[row['MGE']])
             G.add_node(mge_clu_dict[linkage_obj.mge], label=linkage_obj.mge, type=MGE_type_dict[linkage_obj.mge])
+
+        gc_data.append([linkage_obj.mge, linkage_obj.host, MGE_type_dict[linkage_obj.mge], linkage_obj.MGE_gc, linkage_obj.host_gc, linkage_obj.cos_sim, 
+                        linkage_obj.MGE_cov, linkage_obj.host_cov, environment, prefix, linkage_obj.mge_len, host_taxa])
 
         represent_ctg_lineage = ctg_taxa_dict[linkage_obj.host] if linkage_obj.host in ctg_taxa_dict else "NA"
         ctg_phylum = classify_taxa(represent_ctg_lineage, "phylum")
@@ -53,7 +55,7 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
 def plot_network2(G,paper_fig_dir ):
 
     
-    plt.figure(1, figsize=(10, 12))
+    plt.figure(1, figsize=(12, 14))
     
     # layout graphs with positions using graphviz neato
     pos = nx.nx_agraph.graphviz_layout(G, prog="neato")
@@ -247,24 +249,24 @@ def profile_network(whole_G, ctg_taxa_dict):
             ctg_taxa = get_detail_taxa_name(represent_ctg_lineage)
             print(f"{node} {node_label}: {degree} (Host annotation: {ctg_species}, {ctg_taxa})")
     
-    ## see which host has linked the most virus
-    # host_virus_link_count = defaultdict(int)
-    # for node, degree in whole_G.degree:
-    #     if whole_G.nodes[node]['type'] not in ['virus', 'plasmid', 'novel']:
-    #         neighbors = list(whole_G.neighbors(node))
-    #         for neighbor in neighbors:
-    #             if whole_G.nodes[neighbor]['type'] == 'virus':
-    #                 host_virus_link_count[node] += 1
-    # # get the top 10 hosts that linked the most virus
-    # top_hosts = sorted(host_virus_link_count.items(), key=lambda x: x[1], reverse=True)[:10]
-    # print("Top 10 hosts linking the most viruses:")
-    # for host, count in top_hosts:
-    #     node_label = whole_G.nodes[host].get('label', 'Unknown')
-    #     represent_ctg_lineage = ctg_taxa_dict[node_label] if node_label in ctg_taxa_dict else "NA"
-    #     ctg_species = classify_taxa(represent_ctg_lineage, "species")
-    #     ctg_genus = classify_taxa(represent_ctg_lineage, "genus")
-    #     print(f"{host} {node_label}: linked to {count} viruses (Host annotation: {ctg_species}, {ctg_genus})")
-    # count_cross_phylum(whole_G)
+    # see which host has linked the most virus
+    host_virus_link_count = defaultdict(int)
+    for node, degree in whole_G.degree:
+        if whole_G.nodes[node]['type'] not in ['virus', 'plasmid', 'novel']:
+            neighbors = list(whole_G.neighbors(node))
+            for neighbor in neighbors:
+                if whole_G.nodes[neighbor]['type'] == 'virus':
+                    host_virus_link_count[node] += 1
+    # get the top 10 hosts that linked the most virus
+    top_hosts = sorted(host_virus_link_count.items(), key=lambda x: x[1], reverse=True)[:10]
+    print("Top 10 hosts linking the most viruses:")
+    for host, count in top_hosts:
+        node_label = whole_G.nodes[host].get('label', 'Unknown')
+        represent_ctg_lineage = ctg_taxa_dict[node_label] if node_label in ctg_taxa_dict else "NA"
+        ctg_species = classify_taxa(represent_ctg_lineage, "species")
+        ctg_genus = classify_taxa(represent_ctg_lineage, "genus")
+        print(f"{host} {node_label}: linked to {count} viruses (Host annotation: {ctg_species}, {ctg_genus})")
+    count_cross_phylum(whole_G)
     # # ## print the MGE with degree > 1
     # # print("MGEs with degree > 1:")
     # for node, degree in whole_G.degree:
@@ -281,6 +283,17 @@ def profile_network(whole_G, ctg_taxa_dict):
     #             neighbors = list(whole_G.neighbors(target_node))
     #             print(f"Neighbors of {target_node}: {neighbors}")
     #         print ("#########################")
+
+def analyze_MGEs(gc_df, mge_clu_dict):
+    taxon = "s__Enterococcus faecalis"
+    target_gc_df = gc_df[gc_df['host_taxa'].str.contains(taxon)]
+    print (target_gc_df)
+    ## count how many unique MGE clusters, mge_clu_dict
+    target_gc_df["MGE_cluster"] = target_gc_df['MGE'].map(mge_clu_dict)
+    unique_mge_clusters = target_gc_df['MGE_cluster'].unique()
+    print (f"Number of unique MGE clusters linked to {taxon}: {len(unique_mge_clusters)}")
+    print (unique_mge_clusters)
+
 
 if __name__ == "__main__":  
     ANI = 99
@@ -327,7 +340,7 @@ if __name__ == "__main__":
     plot_network2(whole_G, paper_fig_dir)
     profile_network(whole_G, ctg_taxa_dict)
 
-    gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_gc", "host_gc", 
+    gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_type", "MGE_gc", "host_gc", 
                                            "cos_sim", "MGE_cov", "host_cov", 
                                            "environment", "sample", "mge_len", "host_taxa"])
     ## sort gc_df by mge_len descending
@@ -335,5 +348,6 @@ if __name__ == "__main__":
     ## save gc_df to a csv file
     gc_df.to_csv(f"{paper_fig_dir}/mge_host_gc_cov.csv", index=False)
     plot_gc(gc_df, paper_fig_dir)
+    analyze_MGEs(gc_df, mge_clu_dict)
 
     
