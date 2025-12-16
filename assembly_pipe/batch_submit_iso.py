@@ -141,16 +141,19 @@ def methy_run(results_dir):
                 work_dir={results_dir}/{prefix} -j 64"""
             cmd_list.append(cmd)
     batch_file = "run_methy_isolation.sh"
-    num_scripts = 5
+    num_scripts = 9
     f = open(batch_file, "w")
     for i in range(num_scripts):
         script_file = f"batch/methy_isolation_part_{i}.sh"
         with open(script_file, "w") as sf:
+            ## add header
+            sf.write("#!/bin/bash\n")
             for j in range(i, len(cmd_list), num_scripts):
                 sf.write(cmd_list[j] + "\n")
         # print (f"nohup bash {script_file} &", file = f)
         print (f"sbatch  --partition standard --wrap 'bash {script_file}'  --job-name=iso_{i} ", file = f)
     f.close()
+    print (len(cmd_list))
 
 def RM_run(results_dir):
     ## get all ccs bam files
