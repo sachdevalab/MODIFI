@@ -82,7 +82,7 @@ if __name__ == "__main__":
         sample_obj = My_sample(prefix, all_dir)
 
         sample_obj.read_MGE()
-        our_linkages, our_ctg_linkages = sample_obj.read_linkage_dict()
+        our_linkages, our_ctg_linkages, linkage_info_list = sample_obj.read_linkage_dict()
         spacer_linkage_dict = sample_obj.read_spacer(mismatch_allowed=0)
 
         consistent_num, spacer_linkage_num, our_linkage_num, mge_type_consistent_dict = compare_linkage(our_linkages, spacer_linkage_dict, sample_obj)

@@ -499,7 +499,7 @@ def cal_AUC_meta():
     for p in ["05", "10", "20", "30", "50", "100"]:
         prefix = f"m64004_210929_143746.p{p}"
         # result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta2", prefix, "hosts")
-        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta_infant_14", prefix, "hosts")
+        result_dir = os.path.join("/home/shuaiw/borg/paper/linkage/meta_infant_14_v2", prefix, "hosts")
         # if p == "100":
         #     result_dir = "/home/shuaiw/borg/bench/soil_zymo/run4/hosts/"
         frac = frac_dict[p]
@@ -582,8 +582,8 @@ def check_host(host_list, cluster, plasmid):
 
 
 
-cal_AUC_pure()
-# cal_AUC_meta()
+# cal_AUC_pure()
+cal_AUC_meta()
 
 
 

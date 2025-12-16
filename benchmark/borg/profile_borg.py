@@ -10,6 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'motif_change'))
 from sample_object import get_unique_motifs, My_sample, get_ctg_taxa, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa,get_detail_taxa_name
 from check_motif_change import given_species_drep
+from find_borg import find_assembly
 
 class Borg_Entry:
     def __init__(self, line):
@@ -58,7 +59,7 @@ class My_Borg:
         """Get BORG entries with contig depth above threshold"""
         return [entry for entry in self.borg_entries if entry.ctg_depth >= min_depth]
 
-def personal_plot(cluster_obj):
+def personal_plot(profile_df):
     import matplotlib.pyplot as plt
     import seaborn as sns
     import numpy as np
@@ -69,8 +70,11 @@ def personal_plot(cluster_obj):
     from matplotlib.patches import Rectangle
     
     # Create pivot table for heatmap
-    pivot_df = cluster_obj.profile_df.pivot(index='contig', columns='motifString', values='fraction')
+    pivot_df = profile_df.pivot(index='contig', columns='motifString', values='fraction')
     pivot_df = pivot_df.fillna(0)  # Fill NaN values with 0
+
+    # Create a mapping from contig to BORG_Ref BEFORE clustering
+    contig_to_borg = profile_df.groupby('contig')['BORG_Ref'].first().to_dict()
 
     # Perform hierarchical clustering on both rows and columns
 
@@ -91,26 +95,30 @@ def personal_plot(cluster_obj):
     # Create labels with BORG reference information AFTER reordering
     y_labels = []
     for contig in pivot_df.index:  # Use reordered index
-        contig_data = cluster_obj.profile_df[cluster_obj.profile_df['contig'] == contig].iloc[0]
-
-        borg_ref = contig_data['BORG_Ref']
-
+        # Use the pre-created mapping instead of filtering the dataframe
+        # borg_ref = contig_to_borg.get(contig, 'NA')
+        if contig in contig_to_borg:
+            borg_ref = contig_to_borg[contig]
+        else:
+            print (f"Warning: {contig} not found in contig_to_borg mapping.")
         label = f"{contig};({borg_ref})"
-
         y_labels.append(label)
+    
+    # Update the pivot_df index with the new labels before creating heatmap
+    pivot_df.index = y_labels
     
     fig, ax = plt.subplots(figsize=(20, 15))
     
-    # Create heatmap
+    # Create heatmap with yticklabels set to show all labels
     sns.heatmap(pivot_df, cmap="YlGnBu", annot=False, fmt=".2f", 
-                cbar_kws={'label': 'Fraction'}, ax=ax)
+                cbar_kws={'label': 'Fraction'}, ax=ax, yticklabels=True)
     
     
     # Set labels and formatting
     ax.set_xlabel("Motif String", fontsize=12)
     ax.set_ylabel("Contig", fontsize=12)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha='right', fontsize=8)
-    ax.set_yticklabels(y_labels, rotation=0, fontsize=8)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha='right', fontsize=6)
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=6)
     ax.set_title(f"{cluster_species}", fontsize=14, pad=20)
     
 
@@ -120,7 +128,7 @@ def personal_plot(cluster_obj):
     plt.savefig(plot_name, dpi=300, bbox_inches='tight')
     plt.show()
 
-def collect_host_genus(all_dir):
+def collect_host_genus(all_dir, fasta_dict):
     members  = []
     anno_dict = {}
     ctg_taxa_dict = get_ctg_taxa(all_dir)
@@ -128,8 +136,11 @@ def collect_host_genus(all_dir):
         prefix = my_dir
         if not re.search("soil", prefix):
             continue
+        reference = fasta_dict[prefix] if prefix in fasta_dict else None
         print (f"Processing {prefix}...")
         sample_obj = My_sample(prefix, all_dir)
+        sample_obj.reference_fasta = reference
+        sample_obj.fai = sample_obj.reference_fasta + ".fai" if reference else None
         sample_obj.read_depth()
         sample_obj.get_len_dict()
         genome_list, contig_list =  sample_obj.get_high_dp_ctg_list( min_depth=5, min_len=100000)
@@ -137,15 +148,16 @@ def collect_host_genus(all_dir):
         for ctg in contig_list:
             ctg_obj = My_contig(prefix, all_dir, ctg)
             ctg_lineage = ctg_taxa_dict[ctg] if ctg in ctg_taxa_dict else "Unknown"
+            # print (ctg_lineage)
             ctg_phylum = classify_taxa(ctg_lineage, level='phylum')
             ctg_genus = classify_taxa(ctg_lineage, level='genus')
-            ctg_len = ctg_obj.get_ctg_len()
+            # ctg_len = ctg_obj.get_ctg_len()
             taxon = get_detail_taxa_name(ctg_lineage)
             # print (ctg_genus)
             if ctg_genus == "g__Methanoperedens":
-                print (ctg, ctg_lineage, ctg_len)
+                print (ctg, ctg_lineage)
                 # os.system(f"cp {ctg_obj.ctg_ref} /home/shuaiw/borg/paper/borg_data/align/refs")
-                members.append(ctg)
+                members.append((ctg, prefix))
                 anno_dict[ctg] = taxon
     print (f"Total host contigs collected: {len(members)}")
     return members, anno_dict
@@ -183,7 +195,7 @@ if __name__ == "__main__":
     
 
     
-    
+    """
     # Load BORG data
     borg_data = My_Borg(borg_file)
     high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
@@ -197,34 +209,58 @@ if __name__ == "__main__":
     # members = ["soil_1_1336_L", "soil_s4_1_109_C"]
     
     
-    # all_members, all_anno_dict = collect_host_genus(all_dir)
-    # ## if member in all members not in members, add to members, also update borg_anno_dict
-    # for member in all_members:
-    #     if member not in members:
-    #         members.append(member)
-    #         borg_anno_dict[member] = ['HOST', all_anno_dict[member]]
+    fasta_dict = find_assembly()
+    all_members, all_anno_dict = collect_host_genus(all_dir, fasta_dict)
+    ## if member in all members not in members, add to members, also update borg_anno_dict
+    for member in all_members:
+        if member not in members:
+            members.append(member)
+            borg_anno_dict[member[0]] = ['HOST', all_anno_dict[member[0]]]
     # # print (borg_anno_dict)
     # count_mod_freq(all_dir, borg_anno_dict)
-    # """
+
+    # print (members)
 
 
-    cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                    seq_dir, seq_dir, min_frac=0.3, 
-                                    min_sites=50, score_cutoff = 20)
-    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+    # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+    #                                 seq_dir, seq_dir, min_frac=0.3, 
+    #                                 min_sites=50, score_cutoff = 20)
+    # cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
-    # cluster_obj = My_cluster(cluster, members) 
-    # cluster_obj.load_df(seq_dir)
+    cluster_obj = My_cluster(cluster, members) 
+    cluster_obj.load_df(seq_dir)
 
     ## remove all rows with motifstring contains GATCH_4
-    remove_motifs = ['GATCH_4','BATC_2','RGAYCY_3','YGATCB_3','BGATATC_5']
-    cluster_obj.profile_df = cluster_obj.profile_df[~cluster_obj.profile_df['motifString'].isin(remove_motifs)]
 
     ## add a column to indicate borg_ref
     cluster_obj.profile_df['BORG_Ref'] = cluster_obj.profile_df['contig'].apply(lambda x: borg_anno_dict[x][1] if x in borg_anno_dict else 'NA')
-    print (cluster_obj.profile_df)
-    personal_plot(cluster_obj)
-    # """
+
+    
+    cluster_obj.profile_df.to_csv(f"{seq_dir}/{cluster}_profile_df.tsv", index=False)
+    profile_df = cluster_obj.profile_df
+    """
+    remove_motifs = ['GATCH_4','BATC_2','RGAYCY_3','YGATCB_3','BGATATC_5']
+    profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df.tsv")
+    profile_df = profile_df[~profile_df['motifString'].isin(remove_motifs)]
+    
+    # Remove motifs where all contigs have fraction < 0.2
+    motif_max_fractions = profile_df.groupby('motifString')['fraction'].max()
+    motifs_to_keep = motif_max_fractions[motif_max_fractions >= 0.4].index
+    profile_df = profile_df[profile_df['motifString'].isin(motifs_to_keep)]
+    print(f"Kept {len(motifs_to_keep)} motifs with max fraction >= 0.2")
+    
+    # Remove contigs where all motifs have fraction < 0.2
+    contig_max_fractions = profile_df.groupby('contig')['fraction'].max()
+    contigs_to_keep = contig_max_fractions[contig_max_fractions >= 0.4].index
+    profile_df = profile_df[profile_df['contig'].isin(contigs_to_keep)]
+    print(f"Kept {len(contigs_to_keep)} contigs with max fraction >= 0.2")
+
+
+
+    
+    
+    personal_plot(profile_df)
+
 
 
 
