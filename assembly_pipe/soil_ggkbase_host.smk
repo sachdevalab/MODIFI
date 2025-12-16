@@ -5,49 +5,12 @@ configfile: "config_soil.yaml"
 
 rule all_annotation:
     input:
-        checkm=f"{config['work_dir']}/checkM2/quality_report.tsv",
-        genomad_finish=f"{config['work_dir']}/genomad.done",
         ctg_mge = f"{config['work_dir']}/ctg_mge.done",
         host_summary = f"{config['work_dir']}/{config['prefix']}_methylation4/host_summary.csv",
 
 
-
-
-rule checkM:
-    input:
-        fasta=f"{config['ref']}",
-    output:
-        checkm=f"{config['work_dir']}/checkM2/quality_report.tsv",
-        finish=f"{config['work_dir']}/{config['prefix']}.checkm.finish"
-    threads: config["threads"]
-    shell:
-        """ 
-        python split_ctgs.py {input.fasta} {config[work_dir]}/bins/
-        checkm2 predict --input {config[work_dir]}/bins/ --output-directory  {config[work_dir]}/checkM2 --force -x .fasta --threads {threads}
-        touch {output.finish}
-        """
-
-rule genomad:
-    input:
-        fasta=f"{config['ref']}",
-        checkm=f"{config['work_dir']}/checkM2/quality_report.tsv",
-    output:
-        genomad_finish=f"{config['work_dir']}/genomad.done"
-    threads: config["threads"]
-    shell:
-        """
-        genomad end-to-end --relaxed --cleanup --enable-score-calibration \
-            --threads {threads} --sensitivity 7.0 --force-auto \
-            {input.fasta} \
-            {config[work_dir]}/Genomad/ \
-            /groups/diamond/databases/genomad/v1.7/
-        touch {output.genomad_finish}
-        """
-
 rule get_ctg_mge:
     input:
-        # prokka_finish = f"{config['work_dir']}/prokka/prokka.finish",
-        # vibrantr=f"{config['work_dir']}/vibrant.done",
         genomad_finish=f"{config['work_dir']}/genomad.done"
     output:
         mge_finish = f"{config['work_dir']}/ctg_mge.done",
@@ -55,10 +18,11 @@ rule get_ctg_mge:
         host_file = f"{config['work_dir']}/all_host_ctgs.tsv"
     params:
         output_dir = config['work_dir'],
-        prefix = config["prefix"]
+        prefix = config["prefix"],
+        ref=config['ref']
     shell:
         """
-        python merge_MGEs.py {params.output_dir} {params.prefix}
+        python merge_MGEs.py {params.output_dir} {params.prefix} {params.ref}
         touch {output.mge_finish}
         """
 

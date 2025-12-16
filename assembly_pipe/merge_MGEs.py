@@ -224,8 +224,15 @@ def get_mge_union(all_mge_file, classification_dict, vibrant_virus, virsorter2_v
 if __name__ == "__main__":
     workdir = sys.argv[1]
     prefix = sys.argv[2]
-
-    fai = f"{workdir}/{prefix}.hifiasm.p_ctg.rename.fa.fai"
+    if len(sys.argv) == 3:
+        ref = f"{workdir}/{prefix}.hifiasm.p_ctg.rename.fa"
+        fai = f"{ref}.fai"
+        ref_prefix = ref[:-3]
+    else:
+        ref = sys.argv[3]
+        fai = f"{ref}.fai"
+        ref_prefix = ref[:-3].split("/")[-1]
+        
     checkM_report = f"{workdir}/checkM2/quality_report.tsv"
     high_quality_file = f"{workdir}/all_host_ctgs.tsv"
     gtdb_ar53 = f"{workdir}/GTDB/gtdbtk.ar53.summary.tsv"
@@ -233,10 +240,11 @@ if __name__ == "__main__":
     classification_dict = get_bacteria_archea(gtdb_ar53, gtdb_bac120)
     selected_host_ctgs, novel_elements = get_best_ctg(fai, checkM_report, high_quality_file, classification_dict)
 
-    genomad_plasmid = f"{workdir}/Genomad/{prefix}.hifiasm.p_ctg.rename_summary/{prefix}.hifiasm.p_ctg.rename_plasmid_summary.tsv"
-    genomad_virus = f"{workdir}/Genomad/{prefix}.hifiasm.p_ctg.rename_summary/{prefix}.hifiasm.p_ctg.rename_virus_summary.tsv"
+    genomad_plasmid = f"{workdir}/Genomad/{ref_prefix}_summary/{ref_prefix}_plasmid_summary.tsv"
+    print (genomad_plasmid)
+    genomad_virus = f"{workdir}/Genomad/{ref_prefix}_summary/{ref_prefix}_virus_summary.tsv"
     virsorter2 = f"{workdir}/virsorter2/final-viral-score.tsv"
-    virbrant = f"{workdir}/vibrant/VIBRANT_{prefix}.hifiasm.p_ctg.rename/VIBRANT_phages_{prefix}.hifiasm.p_ctg.rename/{prefix}.hifiasm.p_ctg.rename.phages_combined.fna"
+    virbrant = f"{workdir}/vibrant/VIBRANT_{ref_prefix}/VIBRANT_phages_{ref_prefix}/{ref_prefix}.phages_combined.fna"
     all_mge_file = f"{workdir}/all_mge2.tsv"
 
 
