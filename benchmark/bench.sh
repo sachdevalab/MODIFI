@@ -1022,20 +1022,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=cow_test
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/paper/run2/ocean_1/ocean_1_methylation2 \
-  --whole_bam /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.align.bam \
-  --whole_ref /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.hifiasm.p_ctg.rename.fa \
-  --read_type hifi \
-  --min_len 1000 \
-  --max_NM 30000000 \
-  --min_cov 1 \
-  --min_frac 0.4 \
-  --min_score 30 \
-  --min_sites 30 \
-  --mge_file /home/shuaiw/borg/paper/run2/ocean_1/all_mge.tsv \
-  --threads 64  --run_steps profile merge host" \
-  --job-name=ocean_test
+
 
 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3 \
@@ -1247,21 +1234,6 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64" \
   --job-name=cow_0.97
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/paper/run2/ocean_1/ocean_1_methylation_0.97_clip_all \
-  --whole_bam /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.align.bam \
-  --whole_ref /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.hifiasm.p_ctg.rename.fa \
-  --read_type hifi \
-  --min_len 1000 \
-  --max_NM 30000000 \
-  --min_cov 1 \
-  --min_iden 0.97 \
-  --min_frac 0.3 \
-  --min_score 30 \
-  --min_sites 30 \
-  --mge_file /home/shuaiw/borg/paper/run2/ocean_1/all_mge.tsv \
-  --threads 64" \
-  --job-name=ocean_0.97
 
 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/infant_1/infant_1_methylation_0.99_kmer \
@@ -2011,3 +1983,19 @@ python /home/shuaiw/mGlu/main.py \
                 --mge_file /home/shuaiw/borg/paper/borg_data/align/borg.tsv \
                 --threads 64 --visu_ipd --detect_misassembly" \
                 --job-name=borg_48
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/run2/ocean_1/ocean_1_methylation4 \
+  --whole_bam /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.align.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 3 \
+  --min_ctg_cov 3 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 100 \
+  --mge_file /home/shuaiw/borg/paper/run2/ocean_1/all_mge2.tsv \
+  --threads 64  --run_steps host" \
+  --job-name=ocean_test
