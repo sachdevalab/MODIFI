@@ -266,12 +266,19 @@ def batch_soil():
             environment = items[3]
 
             work_dir = os.path.join(outdir, prefix)
+            # cmd = f"""
+            # sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_mge.smk --config \\
+            #     hifi_bam={hifi_bam} \\
+            #     prefix={prefix} \\
+            #     work_dir={work_dir} \\
+            #     ref={ref} -j 64"  --job-name={prefix}
+            # """
             cmd = f"""
-            sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_mge.smk --config \\
+            snakemake -s soil_ggkbase_host.smk --config \\
                 hifi_bam={hifi_bam} \\
                 prefix={prefix} \\
                 work_dir={work_dir} \\
-                ref={ref} -j 64"  --job-name={prefix}
+                ref={ref} -j 64
             """
             print(cmd, file=w)
     w.close()
@@ -283,9 +290,9 @@ if __name__ == "__main__":
     # prefix_table = "prefix_table.tab"
     # read_list(bam_list, cmd_file, prefix_table)
 
-    outdir = "/home/shuaiw/borg/paper/run2/"
-    cmd_file = "run_asthma.sh"
-    prefix_table = "prefix_table_soil.tab"
-    batch_asthma(cmd_file, prefix_table, outdir)
+    # outdir = "/home/shuaiw/borg/paper/run2/"
+    # cmd_file = "run_asthma.sh"
+    # prefix_table = "prefix_table_soil.tab"
+    # batch_asthma(cmd_file, prefix_table, outdir)
 
-    # batch_soil()
+    batch_soil()

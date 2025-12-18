@@ -711,7 +711,7 @@ class Isolation_sample(My_sample):
         for mge in self.mge_dict:
             mge_length = self.length_dict.get(mge, 0)
             if mge_length >= length_cutoff:
-                potential_megaP.append((mge, mge_length, self.mge_dict[mge]))
+                potential_megaP.append((mge, mge_length, self.mge_dict[mge], self.lineage))
         return potential_megaP
 
 

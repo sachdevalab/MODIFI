@@ -716,8 +716,9 @@ def main_profile(all_dir, fig_dir):
         pure_flag = sample_obj.check_pure2()
         average_dp = sample_obj.get_average_depth()
         unique_motif_num, unique_motifs = sample_obj.get_unique_motifs()
-        potential_megaP = sample_obj.search_megaP()
-        potential_megaP_all += potential_megaP
+        potential_megaP = sample_obj.search_megaP() 
+        potential_megaP_all += potential_megaP 
+        print (potential_megaP)
         
         # sample_obj.explore_specific_motifs()
         sample_obj.load_isolation_RM()
@@ -755,11 +756,11 @@ def main_profile(all_dir, fig_dir):
 
     print (len(potential_megaP_all), "potential megaP contigs found:")
     for contig_info in potential_megaP_all:
-        print (contig_info)
+        print (contig_info[0], contig_info[1], contig_info[2], contig_info[3])
 
-    profile_df = pd.read_csv(f"{fig_dir}/isolation_samples_motif_profile.csv")
-    plot_MTase(profile_df, fig_dir)
-    plot_motif_num(profile_df, fig_dir)
+    # profile_df = pd.read_csv(f"{fig_dir}/isolation_samples_motif_profile.csv")
+    # plot_MTase(profile_df, fig_dir)
+    # plot_motif_num(profile_df, fig_dir)
    
 def main(all_dir, fig_dir, drep_clu_file):
     """
