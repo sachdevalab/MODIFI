@@ -24,7 +24,7 @@ def summarize_hosts(results_dir, output_file):
     if df_list:
         combined_df = pd.concat(df_list, ignore_index=True)
         ## filter rows with final_score > 0.5
-        combined_df = combined_df[combined_df['final_score'] > 0.5]
+        combined_df = combined_df[combined_df['final_score'] > 0.9]
         combined_df = combined_df[combined_df['specificity'] < 0.01]
         print (combined_df)
         combined_df.to_csv(output_file, index=False)

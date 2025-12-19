@@ -274,13 +274,13 @@ def find_assembly():
 
 if __name__ == "__main__":
     # Default parameters for backward compatibility
-    borg_ref = "/home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa"
-    all_dir = "/home/shuaiw/borg/paper/gg_run2/"
+    # borg_ref = "/home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa"
+    # all_dir = "/home/shuaiw/borg/paper/gg_run2/"
 
     if len(sys.argv) == 1:
         # Run with default parameters if no arguments provided
         print("Running with default parameters...")
-        borg_ref = "/home/shuaiw/borg/paper/borg_data/all_borg_mini_jumbo.fa"
+        borg_ref = "/home/shuaiw/borg/paper/borg_data/all_borg_mini.fa"
         
         # all_dir = "/home/shuaiw/borg/paper/borg_data/borg_for2/"
         all_dir = "/home/shuaiw/borg/paper/gg_run2/"

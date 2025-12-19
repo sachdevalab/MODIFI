@@ -101,7 +101,7 @@ def personal_plot(profile_df):
             borg_ref = contig_to_borg[contig]
         else:
             print (f"Warning: {contig} not found in contig_to_borg mapping.")
-        label = f"{contig};({borg_ref})"
+        label = f"{contig},{borg_ref}"
         y_labels.append(label)
     
     # Update the pivot_df index with the new labels before creating heatmap
@@ -111,7 +111,7 @@ def personal_plot(profile_df):
     
     # Create heatmap with yticklabels set to show all labels
     sns.heatmap(pivot_df, cmap="YlGnBu", annot=False, fmt=".2f", 
-                cbar_kws={'label': 'Fraction'}, ax=ax, yticklabels=True)
+                cbar_kws={'label': 'Fraction'}, ax=ax, yticklabels=True, xticklabels=True)
     
     
     # Set labels and formatting
@@ -194,8 +194,6 @@ if __name__ == "__main__":
     plot_name = os.path.join(seq_dir, f"{cluster_species}_motif_profile_all.pdf")
     
 
-    
-    """
     # Load BORG data
     borg_data = My_Borg(borg_file)
     high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
@@ -215,7 +213,7 @@ if __name__ == "__main__":
     for member in all_members:
         if member not in members:
             members.append(member)
-            borg_anno_dict[member[0]] = ['HOST', all_anno_dict[member[0]]]
+            borg_anno_dict[member[0]] = ['HOST', all_anno_dict[member[0]][3:]+"<GTDB"]
     # # print (borg_anno_dict)
     # count_mod_freq(all_dir, borg_anno_dict)
 
@@ -238,8 +236,10 @@ if __name__ == "__main__":
     
     cluster_obj.profile_df.to_csv(f"{seq_dir}/{cluster}_profile_df.tsv", index=False)
     profile_df = cluster_obj.profile_df
-    """
-    remove_motifs = ['GATCH_4','BATC_2','RGAYCY_3','YGATCB_3','BGATATC_5']
+
+    remove_motifs = ['GATCH_4','BATC_2','RGAYCY_3','YGATCB_3','BGATATC_5',"GGHCCD_5","HGGCC_5","YCDVH_2","YCTAARAR_2",\
+                     "YGATCBB_3","GGNCCH_5","GGCCH_4","DCCWGG_3","CCCTGH_3","GGNDCC_5","RGATCT_5","RGATCY_5","RGAYCB_3",\
+                       "DYCACGRND_3","YCDV_2", "YDCCGGHR_3","VSAB_3",""]
     profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df.tsv")
     profile_df = profile_df[~profile_df['motifString'].isin(remove_motifs)]
     
