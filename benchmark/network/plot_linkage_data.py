@@ -295,6 +295,72 @@ def analyze_MGEs(gc_df, mge_clu_dict):
     print (unique_mge_clusters)
 
 
+def secondary_chr(all_dir):
+    genome_dir = "/home/shuaiw/borg/paper/sec_chr/genomes/"
+    ### secondary-chromosome
+    gc_df = pd.read_csv(f"{paper_fig_dir}/mge_host_gc_cov.csv")
+    ## only keep the rows with MGE_type as novel
+    target_gc_df = gc_df[gc_df['MGE_type'] == 'novel']
+    ## sort by mge_len descending
+    target_gc_df = target_gc_df.sort_values(by='mge_len', ascending=False)
+    print (target_gc_df.head(20))
+    print (len(target_gc_df))
+    target_gc_df.to_csv(f"{paper_fig_dir}/secondary_chromosome_gc_cov.csv", index=False)
+    for index, row in target_gc_df.iterrows():
+        prefix = row['sample']
+        mge_obj = My_contig(prefix, all_dir, row['MGE'])
+        host_obj = My_contig(prefix, all_dir, row['host'])
+        work_dir = genome_dir + "/" +mge_obj.contig
+        if not os.path.exists(work_dir):
+            os.makedirs(work_dir)
+        
+        # Create subdirectories if they don't exist
+        os.makedirs(f"{work_dir}/MGE_bin", exist_ok=True)
+        os.makedirs(f"{work_dir}/host_bin", exist_ok=True)
+        os.makedirs(f"{work_dir}/combined_bin", exist_ok=True)
+        
+        os.system(f"cp {mge_obj.ctg_ref} {work_dir}/MGE_bin")
+        os.system(f"cp {host_obj.ctg_ref} {work_dir}/host_bin")
+        combined_fasta = f"{work_dir}/combined_bin/{mge_obj.contig}_and_{host_obj.contig}.fa"
+        os.system(f"cat {mge_obj.ctg_ref} {host_obj.ctg_ref} > {combined_fasta}")
+        print (f"Combined fasta saved to {combined_fasta}")
+
+        ## run checkm2 for each bin folder
+        if not os.path.exists(f"{work_dir}/combined_bin/checkm2_output/quality_report.tsv"):
+            os.system(f"checkm2 predict --input {work_dir}/MGE_bin --output-directory {work_dir}/MGE_bin/checkm2_output --force --threads 16 -x .fa")
+            os.system(f"checkm2 predict --input {work_dir}/host_bin --output-directory {work_dir}/host_bin/checkm2_output --force --threads 16 -x .fa")
+            os.system(f"checkm2 predict --input {work_dir}/combined_bin --output-directory {work_dir}/combined_bin/checkm2_output --force --threads 16 -x .fa")
+
+        if  os.path.exists(f"{work_dir}/MGE_bin/checkm2_output/quality_report.tsv"):
+            mge_completness, mge_contamination = get_completness(f"{work_dir}/MGE_bin/checkm2_output/quality_report.tsv")
+        else:
+            mge_completness, mge_contamination = "NA", "NA"
+        if os.path.exists(f"{work_dir}/host_bin/checkm2_output/quality_report.tsv"):
+             host_completness, host_contamination = get_completness(f"{work_dir}/host_bin/checkm2_output/quality_report.tsv")
+        else:
+            host_completness, host_contamination = "NA", "NA"
+        if os.path.exists(f"{work_dir}/combined_bin/checkm2_output/quality_report.tsv"):
+            combined_completness, combined_contamination = get_completness(f"{work_dir}/combined_bin/checkm2_output/quality_report.tsv")
+        else:
+            combined_completness, combined_contamination = "NA", "NA"
+
+
+        ## add compleness to df
+        target_gc_df.at[index, 'MGE_completness'] = mge_completness
+        target_gc_df.at[index, 'Host_completness'] = host_completness
+        target_gc_df.at[index, 'Combined_completness'] = combined_completness
+        target_gc_df.at[index, 'MGE_contamination'] = mge_contamination
+        target_gc_df.at[index, 'Host_contamination'] = host_contamination
+        target_gc_df.at[index, 'Combined_contamination'] = combined_contamination
+        # break
+    print (target_gc_df.head(10))
+    target_gc_df.to_csv(f"{paper_fig_dir}/secondary_chromosome_completness.csv", index=False)
+
+def get_completness(checkm_report):
+    df = pd.read_csv(checkm_report, sep="\t", header=0)
+    for index, row in df.iterrows():
+        return row['Completeness'], row["Contamination"]
+
 if __name__ == "__main__":  
     ANI = 99
     meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
@@ -307,47 +373,43 @@ if __name__ == "__main__":
     if not os.path.exists(paper_fig_dir):
         os.makedirs(paper_fig_dir)
 
-    sample_env_dict = read_metadata(meta_file)
-    drep_clu_dict, host_clu_dict = read_drep_cluster(drep_clu_file)
-    mge_clu_dict = read_mge_cluster(mge_clu_file)
-    ctg_taxa_dict = get_ctg_taxa(all_dir)
+    # sample_env_dict = read_metadata(meta_file)
+    # drep_clu_dict, host_clu_dict = read_drep_cluster(drep_clu_file)
+    # mge_clu_dict = read_mge_cluster(mge_clu_file)
+    # ctg_taxa_dict = get_ctg_taxa(all_dir)
 
-
-    ## the merged graph 
-    whole_G = nx.Graph()
-    gc_data = []
-    cluster_anno_dict = {}
+    # whole_G = nx.Graph()
+    # gc_data = []
+    # cluster_anno_dict = {}
     
-    for my_dir in os.listdir(all_dir):
-        prefix = my_dir
+    # for my_dir in os.listdir(all_dir):
+    #     prefix = my_dir
+    #     if prefix in [ "ERR5621427_sludge", "ERR5621429_sludge", "ERR5621430_sludge"]:
+    #         continue
 
-        if prefix in [ "ERR5621427_sludge", "ERR5621429_sludge", "ERR5621430_sludge"]:
-            continue
+    #     sample_obj = My_sample(prefix, all_dir)
+    #     print(f"Processing {prefix}...")
 
-        sample_obj = My_sample(prefix, all_dir)
-        print(f"Processing {prefix}...")
+    #     MGE_type_dict = sample_obj.read_MGE()
+    #     G, gc_data, cluster_anno_dict = get_edge(cluster_anno_dict, MGE_type_dict, gc_data, 
+    #                                              sample_env_dict[prefix], prefix, host_clu_dict, 
+    #                                              mge_clu_dict, sample_obj, ctg_taxa_dict)
+    #     whole_G = nx.compose(whole_G, G)
 
+    # plot_network2(whole_G, paper_fig_dir)
+    # profile_network(whole_G, ctg_taxa_dict)
 
-        MGE_type_dict = sample_obj.read_MGE()
-        G, gc_data, cluster_anno_dict = get_edge(cluster_anno_dict, MGE_type_dict, gc_data, 
-                                                 sample_env_dict[prefix], prefix, host_clu_dict, 
-                                                 mge_clu_dict, sample_obj, ctg_taxa_dict)
-        whole_G = nx.compose(whole_G, G)
-        # break
+    # gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_type", "MGE_gc", "host_gc", 
+    #                                        "cos_sim", "MGE_cov", "host_cov", 
+    #                                        "environment", "sample", "mge_len", "host_taxa"])
+    # ## sort gc_df by mge_len descending
+    # gc_df = gc_df.sort_values(by='mge_len', ascending=False)
+    # ## save gc_df to a csv file
+    # gc_df.to_csv(f"{paper_fig_dir}/mge_host_gc_cov.csv", index=False)
+    # plot_gc(gc_df, paper_fig_dir)
+    # analyze_MGEs(gc_df, mge_clu_dict)
 
+    secondary_chr(all_dir)
 
-
-    plot_network2(whole_G, paper_fig_dir)
-    profile_network(whole_G, ctg_taxa_dict)
-
-    gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_type", "MGE_gc", "host_gc", 
-                                           "cos_sim", "MGE_cov", "host_cov", 
-                                           "environment", "sample", "mge_len", "host_taxa"])
-    ## sort gc_df by mge_len descending
-    gc_df = gc_df.sort_values(by='mge_len', ascending=False)
-    ## save gc_df to a csv file
-    gc_df.to_csv(f"{paper_fig_dir}/mge_host_gc_cov.csv", index=False)
-    plot_gc(gc_df, paper_fig_dir)
-    analyze_MGEs(gc_df, mge_clu_dict)
 
     
