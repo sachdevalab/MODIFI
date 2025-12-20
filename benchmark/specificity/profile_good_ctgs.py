@@ -1079,30 +1079,30 @@ def main(all_dir, fig_dir, sample_env_dict):
         
         print (f"Processing {prefix}...")
         sample_obj.read_depth()
-        # map_ratio = sample_obj.read_mapping()
-        # linkage_num =  sample_obj.read_host()
-        # regulate_motif_num = sample_obj.read_orphan()
-        # N50, genome_size = sample_obj.get_N50_size()
-        # print(f"{prefix}: N50 size: {N50}, Genome size: {genome_size}")
+        map_ratio = sample_obj.read_mapping()
+        linkage_num =  sample_obj.read_host()
+        regulate_motif_num = sample_obj.read_orphan()
+        N50, genome_size = sample_obj.get_N50_size()
+        print(f"{prefix}: N50 size: {N50}, Genome size: {genome_size}")
         my_genome_list, best_ctgs = sample_obj.get_final_best_ctg2()
         print ("best ctgs num:", len(best_ctgs))
         genome_list += my_genome_list
         print (f">>>Total {len(genome_list)} high depth contigs collected so far.")
 
-        # genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix], map_ratio, linkage_num, \
-                            # regulate_motif_num, len(best_ctgs)])
+        genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix], map_ratio, linkage_num, \
+                            regulate_motif_num, len(best_ctgs)])
 
         # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
         all_data += count_motifs(best_ctgs, all_dir, prefix, sample_env_dict[prefix], ctg_taxa_dict)
-        # all_base_data += count_modified_base(all_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
+        all_base_data += count_modified_base(all_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
         # break
     print ("start plot...")
     df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len', 'RM_num'])
-    # df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
-    # df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
+    df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
+    df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
 
-    # df_genome_data.to_csv(f"{fig_dir}/genome_data_all_samples.csv", index = False)
-    # df_all_base_data.to_csv(f"{fig_dir}/base_count_all_samples.csv", index=False)
+    df_genome_data.to_csv(f"{fig_dir}/genome_data_all_samples.csv", index = False)
+    df_all_base_data.to_csv(f"{fig_dir}/base_count_all_samples.csv", index=False)
     df_all_data.to_csv(f"{fig_dir}/motif_num_all_samples.csv", index=False)    
     
     # df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
@@ -1112,9 +1112,9 @@ def main(all_dir, fig_dir, sample_env_dict):
     plot_motif_env(df_all_data, fig_dir)
     sort_genome_motif(df_all_data, fig_dir)
     plot_motif(df_all_data, fig_dir)
-    # plot_genome(df_genome_data, fig_dir)
-    # plot_meta(df_genome_data, fig_dir)
-    # plot_base(df_all_base_data, fig_dir)
+    plot_genome(df_genome_data, fig_dir)
+    plot_meta(df_genome_data, fig_dir)
+    plot_base(df_all_base_data, fig_dir)
     plot_MTase(df_all_data, fig_dir)
     # ## save genome data
 

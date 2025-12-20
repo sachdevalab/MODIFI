@@ -182,6 +182,8 @@ def single_run():
     resultdir = "/home/shuaiw/borg/paper/run2/"
     for folder in os.listdir(resultdir):
         prefix = folder
+        # if prefix != "ocean_1":
+        #     continue
         outdir = f"{resultdir}/{prefix}"
         reference_fasta = f"{outdir}/{prefix}.hifiasm.p_ctg.rename.fa"
         spacer_outdir = f"{outdir}/spacer/"
