@@ -31,6 +31,9 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
         host_lineage = ctg_taxa_dict[linkage_obj.host] if linkage_obj.host in ctg_taxa_dict else "NA"
         host_taxa = get_detail_taxa_name(host_lineage)
 
+        ## skip the linkage if host taxa is unclassfied
+        if re.search("Unclassified", host_taxa):
+            continue
 
 
         if linkage_obj.host in host_clu_dict:
@@ -373,43 +376,43 @@ if __name__ == "__main__":
     if not os.path.exists(paper_fig_dir):
         os.makedirs(paper_fig_dir)
 
-    # sample_env_dict = read_metadata(meta_file)
-    # drep_clu_dict, host_clu_dict = read_drep_cluster(drep_clu_file)
-    # mge_clu_dict = read_mge_cluster(mge_clu_file)
-    # ctg_taxa_dict = get_ctg_taxa(all_dir)
+    sample_env_dict = read_metadata(meta_file)
+    drep_clu_dict, host_clu_dict = read_drep_cluster(drep_clu_file)
+    mge_clu_dict = read_mge_cluster(mge_clu_file)
+    ctg_taxa_dict = get_ctg_taxa(all_dir)
 
-    # whole_G = nx.Graph()
-    # gc_data = []
-    # cluster_anno_dict = {}
+    whole_G = nx.Graph()
+    gc_data = []
+    cluster_anno_dict = {}
     
-    # for my_dir in os.listdir(all_dir):
-    #     prefix = my_dir
-    #     if prefix in [ "ERR5621427_sludge", "ERR5621429_sludge", "ERR5621430_sludge"]:
-    #         continue
+    for my_dir in os.listdir(all_dir):
+        prefix = my_dir
+        if prefix in [ "ERR5621427_sludge", "ERR5621429_sludge", "ERR5621430_sludge"]:
+            continue
 
-    #     sample_obj = My_sample(prefix, all_dir)
-    #     print(f"Processing {prefix}...")
+        sample_obj = My_sample(prefix, all_dir)
+        print(f"Processing {prefix}...")
 
-    #     MGE_type_dict = sample_obj.read_MGE()
-    #     G, gc_data, cluster_anno_dict = get_edge(cluster_anno_dict, MGE_type_dict, gc_data, 
-    #                                              sample_env_dict[prefix], prefix, host_clu_dict, 
-    #                                              mge_clu_dict, sample_obj, ctg_taxa_dict)
-    #     whole_G = nx.compose(whole_G, G)
+        MGE_type_dict = sample_obj.read_MGE()
+        G, gc_data, cluster_anno_dict = get_edge(cluster_anno_dict, MGE_type_dict, gc_data, 
+                                                 sample_env_dict[prefix], prefix, host_clu_dict, 
+                                                 mge_clu_dict, sample_obj, ctg_taxa_dict)
+        whole_G = nx.compose(whole_G, G)
 
-    # plot_network2(whole_G, paper_fig_dir)
-    # profile_network(whole_G, ctg_taxa_dict)
+    plot_network2(whole_G, paper_fig_dir)
+    profile_network(whole_G, ctg_taxa_dict)
 
-    # gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_type", "MGE_gc", "host_gc", 
-    #                                        "cos_sim", "MGE_cov", "host_cov", 
-    #                                        "environment", "sample", "mge_len", "host_taxa"])
-    # ## sort gc_df by mge_len descending
-    # gc_df = gc_df.sort_values(by='mge_len', ascending=False)
-    # ## save gc_df to a csv file
-    # gc_df.to_csv(f"{paper_fig_dir}/mge_host_gc_cov.csv", index=False)
-    # plot_gc(gc_df, paper_fig_dir)
-    # analyze_MGEs(gc_df, mge_clu_dict)
+    gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_type", "MGE_gc", "host_gc", 
+                                           "cos_sim", "MGE_cov", "host_cov", 
+                                           "environment", "sample", "mge_len", "host_taxa"])
+    ## sort gc_df by mge_len descending
+    gc_df = gc_df.sort_values(by='mge_len', ascending=False)
+    ## save gc_df to a csv file
+    gc_df.to_csv(f"{paper_fig_dir}/mge_host_gc_cov.csv", index=False)
+    plot_gc(gc_df, paper_fig_dir)
+    analyze_MGEs(gc_df, mge_clu_dict)
 
-    secondary_chr(all_dir)
+    # secondary_chr(all_dir)
 
 
     

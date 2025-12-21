@@ -9,6 +9,7 @@ import sys
 from scipy.stats import fisher_exact
 from statsmodels.stats.multitest import multipletests
 import os
+import glob
 
 def read_ref(ref):
     REF = {}
@@ -21,12 +22,12 @@ def read_ref(ref):
 
 def if_region_in_gene_regulatory_region(pos, Gene_regulatory_regions, strand):
     for start, end, cds_strand in Gene_regulatory_regions:
-        if start <= pos <= end:
-        # if cds_strand == strand and start <= pos <= end:
+        # if start <= pos <= end:
+        if cds_strand == strand and start <= pos <= end:
             return True
     return False
 
-def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_regions, background_regions):
+def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_regions):
     motif_len = len(motif_new)
     rev_exact_pos = motif_len - exact_pos + 1
 
@@ -45,7 +46,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
 
             tag = r + ":" + str(site+exact_pos) + "+"
             ## check if the site is in the gene regulatory regions
-            if if_region_in_gene_regulatory_region(site + exact_pos, Gene_regulatory_regions, "-"):
+            if if_region_in_gene_regulatory_region(site + exact_pos, Gene_regulatory_regions, "+"):
                 gene_regu_flag = True
                 gene_regulatory_region_num += 1
             else:
@@ -58,7 +59,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
                 else:
                     methlated_normal_region_num += 1
 
-            if if_region_in_gene_regulatory_region(site + exact_pos, background_regions, "-"):
+            if gene_regu_flag == False:
                 control_region_num += 1
                 if tag in modified_loci:
                     methylated_control_num += 1
@@ -71,7 +72,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
             record_modified_sites[tag] = motif_new
 
 
-            if if_region_in_gene_regulatory_region(site + rev_exact_pos, Gene_regulatory_regions, "+"):
+            if if_region_in_gene_regulatory_region(site + rev_exact_pos, Gene_regulatory_regions, "-"):
                 gene_regu_flag = True
                 gene_regulatory_region_num += 1
             else:
@@ -83,21 +84,17 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_re
                 else:
                     methlated_normal_region_num += 1
 
-            if if_region_in_gene_regulatory_region(site + exact_pos, background_regions, "+"):
+            if gene_regu_flag == False:
                 control_region_num += 1
                 if tag in modified_loci:
                     methylated_control_num += 1
 
-    # print ("gene_regulatory_region_num", gene_regulatory_region_num, "methylated_gene_regulatory_region_num", methylated_gene_regulatory_region_num, "methylated ratio", methylated_gene_regulatory_region_num/gene_regulatory_region_num)
-    # print ("normal_region_num", normal_region_num, "methlated_normal_region_num", methlated_normal_region_num, "methylated ratio", methlated_normal_region_num/normal_region_num)
-    ## fisher test for the two proportions
-    # a, b, c, d = methylated_gene_regulatory_region_num, gene_regulatory_region_num - methylated_gene_regulatory_region_num, methlated_normal_region_num, normal_region_num - methlated_normal_region_num
     a, b, c, d = methylated_gene_regulatory_region_num, gene_regulatory_region_num - methylated_gene_regulatory_region_num, methylated_control_num, control_region_num - methylated_control_num
     odds_ratio, p_value = fisher_exact([[a, b], [c, d]])
     # print ("odds ratio", odds_ratio, "p-value", p_value)
     return odds_ratio, p_value, a, b, c, d
 
-def get_modified_ratio(gff):
+def get_modified_ratio(gff, score_cutoff):
     ## read the gff file
     f = open(gff, "r")
     modified_loci = {}
@@ -110,7 +107,7 @@ def get_modified_ratio(gff):
         pos = int(line[3]) 
         strand = line[6]
         score = int(line[5])
-        if score <= score_cutoff:
+        if score < score_cutoff:
             continue
         modified_loci[ref + ":" + str(pos) + strand] = score
     # print ("no. of modified loci", len(modified_loci))
@@ -158,9 +155,9 @@ def collect_regulation_region(gff, genome):
             elif strand == "-":
                 reg_start = max(1, end - 50)
                 reg_end = end + 100
-                # print (start, end, "reg_start", reg_start, "reg_end", reg_end)
                 Gene_regulatory_regions.append((reg_start, reg_end, "-"))
-    # print (len(Gene_regulatory_regions), "gene regulatory regions collected")
+
+
     return Gene_regulatory_regions
 
 def get_background(Gene_regulatory_regions, n_iter = 10000):
@@ -179,18 +176,9 @@ def get_background(Gene_regulatory_regions, n_iter = 10000):
         background_regions.append((start, end, "-"))
     return background_regions
 
-
-if __name__ == "__main__":
-    score_cutoff = 30
-    min_ctg_len = 100000
-    # genome_gff = "/home/shuaiw/borg/pengfan/contigs/protein/Final_Genomes_qc_rmcirc_prodigal_complete.gff"
-    # methy_dir = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/"
-
-    # genome_gff = "/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/prokka/ERR12723528_mice.gff"
-    # methy_dir = "/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice_methylation/"
-
-    genome_gff = sys.argv[1]
-    methy_dir = sys.argv[2]
+def batch_run():
+    genome_gff = "/home/shuaiw/borg/paper/gene_anno/meta/ocean_1_9_C/prokka/ocean_1_9_C.gff"
+    methy_dir = "/home/shuaiw/borg/paper/run2/ocean_1/ocean_1_methylation4/"
 
     data = []
     i = 0
@@ -236,9 +224,59 @@ if __name__ == "__main__":
     df = df.sort_values(by="corrected_p_value")
     df.to_csv(f"{methy_dir}/regulatory_motif_enrichment.csv", index=False)
 
+if __name__ == "__main__":
+    score_cutoff = 30
+    min_ctg_len = 100000
+    # genome_gff = "/home/shuaiw/borg/pengfan/contigs/protein/Final_Genomes_qc_rmcirc_prodigal_complete.gff"
+    # methy_dir = "/home/shuaiw/borg/pengfan/RuReacBro_20230708_11_72h_20_bin2/"
+
+    # genome_gff = "/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/prokka/ERR12723528_mice.gff"
+    # methy_dir = "/home/shuaiw/borg/assembly/mice_gut/ERR12723528_mice/ERR12723528_mice_methylation/"
+
+    # genome_gff = sys.argv[1]
+    # methy_dir = sys.argv[2]
+    data = []
+    for file in glob.glob(f"/home/shuaiw/borg/paper/gene_anno/meta/*/prokka/*.gff"):
+        # contig = "ocean_1_1164_C"
+        contig = os.path.basename(file).split(".")[0]
+        prefix = "_".join(contig.split("_")[:-2])
+        # if prefix != "ocean_1":
+        #     continue
+        genome_gff = f"/home/shuaiw/borg/paper/gene_anno/meta/{contig}/prokka/{contig}.gff"
+        methy_dir = f"/home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation4/"
 
 
-# motifString,centerPos,modificationType,fraction,nDetected,nGenome,groupTag,partnerMotifString,meanScore,meanIpdRatio,meanCoverage,objectiveScore
-# CYAABTC,4,modified_base,0.7329193,118,161,CYAABTC,,50.966103,1.534779,80.60169,4546.885
-# CAANNNNNGTTG,3,modified_base,0.7446808,35,47,CAANNNNNGTTG,,45.885715,1.4865172,76.71429,1231.739
-# CAGNNNNNNTRG,2,modified_base,0.3181818,70,220,CAGNNNNNNTRG,,45.75714,1.4647014,76.6,1142.7856
+        ## check if the file has more than one line
+        with open(f"{methy_dir}/motifs/{contig}.motifs.csv", "r") as f:
+            lines = f.readlines()
+            if len(lines) < 2:
+                # print(f"File {file} has less than two lines, skipping.")
+                pass
+
+        my_ref = f"{methy_dir}/contigs/{contig}.fa"
+        gff = f"{methy_dir}/gffs/{contig}.gff"
+        motif_file = f"{methy_dir}/motifs/{contig}.motifs.csv"
+        REF = read_ref(my_ref)
+
+        Gene_regulatory_regions = collect_regulation_region(genome_gff, contig)
+
+        # background_regions = get_background(Gene_regulatory_regions)
+        modified_loci = get_modified_ratio(gff, score_cutoff)
+
+        motifs = pd.read_csv(motif_file)
+        motifs = motifs[motifs["nDetected"] >= 500]
+        for index, motif in motifs.iterrows():
+            motif_new = motif["motifString"]
+            exact_pos = motif["centerPos"]
+            frac = motif["fraction"]
+            nDetected = motif["nDetected"]
+            odds_ratio, p_value, a, b, c, d = get_motif_sites(REF, motif_new, exact_pos, modified_loci, Gene_regulatory_regions)
+            print(f"genome {contig} , Motif: {motif_new}, {frac}, Odds Ratio: {odds_ratio}, P-value: {p_value}", a, b, c, d)
+            data.append([contig, motif_new, nDetected, frac, odds_ratio, p_value, a, b, c, d, prefix])
+    df = pd.DataFrame(data, columns=["genome", "motif", "nDetected", "fraction", "odds_ratio", "p_value", "a", "b", "c", "d", "sample"])
+    ## sort the dataframe by p_value in ascending order
+    df = df.sort_values(by="p_value", ascending=True)
+    ## add corrected pvalue
+    rejected, pvals_corrected, _, _ = multipletests(df["p_value"], alpha=0.05, method='fdr_bh')
+    df["corrected_p_value"] = pvals_corrected
+    df.to_csv(f"/home/shuaiw/borg/paper/gene_regulation/motif_enrichment_all_samples.csv", index=False)

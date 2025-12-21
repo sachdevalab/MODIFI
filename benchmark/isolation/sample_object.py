@@ -1089,6 +1089,8 @@ class My_gene(object):
             with open(self.gff, 'r') as f:
                 for line in f:
                     line = line.strip()
+                    if line.startswith(">"):
+                        break
                     if line and not line.startswith('#'):
                         valid_lines.append(line.split('\t'))
             
@@ -1147,6 +1149,8 @@ class My_gene(object):
             for line in open(self.gff, "r"):
                 if line.startswith("#"):
                     continue
+                if line.startswith(">"):
+                    break
                 line = line.strip().split("\t")
                 if len(line) < 9:
                     continue
@@ -1325,6 +1329,118 @@ class My_gene(object):
             total_regulatory_length += (reg[1] - reg[0] + 1)
         return non_coding_length, total_cds_length, total_regulatory_length
 
+    def intersect_gene(self):
+        genome_length = self.get_genome_len()
+        
+        # Initialize counters for four regions
+        region_counts = {
+            "upstream_150": 0,      # CDS start - 150bp to CDS start
+            "start_150": 0,         # CDS start to CDS start + 150bp
+            "end_150": 0,           # CDS end - 150bp to CDS end
+            "downstream_150": 0     # CDS end to CDS end + 150bp
+        }
+        
+        # Assume all regions have the same length (150bp)
+        # Total region lengths for frequency calculation
+        num_cds = len(self.cds_regions)
+        total_lengths = {
+            "upstream_150": 150 * num_cds,
+            "start_150": 150 * num_cds,
+            "end_150": 150 * num_cds,
+            "downstream_150": 150 * num_cds
+        }
+        
+        # Count modifications in each region
+        for mod in self.modified_regions:
+            pos = mod[0]
+            mod_strand = mod[1]
+            
+            for cds in self.cds_regions:
+                start, end, strand = cds[0], cds[1], cds[2]
+                
+                # Only count modifications on the same strand as the gene
+                if mod_strand != strand:
+                    continue
+                
+                if strand == '+':
+                    # For + strand genes (5' to 3' left to right)
+                    # Upstream 150bp: [start - 150, start)
+                    upstream_start = max(1, start - 150)
+                    if upstream_start <= pos < start:
+                        region_counts["upstream_150"] += 1
+                        break
+                    
+                    # Start region: [start, start + 150]
+                    start_region_end = min(end, start + 150)
+                    if start <= pos <= start_region_end:
+                        region_counts["start_150"] += 1
+                        break
+                    
+                    # End region: [end - 150, end]
+                    end_region_start = max(start, end - 150)
+                    if end_region_start <= pos <= end:
+                        region_counts["end_150"] += 1
+                        break
+                    
+                    # Downstream 150bp: (end, end + 150]
+                    downstream_end = end + 150
+                    if end < pos <= downstream_end:
+                        region_counts["downstream_150"] += 1
+                        break
+                
+                else:  # strand == '-'
+                    # For - strand genes (5' to 3' right to left)
+                    # Upstream 150bp: (end, end + 150] (upstream of transcription start)
+                    upstream_end = end + 150
+                    if end < pos <= upstream_end:
+                        region_counts["upstream_150"] += 1
+                        break
+                    
+                    # Start region: [end - 150, end] (transcription start region)
+                    start_region_start = max(start, end - 150)
+                    if start_region_start <= pos <= end:
+                        region_counts["start_150"] += 1
+                        break
+                    
+                    # End region: [start, start + 150] (transcription end region)
+                    end_region_end = min(end, start + 150)
+                    if start <= pos <= end_region_end:
+                        region_counts["end_150"] += 1
+                        break
+                    
+                    # Downstream 150bp: [start - 150, start) (downstream of transcription end)
+                    downstream_start = max(1, start - 150)
+                    if downstream_start <= pos < start:
+                        region_counts["downstream_150"] += 1
+                        break
+        
+        # Calculate frequencies
+        region_frequencies = {}
+        for region in region_counts:
+            if total_lengths[region] > 0:
+                region_frequencies[region] = region_counts[region] / total_lengths[region]
+            else:
+                region_frequencies[region] = 0
+        
+        # Create DataFrame with results - only genome, genome_length, and frequencies
+        data = [
+            self.genome,
+            genome_length,
+            region_frequencies["upstream_150"],
+            region_frequencies["start_150"],
+            region_frequencies["end_150"],
+            region_frequencies["downstream_150"]
+        ]
+        
+        df = pd.DataFrame([data], columns=[
+            'genome', 'genome_length',
+            'upstream_150_frequency',
+            'start_150_frequency',
+            'end_150_frequency',
+            'downstream_150_frequency'
+        ])
+        
+        return df
 
 if __name__ == "__main__":
     pass

@@ -760,15 +760,17 @@ def count_MT_num(anno_file):
             ctg_MT_num[row['contig']].add(row['HMM'])
     return ctg_MT_num
 
-def count_modified_base(all_dir, prefix, best_ctgs, length_dict, env, score_cutoff = 30):
+def count_modified_base(all_dir, prefix, best_ctgs, length_dict, env, ctg_taxa_dict,score_cutoff = 30):
     base_data = []
     for ctg in best_ctgs:
         length = length_dict[ctg]
         ctg_obj = My_contig(prefix, all_dir, ctg)
         ctg_obj.get_mod_ratio(score_cutoff)
+        ctg_lineage = ctg_taxa_dict[ctg_obj.contig] if ctg_obj.contig in ctg_taxa_dict else "Unknown"
+        ctg_phylum = classify_taxa(ctg_lineage, level='phylum')
         base_data.append([prefix, ctg, length, ctg_obj.modified_num, 
                           ctg_obj.modified_motif_num, ctg_obj.modified_ratio, 
-                          ctg_obj.modified_motif_ratio, ctg_obj.motif_ratio, env])
+                          ctg_obj.modified_motif_ratio, ctg_obj.motif_ratio, env, ctg_phylum])
     return base_data
 
 def get_stastics():
@@ -920,31 +922,69 @@ def sort_genome_motif(df_all_data, fig_dir):
 
 def plot_base(df_all_base_data, fig_dir):
     ### sort by sample
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(15, 12))
+    ctg_num_cutoff = 20
+    fig, axes = plt.subplots(3, 2, figsize=(14, 10))
     df_all_base_data = df_all_base_data.sort_values(by='sample')
-    ## plot boxplot where sample is on x-axis and modified_ratio is on y-axis
-    sns.boxplot(data=df_all_base_data, x='sample', y='modified_ratio', hue='environment', palette='Set2', ax=ax1)
-    ax1.set_title('Distribution of Modified Ratios Across Samples')
-    ax1.set_xlabel('Sample')
-    ax1.set_ylabel('Modified Ratio')
-    ax1.tick_params(axis='x', rotation=90)
-    ax1.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    # Filter data for environment and phylum
+    env_counts = df_all_base_data['environment'].value_counts()
+    env_with_enough_data = env_counts[env_counts > ctg_num_cutoff].index
+    df_filtered_env = df_all_base_data[df_all_base_data['environment'].isin(env_with_enough_data)]
+    
+    phylum_counts = df_all_base_data['phylum'].value_counts()
+    phylum_with_enough_data = phylum_counts[phylum_counts > ctg_num_cutoff].index
+    df_filtered_phylum = df_all_base_data[df_all_base_data['phylum'].isin(phylum_with_enough_data)]
+    
+    ## Row 1: modified_ratio
+    # Environment
+    order1_env = df_filtered_env.groupby('environment')['modified_ratio'].mean().sort_values().index
+    sns.boxplot(data=df_filtered_env, x='environment', y='modified_ratio', palette='Set2', ax=axes[0, 0], order=order1_env)
+    axes[0, 0].set_title('Modified Ratios by Environment')
+    axes[0, 0].set_xlabel(f'Environment (>{ctg_num_cutoff} contigs)')
+    axes[0, 0].set_ylabel('Modified Ratio')
+    axes[0, 0].tick_params(axis='x', rotation=90)
+    
+    # Phylum
+    order1_phylum = df_filtered_phylum.groupby('phylum')['modified_ratio'].mean().sort_values().index
+    sns.boxplot(data=df_filtered_phylum, x='phylum', y='modified_ratio', palette='Set2', ax=axes[0, 1], order=order1_phylum)
+    axes[0, 1].set_title('Modified Ratios by Phylum')
+    axes[0, 1].set_xlabel(f'Phylum (>{ctg_num_cutoff} contigs)')
+    axes[0, 1].set_ylabel('Modified Ratio')
+    axes[0, 1].tick_params(axis='x', rotation=90)
 
-    ## plot boxplot where sample is on x-axis and modified_motif_ratio is on y-axis
-    sns.boxplot(data=df_all_base_data, x='sample', y='modified_motif_ratio', hue='environment', palette='Set2', ax=ax2)
-    ax2.set_title('Distribution of Modified Motif Ratios Across Samples')
-    ax2.set_xlabel('Sample')
-    ax2.set_ylabel('Modified Motif Ratio')
-    ax2.tick_params(axis='x', rotation=90)
-    ax2.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+    ## Row 2: modified_motif_ratio
+    # Environment
+    order2_env = df_filtered_env.groupby('environment')['modified_motif_ratio'].mean().sort_values().index
+    sns.boxplot(data=df_filtered_env, x='environment', y='modified_motif_ratio', palette='Set2', ax=axes[1, 0], order=order2_env)
+    axes[1, 0].set_title('Modified Motif Ratios by Environment')
+    axes[1, 0].set_xlabel(f'Environment (>{ctg_num_cutoff} contigs)')
+    axes[1, 0].set_ylabel('Modified Motif Ratio')
+    axes[1, 0].tick_params(axis='x', rotation=90)
+    
+    # Phylum
+    order2_phylum = df_filtered_phylum.groupby('phylum')['modified_motif_ratio'].mean().sort_values().index
+    sns.boxplot(data=df_filtered_phylum, x='phylum', y='modified_motif_ratio', palette='Set2', ax=axes[1, 1], order=order2_phylum)
+    axes[1, 1].set_title('Modified Motif Ratios by Phylum')
+    axes[1, 1].set_xlabel(f'Phylum (>{ctg_num_cutoff} contigs)')
+    axes[1, 1].set_ylabel('Modified Motif Ratio')
+    axes[1, 1].tick_params(axis='x', rotation=90)
 
-    ## plot boxplot where sample is on x-axis and motif_ratio is on y-axis
-    sns.boxplot(data=df_all_base_data, x='sample', y='motif_ratio', hue='environment', palette='Set2', ax=ax3)
-    ax3.set_title('Distribution of Motif Ratios Across Samples')
-    ax3.set_xlabel('Sample')
-    ax3.set_ylabel('Motif Ratio')
-    ax3.tick_params(axis='x', rotation=90)
-    ax3.legend(title='Environment', bbox_to_anchor=(1.05, 1), loc='upper left')
+    ## Row 3: motif_ratio
+    # Environment
+    order3_env = df_filtered_env.groupby('environment')['motif_ratio'].mean().sort_values().index
+    sns.boxplot(data=df_filtered_env, x='environment', y='motif_ratio', palette='Set2', ax=axes[2, 0], order=order3_env)
+    axes[2, 0].set_title('Motif Ratios by Environment')
+    axes[2, 0].set_xlabel(f'Environment (>{ctg_num_cutoff} contigs)')
+    axes[2, 0].set_ylabel('Motif Ratio')
+    axes[2, 0].tick_params(axis='x', rotation=90)
+    
+    # Phylum
+    order3_phylum = df_filtered_phylum.groupby('phylum')['motif_ratio'].mean().sort_values().index
+    sns.boxplot(data=df_filtered_phylum, x='phylum', y='motif_ratio', palette='Set2', ax=axes[2, 1], order=order3_phylum)
+    axes[2, 1].set_title('Motif Ratios by Phylum')
+    axes[2, 1].set_xlabel(f'Phylum (>{ctg_num_cutoff} contigs)')
+    axes[2, 1].set_ylabel('Motif Ratio')
+    axes[2, 1].tick_params(axis='x', rotation=90)
 
     plt.tight_layout()
     plt.savefig(f"{fig_dir}/base_count_all_samples.png", dpi=300, bbox_inches='tight')
@@ -1076,6 +1116,8 @@ def main(all_dir, fig_dir, sample_env_dict):
         if not os.path.exists(sample_obj.depth_file):
             print (f"Skipping {prefix} as depth file not found.")
             continue
+        if prefix != "ocean_1":
+            continue
         
         print (f"Processing {prefix}...")
         sample_obj.read_depth()
@@ -1085,37 +1127,38 @@ def main(all_dir, fig_dir, sample_env_dict):
         N50, genome_size = sample_obj.get_N50_size()
         print(f"{prefix}: N50 size: {N50}, Genome size: {genome_size}")
         my_genome_list, best_ctgs = sample_obj.get_final_best_ctg2()
-        print ("best ctgs num:", len(best_ctgs))
-        genome_list += my_genome_list
-        print (f">>>Total {len(genome_list)} high depth contigs collected so far.")
+        analyze_gene(all_dir, meta_dir, prefix, best_ctgs)
+    #     print ("best ctgs num:", len(best_ctgs))
+    #     genome_list += my_genome_list
+    #     print (f">>>Total {len(genome_list)} high depth contigs collected so far.")
 
-        genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix], map_ratio, linkage_num, \
-                            regulate_motif_num, len(best_ctgs)])
+    #     genome_data.append([prefix, N50, genome_size, sample_env_dict[prefix], map_ratio, linkage_num, \
+    #                         regulate_motif_num, len(best_ctgs)])
 
-        # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
-        all_data += count_motifs(best_ctgs, all_dir, prefix, sample_env_dict[prefix], ctg_taxa_dict)
-        all_base_data += count_modified_base(all_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix])
-        # break
-    print ("start plot...")
-    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len', 'RM_num'])
-    df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
-    df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment'])
+    #     # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
+    #     all_data += count_motifs(best_ctgs, all_dir, prefix, sample_env_dict[prefix], ctg_taxa_dict)
+    #     all_base_data += count_modified_base(all_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix],ctg_taxa_dict)
+    #     # break
+    # print ("start plot...")
+    # df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len', 'RM_num'])
+    # df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
+    # df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment','phylum'])
 
-    df_genome_data.to_csv(f"{fig_dir}/genome_data_all_samples.csv", index = False)
-    df_all_base_data.to_csv(f"{fig_dir}/base_count_all_samples.csv", index=False)
-    df_all_data.to_csv(f"{fig_dir}/motif_num_all_samples.csv", index=False)    
+    # df_genome_data.to_csv(f"{fig_dir}/genome_data_all_samples.csv", index = False)
+    # df_all_base_data.to_csv(f"{fig_dir}/base_count_all_samples.csv", index=False)
+    # df_all_data.to_csv(f"{fig_dir}/motif_num_all_samples.csv", index=False)    
     
     # df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
     # df_genome_data = pd.read_csv(f"{fig_dir}/genome_data_all_samples.csv")
     # df_all_base_data = pd.read_csv(f"{fig_dir}/base_count_all_samples.csv")
 
-    plot_motif_env(df_all_data, fig_dir)
-    sort_genome_motif(df_all_data, fig_dir)
-    plot_motif(df_all_data, fig_dir)
-    plot_genome(df_genome_data, fig_dir)
-    plot_meta(df_genome_data, fig_dir)
-    plot_base(df_all_base_data, fig_dir)
-    plot_MTase(df_all_data, fig_dir)
+    # plot_motif_env(df_all_data, fig_dir)
+    # sort_genome_motif(df_all_data, fig_dir)
+    # plot_motif(df_all_data, fig_dir)
+    # plot_genome(df_genome_data, fig_dir)
+    # plot_meta(df_genome_data, fig_dir)
+    # plot_base(df_all_base_data, fig_dir)
+    # plot_MTase(df_all_data, fig_dir)
     # ## save genome data
 
     # with open(genome_list_file, "w") as f:
@@ -1126,35 +1169,35 @@ def rerun(fig_dir):
     df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
     plot_motif_env(df_all_data, fig_dir)
 
-def main_gene(all_dir, meta_dir, sample_env_dict, fig_dir):
-    ctg_taxa_dict = get_ctg_taxa(all_dir)
-    ## for each file in /home/shuaiw/borg/paper/gene_anno/meta/*/prokka/*gff
-    for gff in glob.glob(f"{meta_dir}/*/prokka/*gff"):
-        contig = os.path.basename(gff).split(".")[0]
-        prefix = "_".join(os.path.basename(gff).split("_")[:-2])
-        environment = sample_env_dict[prefix]
-        ctg_lineage = ctg_taxa_dict[contig] if contig in ctg_taxa_dict else "Unknown"
-        ctg_phylum = classify_taxa(ctg_lineage, level='phylum')
+def analyze_gene(all_dir, meta_dir, prefix, contig_list):
+    
+    for contig in contig_list:
+        
 
-        print (contig)
-        sample_obj = My_contig(prefix, all_dir, contig)
-
-        modified_gff = sample_obj.reprocess_gff
-        genome_file = sample_obj.ctg_ref
+        contig_obj = My_contig(prefix, all_dir, contig)
+        cds_gff = meta_dir + "/" + contig + "/prokka/" + f"{contig}.gff"
+        modified_gff = contig_obj.reprocess_gff
+        genome_file = contig_obj.ctg_ref
         count_dir = f"{meta_dir}/{contig}/count/"
         count_file = os.path.join(count_dir, f"{contig}_region_count.csv")
-        ## mkdir count_dir if not exists
-        if not os.path.exists(count_dir):
-            os.makedirs(count_dir)
-        my_gene = My_gene(gff, contig, genome_file)
+
+        
+        # Create count directory if needed
+        os.makedirs(count_dir, exist_ok=True)
+        print (contig)
+        # Initialize gene object
+        my_gene = My_gene(cds_gff, contig, genome_file)
         my_gene.collect_regulation_region()
         my_gene.read_modified_gff(modified_gff)
-        region_info = my_gene.intersect()
-        region_info['sample'] = prefix
-        region_info['environment'] = environment
-        region_info['phylum'] = ctg_phylum
-        print(region_info)
-        region_info.to_csv(count_file, index=False)
+        
+        # Perform intersection     
+        df = my_gene.intersect_gene()
+        print (df)
+
+        # df.to_csv(count_file, index=False)
+        # processed += 1
+            
+
 
 def plot_coding( meta_dir, fig_dir, min_len = 1000000):
     ctg_num_cutoff = 10
@@ -1391,7 +1434,7 @@ if __name__ == "__main__":
     # plot_motif_len(fig_dir)
     sample_env_dict = read_metadata(meta_file)
     main(all_dir, fig_dir, sample_env_dict)
-    # main_gene(all_dir, meta_dir, sample_env_dict, fig_dir)
+
     # plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)
     # get_stastics()
