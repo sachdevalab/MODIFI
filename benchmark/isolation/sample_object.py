@@ -577,6 +577,7 @@ class Isolation_sample(My_sample):
     def __init__(self, prefix, all_dir):
         super().__init__(prefix, all_dir)
         self.phylum = None
+        self.species = None
         self.lineages = None
         self.average_dp = None
         self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation4"
@@ -619,7 +620,8 @@ class Isolation_sample(My_sample):
         isolation_taxa = self.read_isolation_gtdb()
         self.lineage = isolation_taxa[list(isolation_taxa.keys())[0]]
         self.phylum = self.lineage.split(";")[1][3:] if ";" in self.lineage else "Unclassified"
-
+        self.species = self.lineage.split(";")[-1][3:] if ";" in self.lineage else "Unclassified"
+    
     def read_isolation_gtdb(self):
         """
         Read the GTDB summary file and return a dictionary of contig to bin mapping.

@@ -1045,11 +1045,11 @@ def analyze_jaccard(fig_dir):
     same_sample_df = pd.read_csv(f"{fig_dir}/jaccard_same_sample.csv")  
 
 
-    same_sample_df = same_sample_df[same_sample_df['mge_length'] >= 50000]
+    # same_sample_df = same_sample_df[same_sample_df['mge_length'] >= 50000]
 
 
     ## calculate the proportion of rows with jaccard_similarity==1 in same_sample_df
-    perfect_match = same_sample_df[same_sample_df['jaccard_similarity'] == 1]
+    perfect_match = same_sample_df[same_sample_df['jaccard_similarity_filtered'] == 1]
     proportion_perfect = len(perfect_match) / len(same_sample_df)
     print(f"\nProportion of MGE-host pairs with perfect Jaccard similarity (=1): {proportion_perfect:.4f} ({len(perfect_match)}/{len(same_sample_df)})")
     ## get the perfect_match proportion for each relation  in jaccard_all_sample
@@ -1057,7 +1057,7 @@ def analyze_jaccard(fig_dir):
     print("\nProportion of perfect Jaccard similarity (=1) by taxonomic relation:")
     data = []
     for relation, group in relation_groups:
-        perfect_count = len(group[group['jaccard_similarity'] == 1])
+        perfect_count = len(group[group['jaccard_similarity_filtered'] == 1])
         total_count = len(group)
         proportion = perfect_count / total_count if total_count > 0 else 0
         print(f"{relation}: {proportion:.4f} ({perfect_count}/{total_count})")
@@ -1079,7 +1079,7 @@ def analyze_jaccard(fig_dir):
     print("\nProportion of perfect Jaccard similarity (=1) by phylum:")
     data = []
     for phylum, group in phylum_groups:
-        perfect_count = len(group[group['jaccard_similarity'] == 1])
+        perfect_count = len(group[group['jaccard_similarity_filtered'] == 1])
         total_count = len(group)
         proportion = perfect_count / total_count if total_count > 0 else 0
         print(f"{phylum}: {proportion:.4f} ({perfect_count}/{total_count})")
@@ -1102,14 +1102,14 @@ def analyze_jaccard(fig_dir):
     plt.savefig(f"{fig_dir}/proportion_perfect_jaccard_by_phylum.pdf", dpi=300, bbox_inches="tight")
     plt.close()
 
-    ## see the rows that jaccard_similarity < 0.6 in same_sample_df
-    low_jaccard = same_sample_df[same_sample_df['jaccard_similarity'] < 1]
-    for index, row in low_jaccard.iterrows():
-        if row['phylum'] != 'Bacillota':
-            continue
-        print(f"\n--- Row {index} ---")
-        for col in row.index:
-            print(f"{col}: {row[col]}")
+    # ## see the rows that jaccard_similarity < 0.6 in same_sample_df
+    # low_jaccard = same_sample_df[same_sample_df['jaccard_similarity'] < 1]
+    # for index, row in low_jaccard.iterrows():
+    #     if row['phylum'] != 'Bacillota':
+    #         continue
+    #     print(f"\n--- Row {index} ---")
+    #     for col in row.index:
+    #         print(f"{col}: {row[col]}")
 
 if __name__ == "__main__":
     # meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
@@ -1122,8 +1122,8 @@ if __name__ == "__main__":
     ANI=99
     drep_clu_file = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/data_tables/Cdb.csv"
 
-    main(all_dir, fig_dir, drep_clu_file)
+    # main(all_dir, fig_dir, drep_clu_file)
     # main_96plex(fig_dir)
     
     # main_profile(all_dir, profile_fig_dir)
-    # analyze_jaccard(fig_dir)
+    analyze_jaccard(fig_dir)

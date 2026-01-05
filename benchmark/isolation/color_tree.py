@@ -10,6 +10,20 @@ import matplotlib.pyplot as plt
 
 from sample_object import My_sample, Isolation_sample
 
+PHYLUM_COLORS = {
+    "Pseudomonadota":  "#d8b365",  # tan / brown
+    "Bacillota":       "#f46d43",  # orange
+    "Bacillota_A":     "#8da0cb",  # blue-lavender
+    "Bacillota_C":     "#bdbdbd",  # light gray
+    "Actinomycetota":  "#66c2a5",  # teal-green
+    "Bacteroidota":    "#e78ac3",  # pink
+    "Campylobacterota":"#a6d854",  # light green
+    "Acidobacteriota": "#1b9e77",  # dark green
+    "Verrucomicrobiota":"#999999", # gray
+    "Others":          "#cccccc"   # fallback
+}
+
+
 header = """TREE_COLORS
 #use this template to define branch colors and styles, colored ranges and label colors/font styles/backgrounds
 #lines starting with a hash are comments and ignored during parsing
@@ -198,6 +212,7 @@ def collect_iso_ctgsall_dir(all_dir, iso_genome_list_file, filtered_df):
 def single_run(resultdir, genome_dir):
     data = []
     archea_list = ["SRR27457941", "SRR31014709"]
+
     for folder in os.listdir(resultdir):
         prefix = folder
         if prefix in archea_list:
@@ -253,6 +268,35 @@ def filter_df(df, min_dp = 10):
     print (f"Pure samples with DP >= {min_dp} and Motif_Num > 0: {motif_positive_num} ({motif_positive_num/dp_num:.2%})")
     mge_positive_num = df_dp[df_dp['MGE_bool'] == 1].shape[0]
     print (f"Pure samples with DP >= {min_dp} and MGE_bool = 1: {mge_positive_num} ({mge_positive_num/dp_num:.2%})")
+    ## count how many unique species and phylum in df_dp
+    unique_species = set()
+    unique_phylum = set()
+    no_species_count = 0
+    for index, row in df_dp.iterrows():
+        lineage = row["Lineage"]
+        species = lineage.split(";")[-1][3:] if ";" in lineage else "Unclassified"
+        phylum = lineage.split(";")[1][3:] if ";" in lineage else "Unclassified"
+        if species == "":
+            print (lineage)
+            print (row)
+            species = "Unclassified"
+            no_species_count += 1
+        else:
+            unique_species.add(species)
+        unique_phylum.add(phylum)
+    # print (unique_species)
+    print (f"Unique species in filtered samples: {len(unique_species)}")
+    print (f"Unique phylum in filtered samples: {len(unique_phylum)}")
+    print (f"Samples without species information: {no_species_count}")
+
+    ## count the proportion of samples in each phylum with motif_num > 0
+    print ("\nProportion of samples with Motif_Num > 0 in each phylum:")
+    phylum_groups = df_dp.groupby(df_dp['Lineage'].apply(lambda x: x.split(";")[1][3:] if ";" in x else "Unclassified"))
+    for phylum, group in phylum_groups:
+        total_count = group.shape[0]
+        motif_positive_count = group[group['Motif_Num'] > 0].shape[0]
+        proportion = motif_positive_count / total_count if total_count > 0 else 0
+        print (f"{phylum}: {motif_positive_count}/{total_count} ({proportion:.2%})")
     
     return df_dp
 
@@ -269,30 +313,22 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
             phylum = phylum.replace("p__", "")
             phylums.add(phylum)
     
-    # Use seaborn Set1 color palette
+    # Use predefined PHYLUM_COLORS
     phylum_list = sorted(list(phylums))  # Sort for consistent coloring
-    n_colors = len(phylum_list)
     
-    # Get Set1 palette colors (Set1 has 9 distinct colors)
-    set1_colors = list(sns.color_palette("Set2", n_colors=max(n_colors, 9)))
-    
-    # Convert RGB to hex format for iTOL
+    # Assign colors from PHYLUM_COLORS dictionary
     phylum_color = {}
-    for i, phylum in enumerate(phylum_list):
-        if i < len(set1_colors):
-            rgb = set1_colors[i]
-            hex_color = "#{:02x}{:02x}{:02x}".format(int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
-            phylum_color[phylum] = hex_color
+    for phylum in phylum_list:
+        if phylum in PHYLUM_COLORS:
+            phylum_color[phylum] = PHYLUM_COLORS[phylum]
         else:
-            # If more phylums than Set1 colors, cycle through
-            rgb = set1_colors[i % len(set1_colors)]
-            hex_color = "#{:02x}{:02x}{:02x}".format(int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
-            phylum_color[phylum] = hex_color
+            # Use "Others" color for phylums not in the dictionary
+            phylum_color[phylum] = PHYLUM_COLORS["Others"]
     
     # Add default color for unknown
     phylum_color["unknown"] = "#cccccc"
     
-    print(f"Found {len(phylum_list)} unique phylums using Seaborn Set1 palette:")
+    print(f"Found {len(phylum_list)} unique phylums using predefined colors:")
     for phylum, color in phylum_color.items():
         print(f"  {phylum}: {color}")
     Label_anno = Label_header
@@ -366,6 +402,6 @@ if __name__ == "__main__":
     tree_results = "/home/shuaiw/borg/paper/isolation//GTDB_tree/anno/"
     genome_dir = "/home/shuaiw/borg/paper/isolation//GTDB_tree/genomes"
     genome_list = "/home/shuaiw/borg/paper/specificity/iso_genome.list"  ## for drep
-    run_taxa_dict, sample_meta_dict, filtered_df = single_run(resultdir, genome_dir)
-    collect_iso_ctgsall_dir(resultdir, genome_list, filtered_df)
-    color_phylum(run_taxa_dict, tree_results, sample_meta_dict)
+    run_taxa_dict, sample_meta_dict, filtered_df = single_run(resultdir, genome_dir) ## collect isolation genomes with high dp
+    # collect_iso_ctgsall_dir(resultdir, genome_list, filtered_df)
+    # color_phylum(run_taxa_dict, tree_results, sample_meta_dict)
