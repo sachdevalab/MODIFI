@@ -579,7 +579,7 @@ class Isolation_sample(My_sample):
         self.phylum = None
         self.lineages = None
         self.average_dp = None
-        self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation2"
+        self.work_dir = f"{self.all_dir}/{self.prefix}/{self.prefix}_methylation4"
         self.depth_file = os.path.join(self.work_dir, "mean_depth.csv")
         self.host_sum_file = os.path.join(self.work_dir, "host_summary.csv")
         self.orphan_file = os.path.join(self.work_dir, "regulatory_motif_enrichment.csv")
@@ -731,6 +731,7 @@ class My_contig(My_sample):
         self.ipd_ratio_file = f"{self.work_dir}/ipd_ratio/{contig}.ipd3.csv"
         self.motif_file = f"{self.work_dir}/motifs/{contig}.motifs.csv"
         self.RM_file = f"{self.work_dir}/RM_systems/{contig}.RM.csv"
+        self.ctg_profile = f"{self.work_dir}/profiles/{contig}.motifs.profile.csv"
         self.ctg_len = None
         self.modified_ratio = None
         self.modified_motif_ratio = None
@@ -944,6 +945,15 @@ class My_contig(My_sample):
         f.close()
         return self.RM_dict
 
+    def read_ctg_profile(self):
+        if not os.path.exists(self.ctg_profile):
+            print (f"[⚠️] Contig profile file not found: {self.ctg_profile}")
+            return None
+        df = pd.read_csv(self.ctg_profile)
+        motif_loci_num_dict = {}
+        for index, row in df.iterrows():
+            motif_loci_num_dict[row['motifString']] = row['motif_loci_num']
+        return motif_loci_num_dict
 
 class My_cluster(object):
     def __init__(self, cluster, members):

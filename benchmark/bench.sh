@@ -1723,7 +1723,7 @@ sbatch --job-name=tree \
 
 
 sbatch --partition standard --job-name=pf3 --wrap "python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/pengfan/result_20251121/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin \
+  --work_dir /home/shuaiw/borg/pengfan/result_20251229/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
   --read_type hifi \
@@ -1734,11 +1734,10 @@ sbatch --partition standard --job-name=pf3 --wrap "python /home/shuaiw/mGlu/main
   --min_sites 30 \
   --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
-  --run_steps host \
   --threads 64"
 
 sbatch --partition standard --job-name=pf4 --wrap "python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/pengfan/result_20251121/RuReacBro_20230708_26_72h_NC_r4_LR_bin \
+  --work_dir /home/shuaiw/borg/pengfan/result_20251229/RuReacBro_20230708_26_72h_NC_r4_LR_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_26_72h_NC_r4_LR.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
   --read_type hifi \
@@ -1750,11 +1749,10 @@ sbatch --partition standard --job-name=pf4 --wrap "python /home/shuaiw/mGlu/main
   --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
-  --run_steps host \
   --threads 64"
 
 sbatch --partition standard --job-name=pf5 --wrap "python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/pengfan/result_20251121/RuReacBro_20230708_9_72h_NC_r2_HMW_LR_bin \
+  --work_dir /home/shuaiw/borg/pengfan/result_20251229/RuReacBro_20230708_9_72h_NC_r2_HMW_LR_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_9_72h_NC_r2_HMW_LR.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
   --read_type hifi \
@@ -1766,11 +1764,10 @@ sbatch --partition standard --job-name=pf5 --wrap "python /home/shuaiw/mGlu/main
   --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
-  --run_steps host \
   --threads 64"
 
 sbatch --partition standard --job-name=pf6 --wrap "python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/pengfan/result_20251121/RuReacBro_20230708_Comb_RF_HMW_LR_bin \
+  --work_dir /home/shuaiw/borg/pengfan/result_20251229/RuReacBro_20230708_Comb_RF_HMW_LR_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_Comb_RF_HMW_LR.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
   --read_type hifi \
@@ -1782,11 +1779,10 @@ sbatch --partition standard --job-name=pf6 --wrap "python /home/shuaiw/mGlu/main
   --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
-  --run_steps host \
   --threads 64"
 
 sbatch --partition standard --job-name=pf7 --wrap "python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/pengfan/result_20251121/RuReacBro_20230708_Comb_RF_LR_bin \
+  --work_dir /home/shuaiw/borg/pengfan/result_20251229/RuReacBro_20230708_Comb_RF_LR_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_Comb_RF_LR.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
   --read_type hifi \
@@ -1798,7 +1794,6 @@ sbatch --partition standard --job-name=pf7 --wrap "python /home/shuaiw/mGlu/main
   --mge_file /home/shuaiw/borg/pengfan/contigs/MGE.list \
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --clean \
-  --run_steps host \
   --threads 64"
 
 

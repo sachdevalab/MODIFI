@@ -678,6 +678,6 @@ def main_asthma():
     cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
 if __name__ == "__main__":
-    main_meta()
-    # main_isolation()
+    # main_meta()
+    main_isolation()
     # main_asthma()
