@@ -17,16 +17,17 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 from sample_object import My_gene, get_unique_motifs, get_detail_taxa_name, My_sample, get_ctg_taxa, classify_taxa, My_contig, Isolation_sample
 
 PHYLUM_COLORS = {
-    "Pseudomonadota":  "#d8b365",  # tan / brown
-    "Bacillota":       "#f46d43",  # orange
-    "Bacillota_A":     "#8da0cb",  # blue-lavender
-    "Bacillota_C":     "#bdbdbd",  # light gray
-    "Actinomycetota":  "#66c2a5",  # teal-green
-    "Bacteroidota":    "#e78ac3",  # pink
-    "Campylobacterota":"#a6d854",  # light green
-    "Acidobacteriota": "#1b9e77",  # dark green
-    "Verrucomicrobiota":"#999999", # gray
-    "Others":          "#cccccc"   # fallback
+    "Pseudomonadota":    "#d8b365",  # tan / brown
+    "Bacillota":         "#f46d43",  # orange
+    "Bacillota_A":       "#8da0cb",  # blue-lavender
+    "Desulfobacterota":       "#fc8d62",  # light orange / salmon (same family as Bacillota)
+    "Actinomycetota":    "#66c2a5",  # teal-green
+    "Bacteroidota":      "#e78ac3",  # pink
+    "Campylobacterota":  "#a6d854",  # light green
+    "Acidobacteriota":   "#1b9e77",  # dark green
+    "Verrucomicrobiota": "#7570b3",  # muted purple
+    "Chloroflexota":   "#e7298a",  # magenta
+    "Others":            "#e6e6e6"   # very light neutral (only gray)
 }
 
 
@@ -1413,24 +1414,71 @@ def count_good_ctgs(df_all_data):
     for index, row in top5_motif.iterrows():
         print (f"Contig: {row['contig']}, Motif number: {row['motif_num']}, Lineage: {row['lineage']}")
 
+    ## count how many are bacteria and how many are archaea
+    bacteria_count = len(df_all_data[df_all_data['domain'] == 'd__Bacteria'])
+    archaea_count = len(df_all_data[df_all_data['domain'] == 'd__Archaea'])
+    print (f"Total Bacteria contigs: {bacteria_count}")
+    print (f"Total Archaea contigs: {archaea_count}")
 
-def color_tree(tree_results):
+
+def color_tree(tree_file):
+    from Bio import Phylo
+    
     df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
     count_good_ctgs(df_all_data)
     motif_num_anno = gradient_header + "\n"
     env_anno = strip_heaer + "\n"
     phylum_anno = header + "\n"
 
-    ## Use predefined PHYLUM_COLORS
-    phylum_color = PHYLUM_COLORS.copy()
+    ## Use predefined PHYLUM_COLORS for top 8 most abundant phyla
     ## remove p__ from the phylum names in df_all_data
     df_all_data['phylum'] = df_all_data['phylum'].apply(lambda x: x[3:] if x.startswith("p__") else x)
+    
+    # Read the tree and count leaf nodes per phylum
+    print(f"\nReading tree from: {tree_file}")
+    tree = Phylo.read(tree_file, "newick")
+    tree_leaf_names = [leaf.name for leaf in tree.get_terminals()]
+    print(f"Total leaves in tree: {len(tree_leaf_names)}")
+    
+    # Count phyla based on tree leaf nodes
+    tree_phylum_counts = {}
+    for leaf_name in tree_leaf_names:
+        # Find this leaf in the dataframe
+        matching_rows = df_all_data[df_all_data['contig'] == leaf_name]
+        if not matching_rows.empty:
+            phylum = matching_rows.iloc[0]['phylum']
+            tree_phylum_counts[phylum] = tree_phylum_counts.get(phylum, 0) + 1
+    
+    # Sort and get top 8
+    sorted_phyla = sorted(tree_phylum_counts.items(), key=lambda x: x[1], reverse=True)
+    top8_phyla = [p[0] for p in sorted_phyla[:8]]
+    
+    print(f"\nTop 8 phyla by tree node count:")
+    for phylum, count in sorted_phyla[:8]:
+        print(f"  {phylum}: {count} nodes")
+    
+    # Assign colors from PHYLUM_COLORS to top 8 phyla
+    phylum_color = {}
+    for phylum in top8_phyla:
+        if phylum in PHYLUM_COLORS:
+            phylum_color[phylum] = PHYLUM_COLORS[phylum]
+        else:
+            print (f"Phylum {phylum} not in predefined colors, assigning from palette.")
+            # If phylum not in predefined colors, assign from palette
+            color_idx = top8_phyla.index(phylum) % len(PHYLUM_COLORS)
+            available_colors = [c for c in PHYLUM_COLORS.values() if c != PHYLUM_COLORS["Others"]]
+            phylum_color[phylum] = list(available_colors)[color_idx]
+    
     # All other phyla get the 'Others' color
     all_phyla = df_all_data['phylum'].unique()
     for phylum in all_phyla:
         if phylum not in phylum_color:
             phylum_color[phylum] = PHYLUM_COLORS["Others"]
-    print (phylum_color)
+
+    print(f"Top 8 phyla by node count and color:")
+    for phylum in top8_phyla:
+        print(f"  {phylum}: {tree_phylum_counts[phylum]} nodes" f" - Color: {phylum_color[phylum]}")
+
     ## prepare environment color map
     env_list = df_all_data['environment'].unique().tolist()
     env_color = {}
@@ -1439,10 +1487,10 @@ def color_tree(tree_results):
         rgb = color_palette_env[i]
         hex_color = '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
         env_color[env] = hex_color
-    print (env_color)
+    # print (env_color)
     
-    # Get the list of known phyla from PHYLUM_COLORS (excluding 'Others')
-    known_phyla = [p for p in PHYLUM_COLORS.keys() if p != "Others"]
+    # Use top8_phyla as the known phyla list
+    known_phyla = top8_phyla
     
     for index, row in df_all_data.iterrows():
         ctg_name = row['contig']
@@ -1507,7 +1555,9 @@ if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/run2/"
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"   ## get by gene_anno.smk from assembly_pipe/
     tree_results = "/home/shuaiw/borg/paper/specificity/tree/"
-    color_tree(tree_results)
+    bacteria_tree = "/home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_tree/gtdbtk.unrooted.tree"
+    archaea_tree = "/home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_tree/archaea.unrooted.tree"
+    color_tree(bacteria_tree)
     # plot_motif_len(fig_dir)
     # sample_env_dict = read_metadata(meta_file)
     # main(all_dir, fig_dir, sample_env_dict)

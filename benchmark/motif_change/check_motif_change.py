@@ -547,12 +547,12 @@ def main_meta():
             if len(members) > cutoff:
                 print ("cluster", cluster, len(members), len(variation_data))
 
-                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                                fig_dir, tmp_res, min_frac=0.3, min_sites=100)
+                # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                #                                 fig_dir, tmp_res, min_frac=0.5, min_sites=500)
                 
-                # cluster_obj = My_cluster(cluster, members) 
-                # cluster_obj.load_df(tmp_res)
-                # cluster_obj.manual_filter_motifs()
+                cluster_obj = My_cluster(cluster, members) 
+                cluster_obj.load_df(tmp_res)
+                cluster_obj.manual_filter_motifs()
 
                 if len(cluster_obj.profile_df) < 2:
                     print ("skip cluster with less than 2 contigs with motif profiles")
@@ -624,11 +624,11 @@ def main_isolation():
             if len(members) > cutoff:
                 print ("cluster", cluster, len(members), len(variation_data))
 
-                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                                fig_dir, tmp_res, "isolation", min_frac=0.5, min_sites=500)
+                # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                #                                 fig_dir, tmp_res, "isolation", min_frac=0.5, min_sites=500)
                 
-                # cluster_obj = My_cluster(cluster, members) 
-                # cluster_obj.load_df(tmp_res)
+                cluster_obj = My_cluster(cluster, members) 
+                cluster_obj.load_df(tmp_res)
                 print (">>>>", cluster_obj.profile_df)
                 cluster_obj.manual_filter_motifs()
 
@@ -679,6 +679,6 @@ def main_asthma():
     cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
 if __name__ == "__main__":
-    # main_meta()
-    main_isolation()
+    main_meta()
+    # main_isolation()
     # main_asthma()
