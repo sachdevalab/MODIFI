@@ -173,12 +173,12 @@ class My_sample(object):
         self.specificity_cutoff = 0.01
         self.final_score_cutoff = 0.5
 
-    def get_unique_motifs(self):
+    def get_unique_motifs(self, min_frac=0.4, min_sites = 100):
         if not os.path.exists(self.all_motif_file):
             print (f"[⚠️] Motif file not found: {self.all_motif_file}")
             return None, None
         df = pd.read_csv(self.all_motif_file)
-        return get_unique_motifs(df)
+        return get_unique_motifs(df, min_frac=min_frac, min_sites=min_sites)
 
     def simple_load_motifs(self):
         if not os.path.exists(self.all_motif_file):
@@ -716,6 +716,27 @@ class Isolation_sample(My_sample):
                 potential_megaP.append((mge, mge_length, self.mge_dict[mge], self.lineage))
         return potential_megaP
 
+    def get_iso_good_ctgs(self, min_depth=10, min_len=500000):
+        """
+        Get high depth contig list.
+        sever for drep, to explore motif variation 
+        among strains
+        """
+        genome_list = []
+        contig_list = []
+        ## sort self.length_dict by length descending
+        sorted_contigs = sorted(self.length_dict.items(), key=lambda x: x[1], reverse=True)
+        ## select one longest contig for each isolation sample
+        for contig, length in sorted_contigs:
+            if self.depth_dict.get(contig, 0) >= min_depth and length >= min_len\
+                and contig not in self.mge_dict:
+                genome = self.work_dir + "/contigs/" + contig + ".fa"
+                genome_list.append(genome)
+                contig_list.append(contig)
+            else:
+                print ("Skipping contig:", contig, "Depth:", self.depth_dict.get(contig, 0), "Length:", length)
+            break
+        return genome_list, contig_list
 
 class My_contig(My_sample):
 

@@ -16,6 +16,19 @@ from scipy.stats import ttest_ind
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 from sample_object import My_gene, get_unique_motifs, get_detail_taxa_name, My_sample, get_ctg_taxa, classify_taxa, My_contig, Isolation_sample
 
+PHYLUM_COLORS = {
+    "Pseudomonadota":  "#d8b365",  # tan / brown
+    "Bacillota":       "#f46d43",  # orange
+    "Bacillota_A":     "#8da0cb",  # blue-lavender
+    "Bacillota_C":     "#bdbdbd",  # light gray
+    "Actinomycetota":  "#66c2a5",  # teal-green
+    "Bacteroidota":    "#e78ac3",  # pink
+    "Campylobacterota":"#a6d854",  # light green
+    "Acidobacteriota": "#1b9e77",  # dark green
+    "Verrucomicrobiota":"#999999", # gray
+    "Others":          "#cccccc"   # fallback
+}
+
 
 header = """TREE_COLORS
 #use this template to define branch colors and styles, colored ranges and label colors/font styles/backgrounds
@@ -1334,29 +1347,89 @@ def plot_coding( meta_dir, fig_dir, min_len = 1000000):
     print ("Top 10 genomes with highest general frequency:")
     print (top10_all[['genome', 'general_frequency', 'environment', 'phylum']])
 
+def count_good_ctgs(df_all_data):
+    ## count how many unique species, phyla in the dataframe
+    print (len(df_all_data), "contigs in total.")
+    df_all_data['species'] = df_all_data['lineage'].apply(lambda x: x.split(";")[-1])
+    unique_species_set = set()
+    unique_phyla_set = set()
+    no_species_count = 0
+    for index, row in df_all_data.iterrows():
+        species = row['species']
+        phylum = row['phylum']
+        ## remove 's__' from species name
+        if species.startswith("s__"):
+            species = species[3:]
+        if species != "":
+            unique_species_set.add(species)
+        else:
+            no_species_count += 1
+        unique_phyla_set.add(phylum)
+    print (f"Total unique species: {len(unique_species_set)}")
+    print (f"Total unique phyla: {len(unique_phyla_set)}")
+    print (f"Total contigs with no species annotation: {no_species_count}")
+    ## count how many contigs have motif_num > 0
+    motif_more_than_0 = df_all_data[df_all_data['motif_num'] > 0]
+    print (f"Total contigs with motif number > 0: {len(motif_more_than_0)}")
+    ## proportion
+    proportion = len(motif_more_than_0) / len(df_all_data) * 100
+    print (f"Proportion of contigs with motif number > 0: {proportion:.2f}%")
+    ## print the contig name with 0 motifs
+    motif_0_ctgs = df_all_data[df_all_data['motif_num'] == 0]['contig'].tolist()
+    print (f"Contigs with 0 motifs: {motif_0_ctgs}")
+    ## count the proportion of contigs with motif_num > 0 in each environment
+    env_groups = df_all_data.groupby('environment')
+    for env, group in env_groups:
+        total_ctgs = len(group)
+        motif_more_than_0_env = group[group['motif_num'] > 0]
+        proportion_env = len(motif_more_than_0_env) / total_ctgs * 100
+        print (f"Environment: {env}, Total contigs: {total_ctgs}, Contigs with motif number > 0: {len(motif_more_than_0_env)}, Proportion: {proportion_env:.2f}%")
+
+    ## also count the proportion of contigs with motif_num > 0 in each phylum
+    phylum_groups = df_all_data.groupby('phylum')
+    for phylum, group in phylum_groups:
+        total_ctgs = len(group)
+        if total_ctgs < 40:
+            continue
+        motif_more_than_0_phylum = group[group['motif_num'] > 0]
+        proportion_phylum = len(motif_more_than_0_phylum) / total_ctgs * 100
+        print (f"Phylum: {phylum}, Total contigs: {total_ctgs}, Contigs with motif number > 0: {len(motif_more_than_0_phylum)}, Proportion: {proportion_phylum:.2f}%")
+
+    ## check the average motif number in each environment
+    for env, group in env_groups:
+        avg_motif_num = group['motif_num'].mean()
+        print (f"Environment: {env}, Average motif number: {avg_motif_num:.2f}")
+    ## check the average motif number in each phylum, only for phyla with more than 40 contigs
+    for phylum, group in phylum_groups:
+        total_ctgs = len(group)
+        if total_ctgs < 40:
+            continue
+        avg_motif_num = group['motif_num'].mean()
+        print (f"Phylum: {phylum}, Average motif number: {avg_motif_num:.2f}")
+    
+    ## print the contig and lineage of top 5 contigs with highest motif number
+    top5_motif = df_all_data.sort_values(by='motif_num', ascending=False).head(5)
+    print ("Top 5 contigs with highest motif number:")
+    for index, row in top5_motif.iterrows():
+        print (f"Contig: {row['contig']}, Motif number: {row['motif_num']}, Lineage: {row['lineage']}")
+
+
 def color_tree(tree_results):
     df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
+    count_good_ctgs(df_all_data)
     motif_num_anno = gradient_header + "\n"
     env_anno = strip_heaer + "\n"
     phylum_anno = header + "\n"
 
-    ## prepare phylum color map - only color top 6 phyla
-    phylum_counts = df_all_data['phylum'].value_counts()
-    top_6_phyla = phylum_counts.head(9).index.tolist()
-    
-    phylum_color = {}
-    color_palette = sns.color_palette("Set2", n_colors=9)
-    
-    for i, phylum in enumerate(top_6_phyla):
-        rgb = color_palette[i]
-        hex_color = '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
-        phylum_color[phylum] = hex_color
-    
-    # All other phyla get the same gray color
+    ## Use predefined PHYLUM_COLORS
+    phylum_color = PHYLUM_COLORS.copy()
+    ## remove p__ from the phylum names in df_all_data
+    df_all_data['phylum'] = df_all_data['phylum'].apply(lambda x: x[3:] if x.startswith("p__") else x)
+    # All other phyla get the 'Others' color
     all_phyla = df_all_data['phylum'].unique()
     for phylum in all_phyla:
         if phylum not in phylum_color:
-            phylum_color[phylum] = "#808080"  # gray for others
+            phylum_color[phylum] = PHYLUM_COLORS["Others"]
     print (phylum_color)
     ## prepare environment color map
     env_list = df_all_data['environment'].unique().tolist()
@@ -1367,12 +1440,16 @@ def color_tree(tree_results):
         hex_color = '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
         env_color[env] = hex_color
     print (env_color)
+    
+    # Get the list of known phyla from PHYLUM_COLORS (excluding 'Others')
+    known_phyla = [p for p in PHYLUM_COLORS.keys() if p != "Others"]
+    
     for index, row in df_all_data.iterrows():
         ctg_name = row['contig']
-        if row['phylum'] not in top_6_phyla:
+        if row['phylum'] not in known_phyla:
             phylum_anno += f"{ctg_name} range {phylum_color[row['phylum']]} Others\n"
         else:
-            phylum_anno += f"{ctg_name} range {phylum_color[row['phylum']]} {row['phylum'][3:]}\n"
+            phylum_anno += f"{ctg_name} range {phylum_color[row['phylum']]} {row['phylum']}\n"
 
         if row['motif_num'] > 1:
             motif_num_anno += f"{ctg_name} 2\n"
@@ -1430,10 +1507,10 @@ if __name__ == "__main__":
     all_dir = "/home/shuaiw/borg/paper/run2/"
     meta_dir = "/home/shuaiw/borg/paper/gene_anno/meta/"   ## get by gene_anno.smk from assembly_pipe/
     tree_results = "/home/shuaiw/borg/paper/specificity/tree/"
-    # color_tree(tree_results)
+    color_tree(tree_results)
     # plot_motif_len(fig_dir)
-    sample_env_dict = read_metadata(meta_file)
-    main(all_dir, fig_dir, sample_env_dict)
+    # sample_env_dict = read_metadata(meta_file)
+    # main(all_dir, fig_dir, sample_env_dict)
 
     # plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)

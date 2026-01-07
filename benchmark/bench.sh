@@ -1798,7 +1798,7 @@ sbatch --partition standard --job-name=pf7 --wrap "python /home/shuaiw/mGlu/main
 
 
 
-sbatch --job-name=tree \
+sbatch --job-name=meta_tree \
 --partition standard \
 --wrap "bash get_tree_robust_meta.sh"
 

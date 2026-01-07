@@ -197,12 +197,15 @@ DATA
 
 def collect_iso_ctgsall_dir(all_dir, iso_genome_list_file, filtered_df):
     iso_genome_list = []
+    filtered_df = filtered_df[filtered_df["Motif_Num"] > 0] ## consider only those with motifs
+
     prefix_list = filtered_df['Sample'].tolist()
     print (f"Collecting isolation genomes for {len(prefix_list)} samples...")
     for prefix in prefix_list:
         isolation_obj = Isolation_sample(prefix, all_dir)
         isolation_obj.read_depth()
-        genome_list, contig_list = isolation_obj.get_high_dp_ctg_list()
+        isolation_obj.read_MGE()
+        genome_list, contig_list = isolation_obj.get_iso_good_ctgs(min_depth=10, min_len=500000)
         iso_genome_list += genome_list
     with open(iso_genome_list_file, "w") as f:
         for genome in iso_genome_list:
@@ -225,7 +228,7 @@ def single_run(resultdir, genome_dir):
         pure_anno = sample_obj.check_pure2()
 
         sample_obj.get_phylum()
-        motif_num, unique_motifs = sample_obj.get_unique_motifs()
+        motif_num, unique_motifs = sample_obj.get_unique_motifs(min_frac=0.3, min_sites = 100)
         mge_bool = sample_obj.get_MGE_bool()
         average_dp = sample_obj.get_average_depth()
 
@@ -403,5 +406,5 @@ if __name__ == "__main__":
     genome_dir = "/home/shuaiw/borg/paper/isolation//GTDB_tree/genomes"
     genome_list = "/home/shuaiw/borg/paper/specificity/iso_genome.list"  ## for drep
     run_taxa_dict, sample_meta_dict, filtered_df = single_run(resultdir, genome_dir) ## collect isolation genomes with high dp
-    # collect_iso_ctgsall_dir(resultdir, genome_list, filtered_df)
+    collect_iso_ctgsall_dir(resultdir, genome_list, filtered_df)
     # color_phylum(run_taxa_dict, tree_results, sample_meta_dict)

@@ -322,7 +322,7 @@ def find_species_drep(contig, all_dir, prefix, data_type="meta", min_frac=0.3, m
     for contig in species_contigs:
         ctg_obj = My_contig(prefix, all_dir, contig, data_type)
         print (ctg_obj.motif_file)
-        motif_df = ctg_obj.read_motif(min_frac=0.3, min_sites=100)
+        motif_df = ctg_obj.read_motif(min_frac, min_sites)
         if motif_df is None:
             continue
         for index, row in motif_df.iterrows():
@@ -356,7 +356,7 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
         if os.path.exists(ref):
             os.system(f"cp {ref} {close_genome_dir}/")
 
-        motif_set, contig_list = find_species_drep(contig, all_dir, prefix, data_type, min_frac=0.3, min_sites=100)
+        motif_set, contig_list = find_species_drep(contig, all_dir, prefix, data_type, min_frac, min_sites)
 
         all_motif_set.update(motif_set)
         all_contig_list.extend(contig_list)
@@ -406,20 +406,21 @@ def plot_variation_fraction(variation_data, paper_fig_dir):
                 if motif_variation_flag == "variation":
                     cutoff_dict[cutoff][1] += 1
     ## plot the proportion barplot
-    cutoffs = []
-    proportions = []
-    all_clusters = []
+    data = []
     for cutoff in range(2, 11):
         total_clusters, variation_clusters = cutoff_dict[cutoff]
         if total_clusters == 0:
             proportion = 0
         else:
             proportion = variation_clusters / total_clusters
-        cutoffs.append(cutoff)
-        proportions.append(proportion)
-        all_clusters.append([variation_clusters, total_clusters - variation_clusters])
+        data.append([cutoff, proportion, variation_clusters, total_clusters - variation_clusters])
+    
+    ## Save data to CSV
+    df = pd.DataFrame(data, columns=['cutoff', 'proportion', 'variation_clusters', 'no_variation_clusters'])
+    df.to_csv(f"{paper_fig_dir}/motif_variation_data.csv", index=False)
+    
     plt.figure(figsize=(4,4))
-    sns.barplot(x=cutoffs, y=proportions, color="skyblue")
+    sns.barplot(x=df['cutoff'], y=df['proportion'], color="skyblue")
     plt.xlabel("Cluster member cutoff")
     plt.ylabel("Proportion of clusters with motif variation")
     # plt.ylim(0,1)
@@ -427,12 +428,12 @@ def plot_variation_fraction(variation_data, paper_fig_dir):
     plt.savefig(f"{paper_fig_dir}/motif_variation_proportion.pdf")
     ## also plot the stacked barplot of all clusters
     plt.figure(figsize=(4,4))
-    all_clusters_array = np.array(all_clusters)
+    all_clusters_array = np.array([[row[2], row[3]] for row in data])
     bottom = np.zeros(len(all_clusters_array))
     labels = ["Variation", "No Variation"]
     colors = ["skyblue", "lightgray"]
     for i in range(all_clusters_array.shape[1]):
-        plt.bar(cutoffs, all_clusters_array[:, i], bottom=bottom, color=colors[i], label=labels[i])
+        plt.bar(df['cutoff'], all_clusters_array[:, i], bottom=bottom, color=colors[i], label=labels[i])
         bottom += all_clusters_array[:, i]
     plt.xlabel("Cluster member cutoff")
     plt.ylabel("Number of clusters")
@@ -587,7 +588,7 @@ def main_isolation():
     # print (ctg_taxa_dict)
     # ANI = 95
     # for ANI in [95, 97, 98, 99]:
-    for ANI in [99, 95]:
+    for ANI in [99]:
         drep_clu_file = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/data_tables/Cdb.csv"
         dereplicated_genomes_dir = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/dereplicated_genomes/"
         seq_dir = "/home/shuaiw/borg/paper/motif_change/iso_seq_drep/"
@@ -624,7 +625,7 @@ def main_isolation():
                 print ("cluster", cluster, len(members), len(variation_data))
 
                 cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                                fig_dir, tmp_res, "isolation", min_frac=0.3, min_sites=100)
+                                                fig_dir, tmp_res, "isolation", min_frac=0.5, min_sites=500)
                 
                 # cluster_obj = My_cluster(cluster, members) 
                 # cluster_obj.load_df(tmp_res)
@@ -635,19 +636,19 @@ def main_isolation():
                     print ("skip cluster with less than 2 contigs with motif profiles")
                     continue
 
+                ### get taxa of cluster
                 represent_ctg = select_represent(represent_ctg_set, members)
                 represent_ctg_lineage = ctg_taxa_dict[represent_ctg] if represent_ctg in ctg_taxa_dict else "NA"
                 cluster_phylum = classify_taxa(represent_ctg_lineage, "phylum")
                 cluster_species = classify_taxa(represent_ctg_lineage, "species")
 
                 motif_variation_flag = cluster_obj.check_diff_motifs()
-
-                
                 similarity_data_cluster, motif_clade_num = cluster_obj.pairwise_compare(bin_freq=0.6)
+
                 variation_data.append([cluster, len(members), motif_variation_flag])
                 similarity_data += similarity_data_cluster
                 clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
-                print ("###############################", represent_ctg_lineage)
+
                 if motif_variation_flag == "variation" or motif_clade_num > 1:
                     plot_name = f"{fig_dir}/{cluster}.pdf"
                     cluster_obj.plot_profile(cluster, plot_name, cluster_species)

@@ -22,7 +22,7 @@ NANO_2_INF1330004_4G1_pacbio	infant_9	/home/shuaiw/borg/paper/aws/infant/NANO_2_
 NANO_2_INF1340011_2G1_pacbio	infant_10	/home/shuaiw/borg/paper/aws/infant/NANO_2_INF1340011_2G1_pacbio.bam   infant
 NANO_2_INF1340011_3G1_pacbio	infant_11	/home/shuaiw/borg/paper/aws/infant/NANO_2_INF1340011_3G1_pacbio.bam   infant
 NANO_2_INF1340011_4G1_pacbio	infant_12	/home/shuaiw/borg/paper/aws/infant/NANO_2_INF1340011_4G1_pacbio.bam   infant
-NANO_2_MAT1240037_2G1_pacbio	infant_13	/home/shuaiw/borg/paper/aws/infant/NANO_2_MAT1240037_2G1_pacbio.bam   infant
+NANO_2_MAT1240037_2G1_pacbio	infant_13	/home/shuaiw/borg/paper/aws/infant/NANO_2_MAT1240037_2G1_pacbio.bam   mother
 NANO_3_INF1240040_5G1_pacbio	infant_14	/home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_5G1_pacbio.bam   infant
 NANO_3_INF1240040_6G1_pacbio	infant_15	/home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_6G1_pacbio.bam   infant
 NANO_3_INF1310001_8G1_pacbio	infant_16	/home/shuaiw/borg/paper/aws/infant/NANO_3_INF1310001_8G1_pacbio.bam   infant
