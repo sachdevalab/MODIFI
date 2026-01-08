@@ -27,7 +27,7 @@ plot_cross_taxa <- function(fig_dir) {
     scale_fill_brewer(palette = "Set2") +
     labs(
       x = "MGE-Genome Taxonomic Relationship",
-      y = "Modification Motif Jaccard Similarity",
+      y = "Motif Jaccard Similarity",
     ) +
     theme_minimal() +
     theme(

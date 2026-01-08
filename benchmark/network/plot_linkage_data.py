@@ -400,6 +400,9 @@ if __name__ == "__main__":
         whole_G = nx.compose(whole_G, G)
 
     plot_network2(whole_G, paper_fig_dir)
+    ## save whole_G to file by gml
+    nx.write_gml(whole_G, f"{paper_fig_dir}/whole_network.gml")
+
     profile_network(whole_G, ctg_taxa_dict)
 
     gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_type", "MGE_gc", "host_gc", 

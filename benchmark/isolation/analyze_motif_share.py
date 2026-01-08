@@ -55,7 +55,7 @@ def quantify_sharing(sample_obj, mge_dict, depth_dict, length_dict, unique_motif
     contig_cols = df.columns.tolist()[1:]  # Skip the motifString column
     
     contig_annotations = []
-    for contig in contig_cols:
+    for contig in set(contig_cols):
         # Determine contig type
         if contig in mge_dict:
             ctg_type = "MGE"
@@ -116,12 +116,16 @@ def cal_jaccard(df_enhanced, depth_cutoff, length_cutoff, bin_freq = 0.3):
     filtered_df = df_enhanced[
         (df_enhanced['depth'] >= depth_cutoff) &
         (df_enhanced['length'] >= length_cutoff)
-    ]
+    ].copy()
 
     ## binary the motif_frequency based on bin_freq
     filtered_df['motif_frequency'] = filtered_df['motif_frequency'].apply(lambda x: 1 if x >= bin_freq else 0)
-    # print (filtered_df)
-    ## calculate jaccard similarity between each pair of MGE and host
+    
+    # Get all unique contigs that pass the filters (retain all contigs)
+    all_contigs_info = filtered_df[['contig', 'contig_type', 'prefix', 'phylum', 'lineage', 'mge_type', 'depth', 'length']].drop_duplicates()
+    all_mge_contigs = all_contigs_info[all_contigs_info['contig_type'] == 'MGE']['contig'].unique()
+    all_host_contigs = all_contigs_info[all_contigs_info['contig_type'] == 'Host']['contig'].unique()
+    
     ## Only consider motifs with frequency = 1 (present motifs)
     present_motifs = filtered_df[filtered_df['motif_frequency'] == 1]
     
@@ -130,13 +134,19 @@ def cal_jaccard(df_enhanced, depth_cutoff, length_cutoff, bin_freq = 0.3):
     host_motifs = present_motifs[present_motifs['contig_type'] == 'Host'][['motifString', 'contig', 'prefix', 
                                                                         'phylum', 'lineage','mge_type', 'depth', 'length','motif_loci_num']]
 
-    # print(f"[✔] Found {len(mge_motifs)} MGE motifs and {len(host_motifs)} Host motifs with frequency = 1")
-    filtered_mge_num = len(mge_motifs['contig'].unique())
+    # Use all MGE contigs that pass filters, not just those with present motifs
+    filtered_mge_num = len(all_mge_contigs)
+    
     jaccard_scores = []
-    for mge_contig in mge_motifs['contig'].unique():
+    # Iterate over all MGE contigs, not just those with present motifs
+    for mge_contig in all_mge_contigs:
+        # Get motif set for this MGE (empty set if no present motifs)
         mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
-        host_contig = host_motifs['contig'].unique()[0]
-
+        
+        # Get host contig info
+        if len(all_host_contigs) == 0:
+            continue
+        host_contig = all_host_contigs[0]
         host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
         intersection = mge_motifs_set.intersection(host_motifs_set)
         union = mge_motifs_set.union(host_motifs_set)
@@ -160,10 +170,14 @@ def cal_jaccard(df_enhanced, depth_cutoff, length_cutoff, bin_freq = 0.3):
         ## count number of motifs specifically in mge
         mge_specific = mge_motifs_set - host_motifs_set
         mge_specific_num = len(mge_specific)
-        mge_type = mge_motifs[mge_motifs['contig'] == mge_contig]['mge_type'].values[0]
+        
+        # Get contig metadata from all_contigs_info
+        mge_info = all_contigs_info[all_contigs_info['contig'] == mge_contig].iloc[0]
+        host_info = all_contigs_info[all_contigs_info['contig'] == host_contig].iloc[0]
+        
         jaccard_scores.append({
             'mge_contig': mge_contig,
-            'mge_type': mge_type,
+            'mge_type': mge_info['mge_type'],
             'host_contig': host_contig,
             'jaccard_similarity': jaccard,
             'jaccard_similarity_filtered': jaccard_filter,
@@ -172,11 +186,11 @@ def cal_jaccard(df_enhanced, depth_cutoff, length_cutoff, bin_freq = 0.3):
             'all_num_filtered': len(union_filtered),
             'relation': relation,
             'mge_specific_num': mge_specific_num,
-            'host_depth': host_motifs[host_motifs['contig'] == host_contig]['depth'].values[0],
-            'host_length': host_motifs[host_motifs['contig'] == host_contig]['length'].values[0],
-            'mge_depth': mge_motifs[mge_motifs['contig'] == mge_contig]['depth'].values[0],
-            'mge_length': mge_motifs[mge_motifs['contig'] == mge_contig]['length'].values[0],
-            'host_lineage': host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0],
+            'host_depth': host_info['depth'],
+            'host_length': host_info['length'],
+            'mge_depth': mge_info['depth'],
+            'mge_length': mge_info['length'],
+            'host_lineage': host_info['lineage'],
         })
     # print (jaccard_scores)
     return pd.DataFrame(jaccard_scores), present_motifs, filtered_mge_num
