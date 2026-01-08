@@ -14,9 +14,9 @@ from Bio.Seq import Seq
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'motif_change'))
 from sample_object import My_sample, Isolation_sample, get_unique_motifs,My_contig
-from check_motif_change import read_drep_cluster
+from check_motif_change import read_drep_cluster, clean_profile
 
-relation_order = ['same_sample', 'same_strain','same_species', 'same_genus', 'same_family', 'same_order', 
+relation_order = ['same_isolate', 'same_strain','same_species', 'same_genus', 'same_family', 'same_order', 
                     'same_class', 'same_phylum', 'same_domain']
 
 def read_motif_freq(motif_freq_file, prefix, all_motif_freq):
@@ -128,7 +128,7 @@ def cal_jaccard(df_enhanced, depth_cutoff, length_cutoff, bin_freq = 0.3):
     
     ## Only consider motifs with frequency = 1 (present motifs)
     present_motifs = filtered_df[filtered_df['motif_frequency'] == 1]
-    
+    # print ("###", present_motifs)
     mge_motifs = present_motifs[present_motifs['contig_type'] == 'MGE'][['motifString', 'contig', 'prefix', 
                                                                          'phylum', 'lineage','mge_type', 'depth', 'length','motif_loci_num']]
     host_motifs = present_motifs[present_motifs['contig_type'] == 'Host'][['motifString', 'contig', 'prefix', 
@@ -150,6 +150,7 @@ def cal_jaccard(df_enhanced, depth_cutoff, length_cutoff, bin_freq = 0.3):
         host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
         intersection = mge_motifs_set.intersection(host_motifs_set)
         union = mge_motifs_set.union(host_motifs_set)
+        # union = host_motifs_set ## only consider host motifs as MGE motifs might be error-prone
         ## exclude the motif that does not have motifstring in MGE
         union_filtered = set()
         for motif in union:
@@ -166,7 +167,7 @@ def cal_jaccard(df_enhanced, depth_cutoff, length_cutoff, bin_freq = 0.3):
             jaccard_filter = 0.0
         else:
             jaccard_filter = len(intersection) / len(union_filtered)
-        relation = 'same_sample'
+        relation = 'same_isolate'
         ## count number of motifs specifically in mge
         mge_specific = mge_motifs_set - host_motifs_set
         mge_specific_num = len(mge_specific)
@@ -193,9 +194,76 @@ def cal_jaccard(df_enhanced, depth_cutoff, length_cutoff, bin_freq = 0.3):
             'host_lineage': host_info['lineage'],
         })
     # print (jaccard_scores)
-    return pd.DataFrame(jaccard_scores), present_motifs, filtered_mge_num
+    ## count how many for each type of relation
+    jaccard_scores = pd.DataFrame(jaccard_scores)
 
-def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100):
+    return jaccard_scores, present_motifs, filtered_mge_num
+
+
+def standardize_jaccard(mge_contig, host_contig, host_motifs, mge_motifs, bin_freq = 0.3):
+    host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
+    mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
+    intersection = mge_motifs_set.intersection(host_motifs_set)
+    print ("host motifs", host_motifs_set, "mge motifs", mge_motifs_set)
+    union_motifs = mge_motifs_set.union(host_motifs_set)
+    all_dir = "/home/shuaiw/borg/paper/isolation/batch2_results/"
+    prefix_list = []
+    motif_list = []
+
+    mge_prefix = mge_motifs[mge_motifs['contig'] == mge_contig]['prefix'].iloc[0]
+    prefix_list.append([mge_prefix, mge_contig])
+    ctg_obj = My_contig(mge_prefix, all_dir , mge_contig, data_type="isolation")
+    motif_df = ctg_obj.read_motif()
+    ## for motif in union, if the string is in motif_df, get the centerPos of it
+    ## if it is not in motif_list, add the string and centerPos to it
+    for motif in union_motifs:
+        if motif in motif_df['motifString'].values:
+            centpos = motif_df[motif_df['motifString'] == motif]['centerPos'].iloc[0]
+            if motif not in [m[0] for m in motif_list]:
+                motif_list.append([motif, centpos])
+    host_prefix = host_motifs[host_motifs['contig'] == host_contig]['prefix'].iloc[0]
+    prefix_list.append([host_prefix, host_contig])
+    ctg_obj = My_contig(host_prefix, all_dir , host_contig, data_type="isolation")
+    motif_df = ctg_obj.read_motif()
+    ## for motif in union, if the string is in motif_df, get the centerPos of it
+    ## if it is not in motif_list, add the string and centerPos to it
+    for motif in union_motifs:
+        if motif in motif_df['motifString'].values:
+            centpos = motif_df[motif_df['motifString'] == motif]['centerPos'].iloc[0]
+            if motif not in [m[0] for m in motif_list]:
+                motif_list.append([motif, centpos])
+
+    re_profile_df = clean_profile(prefix_list, motif_list, all_dir, data_type="isolation")
+    ## transform to binary based on bin_freq
+    re_profile_df['binary_fraction'] = (re_profile_df['fraction'] >= bin_freq).astype(int)
+    mge_motif_filter_set = set(re_profile_df[(re_profile_df['contig'] == mge_contig) & (re_profile_df['binary_fraction'] == 1)]['motifString'].values)
+    host_motif_filter_set = set(re_profile_df[(re_profile_df['contig'] == host_contig) & (re_profile_df['binary_fraction'] == 1)]['motifString'].values)
+    print ("re_profile", "host", host_motif_filter_set, "mge", mge_motif_filter_set)
+    ## get jaccard similarity
+    intersection = mge_motif_filter_set.intersection(host_motif_filter_set)
+    union = mge_motif_filter_set.union(host_motif_filter_set)
+    if len(union) == 0:
+        jaccard_similarity = 0.0
+    else:
+        jaccard_similarity = len(intersection) / len(union)
+    
+    mge_has_string_motif_set = set(re_profile_df[(re_profile_df['contig'] == mge_contig) & (re_profile_df['motif_loci_num'] > 0)]['motifString'].values)
+    ## remove motifs in mge_motif_filter_set and host_motif_filter_set that are not in mge_has_string_motif_set
+    mge_motif_filter_set = mge_motif_filter_set.intersection(mge_has_string_motif_set)
+    host_motif_filter_set = host_motif_filter_set.intersection(mge_has_string_motif_set)
+    ## get jaccard similarity after filtering
+    intersection = mge_motif_filter_set.intersection(host_motif_filter_set)
+    union = mge_motif_filter_set.union(host_motif_filter_set)
+    if len(union) == 0:
+        jaccard_similarity_filtered = 0.0
+    else:
+        jaccard_similarity_filtered = len(intersection) / len(union)
+    return jaccard_similarity, jaccard_similarity_filtered
+
+
+
+
+def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100, bin_freq = 0.3):
     mge_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'MGE'][['motifString', 'contig', 
                                                                                  'prefix', 'phylum', 'lineage','mge_type', 'depth', 'length', 'motif_loci_num']]
     host_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'Host'][['motifString', 'contig', 
@@ -218,7 +286,8 @@ def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100
             host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
             intersection = mge_motifs_set.intersection(host_motifs_set)
             union = mge_motifs_set.union(host_motifs_set)
-
+            # union = host_motifs_set ## only consider host motifs as MGE motifs might be error-prone
+            # print ("#####", union)
             ## exclude the motif that does not have motifstring in MGE
             union_filtered = set()
             for motif in union:
@@ -236,12 +305,14 @@ def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100
             else:
                 jaccard_filter = len(intersection) / len(union_filtered)
 
+            jaccard_similarity, jaccard_similarity_filtered = standardize_jaccard(mge_contig, host_contig, host_motifs, mge_motifs, bin_freq)
+            
             # Get the prefix for the current MGE and host contigs
             mge_prefix = mge_motifs[mge_motifs['contig'] == mge_contig]['prefix'].iloc[0]
             host_prefix = host_motifs[host_motifs['contig'] == host_contig]['prefix'].iloc[0]
             
             if mge_prefix == host_prefix:
-                relation = 'same_sample'
+                relation = 'same_isolate'
                 # continue
             else:
                 relation = esti_relation(
@@ -254,6 +325,8 @@ def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100
                         test += 1
                         # print (f"[!] Found same strain pair: MGE {mge_contig} ({mge_prefix}) and Host {host_contig} ({host_prefix})")
                         relation = 'same_strain'
+            print (relation, f"[✔] Jaccard similarity between MGE {mge_contig} and Host {host_contig}: {jaccard_similarity}, filtered: {jaccard_similarity_filtered}")
+            print (jaccard, jaccard_filter)
             mge_type = mge_motifs[mge_motifs['contig'] == mge_contig]['mge_type'].values[0]
             jaccard_scores.append({
                 'mge_contig': mge_contig,
@@ -261,6 +334,8 @@ def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100
                 'host_contig': host_contig,
                 'jaccard_similarity': jaccard,
                 'jaccard_similarity_filtered': jaccard_filter,
+                'jaccard_similarity2': jaccard_similarity,
+                'jaccard_similarity_filtered2': jaccard_similarity_filtered,
                 'share_num': len(intersection),
                 'all_num': len(union),
                 'all_num_filtered': len(union_filtered),
@@ -273,8 +348,15 @@ def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100
             })
         # if test > 20:
         #     break
+    jaccard_scores = pd.DataFrame(jaccard_scores)
+    if len(jaccard_scores) > 0:
+        
+        relation_counts = jaccard_scores['relation'].value_counts()
+        print(f"[✔] Relation counts:\n{relation_counts}")
+    else:
+        print("[!] No jaccard scores calculated (no MGE or host contigs found)")
 
-    return pd.DataFrame(jaccard_scores)
+    return jaccard_scores
 
 def get_strain_prefix(drep_clu_dict):
     clu_prefix_dict = {}
@@ -666,8 +748,8 @@ def count_jaccard(same_sample_df, jaccard_all_sample):
     jaccard_1 = same_sample_df[same_sample_df['jaccard_similarity'] == 1]
     print(f"Proportion of MGE-host pairs with Jaccard similarity = 1: {len(jaccard_1) / len(same_sample_df):.4f}")
     ## compare cross-sample and same-sample jaccard similarity using boxplot, jaccard_all_sample have both same_sample and cross_sample
-    combined_df = pd.concat([same_sample_df.assign(sample_type='same_sample'),
-                             jaccard_all_sample[jaccard_all_sample['relation'] != 'same_sample'].assign(sample_type='cross_sample')])
+    combined_df = pd.concat([same_sample_df.assign(sample_type='same_isolate'),
+                             jaccard_all_sample[jaccard_all_sample['relation'] != 'same_isolate'].assign(sample_type='cross_sample')])
     plot_compare(combined_df, fig_dir)
     ## print the rows with mge_specific_num > 0
     mge_specific = same_sample_df[same_sample_df['mge_specific_num'] > 0]
@@ -688,7 +770,7 @@ def plot_compare(combined_df, fig_dir):
     plt.grid(axis='y', alpha=0.3)
     ## add statistical annotation
     from scipy.stats import mannwhitneyu
-    same_sample_values = combined_df[combined_df['sample_type'] == 'same_sample']['jaccard_similarity']
+    same_sample_values = combined_df[combined_df['sample_type'] == 'same_isolate']['jaccard_similarity']
     cross_sample_values = combined_df[combined_df['sample_type'] == 'cross_sample']['jaccard_similarity']
     stat, p_value = mannwhitneyu(same_sample_values, cross_sample_values, alternative='two-sided')
     ## add p-value to the plot
@@ -933,18 +1015,18 @@ def main(all_dir, fig_dir, drep_clu_file):
         
         final_num += 1
 
-        # if i > 100:
-        #     break  # For testing, limit to first 30 samples
+        if i > 100:
+            break  # For testing, limit to first 100 samples
 
     count_mge(all_mge_dict, all_contig_info)
     
-    same_sample_df = jaccard_all[jaccard_all['relation'] == 'same_sample']
+    same_sample_df = jaccard_all[jaccard_all['relation'] == 'same_isolate']
     print (same_sample_df)
-    print (len(same_sample_df) , "total same-sample MGE-host pairs out of ", len(jaccard_all))
+    print (len(same_sample_df) , "total same-isolate MGE-host pairs out of ", len(jaccard_all))
     
-    # jaccard_all_sample = cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=1000)
+    jaccard_all_sample = cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=10, bin_freq=0.3)
     # jaccard_all_sample.to_csv(f"{fig_dir}/jaccard_all_samples.csv", index=False)
-    same_sample_df.to_csv(f"{fig_dir}/jaccard_same_sample.csv", index=False)
+    # same_sample_df.to_csv(f"{fig_dir}/jaccard_same_sample.csv", index=False)
 
 
     # jaccard_all_sample = pd.read_csv(f"{fig_dir}/jaccard_all_samples.csv")

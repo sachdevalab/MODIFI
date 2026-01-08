@@ -227,6 +227,23 @@ def profile_heatmap(prefix_list, motif_list, all_dir, tmp_res_file, cluster_obj,
     cluster_obj.get_profile(df, tmp_res_file)
 
     return cluster_obj
+
+def clean_profile(prefix_list, motif_list, all_dir, data_type="meta", score_cutoff = 30):
+    data = []
+    for prefix, contig in prefix_list:
+        ctg_obj = My_contig(prefix, all_dir, contig, data_type)
+        if not os.path.exists(ctg_obj.gff) or not os.path.exists(ctg_obj.ipd_ratio_file) or not os.path.exists(ctg_obj.ctg_ref):
+            continue
+        REF = read_ref(ctg_obj.ctg_ref)
+        modified_loci = get_modified_ratio(ctg_obj.gff, score_cutoff)
+
+
+        for motif_new, exact_pos in motif_list:
+            motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
+            # print (motif_profile)
+            data.append([contig,motif_new + "_" + str(exact_pos), motif_profile[-2], motif_profile[-4]])
+    df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction", "motif_loci_num"])
+    return df
     
 def given_species(all_dir, closed_genome, seq_dir):
     
