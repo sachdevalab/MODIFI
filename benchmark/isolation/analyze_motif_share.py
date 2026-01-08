@@ -49,34 +49,21 @@ def read_motif_freq_ctg(profile, all_motif_freq, mge_dict):
             all_motif_freq.append([row[cols[j]], cols[j], row["motifString"], ctg_type])
     return all_motif_freq
 
-def quantify_sharing(sample_obj, mge_dict, depth_dict, length_dict, unique_motifs):
-    """
-    Add contig annotation columns (type, depth, length) to motif profile data.
-    
-    Args:
-        profile (str): Path to motif profile CSV file
-        mge_dict (dict): Dictionary mapping contig names to MGE types
-        depth_dict (dict): Dictionary mapping contig names to depth values
-        length_dict (dict): Dictionary mapping contig names to length values
-    
-    Returns:
-        pd.DataFrame: Enhanced dataframe with additional annotation columns
-    """
-    print (sample_obj.profile)
+def quantify_sharing(sample_obj, mge_dict, depth_dict, length_dict, unique_motifs, represent_contig_list):
+
     df = pd.read_csv(sample_obj.profile)
-    
-    # Get contig names (all columns except the first one which is motifString)
     contig_cols = df.columns.tolist()[1:]  # Skip the motifString column
     
-    # Create annotation dictionaries for each contig
     contig_annotations = []
-    
     for contig in contig_cols:
         # Determine contig type
         if contig in mge_dict:
             ctg_type = "MGE"
             mge_type = mge_dict[contig]
         else:
+            if contig not in represent_contig_list:
+                ## only keep the host contigs in represent_contig_list
+                continue
             ctg_type = "Host"
             mge_type = "N/A"
         
@@ -114,21 +101,23 @@ def quantify_sharing(sample_obj, mge_dict, depth_dict, length_dict, unique_motif
     # Merge with annotations
     df_enhanced = df_melted.merge(annotations_df, on='contig', how='left')
     
-    # Reorder columns for better readability
-    # df_enhanced = df_enhanced[['motifString', 'contig', 'contig_type', 'mge_type', 
-    #                            'depth', 'length', 'motif_frequency']]
-    ## only consider the motif in unique_motifs
     df_enhanced = df_enhanced[df_enhanced['motifString'].isin(unique_motifs)]
-
-    return cal_jaccard(df_enhanced, sample_obj.depth_cutoff, sample_obj.length_cutoff)
+    # filter annotations_df by sample_obj.depth_cutoff and sample_obj.length_cutoff
+    annotations_df = annotations_df[
+        (annotations_df['depth'] >= sample_obj.depth_cutoff) &
+        (annotations_df['length'] >= sample_obj.length_cutoff)
+    ]
+    jaccard_scores , present_motifs, filtered_mge_num = cal_jaccard(df_enhanced, sample_obj.depth_cutoff, sample_obj.length_cutoff)
+    return jaccard_scores, present_motifs, annotations_df, filtered_mge_num
     # return df_enhanced
 
-def cal_jaccard(df_enhanced, depth_cutoff = 10, length_cutoff = 5000, bin_freq = 0.3):
+def cal_jaccard(df_enhanced, depth_cutoff, length_cutoff, bin_freq = 0.3):
     ## filter the dataframe based on depth and length cutoff
     filtered_df = df_enhanced[
         (df_enhanced['depth'] >= depth_cutoff) &
         (df_enhanced['length'] >= length_cutoff)
     ]
+
     ## binary the motif_frequency based on bin_freq
     filtered_df['motif_frequency'] = filtered_df['motif_frequency'].apply(lambda x: 1 if x >= bin_freq else 0)
     # print (filtered_df)
@@ -136,58 +125,61 @@ def cal_jaccard(df_enhanced, depth_cutoff = 10, length_cutoff = 5000, bin_freq =
     ## Only consider motifs with frequency = 1 (present motifs)
     present_motifs = filtered_df[filtered_df['motif_frequency'] == 1]
     
-    mge_motifs = present_motifs[present_motifs['contig_type'] == 'MGE'][['motifString', 'contig', 'prefix', 'phylum', 'lineage','mge_type', 'depth', 'length','motif_loci_num']]
-    host_motifs = present_motifs[present_motifs['contig_type'] == 'Host'][['motifString', 'contig', 'prefix', 'phylum', 'lineage','mge_type', 'depth', 'length','motif_loci_num']]
+    mge_motifs = present_motifs[present_motifs['contig_type'] == 'MGE'][['motifString', 'contig', 'prefix', 
+                                                                         'phylum', 'lineage','mge_type', 'depth', 'length','motif_loci_num']]
+    host_motifs = present_motifs[present_motifs['contig_type'] == 'Host'][['motifString', 'contig', 'prefix', 
+                                                                        'phylum', 'lineage','mge_type', 'depth', 'length','motif_loci_num']]
 
     # print(f"[✔] Found {len(mge_motifs)} MGE motifs and {len(host_motifs)} Host motifs with frequency = 1")
-    
+    filtered_mge_num = len(mge_motifs['contig'].unique())
     jaccard_scores = []
     for mge_contig in mge_motifs['contig'].unique():
         mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
-        for host_contig in host_motifs['contig'].unique():
-            host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
-            intersection = mge_motifs_set.intersection(host_motifs_set)
-            union = mge_motifs_set.union(host_motifs_set)
-            ## exclude the motif that does not have motifstring in MGE
-            union_filtered = set()
-            for motif in union:
-                mge_motif_loci = mge_motifs[(mge_motifs['contig'] == mge_contig) & (mge_motifs['motifString'] == motif)]['motif_loci_num']
-                if len(mge_motif_loci) > 0 and mge_motif_loci.values[0] > 0:
-                    union_filtered.add(motif)
+        host_contig = host_motifs['contig'].unique()[0]
 
-            if len(union) == 0:
-                jaccard = 0.0
-            else:
-                jaccard = len(intersection) / len(union)
+        host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
+        intersection = mge_motifs_set.intersection(host_motifs_set)
+        union = mge_motifs_set.union(host_motifs_set)
+        ## exclude the motif that does not have motifstring in MGE
+        union_filtered = set()
+        for motif in union:
+            mge_motif_loci = mge_motifs[(mge_motifs['contig'] == mge_contig) & (mge_motifs['motifString'] == motif)]['motif_loci_num']
+            if len(mge_motif_loci) > 0 and mge_motif_loci.values[0] > 0:
+                union_filtered.add(motif)
 
-            if len(union_filtered) == 0:
-                jaccard_filter = 0.0
-            else:
-                jaccard_filter = len(intersection) / len(union_filtered)
-            relation = 'same_sample'
-            ## count number of motifs specifically in mge
-            mge_specific = mge_motifs_set - host_motifs_set
-            mge_specific_num = len(mge_specific)
-            mge_type = mge_motifs[mge_motifs['contig'] == mge_contig]['mge_type'].values[0]
-            jaccard_scores.append({
-                'mge_contig': mge_contig,
-                'mge_type': mge_type,
-                'host_contig': host_contig,
-                'jaccard_similarity': jaccard,
-                'jaccard_similarity_filtered': jaccard_filter,
-                'share_num': len(intersection),
-                'all_num': len(union),
-                'all_num_filtered': len(union_filtered),
-                'relation': relation,
-                'mge_specific_num': mge_specific_num,
-                'host_depth': host_motifs[host_motifs['contig'] == host_contig]['depth'].values[0],
-                'host_length': host_motifs[host_motifs['contig'] == host_contig]['length'].values[0],
-                'mge_depth': mge_motifs[mge_motifs['contig'] == mge_contig]['depth'].values[0],
-                'mge_length': mge_motifs[mge_motifs['contig'] == mge_contig]['length'].values[0],
-                'host_lineage': host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0],
-            })
+        if len(union) == 0:
+            jaccard = 0.0
+        else:
+            jaccard = len(intersection) / len(union)
+
+        if len(union_filtered) == 0:
+            jaccard_filter = 0.0
+        else:
+            jaccard_filter = len(intersection) / len(union_filtered)
+        relation = 'same_sample'
+        ## count number of motifs specifically in mge
+        mge_specific = mge_motifs_set - host_motifs_set
+        mge_specific_num = len(mge_specific)
+        mge_type = mge_motifs[mge_motifs['contig'] == mge_contig]['mge_type'].values[0]
+        jaccard_scores.append({
+            'mge_contig': mge_contig,
+            'mge_type': mge_type,
+            'host_contig': host_contig,
+            'jaccard_similarity': jaccard,
+            'jaccard_similarity_filtered': jaccard_filter,
+            'share_num': len(intersection),
+            'all_num': len(union),
+            'all_num_filtered': len(union_filtered),
+            'relation': relation,
+            'mge_specific_num': mge_specific_num,
+            'host_depth': host_motifs[host_motifs['contig'] == host_contig]['depth'].values[0],
+            'host_length': host_motifs[host_motifs['contig'] == host_contig]['length'].values[0],
+            'mge_depth': mge_motifs[mge_motifs['contig'] == mge_contig]['depth'].values[0],
+            'mge_length': mge_motifs[mge_motifs['contig'] == mge_contig]['length'].values[0],
+            'host_lineage': host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0],
+        })
     # print (jaccard_scores)
-    return pd.DataFrame(jaccard_scores), present_motifs
+    return pd.DataFrame(jaccard_scores), present_motifs, filtered_mge_num
 
 def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100):
     mge_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'MGE'][['motifString', 'contig', 
@@ -844,16 +836,19 @@ def main(all_dir, fig_dir, drep_clu_file):
     samples: bacteria, pure, high average depth >= 10x, has MGEs, has motifs
     """
     i = 0
-    pure_num, mge_num, has_motif_num = 0, 0, 0
+    pure_num, mge_num, has_motif_num, final_num = 0, 0, 0, 0
     jaccard_all = pd.DataFrame()
     present_motifs_all = pd.DataFrame()
+    all_contig_info = pd.DataFrame()
     archea_list = ["SRR27457941", "SRR31014709"]
     drep_clu_dict = read_drep_cluster(drep_clu_file, {})
     clu_prefix_dict = get_strain_prefix(drep_clu_dict)
     profile_data = []
     # print (clu_prefix_dict)
     # print (est_strain(clu_prefix_dict, 'SRR32364911', 'SRR32364914'))
-    
+    all_mge_dict = {}
+    all_filtered_mge_num = 0
+
     for prefix in os.listdir(all_dir):
         if prefix in archea_list:
             continue
@@ -869,40 +864,48 @@ def main(all_dir, fig_dir, drep_clu_file):
         average_dp = sample_obj.get_average_depth()
         unique_motif_num, unique_motifs = sample_obj.get_unique_motifs()
         sample_obj.explore_specific_motifs()
+        genome_list, represent_contig_list = sample_obj.get_iso_good_ctgs(min_depth=10, min_len=500000)
+
+        if average_dp < 10:
+            print(f"Skipping {prefix} as low average depth: {average_dp}")
+            continue
 
         if pure_flag == "pure":
             pure_num += 1
         else:
             continue
-        if average_dp < 10:
-            print(f"Skipping {prefix} as low average depth: {average_dp}")
-            continue
+
         # print (f"{prefix} is {pure_flag}")
         if len(mge_dict) < 1:
             continue
         else:
             mge_num += 1
 
-        if unique_motifs == 0:
+        if len(unique_motifs) == 0:
             print(f"Skipping {prefix} as no motifs.")
             continue
         else:
             has_motif_num += 1
 
-        if not os.path.exists(sample_obj.profile):
+        if len(represent_contig_list) < 1:
+            print(f"Skipping {prefix} as no good contigs.")
             continue
-        line_count = sum(1 for line in open(sample_obj.profile)) - 1  # Subtract 1 for header
-        if line_count < 2:
-            print(f"Skipping {prefix} as insufficient motif data.")
-            continue
-        
-        
 
         # Enhanced motif sharing analysis with additional annotations
-        jaccard_scores, present_motifs = quantify_sharing(sample_obj, mge_dict, depth_dict, length_dict, unique_motifs)
+        jaccard_scores, present_motifs, annotations_df, filtered_mge_num = quantify_sharing(sample_obj, mge_dict, depth_dict, 
+                                                          length_dict, unique_motifs, 
+                                                          represent_contig_list)
+        # print (annotations_df)
+        ## check mge number in filtered_df, skip if zero
+        filter_mge_num = len(annotations_df[annotations_df['contig_type'] == "MGE"])
+        if filter_mge_num == 0:
+            print(f"Skipping {prefix} as no MGEs in filtered dataframe.")
+            continue
+        all_filtered_mge_num += filtered_mge_num
         jaccard_scores['prefix'] = prefix
         jaccard_scores['phylum'] = sample_obj.phylum
-        
+        all_contig_info = pd.concat([all_contig_info, annotations_df], axis=0, ignore_index=True)
+        all_mge_dict = {**all_mge_dict, **mge_dict}
         # Use robust concatenation that handles empty DataFrames
         if jaccard_all.empty:
             jaccard_all = jaccard_scores.copy()
@@ -913,31 +916,36 @@ def main(all_dir, fig_dir, drep_clu_file):
             present_motifs_all = present_motifs.copy()
         else:
             present_motifs_all = pd.concat([present_motifs_all, present_motifs], axis=0, ignore_index=True)
+        
+        final_num += 1
 
         # if i > 100:
         #     break  # For testing, limit to first 30 samples
 
+    count_mge(all_mge_dict, all_contig_info)
     
     same_sample_df = jaccard_all[jaccard_all['relation'] == 'same_sample']
     print (same_sample_df)
     print (len(same_sample_df) , "total same-sample MGE-host pairs out of ", len(jaccard_all))
-
     
-    jaccard_all_sample = cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=1000)
-    jaccard_all_sample.to_csv(f"{fig_dir}/jaccard_all_samples.csv", index=False)
+    # jaccard_all_sample = cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=1000)
+    # jaccard_all_sample.to_csv(f"{fig_dir}/jaccard_all_samples.csv", index=False)
     same_sample_df.to_csv(f"{fig_dir}/jaccard_same_sample.csv", index=False)
 
 
-    jaccard_all_sample = pd.read_csv(f"{fig_dir}/jaccard_all_samples.csv")
-    same_sample_df = pd.read_csv(f"{fig_dir}/jaccard_same_sample.csv")
-    # analyze_link(all_link_df)
-    plot_jaccard(same_sample_df, fig_dir)
-    gradient_plot(same_sample_df, fig_dir)
-    plot_jaccard_distribution(same_sample_df, fig_dir)
+    # jaccard_all_sample = pd.read_csv(f"{fig_dir}/jaccard_all_samples.csv")
+    # same_sample_df = pd.read_csv(f"{fig_dir}/jaccard_same_sample.csv")
+    # # analyze_link(all_link_df)
+    # plot_jaccard(same_sample_df, fig_dir)
+    # gradient_plot(same_sample_df, fig_dir)
+    # plot_jaccard_distribution(same_sample_df, fig_dir)
 
-    cross_taxa_plot(jaccard_all_sample, fig_dir)
-    count_jaccard(same_sample_df, jaccard_all_sample)
-    print (f"Total {i} samples, {pure_num} pure samples, {mge_num} samples with MGEs, {has_motif_num} samples with motifs.")
+    # cross_taxa_plot(jaccard_all_sample, fig_dir)
+    # count_jaccard(same_sample_df, jaccard_all_sample)
+    print (f"Total {i} samples, {pure_num} pure samples, {mge_num} samples with MGEs, {has_motif_num} samples with motifs, {final_num} samples analyzed.")
+    print (f"Total filtered MGEs: {all_filtered_mge_num}")
+    print ("Analysis complete.")
+
 
 def get_new_host(plasmid_list):
     plasmid_host_dict = {}
@@ -1111,6 +1119,35 @@ def analyze_jaccard(fig_dir):
     #     for col in row.index:
     #         print(f"{col}: {row[col]}")
 
+
+def count_mge(all_mge_dict, all_contig_info):
+    ## count the mge types in all_mge_dict
+    mge_type_counts = {}
+    for mge_contig, mge_info in all_mge_dict.items():
+        mge_type = mge_info[0]
+        if mge_type not in mge_type_counts:
+            mge_type_counts[mge_type] = 0
+        mge_type_counts[mge_type] += 1
+    print("MGE type counts across all samples:", len(all_mge_dict))
+    for mge_type, count in mge_type_counts.items():
+        print(f"{mge_type}: {count}")
+        print(f"Proportion of {mge_type}: {count/len(all_mge_dict):.4f}")
+
+    ## count number of host contigs
+    host_contigs = all_contig_info[all_contig_info['contig_type'] == "Host"]
+    unique_host_contigs = host_contigs['contig'].nunique()
+    print(f"\nTotal unique host contigs: {unique_host_contigs}")
+    ## count the mge types in all_contig_info
+    all_contig_info_mge = all_contig_info[all_contig_info['contig_type'] == "MGE"]
+    print(f"\nTotal MGE contigs in all_contig_info: {len(all_contig_info_mge)}")
+    print(f"Total unique MGE contigs in all_contig_info: {all_contig_info_mge['contig'].nunique()}")
+    contig_mge_type_counts = all_contig_info_mge['mge_type'].value_counts()
+    print("\nMGE type counts in filtered contig info:")
+    for mge_type, count in contig_mge_type_counts.items():
+        print(f"{mge_type}: {count}")
+        print(f"Proportion of {mge_type}: {count/len(all_contig_info_mge):.4f}")
+    
+
 if __name__ == "__main__":
     # meta_file = "/home/shuaiw/Methy/assembly_pipe/prefix_table.tab"
     # sample_env_dict = read_metadata(meta_file)
@@ -1122,8 +1159,8 @@ if __name__ == "__main__":
     ANI=99
     drep_clu_file = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/data_tables/Cdb.csv"
 
-    # main(all_dir, fig_dir, drep_clu_file)
+    main(all_dir, fig_dir, drep_clu_file)
     # main_96plex(fig_dir)
     
     # main_profile(all_dir, profile_fig_dir)
-    analyze_jaccard(fig_dir)
+    # analyze_jaccard(fig_dir)

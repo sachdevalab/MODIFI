@@ -19,8 +19,8 @@ plot_variation_fraction <- function(data_file, paper_fig_dir) {
     geom_bar(stat = "identity", fill = "skyblue", width = 0.7) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
     labs(title = "",
-         x = "Cluster member cutoff",
-         y = "Proportion of clusters\nwith motif variation") +
+         x = "Strain member cutoff",
+         y = "Proportion of strains\nwith motif variation") +
     theme_minimal() +
     theme(axis.text.x = element_text(size = 10),
           axis.text.y = element_text(size = 10),
@@ -44,8 +44,8 @@ plot_variation_fraction <- function(data_file, paper_fig_dir) {
     scale_fill_manual(values = c("Variation" = "skyblue", "No Variation" = "lightgray")) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
     labs(title = "",
-         x = "Cluster member cutoff",
-         y = "No. of clusters",
+         x = "Strain member cutoff",
+         y = "No. of strains",
          fill = "") +
     theme_minimal() +
     theme(axis.text.x = element_text(size = 10),
@@ -70,8 +70,8 @@ plot_variation_fraction <- function(data_file, paper_fig_dir) {
 }
 
 # Main execution
-# paper_fig_dir <- "../../tmp/figures/strain_diff/iso_drep_99"
-paper_fig_dir <- "../../tmp/figures/strain_diff/drep_99"
+paper_fig_dir <- "../../tmp/figures/strain_diff/iso_drep_99"
+# paper_fig_dir <- "../../tmp/figures/strain_diff/drep_99"
 data_file <- paste0(paper_fig_dir, "/motif_variation_data.csv")
 
 # Check if data file exists
