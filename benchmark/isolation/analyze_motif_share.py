@@ -11,6 +11,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 import re
 import sys
 from Bio.Seq import Seq
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from functools import partial
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'motif_change'))
 from sample_object import My_sample, Isolation_sample, get_unique_motifs,My_contig
@@ -200,70 +202,170 @@ def cal_jaccard(df_enhanced, depth_cutoff, length_cutoff, bin_freq = 0.3):
     return jaccard_scores, present_motifs, filtered_mge_num
 
 
-def standardize_jaccard(mge_contig, host_contig, host_motifs, mge_motifs, bin_freq = 0.3):
+def standardize_jaccard(mge_contig, host_contig, host_motifs, mge_motifs, bin_freq=0.3, 
+                       motif_cache=None, profile_cache=None):
+    """
+    Optimized version with caching support.
+    Pass motif_cache and profile_cache dicts to reuse across multiple calls.
+    """
+    if motif_cache is None:
+        motif_cache = {}
+    if profile_cache is None:
+        profile_cache = {}
+    
     host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
     mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
-    intersection = mge_motifs_set.intersection(host_motifs_set)
-    print ("host motifs", host_motifs_set, "mge motifs", mge_motifs_set)
     union_motifs = mge_motifs_set.union(host_motifs_set)
+    
     all_dir = "/home/shuaiw/borg/paper/isolation/batch2_results/"
-    prefix_list = []
-    motif_list = []
-
-    mge_prefix = mge_motifs[mge_motifs['contig'] == mge_contig]['prefix'].iloc[0]
-    prefix_list.append([mge_prefix, mge_contig])
-    ctg_obj = My_contig(mge_prefix, all_dir , mge_contig, data_type="isolation")
-    motif_df = ctg_obj.read_motif()
-    ## for motif in union, if the string is in motif_df, get the centerPos of it
-    ## if it is not in motif_list, add the string and centerPos to it
-    for motif in union_motifs:
-        if motif in motif_df['motifString'].values:
-            centpos = motif_df[motif_df['motifString'] == motif]['centerPos'].iloc[0]
-            if motif not in [m[0] for m in motif_list]:
-                motif_list.append([motif, centpos])
-    host_prefix = host_motifs[host_motifs['contig'] == host_contig]['prefix'].iloc[0]
-    prefix_list.append([host_prefix, host_contig])
-    ctg_obj = My_contig(host_prefix, all_dir , host_contig, data_type="isolation")
-    motif_df = ctg_obj.read_motif()
-    ## for motif in union, if the string is in motif_df, get the centerPos of it
-    ## if it is not in motif_list, add the string and centerPos to it
-    for motif in union_motifs:
-        if motif in motif_df['motifString'].values:
-            centpos = motif_df[motif_df['motifString'] == motif]['centerPos'].iloc[0]
-            if motif not in [m[0] for m in motif_list]:
-                motif_list.append([motif, centpos])
-
-    re_profile_df = clean_profile(prefix_list, motif_list, all_dir, data_type="isolation")
-    ## transform to binary based on bin_freq
+    
+    # Check cache for this contig pair
+    pair_key = f"{mge_contig}_{host_contig}"
+    if pair_key in profile_cache:
+        re_profile_df = profile_cache[pair_key]
+    else:
+        # Build motif list efficiently using set for O(1) lookups
+        motif_set_built = set()
+        motif_list = []
+        
+        # Get prefixes once
+        mge_prefix = mge_motifs[mge_motifs['contig'] == mge_contig]['prefix'].iloc[0]
+        host_prefix = host_motifs[host_motifs['contig'] == host_contig]['prefix'].iloc[0]
+        
+        # Cache motif dataframes per contig
+        if mge_contig not in motif_cache:
+            ctg_obj = My_contig(mge_prefix, all_dir, mge_contig, data_type="isolation")
+            motif_cache[mge_contig] = ctg_obj.read_motif()
+        
+        if host_contig not in motif_cache:
+            ctg_obj = My_contig(host_prefix, all_dir, host_contig, data_type="isolation")
+            motif_cache[host_contig] = ctg_obj.read_motif()
+        
+        # Build motif list from cached data
+        for motif in union_motifs:
+            if motif not in motif_set_built:
+                # Check MGE motif data
+                if motif in motif_cache[mge_contig]['motifString'].values:
+                    centpos = motif_cache[mge_contig][motif_cache[mge_contig]['motifString'] == motif]['centerPos'].iloc[0]
+                    motif_list.append([motif, centpos])
+                    motif_set_built.add(motif)
+                # Check host motif data
+                elif motif in motif_cache[host_contig]['motifString'].values:
+                    centpos = motif_cache[host_contig][motif_cache[host_contig]['motifString'] == motif]['centerPos'].iloc[0]
+                    motif_list.append([motif, centpos])
+                    motif_set_built.add(motif)
+        
+        prefix_list = [[mge_prefix, mge_contig], [host_prefix, host_contig]]
+        
+        # Call clean_profile and cache result
+        re_profile_df = clean_profile(prefix_list, motif_list, all_dir, data_type="isolation")
+        profile_cache[pair_key] = re_profile_df
+    
+    # Transform to binary based on bin_freq
     re_profile_df['binary_fraction'] = (re_profile_df['fraction'] >= bin_freq).astype(int)
-    mge_motif_filter_set = set(re_profile_df[(re_profile_df['contig'] == mge_contig) & (re_profile_df['binary_fraction'] == 1)]['motifString'].values)
-    host_motif_filter_set = set(re_profile_df[(re_profile_df['contig'] == host_contig) & (re_profile_df['binary_fraction'] == 1)]['motifString'].values)
-    print ("re_profile", "host", host_motif_filter_set, "mge", mge_motif_filter_set)
-    ## get jaccard similarity
+    
+    # Use boolean indexing more efficiently
+    mge_mask = (re_profile_df['contig'] == mge_contig) & (re_profile_df['binary_fraction'] == 1)
+    host_mask = (re_profile_df['contig'] == host_contig) & (re_profile_df['binary_fraction'] == 1)
+    
+    mge_motif_filter_set = set(re_profile_df[mge_mask]['motifString'].values)
+    host_motif_filter_set = set(re_profile_df[host_mask]['motifString'].values)
+    
+    # Get jaccard similarity
     intersection = mge_motif_filter_set.intersection(host_motif_filter_set)
     union = mge_motif_filter_set.union(host_motif_filter_set)
-    if len(union) == 0:
-        jaccard_similarity = 0.0
-    else:
-        jaccard_similarity = len(intersection) / len(union)
+    jaccard_similarity = len(intersection) / len(union) if len(union) > 0 else 0.0
     
-    mge_has_string_motif_set = set(re_profile_df[(re_profile_df['contig'] == mge_contig) & (re_profile_df['motif_loci_num'] > 0)]['motifString'].values)
-    ## remove motifs in mge_motif_filter_set and host_motif_filter_set that are not in mge_has_string_motif_set
+    # Filter by motifs that actually exist in MGE
+    mge_has_motif_mask = (re_profile_df['contig'] == mge_contig) & (re_profile_df['motif_loci_num'] > 0)
+    mge_has_string_motif_set = set(re_profile_df[mge_has_motif_mask]['motifString'].values)
+    
+    # Remove motifs not in mge_has_string_motif_set
     mge_motif_filter_set = mge_motif_filter_set.intersection(mge_has_string_motif_set)
     host_motif_filter_set = host_motif_filter_set.intersection(mge_has_string_motif_set)
-    ## get jaccard similarity after filtering
+    
+    # Get jaccard similarity after filtering
     intersection = mge_motif_filter_set.intersection(host_motif_filter_set)
     union = mge_motif_filter_set.union(host_motif_filter_set)
-    if len(union) == 0:
-        jaccard_similarity_filtered = 0.0
-    else:
-        jaccard_similarity_filtered = len(intersection) / len(union)
+    jaccard_similarity_filtered = len(intersection) / len(union) if len(union) > 0 else 0.0
+    
     return jaccard_similarity, jaccard_similarity_filtered
 
 
+def process_mge_contig(mge_contig, mge_motifs, host_motifs, host_contig_list, 
+                       clu_prefix_dict, random_ctg_num, bin_freq):
+    """Worker function to process one MGE contig against random host contigs."""
+    # Each process has its own cache
+    motif_cache = {}
+    profile_cache = {}
+    
+    mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
+    results = []
+    test_count = 0
+    
+    for host_contig in np.random.choice(host_contig_list, size=min(random_ctg_num, 
+                                                                   len(host_contig_list)), replace=False):
+        host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
+        intersection = mge_motifs_set.intersection(host_motifs_set)
+        union = mge_motifs_set.union(host_motifs_set)
+        
+        ## exclude the motif that does not have motifstring in MGE
+        union_filtered = set()
+        for motif in union:
+            mge_motif_loci = mge_motifs[(mge_motifs['contig'] == mge_contig) & 
+                                        (mge_motifs['motifString'] == motif)]['motif_loci_num']
+            if len(mge_motif_loci) > 0 and mge_motif_loci.values[0] > 0:
+                union_filtered.add(motif)
+
+        jaccard = len(intersection) / len(union) if len(union) > 0 else 0.0
+        jaccard_filter = len(intersection) / len(union_filtered) if len(union_filtered) > 0 else 0.0
+
+        # Use cached version for speedup
+        jaccard_similarity, jaccard_similarity_filtered = standardize_jaccard(
+            mge_contig, host_contig, host_motifs, mge_motifs, bin_freq,
+            motif_cache=motif_cache, profile_cache=profile_cache)
+        
+        # Get the prefix for the current MGE and host contigs
+        mge_prefix = mge_motifs[mge_motifs['contig'] == mge_contig]['prefix'].iloc[0]
+        host_prefix = host_motifs[host_motifs['contig'] == host_contig]['prefix'].iloc[0]
+        
+        if mge_prefix == host_prefix:
+            relation = 'same_isolate'
+        else:
+            relation = esti_relation(
+                mge_motifs[mge_motifs['contig'] == mge_contig]['lineage'].values[0],
+                host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0]
+            )
+            if relation == "same_species":
+                # check if they are in the same drep cluster
+                if est_strain(clu_prefix_dict, mge_prefix, host_prefix):
+                    test_count += 1
+                    relation = 'same_strain'
+        
+        mge_type = mge_motifs[mge_motifs['contig'] == mge_contig]['mge_type'].values[0]
+        results.append({
+            'mge_contig': mge_contig,
+            'mge_type': mge_type,
+            'host_contig': host_contig,
+            'jaccard_similarity': jaccard,
+            'jaccard_similarity_filtered': jaccard_filter,
+            'jaccard_similarity2': jaccard_similarity,
+            'jaccard_similarity_filtered2': jaccard_similarity_filtered,
+            'share_num': len(intersection),
+            'all_num': len(union),
+            'all_num_filtered': len(union_filtered),
+            'relation': relation,
+            'host_depth': host_motifs[host_motifs['contig'] == host_contig]['depth'].values[0],
+            'host_length': host_motifs[host_motifs['contig'] == host_contig]['length'].values[0],
+            'mge_depth': mge_motifs[mge_motifs['contig'] == mge_contig]['depth'].values[0],
+            'mge_length': mge_motifs[mge_motifs['contig'] == mge_contig]['length'].values[0],
+            'host_lineage': host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0],
+        })
+    
+    return results, len(motif_cache), len(profile_cache)
 
 
-def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100, bin_freq = 0.3):
+def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100, bin_freq=0.3, n_workers=None):
     mge_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'MGE'][['motifString', 'contig', 
                                                                                  'prefix', 'phylum', 'lineage','mge_type', 'depth', 'length', 'motif_loci_num']]
     host_motifs = present_motifs_all[present_motifs_all['contig_type'] == 'Host'][['motifString', 'contig', 
@@ -275,82 +377,52 @@ def cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=100
     ## count how many prefix in present_motifs_all
     print (f"[✔] Total unique prefixes: {len(present_motifs_all['prefix'].unique())}")
 
-    test = 0
+    # Use multiprocessing to parallelize MGE contig processing
+    if n_workers is None:
+        n_workers = min(os.cpu_count() or 4, len(mge_motifs['contig'].unique()))
+    
+    print(f"[✔] Using {n_workers} workers for parallel processing")
+    
+    mge_contig_list = mge_motifs['contig'].unique()
+    total_pairs = len(mge_contig_list) * min(random_ctg_num, len(host_contig_list))
+    processed = 0
     jaccard_scores = []
-    for mge_contig in mge_motifs['contig'].unique():
-        mge_motifs_set = set(mge_motifs[mge_motifs['contig'] == mge_contig]['motifString'])
-        ## randomly select 100 host contigs
-        for host_contig in np.random.choice(host_contig_list, size=min(random_ctg_num, 
-                                                                       len(host_contig_list)), replace=False):
-        # for host_contig in host_contig_list:
-            host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
-            intersection = mge_motifs_set.intersection(host_motifs_set)
-            union = mge_motifs_set.union(host_motifs_set)
-            # union = host_motifs_set ## only consider host motifs as MGE motifs might be error-prone
-            # print ("#####", union)
-            ## exclude the motif that does not have motifstring in MGE
-            union_filtered = set()
-            for motif in union:
-                mge_motif_loci = mge_motifs[(mge_motifs['contig'] == mge_contig) & (mge_motifs['motifString'] == motif)]['motif_loci_num']
-                if len(mge_motif_loci) > 0 and mge_motif_loci.values[0] > 0:
-                    union_filtered.add(motif)
-
-            if len(union) == 0:
-                jaccard = 0.0
-            else:
-                jaccard = len(intersection) / len(union)
-
-            if len(union_filtered) == 0:
-                jaccard_filter = 0.0
-            else:
-                jaccard_filter = len(intersection) / len(union_filtered)
-
-            jaccard_similarity, jaccard_similarity_filtered = standardize_jaccard(mge_contig, host_contig, host_motifs, mge_motifs, bin_freq)
-            
-            # Get the prefix for the current MGE and host contigs
-            mge_prefix = mge_motifs[mge_motifs['contig'] == mge_contig]['prefix'].iloc[0]
-            host_prefix = host_motifs[host_motifs['contig'] == host_contig]['prefix'].iloc[0]
-            
-            if mge_prefix == host_prefix:
-                relation = 'same_isolate'
-                # continue
-            else:
-                relation = esti_relation(
-                    mge_motifs[mge_motifs['contig'] == mge_contig]['lineage'].values[0],
-                    host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0]
-                )
-                if relation == "same_species":
-                    # check if they are in the same drep cluster
-                    if est_strain(clu_prefix_dict, mge_prefix, host_prefix):
-                        test += 1
-                        # print (f"[!] Found same strain pair: MGE {mge_contig} ({mge_prefix}) and Host {host_contig} ({host_prefix})")
-                        relation = 'same_strain'
-            print (relation, f"[✔] Jaccard similarity between MGE {mge_contig} and Host {host_contig}: {jaccard_similarity}, filtered: {jaccard_similarity_filtered}")
-            print (jaccard, jaccard_filter)
-            mge_type = mge_motifs[mge_motifs['contig'] == mge_contig]['mge_type'].values[0]
-            jaccard_scores.append({
-                'mge_contig': mge_contig,
-                'mge_type': mge_type,
-                'host_contig': host_contig,
-                'jaccard_similarity': jaccard,
-                'jaccard_similarity_filtered': jaccard_filter,
-                'jaccard_similarity2': jaccard_similarity,
-                'jaccard_similarity_filtered2': jaccard_similarity_filtered,
-                'share_num': len(intersection),
-                'all_num': len(union),
-                'all_num_filtered': len(union_filtered),
-                'relation': relation,
-                'host_depth': host_motifs[host_motifs['contig'] == host_contig]['depth'].values[0],
-                'host_length': host_motifs[host_motifs['contig'] == host_contig]['length'].values[0],
-                'mge_depth': mge_motifs[mge_motifs['contig'] == mge_contig]['depth'].values[0],
-                'mge_length': mge_motifs[mge_motifs['contig'] == mge_contig]['length'].values[0],
-                'host_lineage': host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0],
-            })
-        # if test > 20:
-        #     break
+    total_motif_cache = 0
+    total_profile_cache = 0
+    
+    # Use ProcessPoolExecutor for parallel processing
+    with ProcessPoolExecutor(max_workers=n_workers) as executor:
+        # Submit all MGE contigs for processing
+        future_to_mge = {
+            executor.submit(
+                process_mge_contig, 
+                mge_contig, mge_motifs, host_motifs, host_contig_list,
+                clu_prefix_dict, random_ctg_num, bin_freq
+            ): mge_contig for mge_contig in mge_contig_list
+        }
+        
+        # Process results as they complete
+        for future in as_completed(future_to_mge):
+            mge_contig = future_to_mge[future]
+            try:
+                results, motif_cache_size, profile_cache_size = future.result()
+                jaccard_scores.extend(results)
+                processed += len(results)
+                total_motif_cache += motif_cache_size
+                total_profile_cache += profile_cache_size
+                
+                # Progress update
+                if processed % 100 == 0 or processed == total_pairs:
+                    print(f"[{processed}/{total_pairs}] Completed MGE contig {mge_contig}")
+            except Exception as exc:
+                print(f"[!] MGE contig {mge_contig} generated an exception: {exc}")
+    
+    print(f"\n[✔] Processed {processed} pairs total")
+    print(f"[✔] Average motif cache size per worker: {total_motif_cache / len(mge_contig_list):.1f} contigs")
+    print(f"[✔] Average profile cache size per worker: {total_profile_cache / len(mge_contig_list):.1f} pairs")
+    
     jaccard_scores = pd.DataFrame(jaccard_scores)
     if len(jaccard_scores) > 0:
-        
         relation_counts = jaccard_scores['relation'].value_counts()
         print(f"[✔] Relation counts:\n{relation_counts}")
     else:
@@ -646,6 +718,9 @@ def cross_taxa_plot(jaccard_all, fig_dir):
     ## box plot hue to relation with ordered x-axis
     # Define the desired order from most closely related to least related
 
+    # Filter out rows with invalid relation values (NaN, None, or non-string)
+    jaccard_all = jaccard_all[jaccard_all['relation'].notna()]
+    jaccard_all = jaccard_all[jaccard_all['relation'].isin(relation_order)]
     
     # Create a figure with 2x2 subplots
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10))
@@ -672,7 +747,7 @@ def cross_taxa_plot(jaccard_all, fig_dir):
     
     # Bottom left subplot: All data violin plot
     sns.violinplot(data=jaccard_all, x='relation', y='jaccard_similarity', 
-                  ax=ax3, palette='Set3', order=relation_order)
+                  hue='relation', ax=ax3, palette='Set3', order=relation_order, legend=False)
     # Add mean markers
     for i, relation in enumerate(relation_order):
         relation_data = jaccard_all[jaccard_all['relation'] == relation]
@@ -687,7 +762,7 @@ def cross_taxa_plot(jaccard_all, fig_dir):
     
     # Bottom right subplot: Filtered data violin plot
     sns.violinplot(data=filtered_data, x='relation', y='jaccard_similarity', 
-                  ax=ax4, palette='Set3', order=relation_order)
+                  hue='relation', ax=ax4, palette='Set3', order=relation_order, legend=False)
     # Add mean markers
     for i, relation in enumerate(relation_order):
         relation_data = filtered_data[filtered_data['relation'] == relation]
@@ -710,7 +785,7 @@ def cross_taxa_plot(jaccard_all, fig_dir):
     plasmid_data = jaccard_all[jaccard_all['mge_type'] == 'plasmid']
     if not plasmid_data.empty:      
         sns.violinplot(data=plasmid_data, x='relation', y='jaccard_similarity', 
-                      ax=axes[0], palette='Set3', order=relation_order)
+                      hue='relation', ax=axes[0], palette='Set3', order=relation_order, legend=False)
         # Add mean markers
         for i, relation in enumerate(relation_order):
             mean_val = plasmid_data[plasmid_data['relation'] == relation]['jaccard_similarity'].mean()
@@ -724,7 +799,7 @@ def cross_taxa_plot(jaccard_all, fig_dir):
     phage_data = jaccard_all[jaccard_all['mge_type'] == 'virus']
     if not phage_data.empty:    
         sns.violinplot(data=phage_data, x='relation', y='jaccard_similarity', 
-                      ax=axes[1], palette='Set3', order=relation_order)
+                      hue='relation', ax=axes[1], palette='Set3', order=relation_order, legend=False)
         # Add mean markers
         for i, relation in enumerate(relation_order):
             mean_val = phage_data[phage_data['relation'] == relation]['jaccard_similarity'].mean()
@@ -1015,7 +1090,7 @@ def main(all_dir, fig_dir, drep_clu_file):
         
         final_num += 1
 
-        if i > 100:
+        if i > 50:
             break  # For testing, limit to first 100 samples
 
     count_mge(all_mge_dict, all_contig_info)
@@ -1024,8 +1099,8 @@ def main(all_dir, fig_dir, drep_clu_file):
     print (same_sample_df)
     print (len(same_sample_df) , "total same-isolate MGE-host pairs out of ", len(jaccard_all))
     
-    jaccard_all_sample = cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=10, bin_freq=0.3)
-    # jaccard_all_sample.to_csv(f"{fig_dir}/jaccard_all_samples.csv", index=False)
+    jaccard_all_sample = cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=10, bin_freq=0.3, n_workers=16)
+    jaccard_all_sample.to_csv(f"{fig_dir}/jaccard_all_samples.csv", index=False)
     # same_sample_df.to_csv(f"{fig_dir}/jaccard_same_sample.csv", index=False)
 
 
@@ -1036,7 +1111,7 @@ def main(all_dir, fig_dir, drep_clu_file):
     # gradient_plot(same_sample_df, fig_dir)
     # plot_jaccard_distribution(same_sample_df, fig_dir)
 
-    # cross_taxa_plot(jaccard_all_sample, fig_dir)
+    cross_taxa_plot(jaccard_all_sample, fig_dir)
     # count_jaccard(same_sample_df, jaccard_all_sample)
     print (f"Total {i} samples, {pure_num} pure samples, {mge_num} samples with MGEs, {has_motif_num} samples with motifs, {final_num} samples analyzed.")
     print (f"Total filtered MGEs: {all_filtered_mge_num}")
