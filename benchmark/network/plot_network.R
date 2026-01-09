@@ -13,6 +13,11 @@ plot_network <- function(gml_file, output_file) {
   cat("Reading network from:", gml_file, "\n")
   G <- read_graph(gml_file, format = "gml")
   
+  # Remove edge weights if they exist
+  if ("weight" %in% edge_attr_names(G)) {
+    G <- delete_edge_attr(G, "weight")
+  }
+  
   cat("Network loaded:\n")
   cat("  Nodes:", vcount(G), "\n")
   cat("  Edges:", ecount(G), "\n")
@@ -106,8 +111,8 @@ plot_network <- function(gml_file, output_file) {
     # Draw edges first
     geom_edge_link(color = "gray", alpha = 0.8, width = 0.5) +
     # Draw nodes
-    geom_node_point(aes(color = I(nodes_df$color), shape = I(nodes_df$shape)), 
-                    size = 3, alpha = 0.8) +
+    geom_node_point(aes(fill = I(nodes_df$color), shape = I(nodes_df$shape)), 
+                    size = 3, alpha = 0.8, color = "black", stroke = 0.3) +
     # Prepare legend manually
     theme_void() +
     theme(
@@ -168,7 +173,7 @@ plot_network <- function(gml_file, output_file) {
     remaining_host_types <- length(host_types) - min(6, nrow(host_type_counts))
     if (remaining_host_types > 0) {
       legend_data <- rbind(legend_data, 
-                          data.frame(label = sprintf("  ... +%d more host types", remaining_host_types),
+                          data.frame(label = sprintf("  ... +%d others", remaining_host_types),
                                     color = "lightgray", shape = 22))
     }
   }
