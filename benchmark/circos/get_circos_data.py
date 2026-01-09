@@ -704,29 +704,30 @@ def auto_main_borg():
     for sample in ["soil_1", "soil_2", "soil_s1_1","soil_s1_2","soil_s3_1","soil_s3_2","soil_s4_1","soil_s4_2"]:
         handle_each_sample(sample, out_dir, all_dir)
 
+def main_ecoli():
+    out_dir = "/home/shuaiw/borg/paper/circos/ecoli_2026/"
+    
+    for num in [1, 2,3, 4, 5, 6]:
+        contig = f"E_coli_H10407_{num}"
+        sample_dir = "/home/shuaiw/borg/paper/linkage/pure2/m64004_210929_143746.p100/"
+        motif_list = [["GATC", 2], ["CTTCAG", 5], ["AGCANNNNNNCCT", 4], ["CAAYNNNNNCTGC", 3]]
+        my_ref = f"{sample_dir}/contigs/{contig}.fa"
+        gff2 = f"{sample_dir}/gffs/{contig}.reprocess.gff"
+        ipd_ratio_file = f"{sample_dir}/ipd_ratio/{contig}.ipd3.csv"
+        get_all_loci(gff2, contig, my_ref, out_dir, motif_list)
+
 if __name__ == "__main__":
     score_cutoff = 30
     # auto_main()
     # auto_main_jumbo()
     # manual_main()
-    auto_main_borg()
+    # auto_main_borg()
+    main_ecoli()
 
 
-    # contig = "E_coli_H10407_6"
-    # # contig = "B_cepacia_UCB-717_4"
-    # motif_list = ["GATC", "CTTCAG"]
-    # # motif_list = ["GATC", "CTTCAG", "AGCANNNNNNCCT", "CAAYNNNNNCTGC"]
-    # my_ref = f"/home/shuaiw/borg/bench/zymo_new_ref/contigs/{contig}.fa"
-    # gff2 = f"/home/shuaiw/borg/bench/zymo_new_ref/gffs/{contig}.reprocess.gff"
-    # ipd_ratio_file = f"/home/shuaiw/borg/bench/zymo_new_ref_NM3/ipd_ratio/{contig}.ipd3.csv"
 
 
-    # motif_list = ["CAGAC", "CCGG", "TGCCCA", "TCTANNNNNNNRTNG","GAANNNNNNTGGC"]
-    # # contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_553_L"
-    # contig = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_10354_C"
-    # my_ref = f"/home/shuaiw/borg/bench/soil/run1/contigs/{contig}.fa"
-    # gff2 = f"/home/shuaiw/borg/bench/soil/run1/gffs/{contig}.reprocess.gff"
-    # ipd_ratio_file = f"/home/shuaiw/borg/bench/soil/run1/ipd_ratio/{contig}.ipd3.csv"
+
 
 
     # out_dir = "/home/shuaiw/borg/paper/circos/inversion"

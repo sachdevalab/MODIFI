@@ -293,7 +293,7 @@ def standardize_jaccard(mge_contig, host_contig, host_motifs, mge_motifs, bin_fr
 
 
 def process_mge_contig(mge_contig, mge_motifs, host_motifs, host_contig_list, 
-                       clu_prefix_dict, random_ctg_num, bin_freq):
+                       clu_prefix_dict, random_ctg_num, bin_freq, max_per_relation=1):
     """Worker function to process one MGE contig against random host contigs."""
     # Each process has its own cache
     motif_cache = {}
@@ -303,8 +303,33 @@ def process_mge_contig(mge_contig, mge_motifs, host_motifs, host_contig_list,
     results = []
     test_count = 0
     
+    # Track number of host contigs processed per relation
+    relation_counts = {}
+    
     for host_contig in np.random.choice(host_contig_list, size=min(random_ctg_num, 
                                                                    len(host_contig_list)), replace=False):
+        
+        # Get the prefix for the current MGE and host contigs
+        mge_prefix = mge_motifs[mge_motifs['contig'] == mge_contig]['prefix'].iloc[0]
+        host_prefix = host_motifs[host_motifs['contig'] == host_contig]['prefix'].iloc[0]
+        
+        if mge_prefix == host_prefix:
+            relation = 'same_isolate'
+        else:
+            relation = esti_relation(
+                mge_motifs[mge_motifs['contig'] == mge_contig]['lineage'].values[0],
+                host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0]
+            )
+            if relation == "same_species":
+                # check if they are in the same drep cluster
+                if est_strain(clu_prefix_dict, mge_prefix, host_prefix):
+                    test_count += 1
+                    relation = 'same_strain'
+        
+        # Check if we've reached the max for this relation
+        if relation_counts.get(relation, 0) >= max_per_relation:
+            continue
+
         host_motifs_set = set(host_motifs[host_motifs['contig'] == host_contig]['motifString'])
         intersection = mge_motifs_set.intersection(host_motifs_set)
         union = mge_motifs_set.union(host_motifs_set)
@@ -325,22 +350,8 @@ def process_mge_contig(mge_contig, mge_motifs, host_motifs, host_contig_list,
             mge_contig, host_contig, host_motifs, mge_motifs, bin_freq,
             motif_cache=motif_cache, profile_cache=profile_cache)
         
-        # Get the prefix for the current MGE and host contigs
-        mge_prefix = mge_motifs[mge_motifs['contig'] == mge_contig]['prefix'].iloc[0]
-        host_prefix = host_motifs[host_motifs['contig'] == host_contig]['prefix'].iloc[0]
-        
-        if mge_prefix == host_prefix:
-            relation = 'same_isolate'
-        else:
-            relation = esti_relation(
-                mge_motifs[mge_motifs['contig'] == mge_contig]['lineage'].values[0],
-                host_motifs[host_motifs['contig'] == host_contig]['lineage'].values[0]
-            )
-            if relation == "same_species":
-                # check if they are in the same drep cluster
-                if est_strain(clu_prefix_dict, mge_prefix, host_prefix):
-                    test_count += 1
-                    relation = 'same_strain'
+        # Increment relation counter
+        relation_counts[relation] = relation_counts.get(relation, 0) + 1
         
         mge_type = mge_motifs[mge_motifs['contig'] == mge_contig]['mge_type'].values[0]
         results.append({
@@ -1090,8 +1101,8 @@ def main(all_dir, fig_dir, drep_clu_file):
         
         final_num += 1
 
-        if i > 50:
-            break  # For testing, limit to first 100 samples
+        # if i > 50:
+        #     break  # For testing, limit to first 50 samples
 
     count_mge(all_mge_dict, all_contig_info)
     
@@ -1099,7 +1110,7 @@ def main(all_dir, fig_dir, drep_clu_file):
     print (same_sample_df)
     print (len(same_sample_df) , "total same-isolate MGE-host pairs out of ", len(jaccard_all))
     
-    jaccard_all_sample = cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=10, bin_freq=0.3, n_workers=16)
+    jaccard_all_sample = cross_sample_jaccard(present_motifs_all, clu_prefix_dict, random_ctg_num=1000, bin_freq=0.3, n_workers=32)
     jaccard_all_sample.to_csv(f"{fig_dir}/jaccard_all_samples.csv", index=False)
     # same_sample_df.to_csv(f"{fig_dir}/jaccard_same_sample.csv", index=False)
 
