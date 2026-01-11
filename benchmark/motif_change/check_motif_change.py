@@ -241,8 +241,8 @@ def clean_profile(prefix_list, motif_list, all_dir, data_type="meta", score_cuto
         for motif_new, exact_pos in motif_list:
             motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci)
             # print (motif_profile)
-            data.append([contig,motif_new + "_" + str(exact_pos), motif_profile[-2], motif_profile[-4]])
-    df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction", "motif_loci_num"])
+            data.append([contig,motif_new + "_" + str(exact_pos), motif_profile[-2], motif_profile[-4], motif_profile[-3]])
+    df = pd.DataFrame(data, columns = ["contig", "motifString", "fraction", "motif_loci_num", "motif_modified_num"])
     return df
     
 def given_species(all_dir, closed_genome, seq_dir):
