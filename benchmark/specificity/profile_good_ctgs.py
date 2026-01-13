@@ -1456,6 +1456,9 @@ def color_tree(tree_file):
     print(f"\nTop 8 phyla by tree node count:")
     for phylum, count in sorted_phyla[:8]:
         print(f"  {phylum}: {count} nodes")
+    ## save all the phyla with node counts in to a CSV file
+    phylum_counts_df = pd.DataFrame(sorted_phyla, columns=['Phylum', 'Node_Count'])
+    phylum_counts_df.to_csv(f"{tree_results}/phylum_node_counts.csv", index=False)
     
     # Assign colors from PHYLUM_COLORS to top 8 phyla
     phylum_color = {}

@@ -62,15 +62,6 @@ plot_cross_taxa <- function(fig_dir) {
       .groups = 'drop'
     )
   
-  # calculate proportion with perfect match (jaccard_similarity_filtered == 1) for all data
-  perfect_match_filtered_data <- jaccard_all %>%
-    group_by(relation) %>%
-    summarise(
-      count = n(),
-      perfect_count = sum(jaccard_similarity_filtered == 1, na.rm = TRUE),
-      proportion = perfect_count / count,
-      .groups = 'drop'
-    )
 
   # Print statistics
   cat("\n=== Mean Jaccard Similarity by Relation ===\n")
@@ -79,14 +70,12 @@ plot_cross_taxa <- function(fig_dir) {
   cat("\n=== Proportion with Perfect Match (Jaccard == 1) - All Data ===\n")
   print(perfect_match_data %>% mutate(proportion_pct = round(proportion * 100, 2)), n = Inf)
   
-  cat("\n=== Proportion with Perfect Match (jaccard_similarity_filtered == 1) ===\n")
-  print(perfect_match_filtered_data %>% mutate(proportion_pct = round(proportion * 100, 2)), n = Inf)
-  
+
   cat("\n=== Same Isolate with Lowest Jaccard Similarity ===\n")
   same_isolate_data <- jaccard_all %>%
     filter(relation == 'same_isolate') %>%
     arrange(jaccard_similarity_filtered2) %>%
-    head(20) %>%
+    head(30) %>%
     select(mge_contig, host_contig, jaccard_similarity2, jaccard_similarity_filtered2, 
            all_num_filtered, share_num, mge_type, mge_length, host_length)
   print(as.data.frame(same_isolate_data), row.names = FALSE)

@@ -109,9 +109,11 @@ def get_new_host(plasmid_list_file):
 
 
 # motif_profile = "/home/shuaiw/borg/paper/linkage/m64004_210929_143746.p100/motif_profile.csv"
-motif_profile = "/home/shuaiw/borg/bench/zymo_new_ref/motif_profile.csv"
+# motif_profile = "/home/shuaiw/borg/bench/zymo_new_ref/motif_profile.csv"
+motif_profile = "/home/shuaiw/borg/paper/linkage/pure2/m64004_210929_143746.p100/motif_profile.csv"
 plasmid_list_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"
-heat_map = "../../tmp/results2/motif_heatmap.png"
+# heat_map = "../../tmp/results2/motif_heatmap.png"
+heat_map = "../../tmp/figures/motif_sharing/96plex_motif_heatmap.pdf"
 
 
 df = pd.read_csv(motif_profile, index_col=0)
