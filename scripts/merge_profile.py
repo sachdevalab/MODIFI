@@ -54,7 +54,7 @@ def load_contigs():
 
 def read_profile_worker(profile_list, file, sample_name,  min_motif_sites=1):
     profile = pd.read_csv(os.path.join(profile_list, file), sep = ",")
-    motifs_names = profile['motifString']
+    motifs_names = profile['motifString'] + "_" + profile["centerPos"].astype(str)
     
     profile.loc[profile['motif_modified_num'] < min_motif_sites, 'motif_modified_ratio'] = 0
     ## we only want the motif_modified_ratio column
@@ -109,6 +109,8 @@ def merge_profile_parallele(profile_list, min_motif_sites=1, threads = 1):
     ## define the row names as motifs_names
     # print (motifs_names)
     profiles.index = motifs_names
+    ## set the name as motif_identifier
+    profiles.index.name = "motif_identifier"
     print (profiles.head())
     ## print the shape of the profiles
     print (profiles.shape)
@@ -132,7 +134,7 @@ def merge_profile(profile_list, min_motif_sites=1):
             sample_name = match.group(1).split("/")[-1]
             samples.append(sample_name)
             # print (sample_name, profile.head())
-            motifs_names = profile['motifString']
+            motifs_names = profile['motifString'] + "_" + profile["centerPos"].astype(str)
             # print (motifs_names)
             ## if motif_modified_num < min_motif_sites, we set the motif_modified_ratio to 0
             ### minimium number of motif sites cutoff, it too less motif sites, no meaning to calculate the ratio

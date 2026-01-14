@@ -19,7 +19,7 @@ get_new_host <- function(plasmid_list_file) {
 # Function to create heatmap
 create_heatmap <- function(df, heat_map, plasmid_list, host_list) {
   # Remove specific motifs
-  motifs_to_remove <- c("GATCBAMY", "BGATCGRAB", "GATCNAVYRNB")
+  motifs_to_remove <- c("GATCBAMY_3", "BGATCGRAB_4", "GATCNAVYRNB_3", "SAAAGAGMH_6","CGWCGVKRD_2","HCCTTCYNDD_2","DNCCTTCYNDD_3","GAAGGYBKND_4","CGWCGNNY_2","RCTCGAGNRD_2","GWCAYH_4","BNNCCGGNYRDNA_4","HGCGCGCNYD_3")
   df <- df[!rownames(df) %in% motifs_to_remove, ]
   
   # Transpose dataframe (rows become columns, columns become rows)

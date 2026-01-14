@@ -1173,7 +1173,7 @@ def get_new_host(plasmid_list):
 
 
 def main_96plex(fig_dir, bin_freq=0.3):
-    data_dir ="/home/shuaiw/borg/paper/linkage/pure/m64004_210929_143746.p100/"
+    data_dir ="/home/shuaiw/borg/paper/linkage/pure2/m64004_210929_143746.p100/"
     plasmid_list_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"
     my_96plex_data = []
     plasmid_host_dict = get_new_host(plasmid_list_file)
@@ -1181,7 +1181,7 @@ def main_96plex(fig_dir, bin_freq=0.3):
     profile_df = pd.read_csv(motif_profile)
     
     # Melt the profile_df from wide to long format
-    profile_df_melted = profile_df.melt(id_vars=['motifString'], 
+    profile_df_melted = profile_df.melt(id_vars=['motif_identifier'], 
                                         var_name='contig', 
                                         value_name='freq')
     
@@ -1197,19 +1197,18 @@ def main_96plex(fig_dir, bin_freq=0.3):
             continue
 
         my_host_motif_df = pd.read_csv(my_host_motif_file)
-        host_motif_num, host_motifs = get_unique_motifs(my_host_motif_df)
+        host_motif_num, host_motifs, unique_motifs_identifier = get_unique_motifs(my_host_motif_df)
 
         ## get motif set for MGE and host, based on profile_df_melted,
         # # only consider motifs in host_motifs
         MGE_motif_set = set(profile_df_melted[
             (profile_df_melted['contig'] == my_MGE) &
-            (profile_df_melted['motifString'].isin(host_motifs))
-        ]['motifString'])
+            (profile_df_melted['motif_identifier'].isin(unique_motifs_identifier))
+        ]['motif_identifier'])
         host_motif_set = set(profile_df_melted[
             (profile_df_melted['contig'] == host) &
-            (profile_df_melted['motifString'].isin(host_motifs))
-        ]['motifString'])
-
+            (profile_df_melted['motif_identifier'].isin(unique_motifs_identifier))
+        ]['motif_identifier'])
 
         intersection = MGE_motif_set.intersection(host_motif_set)
         union = MGE_motif_set.union(host_motif_set)
@@ -1373,8 +1372,8 @@ if __name__ == "__main__":
     ANI=99
     drep_clu_file = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/data_tables/Cdb.csv"
 
-    main(all_dir, fig_dir, drep_clu_file)
-    # main_96plex(fig_dir)
+    # main(all_dir, fig_dir, drep_clu_file)
+    main_96plex(fig_dir)
     
     # main_profile(all_dir, profile_fig_dir)
     # analyze_jaccard(fig_dir)

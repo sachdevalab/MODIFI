@@ -214,6 +214,7 @@ def extract_motif_data(host_df, plasmid_df, motif_cluster_dict, min_frac = 0.5, 
                            'motif_modified_num_host', 'motif_loci_num_plasmid', 
                            'motif_modified_num_plasmid']]
     motif_data.columns = ['motif', 'centerPos', 'host_total', 'host_meth', 'plasmid_total', 'plasmid_meth']
+    motif_data['motif'] = motif_data['motif'].astype(str) + "_" + motif_data['centerPos'].astype(str)
     ## add a column which represents the occurrence_ratio of the motif in the host, recorded in the motif_cluster_dict
     motif_data['occurrence_ratio'] = motif_data['motif'].apply(lambda x: motif_cluster_dict[x][2])
     motif_data['cluster_id'] = motif_data['motif'].apply(lambda x: motif_cluster_dict[x][0] if x in motif_cluster_dict else None)
@@ -346,7 +347,7 @@ def summary_motif_info(motif_data):
 
 def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name, min_detect, motif_cluster_dict):
     motif_data = extract_motif_data(bin_df, plasmid_df, motif_cluster_dict, min_frac, min_detect)
-    motif_data = filter_motifs(bin_motif, motif_data)
+    # motif_data = filter_motifs(bin_motif, motif_data)
     # motif_filter = MotifFilter(motif_data)
     # motif_data = motif_filter.filter()
 
@@ -766,6 +767,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
         i += 1
         if final_score_list is not None:
             all_final_score_list += final_score_list
+        # break
 
 
     summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list,MGE_dict)

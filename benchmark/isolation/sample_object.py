@@ -27,10 +27,12 @@ def get_unique_motifs(df_motif, min_frac=0.4, min_sites = 100):
     df_motif = df_motif[(df_motif['fraction'] >= min_frac) & (df_motif['nDetected'] >= min_sites)]
     ## rm redundant motifs which are reverse complement 
     unique_motifs = []
+    unique_motifs_identifier = []
     for index, row in df_motif.iterrows():
         if row['motifString'] not in unique_motifs and  str(Seq(row['motifString']).reverse_complement()) not in unique_motifs:
             unique_motifs.append(row['motifString'])
-    return len(unique_motifs), unique_motifs
+            unique_motifs_identifier.append(row['motifString'] + "_" + str(row['centerPos']))
+    return len(unique_motifs), unique_motifs, unique_motifs_identifier
 
 def get_unique_motifs_simple(df_motif):
     unique_motifs = []
