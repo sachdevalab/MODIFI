@@ -115,80 +115,6 @@ def linkage_score_from_counts2(motif_data, min_frac, max_sites=5000):
         'host_motif_num': len(motif_data),
     }
 
-
-def linkage_score_from_counts1(motif_data, max_sites=5000):
-    """
-    Adds confidence weighting based on motif site counts.
-    """
-    scores = []
-    weights = []
-    total_sites = 0
-    total_host_sites = 0
-    restriction_signal = 1
-    valid_motif_num = 0
-    valid_motif_list = []
-    for m in motif_data:
-        h_total = m['host_total']
-        h_meth = m['host_meth']
-        p_total = m['plasmid_total']
-        p_meth = m['plasmid_meth']
-
-        if h_total == 0:
-            continue
-        if p_total == 0:  #skip if plasmid has no motif string
-            continue
-        if p_meth > 0:
-            valid_motif_list.append(m)
-            valid_motif_num += 1
-        weight = h_total
-        weight = min(weight, 1000)   ### set weight to 1000, once the h_total is larger than 1000
-        total_sites += h_total + p_total
-        total_host_sites += h_total
-
-        f_host = h_meth / h_total
-
-        f_plasmid = p_meth / p_total
-        # motif_score = 1 - abs(f_host - f_plasmid)
-        ## whether f_host and f_plasmid both are larger than 0.5
-        # if f_plasmid > min_frac:
-        #     motif_score = 1
-        if f_plasmid > f_host:
-            motif_score = 1
-        else:
-            motif_score = 1 - abs(f_host - f_plasmid)/f_host   ## if the f_host is only 0.5, so divided by f_host to normalize the score
-
-        scores.append(motif_score * log(weight))
-        weights.append(log(weight))
-        
-    if not scores:
-        return {'linkage_score': 0.0, 'confidence': 0.0, 'final_score': 0.0}
-
-    linkage_score = sum(scores) / sum(weights)
-
-    # Confidence scaling (logarithmic)
-    confidence = log(1 + total_sites) / log(1 + max_sites)
-    if confidence > 1:
-        confidence = 1
-
-    # motif confidence
-    # valid_motif_num = count_uniq_motif(valid_motif_list)  ## remove redundant motifs in counting
-    filtered_motifs = uniq_similar_motifs(valid_motif_list)
-    valid_motif_num = len(filtered_motifs)
-    
-    motif_confidence = log(1+valid_motif_num)/log(1+3)   
-    if motif_confidence > 1:
-        motif_confidence = 1
-    final_score = linkage_score * confidence * motif_confidence * restriction_signal
-
-    return {
-        'linkage_score': round(linkage_score, 4),
-        'confidence': round(confidence, 4),
-        'final_score': round(final_score, 4),
-        'total_sites': total_sites,
-        'motif_confidence': round(motif_confidence, 4),
-        'host_motif_num': len(motif_data)
-    }
-
 def extract_motif_data(host_df, plasmid_df, motif_cluster_dict, min_frac = 0.5, min_detect = 100):
     # Early exit if either DataFrame is empty
     if host_df.empty or plasmid_df.empty:
@@ -294,9 +220,9 @@ def drep_bin_motif(bin_motif, motif_cluster_dict):
     # Handle empty DataFrame case
     if bin_motif.empty or len(bin_motif.columns) == 0:
         return pd.DataFrame()
-    
+    bin_motif["motif_identifier"] = bin_motif["motifString"] + "_" + bin_motif["centerPos"].astype(str)
     bin_motif['cluster_id'] = bin_motif.apply(
-        lambda row: motif_cluster_dict.get(row['motifString'])[0] if row['motifString'] in motif_cluster_dict else None, axis=1
+        lambda row: motif_cluster_dict.get(row['motif_identifier'])[0] if row['motif_identifier'] in motif_cluster_dict else None, axis=1
     )
     filtered_motifs = []
     seen_clusters = set()
@@ -347,7 +273,7 @@ def summary_motif_info(motif_data):
 
 def bin_worker(bin_df, plasmid_df, bin_motif, min_frac, bin_name, min_detect, motif_cluster_dict):
     motif_data = extract_motif_data(bin_df, plasmid_df, motif_cluster_dict, min_frac, min_detect)
-    # motif_data = filter_motifs(bin_motif, motif_data)
+    motif_data = filter_motifs(bin_motif, motif_data)
     # motif_filter = MotifFilter(motif_data)
     # motif_data = motif_filter.filter()
 
@@ -397,6 +323,8 @@ def for_each_plasmid(bin_df_dict, bin_motif_dict, plasmid_name, profile_dir, hos
         with ProcessPoolExecutor(max_workers=effective_threads) as executor:
             batch_futures = []
             for bin_name in batch_bins:
+                # if bin_name != "E_coli_H10407_1":
+                #     continue
                 bin_df = bin_df_dict[bin_name]
                 bin_motif = bin_motif_dict[bin_name]
 
@@ -562,13 +490,14 @@ def filter_motifs(host_motif, motif_data):
     
     # Use vectorized operations instead of iterrows() - much faster
     # Create tags using vectorized string operations
-    host_motif_tags = (host_motif['motifString'] + "_tga_" + host_motif['centerPos'].astype(str)).tolist()
+    host_motif_tags = (host_motif['motifString'] + "_" + host_motif['centerPos'].astype(str)).tolist()
     motif_tag_set = set(host_motif_tags)  # Use set for O(1) lookup instead of dict
     
     # Filter motifs using list comprehension - faster than loop + append
     new_motif_data = [
         m for m in motif_data 
-        if (m['motif'] + "_tga_" + str(m['centerPos'])) in motif_tag_set
+        # if (m['motif'] + "_tga_" + str(m['centerPos'])) in motif_tag_set
+        if m['motif']  in motif_tag_set
     ]
     
     return new_motif_data
@@ -746,7 +675,7 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
         #     print (f"Skip {plasmid_name} with {MGE_motif_num} motifs.")
         #     continue
         # print (f"Processing {i}-th/{len(MGE_dict)} {plasmid_name} with {MGE_motif_num} original motifs.")
-        # if plasmid_name != "ocean_1_1355_L":
+        # if plasmid_name != "E_coli_H10407_6":
         #     continue
         print (f"Processing {i}-th/{len(MGE_dict)} {plasmid_name}.")
 

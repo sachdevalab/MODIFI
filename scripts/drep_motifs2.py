@@ -52,7 +52,7 @@ def create_similarity_matrix(motifs):
             if i == j:
                 similarity_matrix[i, j] = 1.0
             else:
-                sim = reverse_complement_similarity(motifs[i], motifs[j])
+                sim = reverse_complement_similarity(motifs[i].split("_")[0], motifs[j].split("_")[0])
                 similarity_matrix[i, j] = sim
                 similarity_matrix[j, i] = sim
     
@@ -330,7 +330,6 @@ def motif_cluster_worker(motif_file, fai, output_dir, min_frac=0.3, similarity_t
     # Read motifs
     print(f"Reading motif data from {motif_file}")
     motif_dict, samples = read_motifs(motif_file, min_frac)
-    
     print(f"Found {len(motif_dict)} motifs across {len(samples)} samples")
     if len(motif_dict) == 0 or len(samples) == 0:
         print("No motifs or samples found after filtering. Exiting.")
