@@ -11,17 +11,19 @@ import matplotlib.pyplot as plt
 from sample_object import My_sample, Isolation_sample
 
 PHYLUM_COLORS = {
-    "Pseudomonadota":  "#d8b365",  # tan / brown
-    "Bacillota":       "#f46d43",  # orange
-    "Bacillota_A":     "#8da0cb",  # blue-lavender
-    "Bacillota_C":     "#bdbdbd",  # light gray
-    "Actinomycetota":  "#66c2a5",  # teal-green
-    "Bacteroidota":    "#e78ac3",  # pink
-    "Campylobacterota":"#a6d854",  # light green
-    "Acidobacteriota": "#1b9e77",  # dark green
-    "Verrucomicrobiota":"#999999", # gray
-    "Others":          "#cccccc"   # fallback
+    "Pseudomonadota":    "#d8b365",  # tan / brown
+    "Bacillota":         "#f46d43",  # orange
+    "Bacillota_A":       "#8da0cb",  # blue-lavender
+    "Desulfobacterota":       "#fc8d62",  # light orange / salmon (same family as Bacillota)
+    "Actinomycetota":    "#66c2a5",  # teal-green
+    "Bacteroidota":      "#e78ac3",  # pink
+    "Campylobacterota":  "#a6d854",  # light green
+    "Acidobacteriota":   "#1b9e77",  # dark green
+    "Verrucomicrobiota": "#7570b3",  # muted purple
+    "Chloroflexota":   "#e7298a",  # magenta
+    "Others":            "#e6e6e6"   # very light neutral (only gray)
 }
+
 
 
 header = """TREE_COLORS

@@ -1199,6 +1199,10 @@ def main_96plex(fig_dir, bin_freq=0.3):
         my_host_motif_df = pd.read_csv(my_host_motif_file)
         host_motif_num, host_motifs, unique_motifs_identifier = get_unique_motifs(my_host_motif_df)
 
+        # Get unique motifs from MGE motif file
+        my_MGE_motif_df = pd.read_csv(my_MGE_motif_file)
+        MGE_motif_num, MGE_motifs, MGE_unique_motifs_identifier = get_unique_motifs(my_MGE_motif_df)
+
         ## get motif set for MGE and host, based on profile_df_melted,
         # # only consider motifs in host_motifs
         MGE_motif_set = set(profile_df_melted[
@@ -1216,23 +1220,45 @@ def main_96plex(fig_dir, bin_freq=0.3):
             jaccard = 0.0
         else:
             jaccard = len(intersection) / len(union)
-        my_96plex_data.append([my_MGE, host, len(intersection), len(union), jaccard])
-    my_96plex_df = pd.DataFrame(my_96plex_data, columns=['MGE', 'host', 'shared_motif_num', 'total_motif_num', 'jaccard_similarity'])
+        
+        # Calculate filtered Jaccard: only consider motifs that exist in MGE motif file
+        MGE_motif_set_filtered = set(profile_df_melted[
+            (profile_df_melted['contig'] == my_MGE) &
+            (profile_df_melted['motif_identifier'].isin(MGE_unique_motifs_identifier))
+        ]['motif_identifier'])
+        host_motif_set_filtered = set(profile_df_melted[
+            (profile_df_melted['contig'] == host) &
+            (profile_df_melted['motif_identifier'].isin(MGE_unique_motifs_identifier))
+        ]['motif_identifier'])
+        
+        intersection_filtered = MGE_motif_set_filtered.intersection(host_motif_set_filtered)
+        union_filtered = MGE_motif_set_filtered.union(host_motif_set_filtered)
+        if len(union_filtered) == 0:
+            jaccard_filtered = 0.0
+        else:
+            jaccard_filtered = len(intersection_filtered) / len(union_filtered)
+        
+        my_96plex_data.append([my_MGE, host, len(intersection), len(union), jaccard, 
+                              len(intersection_filtered), len(union_filtered), jaccard_filtered])
+    my_96plex_df = pd.DataFrame(my_96plex_data, columns=['MGE', 'host', 'shared_motif_num', 'total_motif_num', 
+                                                          'jaccard_similarity', 'shared_motif_num_filtered', 
+                                                          'total_motif_num_filtered', 'jaccard_similarity_filtered'])
     print (my_96plex_df)
     plot_96plex(my_96plex_df, fig_dir)
     
 
 def plot_96plex(my_96plex_df, fig_dir):
     ## plot the distribution of jaccard similarity using histogram
-    # Create subplot with histogram and barplot
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    # Create subplot with histogram and barplot - now with 2 rows for filtered vs unfiltered
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     
+    # Top row: Unfiltered Jaccard similarity
     # Plot histogram of jaccard similarity
-    sns.histplot(my_96plex_df['jaccard_similarity'], bins=20, kde=True, color='lightcoral', ax=ax1)
-    ax1.set_xlabel('Jaccard Similarity', fontsize=14)
-    ax1.set_ylabel('Count', fontsize=14)
-    ax1.grid(axis='y', alpha=0.3)
-    ax1.set_title('Distribution of Jaccard Similarity', fontsize=14)
+    sns.histplot(my_96plex_df['jaccard_similarity'], bins=20, kde=True, color='lightcoral', ax=axes[0, 0])
+    axes[0, 0].set_xlabel('Jaccard Similarity', fontsize=14)
+    axes[0, 0].set_ylabel('Count', fontsize=14)
+    axes[0, 0].grid(axis='y', alpha=0.3)
+    axes[0, 0].set_title('Jaccard Similarity (Host motifs)', fontsize=14)
     
     # Plot barplot of shared motif number cutoff
     max_shared = my_96plex_df['shared_motif_num'].max()
@@ -1240,9 +1266,9 @@ def plot_96plex(my_96plex_df, fig_dir):
     # Check if max_shared is NaN or if dataframe is empty
     if pd.isna(max_shared) or len(my_96plex_df) == 0:
         print("Warning: No valid shared motif data found, skipping barplot")
-        ax2.text(0.5, 0.5, 'No Data Available', ha='center', va='center', transform=ax2.transAxes)
-        ax2.set_xlabel('Number of Shared Motifs', fontsize=14)
-        ax2.set_ylabel('Proportion of MGE-Host Pairs', fontsize=14)
+        axes[0, 1].text(0.5, 0.5, 'No Data Available', ha='center', va='center', transform=axes[0, 1].transAxes)
+        axes[0, 1].set_xlabel('Number of Shared Motifs', fontsize=14)
+        axes[0, 1].set_ylabel('Proportion of MGE-Host Pairs', fontsize=14)
     else:
         share_counts = []
         for i in range(0, int(max_shared) + 1):
@@ -1250,11 +1276,38 @@ def plot_96plex(my_96plex_df, fig_dir):
             share_counts.append({'shared_motifs': i, 'count': count, 'proportion': count / len(my_96plex_df)})
         share_counts_df = pd.DataFrame(share_counts)
         
-        sns.barplot(data=share_counts_df, x='shared_motifs', y='proportion', color='steelblue', ax=ax2)
-        ax2.set_xlabel('Number of Shared Motifs', fontsize=14)
-        ax2.set_ylabel('Proportion of MGE-Host Pairs', fontsize=14)
-        ax2.grid(axis='y', alpha=0.3)
-        ax2.set_title('Shared Motifs Distribution', fontsize=14)
+        sns.barplot(data=share_counts_df, x='shared_motifs', y='proportion', color='steelblue', ax=axes[0, 1])
+        axes[0, 1].set_xlabel('Number of Shared Motifs', fontsize=14)
+        axes[0, 1].set_ylabel('Proportion of MGE-Host Pairs', fontsize=14)
+        axes[0, 1].grid(axis='y', alpha=0.3)
+        axes[0, 1].set_title('Shared Motifs (Host motifs)', fontsize=14)
+    
+    # Bottom row: Filtered Jaccard similarity (MGE motifs only)
+    sns.histplot(my_96plex_df['jaccard_similarity_filtered'], bins=20, kde=True, color='lightgreen', ax=axes[1, 0])
+    axes[1, 0].set_xlabel('Jaccard Similarity (Filtered)', fontsize=14)
+    axes[1, 0].set_ylabel('Count', fontsize=14)
+    axes[1, 0].grid(axis='y', alpha=0.3)
+    axes[1, 0].set_title('Jaccard Similarity (MGE motifs only)', fontsize=14)
+    
+    # Plot barplot of shared motif number cutoff (filtered)
+    max_shared_filtered = my_96plex_df['shared_motif_num_filtered'].max()
+    
+    if pd.isna(max_shared_filtered) or len(my_96plex_df) == 0:
+        axes[1, 1].text(0.5, 0.5, 'No Data Available', ha='center', va='center', transform=axes[1, 1].transAxes)
+        axes[1, 1].set_xlabel('Number of Shared Motifs (Filtered)', fontsize=14)
+        axes[1, 1].set_ylabel('Proportion of MGE-Host Pairs', fontsize=14)
+    else:
+        share_counts_filtered = []
+        for i in range(0, int(max_shared_filtered) + 1):
+            count = len(my_96plex_df[my_96plex_df['shared_motif_num_filtered'] >= i])
+            share_counts_filtered.append({'shared_motifs': i, 'count': count, 'proportion': count / len(my_96plex_df)})
+        share_counts_filtered_df = pd.DataFrame(share_counts_filtered)
+        
+        sns.barplot(data=share_counts_filtered_df, x='shared_motifs', y='proportion', color='darkseagreen', ax=axes[1, 1])
+        axes[1, 1].set_xlabel('Number of Shared Motifs (Filtered)', fontsize=14)
+        axes[1, 1].set_ylabel('Proportion of MGE-Host Pairs', fontsize=14)
+        axes[1, 1].grid(axis='y', alpha=0.3)
+        axes[1, 1].set_title('Shared Motifs (MGE motifs only)', fontsize=14)
     
     plt.tight_layout()
     plt.savefig(f"{fig_dir}/jaccard_similarity_distribution_96plex.pdf", dpi=300, bbox_inches="tight")
