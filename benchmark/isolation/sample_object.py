@@ -1099,6 +1099,37 @@ class My_cluster(object):
         # filter self.profile_df to exclude these motifs
         self.profile_df = self.profile_df[~self.profile_df['motifString'].isin(self.filtered_motifs)]
 
+    def pairwise_edit_distance(self, seq_dir, edit_dir):
+        for i in range(len(self.members)):
+            for j in range(i+1, len(self.members)):
+                # compute edit distance between self.members[i] and self.members[j]
+                
+                genome_1_fasta = os.path.join(seq_dir, self.cluster, f"{self.members[i]}.fa")
+                genome_2_fasta = os.path.join(seq_dir, self.cluster, f"{self.members[j]}.fa")
+                print (f"Edit distance between {self.members[i]} and {self.members[j]}: ")
+                prefix = os.path.join(edit_dir, f"{self.members[i]}_{self.members[j]}")
+                cmd = f"dnadiff -p {prefix} {genome_1_fasta} {genome_2_fasta}"
+                os.system(cmd)
+                dnadiff_report = f"{prefix}.report"
+                total_snps, total_indels, edit_distance = read_dnadiff_report(dnadiff_report)
+                print (f"Total SNPs: {total_snps}, Total Indels: {total_indels}, Edit Distance: {edit_distance}")
+                ## remove tmp files except the report
+                for file in os.listdir(edit_dir):
+                    if file.startswith(f"{self.members[i]}_{self.members[j]}") and not file.endswith(".report"):
+                        os.remove(os.path.join(edit_dir, file))
+
+def read_dnadiff_report(dnadiff_report):
+    ## read total TotalSNPs and TotalIndels from dnadiff report
+    total_snps = 0
+    total_indels = 0
+    with open(dnadiff_report, 'r') as f:
+        for line in f:
+            if line.startswith("TotalSNPs"):
+                total_snps = int(line.strip().split()[1])
+            elif line.startswith("TotalIndels"):
+                total_indels = int(line.strip().split()[1])
+    edit_distance = total_snps + total_indels
+    return total_snps, total_indels, edit_distance
 
 class My_gene(object):
 

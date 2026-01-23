@@ -3,63 +3,116 @@ library(dplyr)
 library(readr)
 library(circlize)
 library(grid)
+library(tidyr)
+library(tibble)
+library(RColorBrewer)
 
-# Function to read plasmid list and get host associations
-get_new_host <- function(plasmid_list_file) {
-  df <- read_csv(plasmid_list_file, show_col_types = FALSE)
+# Function to read and process long format data
+process_long_data <- function(motif_profile_long) {
+  # Read long format data
+  df_long <- read_csv(motif_profile_long, show_col_types = FALSE)
   
-  plasmid_list <- df$seq_name
+  # Convert to wide format (pivot)
+  df_wide <- df_long %>%
+    select(motif_identifier, sample, fraction) %>%
+    pivot_wider(names_from = sample, values_from = fraction)
   
-  # Extract and flatten host lists
-  host_list <- unique(unlist(strsplit(df$host, ";")))
+  # Set motif_identifier as row names
+  motif_mat <- df_wide %>%
+    column_to_rownames("motif_identifier") %>%
+    as.matrix()
   
-  return(list(plasmid_list = plasmid_list, host_list = host_list))
+  # Get strain and genome type info for each sample
+  sample_info <- df_long %>%
+    select(sample, strain_name, genome_type) %>%
+    distinct() %>%
+    arrange(sample)
+  
+  return(list(matrix = motif_mat, sample_info = sample_info))
 }
 
-# Function to create heatmap
-create_heatmap <- function(df, heat_map, plasmid_list, host_list) {
+# Function to create heatmap with strain annotation
+create_heatmap <- function(mat, sample_info, heat_map) {
   # Remove specific motifs
-  motifs_to_remove <- c("GATCBAMY_3", "BGATCGRAB_4", "GATCNAVYRNB_3", "SAAAGAGMH_6","CGWCGVKRD_2","HCCTTCYNDD_2","DNCCTTCYNDD_3","GAAGGYBKND_4","CGWCGNNY_2","RCTCGAGNRD_2","GWCAYH_4","BNNCCGGNYRDNA_4","HGCGCGCNYD_3")
-  df <- df[!rownames(df) %in% motifs_to_remove, ]
+  motifs_to_remove <- c("GATCBAMY_3", "BGATCGRAB_4", "GATCNAVYRNB_3", "SAAAGAGMH_6",
+                         "CGWCGVKRD_2", "HCCTTCYNDD_2", "DNCCTTCYNDD_3", "GAAGGYBKND_4",
+                         "CGWCGNNY_2", "RCTCGAGNRD_2", "GWCAYH_4", "BNNCCGGNYRDNA_4", 
+                         "HGCGCGCNYD_3")
+  mat <- mat[!rownames(mat) %in% motifs_to_remove, ]
   
-  # Transpose dataframe (rows become columns, columns become rows)
-  df_t <- as.data.frame(t(df))
+  # Remove motifs with all zero values across all samples
+  row_sums <- rowSums(mat)
+  mat <- mat[row_sums > 0, ]
+  cat("Retained", nrow(mat), "motifs with non-zero values\n")
   
-  # Sort sequences
-  df_t <- df_t[order(rownames(df_t)), ]
-  
-  # Convert to matrix for ComplexHeatmap
-  mat <- as.matrix(df_t)
+  # Transpose matrix (rows=samples, cols=motifs)
+  mat_t <- t(mat)
   
   # Convert values lower than 0.3 to 0
-  mat[mat < 0.3] <- 0
+  mat_t[mat_t < 0.4] <- 0
   
-  # Assign type to each sequence
-  type_labels <- sapply(rownames(mat), function(seq) {
-    if (seq %in% plasmid_list) {
-      return('plasmid')
-    } else if (seq %in% host_list) {
-      return('host')
-    } else {
-      return('host')
-    }
-  })
+  # Match sample_info to matrix rows
+  sample_info <- sample_info[match(rownames(mat_t), sample_info$sample), ]
   
-  # Create annotation with better styling
+  # Get unique strains and assign numbers
+  unique_strains <- unique(sample_info$strain_name)
+  n_strains <- length(unique_strains)
+  
+  # Create numeric mapping for strains
+  strain_numbers <- setNames(1:n_strains, unique_strains)
+  sample_info$strain_number <- as.character(strain_numbers[sample_info$strain_name])
+  
+  # Create better color palette for strain numbers using RColorBrewer
+  # Use a combination of Set3, Pastel1, and Set2 for distinct, pleasant colors
+  if (n_strains <= 12) {
+    strain_colors_palette <- RColorBrewer::brewer.pal(min(12, max(3, n_strains)), "Set3")
+  } else if (n_strains <= 20) {
+    strain_colors_palette <- c(
+      RColorBrewer::brewer.pal(12, "Set3"),
+      RColorBrewer::brewer.pal(min(8, n_strains - 12), "Pastel1")
+    )
+  } else {
+    strain_colors_palette <- c(
+      RColorBrewer::brewer.pal(12, "Set3"),
+      RColorBrewer::brewer.pal(9, "Pastel1"),
+      RColorBrewer::brewer.pal(8, "Set2")
+    )
+  }
+  
+  strain_number_colors <- setNames(
+    strain_colors_palette[1:n_strains],
+    as.character(1:n_strains)
+  )
+  
+  # Create row annotations
   row_ha <- rowAnnotation(
-    Type = type_labels,
-    col = list(Type = c(plasmid = '#6A5ACD', host = '#FF8C00')),
-    annotation_width = unit(8, "mm"),
+    Strain = sample_info$strain_number,
+    Type = sample_info$genome_type,
+    col = list(
+      Strain = strain_number_colors,
+      Type = c(plasmid = '#9370DB', host = '#4CAF50', unknown = '#BDBDBD')
+    ),
+    annotation_width = unit(c(8, 8), "mm"),
     annotation_legend_param = list(
       Type = list(
-        title = "Type", 
+        title = "Genome Type",
         title_gp = gpar(fontsize = 12, fontface = "bold"),
         labels_gp = gpar(fontsize = 10),
         grid_height = unit(5, "mm"),
         grid_width = unit(5, "mm")
+      ),
+      Strain = list(
+        title = "Strain",
+        title_gp = gpar(fontsize = 12, fontface = "bold"),
+        labels_gp = gpar(fontsize = 9),
+        grid_height = unit(5, "mm"),
+        grid_width = unit(5, "mm"),
+        nrow = ceiling(n_strains / 2)
       )
     ),
-    show_annotation_name = FALSE
+    show_annotation_name = TRUE,
+    annotation_name_gp = gpar(fontsize = 10, fontface = "bold"),
+    annotation_name_side = "top"
   )
   
   # Define color function (white to dark red/brown)
@@ -67,7 +120,7 @@ create_heatmap <- function(df, heat_map, plasmid_list, host_list) {
   
   # Create heatmap with better layout
   ht <- Heatmap(
-    mat,
+    mat_t,
     name = "Fraction",
     col = col_fun,
     left_annotation = row_ha,
@@ -80,12 +133,12 @@ create_heatmap <- function(df, heat_map, plasmid_list, host_list) {
     show_row_names = TRUE,
     show_column_names = TRUE,
     row_names_side = "left",
-    row_names_gp = gpar(fontsize = 9),
-    column_names_gp = gpar(fontsize = 8),
+    row_names_gp = gpar(fontsize = 8),
+    column_names_gp = gpar(fontsize = 7),
     column_names_rot = 90,
     row_dend_width = unit(20, "mm"),
     column_dend_height = unit(20, "mm"),
-    rect_gp = gpar(col = "white", lwd = 1),
+    rect_gp = gpar(col = "white", lwd = 0.5),
     heatmap_legend_param = list(
       title = "Fraction",
       title_gp = gpar(fontsize = 12, fontface = "bold"),
@@ -101,7 +154,7 @@ create_heatmap <- function(df, heat_map, plasmid_list, host_list) {
   )
   
   # Save to PDF with better dimensions
-  pdf(heat_map, width = 20, height = 12)
+  pdf(heat_map, width = 10, height = 7)
   draw(ht, padding = unit(c(5, 5, 5, 15), "mm"), 
        heatmap_legend_side = "right",
        annotation_legend_side = "right")
@@ -109,27 +162,26 @@ create_heatmap <- function(df, heat_map, plasmid_list, host_list) {
 }
 
 # Main execution
-motif_profile <- "/home/shuaiw/borg/paper/linkage/pure2/m64004_210929_143746.p100/motif_profile.csv"
-plasmid_list_file <- "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"
+motif_profile_long <- "/home/shuaiw/borg/paper/linkage/pure2/m64004_210929_143746.p100/motif_profile_long.csv"
 heat_map <- "../../tmp/figures/motif_sharing/96plex_motif_heatmap.pdf"
 
-# Read motif profile - handle duplicate row names
-df <- read.csv(motif_profile, check.names = FALSE)
-
-# Check if first column should be row names
-if (ncol(df) > 0 && !is.numeric(df[,1])) {
-  # Make row names unique by adding suffixes to duplicates
-  row_names <- make.unique(as.character(df[,1]))
-  df <- df[,-1]  # Remove first column
-  rownames(df) <- row_names
-}
-
-# Get plasmid and host lists
-result <- get_new_host(plasmid_list_file)
-plasmid_list <- result$plasmid_list
-host_list <- result$host_list
+# Process long format data
+result <- process_long_data(motif_profile_long)
+mat <- result$matrix
+sample_info <- result$sample_info
 
 # Create heatmap
-create_heatmap(df, heat_map, plasmid_list, host_list)
+create_heatmap(mat, sample_info, heat_map)
 
-cat("Heatmap saved to:", heat_map, "\n")
+# Print strain mapping
+cat("\nStrain Number Mapping:\n")
+unique_strains <- unique(sample_info$strain_name)
+strain_numbers <- setNames(1:length(unique_strains), unique_strains)
+for (strain in names(strain_numbers)) {
+  cat(sprintf("%2d: %s\n", strain_numbers[strain], strain))
+}
+
+cat("\nHeatmap saved to:", heat_map, "\n")
+cat("Number of samples:", nrow(sample_info), "\n")
+cat("Number of unique strains:", length(unique(sample_info$strain_name)), "\n")
+cat("Number of motifs:", nrow(mat), "\n")

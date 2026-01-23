@@ -609,6 +609,7 @@ def main_isolation():
         drep_clu_file = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/data_tables/Cdb.csv"
         dereplicated_genomes_dir = f"/home/shuaiw/borg/paper/specificity/iso_{ANI}_out/dereplicated_genomes/"
         seq_dir = "/home/shuaiw/borg/paper/motif_change/iso_seq_drep/"
+        edit_dir = "/home/shuaiw/borg/paper/motif_change/iso_edit_dist/"
         fig_dir = f"/home/shuaiw/borg/paper/motif_change/iso_plot_drep2_{ANI}/"
         tmp_res = f"/home/shuaiw/borg/paper/motif_change/iso_result_drep2_{ANI}/"
         paper_fig_dir = f"../../tmp/figures/strain_diff/iso_drep_{ANI}/"
@@ -643,36 +644,38 @@ def main_isolation():
                 #                                 fig_dir, tmp_res, "isolation", min_frac=0.5, min_sites=500)
                 
                 cluster_obj = My_cluster(cluster, members) 
-                cluster_obj.load_df(tmp_res)
-                print (">>>>", cluster_obj.profile_df)
-                cluster_obj.manual_filter_motifs()
+                cluster_obj.pairwise_edit_distance(seq_dir, edit_dir)
+                # break
+        #         cluster_obj.load_df(tmp_res)
+        #         print (">>>>", cluster_obj.profile_df)
+        #         cluster_obj.manual_filter_motifs()
 
-                if len(cluster_obj.profile_df) < 2:
-                    print ("skip cluster with less than 2 contigs with motif profiles")
-                    continue
+        #         if len(cluster_obj.profile_df) < 2:
+        #             print ("skip cluster with less than 2 contigs with motif profiles")
+        #             continue
 
-                ### get taxa of cluster
-                represent_ctg = select_represent(represent_ctg_set, members)
-                represent_ctg_lineage = ctg_taxa_dict[represent_ctg] if represent_ctg in ctg_taxa_dict else "NA"
-                cluster_phylum = classify_taxa(represent_ctg_lineage, "phylum")
-                cluster_species = classify_taxa(represent_ctg_lineage, "species")
+        #         ### get taxa of cluster
+        #         represent_ctg = select_represent(represent_ctg_set, members)
+        #         represent_ctg_lineage = ctg_taxa_dict[represent_ctg] if represent_ctg in ctg_taxa_dict else "NA"
+        #         cluster_phylum = classify_taxa(represent_ctg_lineage, "phylum")
+        #         cluster_species = classify_taxa(represent_ctg_lineage, "species")
 
-                motif_variation_flag = cluster_obj.check_diff_motifs()
-                similarity_data_cluster, motif_clade_num = cluster_obj.pairwise_compare(bin_freq=0.6)
+        #         motif_variation_flag = cluster_obj.check_diff_motifs()
+        #         similarity_data_cluster, motif_clade_num = cluster_obj.pairwise_compare(bin_freq=0.6)
 
-                variation_data.append([cluster, len(members), motif_variation_flag])
-                similarity_data += similarity_data_cluster
-                clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
+        #         variation_data.append([cluster, len(members), motif_variation_flag])
+        #         similarity_data += similarity_data_cluster
+        #         clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
 
-                if motif_variation_flag == "variation" or motif_clade_num > 1:
-                    plot_name = f"{fig_dir}/{cluster}.pdf"
-                    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
-                # if len(variation_data) > 10:
-                #     break
-        plot_variation_fraction(variation_data, paper_fig_dir)
-        plot_similarity_dist(similarity_data, paper_fig_dir)
-        plot_clade_size(clade_data, paper_fig_dir)
-        print ("all done")
+        #         if motif_variation_flag == "variation" or motif_clade_num > 1:
+        #             plot_name = f"{fig_dir}/{cluster}.pdf"
+        #             cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+        #         # if len(variation_data) > 10:
+        #         #     break
+        # plot_variation_fraction(variation_data, paper_fig_dir)
+        # plot_similarity_dist(similarity_data, paper_fig_dir)
+        # plot_clade_size(clade_data, paper_fig_dir)
+        # print ("all done")
 # 
 def main_asthma():
     all_dir = "/home/shuaiw/borg/paper/run2/"
@@ -694,6 +697,6 @@ def main_asthma():
     cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
 if __name__ == "__main__":
-    main_meta()
-    # main_isolation()
+    # main_meta()
+    main_isolation()
     # main_asthma()
