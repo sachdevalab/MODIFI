@@ -82,14 +82,13 @@ plot_cross_taxa <- function(fig_dir) {
   cat("\n")
 
   # Create barplot with error bars
-  p2 <- ggplot(stats_data, aes(x = relation, y = mean, fill = relation)) +
-    geom_bar(stat = "identity", show.legend = FALSE) +
+  p2 <- ggplot(stats_data, aes(x = relation, y = mean)) +
+    geom_bar(stat = "identity", fill = "gray60", show.legend = FALSE) +
     geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
                   width = 0.2, linewidth = 0.5) +
     geom_text(data = count_data, 
               aes(x = relation, y = -max(stats_data$mean) * 0.05, label = paste0("n=", count)),
               size = 3.5, inherit.aes = FALSE) +
-    scale_fill_brewer(palette = "Set2") +
     labs(
       x = "MGE-Genome Taxonomic Relationship",
       y = "Mean Jaccard Similarity",
@@ -101,7 +100,7 @@ plot_cross_taxa <- function(fig_dir) {
       axis.text.y = element_text(size = 12),
       axis.title = element_text(size = 14),
       plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
-      panel.grid.major.y = element_line(colour = "grey80"),
+      panel.grid.major.y = element_line(colour = "gray60"),
       panel.grid.major.x = element_blank(),
       panel.grid.minor = element_blank(),
       panel.background = element_rect(fill = "white", colour = NA),
@@ -110,7 +109,7 @@ plot_cross_taxa <- function(fig_dir) {
   
   # Save plot
   ggsave(paste0(fig_dir, "/jaccard_similarity_by_taxa_relation.pdf"), 
-         p2, width = 6, height = 5.5, dpi = 400)
+         p2, width = 5, height = 5, dpi = 400)
   
   cat("\nPlot saved successfully!\n")
 }

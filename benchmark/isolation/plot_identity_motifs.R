@@ -103,7 +103,7 @@ analyze_jaccard <- function(fig_dir) {
     ) +
     theme_minimal() +
     theme(
-      axis.text.x = element_text(angle = 45, hjust = 1, size = 11),
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
       axis.text.y = element_text(size = 11),
       axis.title = element_text(size = 12),
       plot.title = element_text(size = 13, face = "bold", hjust = 0.5),
@@ -114,7 +114,7 @@ analyze_jaccard <- function(fig_dir) {
   # Combine plots and save
   combined_plot <- arrangeGrob(p1, p2, ncol = 2)
   ggsave(paste0(fig_dir, "/proportion_perfect_jaccard_by_phylum.pdf"), 
-         combined_plot, width = 10, height = 6, dpi = 400)
+         combined_plot, width = 7, height = 5, dpi = 400)
   
   cat("\nPlots saved successfully!\n")
 }

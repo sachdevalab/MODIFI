@@ -744,7 +744,7 @@ def count_motifs(best_ctgs, all_dir, prefix, environment, ctg_taxa_dict):
         df_motif = ctg_obj.read_motif(min_frac=0.3, min_sites=100)
         # print (df_motif)
         ## only keep themotifs with fraction >= 0.4, and nDetected >=100
-        unique_motifs_num, unique_motifs = get_unique_motifs(df_motif)
+        unique_motifs_num, unique_motifs, unique_motifs_identifier = get_unique_motifs(df_motif)
         if unique_motifs_num > 0:
             has_motif_ctg_num += 1
         motif_num_list.append(unique_motifs_num)
@@ -1130,8 +1130,8 @@ def main(all_dir, fig_dir, sample_env_dict):
         if not os.path.exists(sample_obj.depth_file):
             print (f"Skipping {prefix} as depth file not found.")
             continue
-        if prefix != "ocean_1":
-            continue
+        # if prefix != "ocean_1":
+        #     continue
         
         print (f"Processing {prefix}...")
         sample_obj.read_depth()
@@ -1141,8 +1141,8 @@ def main(all_dir, fig_dir, sample_env_dict):
         N50, genome_size = sample_obj.get_N50_size()
         print(f"{prefix}: N50 size: {N50}, Genome size: {genome_size}")
         my_genome_list, best_ctgs = sample_obj.get_final_best_ctg2()
-        analyze_gene(all_dir, meta_dir, prefix, best_ctgs)
-        print ("best ctgs num:", len(best_ctgs))
+        # analyze_gene(all_dir, meta_dir, prefix, best_ctgs)
+        # print ("best ctgs num:", len(best_ctgs))
         genome_list += my_genome_list
         print (f">>>Total {len(genome_list)} high depth contigs collected so far.")
 
@@ -1151,15 +1151,15 @@ def main(all_dir, fig_dir, sample_env_dict):
 
         # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
         all_data += count_motifs(best_ctgs, all_dir, prefix, sample_env_dict[prefix], ctg_taxa_dict)
-        all_base_data += count_modified_base(all_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix],ctg_taxa_dict)
+        # all_base_data += count_modified_base(all_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix],ctg_taxa_dict)
         # break
     print ("start plot...")
     df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len', 'RM_num'])
     df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num'])
-    df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment','phylum'])
+    # df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment','phylum'])
 
     df_genome_data.to_csv(f"{fig_dir}/genome_data_all_samples.csv", index = False)
-    df_all_base_data.to_csv(f"{fig_dir}/base_count_all_samples.csv", index=False)
+    # df_all_base_data.to_csv(f"{fig_dir}/base_count_all_samples.csv", index=False)
     df_all_data.to_csv(f"{fig_dir}/motif_num_all_samples.csv", index=False)    
     
     # df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
@@ -1171,7 +1171,7 @@ def main(all_dir, fig_dir, sample_env_dict):
     plot_motif(df_all_data, fig_dir)
     plot_genome(df_genome_data, fig_dir)
     plot_meta(df_genome_data, fig_dir)
-    plot_base(df_all_base_data, fig_dir)
+    # plot_base(df_all_base_data, fig_dir)
     plot_MTase(df_all_data, fig_dir)
     # ## save genome data
 
@@ -1421,7 +1421,7 @@ def count_good_ctgs(df_all_data):
     print (f"Total Archaea contigs: {archaea_count}")
 
 
-def color_tree(tree_file):
+def color_tree(tree_file, tree_results):
     from Bio import Phylo
     
     df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
@@ -1562,10 +1562,12 @@ if __name__ == "__main__":
     tree_results = "/home/shuaiw/borg/paper/specificity/tree/"
     bacteria_tree = "/home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_tree/gtdbtk.unrooted.tree"
     archaea_tree = "/home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_tree/archaea.unrooted.tree"
-    # color_tree(bacteria_tree)
+    archea_tree_results = "/home/shuaiw/borg/paper/specificity/archea_tree/"
+    # color_tree(bacteria_tree, tree_results)
+    color_tree(archaea_tree, archea_tree_results)
     # plot_motif_len(fig_dir)
-    sample_env_dict = read_metadata(meta_file)
-    main(all_dir, fig_dir, sample_env_dict)
+    # sample_env_dict = read_metadata(meta_file)
+    # main(all_dir, fig_dir, sample_env_dict)
 
     # plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)

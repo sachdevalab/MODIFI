@@ -57,7 +57,7 @@ plot_variation_fraction <- function(data_file, paper_fig_dir) {
           plot.margin = margin(10, 10, 10, 10))
   
   # Combine plots side by side
-  combined_plot <- arrangeGrob(p1, p2, ncol = 2)
+  combined_plot <- arrangeGrob(p2, p1, ncol = 2)
   
   # Save the combined plot
   ggsave(paste0(paper_fig_dir, "/motif_variation_combined.pdf"), 
@@ -70,8 +70,8 @@ plot_variation_fraction <- function(data_file, paper_fig_dir) {
 }
 
 # Main execution
-paper_fig_dir <- "../../tmp/figures/strain_diff/iso_drep_99"
-# paper_fig_dir <- "../../tmp/figures/strain_diff/drep_99"
+# paper_fig_dir <- "../../tmp/figures/strain_diff/iso_drep_99"
+paper_fig_dir <- "../../tmp/figures/strain_diff/drep_99"
 data_file <- paste0(paper_fig_dir, "/motif_variation_data.csv")
 
 # Check if data file exists

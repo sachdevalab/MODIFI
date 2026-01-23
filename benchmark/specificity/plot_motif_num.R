@@ -4,6 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(gridExtra)
+library(ggsignif)
 
 count_good_ctgs <- function(df_all_data, fig_dir) {
   # Count statistics
@@ -86,7 +87,7 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
     scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
     labs(title = "",
          x = NULL,
-         y = "Proportion (%)") +
+         y = "Proportion of genomes\n with motifs (%)") +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
           axis.text.y = element_text(size = 10),
@@ -100,9 +101,9 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
     scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
     labs(title = "",
          x = NULL,
-         y = "Proportion (%)") +
+         y = "Proportion of genomes\n with motifs (%)") +
     theme_minimal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8.5),
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
           axis.text.y = element_text(size = 10),
           plot.title = element_text(size = 11, hjust = 0.5, face = "bold"),
           panel.grid.major.x = element_blank())
@@ -125,20 +126,30 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
     group_by(environment) %>%
     summarise(n = n()) %>%
     arrange(match(environment, env_order))
-  
+
+  # Create comparison list for ocean vs other environments
+  ocean_comparisons <- lapply(setdiff(env_order, "ocean"), function(env) c("ocean", env))
+
   # Plot 3: Environment motif number distribution (box plot)
   p3 <- ggplot(df_filtered_env, aes(x = environment, y = motif_num)) +
     geom_boxplot(fill = "#A0A0A0", outlier.size = 0.5, width = 0.6) +
+    geom_signif(comparisons = ocean_comparisons,
+                test = "t.test",
+                map_signif_level = c("***" = 0.001, "**" = 0.01, "*" = 0.05),
+                step_increase = 0.12,
+                tip_length = 0.02,
+                textsize = 3.5) +
     scale_x_discrete(labels = function(x) paste0(x, "\nn=", env_counts$n[match(x, env_counts$environment)])) +
-    scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
     labs(title = "",
          x = NULL,
-         y = "Motif Number") +
+         y = "No. of motifs per genome") +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
           axis.text.y = element_text(size = 10),
           plot.title = element_text(size = 11, hjust = 0.5, face = "bold"),
           panel.grid.major.x = element_blank())
+  
   
   # Filter data for phylum boxplot and clean phylum names
   df_filtered_phylum <- df_all_data %>%
@@ -180,11 +191,47 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
   # Save the combined plot
   ggsave(paste0(fig_dir, "/proportion_motif.pdf"), 
          combined_plot, 
-         width = 9, 
-         height = 6, 
+         width = 8, 
+         height = 5, 
          dpi = 300)
   
   cat(sprintf("Plot saved to %s/proportion_motif.pdf\n", fig_dir))
+  
+  # Save p1 separately
+  ggsave(paste0(fig_dir, "/proportion_motif_env_barplot.pdf"), 
+         p1, 
+         width = 3, 
+         height = 3, 
+         dpi = 300)
+  
+  cat(sprintf("Plot saved to %s/proportion_motif_env_barplot.pdf\n", fig_dir))
+
+  # Save p2 separately
+  ggsave(paste0(fig_dir, "/proportion_motif_phylum_barplot.pdf"), 
+         p2, 
+         width = 6, 
+         height = 3, 
+         dpi = 300)
+  
+  cat(sprintf("Plot saved to %s/proportion_motif_phylum_barplot.pdf\n", fig_dir))
+  
+  # Save p3 separately
+  ggsave(paste0(fig_dir, "/motif_num_env_boxplot.pdf"), 
+         p3, 
+         width = 3, 
+         height = 4, 
+         dpi = 300)
+  
+  cat(sprintf("Plot saved to %s/motif_num_env_boxplot.pdf\n", fig_dir))
+  
+  # Save p4 separately
+  ggsave(paste0(fig_dir, "/motif_num_phylum_boxplot.pdf"), 
+         p4, 
+         width = 6, 
+         height = 3, 
+         dpi = 300)
+  
+  cat(sprintf("Plot saved to %s/motif_num_phylum_boxplot.pdf\n", fig_dir))
 }
 
 # Main execution
