@@ -6,33 +6,29 @@ Each phylum from the PHYLUM_COLORS dictionary will be a leaf in the tree.
 
 import random
 
-# Phyla from the main analysis
-PHYLA = [
-    "Pseudomonadota",
-    "Bacillota",
-    "Bacillota_A",
-    "Desulfobacterota",
-    "Actinomycetota",
-    "Bacteroidota",
-    "Campylobacterota",
-    "Acidobacteriota",
-    "Verrucomicrobiota",
-    "Chloroflexota",
-    "Others"
-]
 
 PHYLUM_COLORS = {
-    "Pseudomonadota":    "#d8b365",
-    "Bacillota":         "#f46d43",
-    "Bacillota_A":       "#8da0cb",
-    "Desulfobacterota":  "#fc8d62",
-    "Actinomycetota":    "#66c2a5",
-    "Bacteroidota":      "#e78ac3",
-    "Campylobacterota":  "#a6d854",
-    "Acidobacteriota":   "#1b9e77",
-    "Verrucomicrobiota": "#7570b3",
-    "Chloroflexota":     "#e7298a",
-    "Others":            "#e6e6e6"
+    "Pseudomonadota":    "#d8b365",  # tan / brown
+    "Bacillota":         "#f46d43",  # orange
+    "Bacillota_A":       "#8da0cb",  # blue-lavender
+    "Desulfobacterota":       "#fc8d62",  # light orange / salmon (same family as Bacillota)
+    "Actinomycetota":    "#66c2a5",  # teal-green
+    "Bacteroidota":      "#e78ac3",  # pink
+    "Campylobacterota":  "#a6d854",  # light green
+    "Acidobacteriota":   "#1b9e77",  # dark green
+    "Verrucomicrobiota": "#7570b3",  # muted purple
+    "Chloroflexota":   "#e7298a",  # magenta
+    # Archaea phyla
+    "Thermoproteota":    "#b15928",  # brown/rust
+    "Thermoplasmatota":  "#fdbf6f",  # light orange/yellow
+    "Halobacteriota":    "#ff7f00",  # bright orange
+    "Aenigmatarchaeota": "#cab2d6",  # light purple
+    "Nanoarchaeota":     "#6a3d9a",  # deep purple
+    "Hadarchaeota":      "#fb9a99",  # light red/pink
+    "Asgardarchaeota":   "#e31a1c",  # red
+    "Micrarchaeota":     "#a6cee3",  # light blue
+    
+    "Others":            "#e6e6e6"   # very light neutral (only gray)
 }
 
 
@@ -186,6 +182,7 @@ def main():
     
     # Set random seed for reproducibility
     random.seed(42)
+    PHYLA = list(PHYLUM_COLORS.keys())
     
     # Generate balanced tree
     phyla_sorted = sorted(PHYLA)

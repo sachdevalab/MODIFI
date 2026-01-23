@@ -27,6 +27,16 @@ PHYLUM_COLORS = {
     "Acidobacteriota":   "#1b9e77",  # dark green
     "Verrucomicrobiota": "#7570b3",  # muted purple
     "Chloroflexota":   "#e7298a",  # magenta
+    # Archaea phyla
+    "Thermoproteota":    "#b15928",  # brown/rust
+    "Thermoplasmatota":  "#fdbf6f",  # light orange/yellow
+    "Halobacteriota":    "#ff7f00",  # bright orange
+    "Aenigmatarchaeota": "#cab2d6",  # light purple
+    "Nanoarchaeota":     "#6a3d9a",  # deep purple
+    "Hadarchaeota":      "#fb9a99",  # light red/pink
+    "Asgardarchaeota":   "#e31a1c",  # red
+    "Micrarchaeota":     "#a6cee3",  # light blue
+
     "Others":            "#e6e6e6"   # very light neutral (only gray)
 }
 
@@ -1490,7 +1500,7 @@ def color_tree(tree_file, tree_results):
         rgb = color_palette_env[i]
         hex_color = '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
         env_color[env] = hex_color
-    # print (env_color)
+    print (env_color)
     
     # Use top8_phyla as the known phyla list
     known_phyla = top8_phyla
@@ -1563,8 +1573,8 @@ if __name__ == "__main__":
     bacteria_tree = "/home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_tree/gtdbtk.unrooted.tree"
     archaea_tree = "/home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_tree/archaea.unrooted.tree"
     archea_tree_results = "/home/shuaiw/borg/paper/specificity/archea_tree/"
-    # color_tree(bacteria_tree, tree_results)
-    color_tree(archaea_tree, archea_tree_results)
+    color_tree(bacteria_tree, tree_results)
+    # color_tree(archaea_tree, archea_tree_results)
     # plot_motif_len(fig_dir)
     # sample_env_dict = read_metadata(meta_file)
     # main(all_dir, fig_dir, sample_env_dict)
