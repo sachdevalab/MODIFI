@@ -56,7 +56,7 @@ analyze_jaccard <- function(fig_dir) {
     scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
     labs(
       x = "Phylum",
-      y = "Proportion of MGE-host pairs with identical motif sets",
+      y = "Proportion of MGE-host pairs with identical motifs",
     ) +
     theme_minimal() +
     theme(
@@ -99,7 +99,7 @@ analyze_jaccard <- function(fig_dir) {
     scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
     labs(
       x = "Phylum",
-      y = "Proportion with identical motifs (MGE-validated sites only)",
+      y = "Proportion of MGE-host pairs with identical motifs \n(motifs not occurring in MGE are removed)",
     ) +
     theme_minimal() +
     theme(

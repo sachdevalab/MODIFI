@@ -95,7 +95,7 @@ create_heatmap <- function(mat, sample_info, heat_map) {
     annotation_width = unit(c(8, 8), "mm"),
     annotation_legend_param = list(
       Type = list(
-        title = "Genome Type",
+        title = "Genome",
         title_gp = gpar(fontsize = 12, fontface = "bold"),
         labels_gp = gpar(fontsize = 10),
         grid_height = unit(5, "mm"),
