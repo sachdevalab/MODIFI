@@ -104,7 +104,7 @@ create_heatmap <- function(mat, sample_info, heat_map) {
       Strain = list(
         title = "Strain",
         title_gp = gpar(fontsize = 12, fontface = "bold"),
-        labels_gp = gpar(fontsize = 9),
+        labels = rep("", n_strains),
         grid_height = unit(5, "mm"),
         grid_width = unit(5, "mm"),
         nrow = ceiling(n_strains / 2)
