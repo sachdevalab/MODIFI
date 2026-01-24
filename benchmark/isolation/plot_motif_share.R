@@ -109,7 +109,7 @@ plot_cross_taxa <- function(fig_dir) {
   
   # Save plot
   ggsave(paste0(fig_dir, "/jaccard_similarity_by_taxa_relation.pdf"), 
-         p2, width = 5, height = 5, dpi = 400)
+         p2, width = 6, height = 5, dpi = 400)
   
   cat("\nPlot saved successfully!\n")
 }

@@ -87,14 +87,14 @@ create_heatmap <- function(mat, sample_info, heat_map) {
   # Create row annotations
   row_ha <- rowAnnotation(
     Strain = sample_info$strain_number,
-    Type = sample_info$genome_type,
+    Genome = sample_info$genome_type,
     col = list(
       Strain = strain_number_colors,
-      Type = c(plasmid = '#9370DB', host = '#4CAF50', unknown = '#BDBDBD')
+      Genome = c(plasmid = '#9370DB', host = '#4CAF50', unknown = '#BDBDBD')
     ),
     annotation_width = unit(c(8, 8), "mm"),
     annotation_legend_param = list(
-      Type = list(
+      Genome = list(
         title = "Genome",
         title_gp = gpar(fontsize = 12, fontface = "bold"),
         labels_gp = gpar(fontsize = 10),

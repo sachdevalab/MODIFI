@@ -48,12 +48,14 @@ analyze_jaccard <- function(fig_dir) {
                 phylum_df1$total_count[i]))
   }
   
+  # Add count labels to phylum names
+  phylum_df1 <- phylum_df1 %>%
+    mutate(phylum_label = paste0(phylum, "\nn=", total_count))
+  
   # Plot bar plot for jaccard_similarity
-  p1 <- ggplot(phylum_df1, aes(x = phylum, y = proportion)) +
+  p1 <- ggplot(phylum_df1, aes(x = phylum_label, y = proportion)) +
     geom_bar(stat = "identity", fill = "gray60", width = 0.7) +
-    geom_text(aes(label = paste0("n=", total_count)), 
-              vjust = -0.5, size = 3.5, fontface = "bold") +
-    scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+    ylim(0, 1) +
     labs(
       x = "Phylum",
       y = "Proportion of MGE-host pairs with identical motifs",
@@ -91,12 +93,14 @@ analyze_jaccard <- function(fig_dir) {
                 phylum_df2$total_count[i]))
   }
   
+  # Add count labels to phylum names
+  phylum_df2 <- phylum_df2 %>%
+    mutate(phylum_label = paste0(phylum, "\nn=", total_count))
+  
   # Plot bar plot for jaccard_similarity_filtered
-  p2 <- ggplot(phylum_df2, aes(x = phylum, y = proportion)) +
+  p2 <- ggplot(phylum_df2, aes(x = phylum_label, y = proportion)) +
     geom_bar(stat = "identity", fill = "gray60", width = 0.7) +
-    geom_text(aes(label = paste0("n=", total_count)), 
-              vjust = -0.5, size = 3.5, fontface = "bold") +
-    scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+    ylim(0, 1) +
     labs(
       x = "Phylum",
       y = "Proportion of MGE-host pairs with identical motifs \n(motifs not occurring in MGE are removed)",
@@ -114,7 +118,7 @@ analyze_jaccard <- function(fig_dir) {
   # Combine plots and save
   combined_plot <- arrangeGrob(p1, p2, ncol = 2)
   ggsave(paste0(fig_dir, "/proportion_perfect_jaccard_by_phylum.pdf"), 
-         combined_plot, width = 7, height = 5, dpi = 400)
+         combined_plot, width = 7, height = 6, dpi = 400)
   
   cat("\nPlots saved successfully!\n")
 }
