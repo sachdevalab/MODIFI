@@ -1172,6 +1172,14 @@ def get_new_host(plasmid_list):
     return plasmid_host_dict
 
 
+def read_MGE_motif_string(my_MGE_profile_file):
+    df = pd.read_csv(my_MGE_profile_file)
+    df["motif_identifier"] = df["motifString"] + "_" + df["centerPos"].astype(str)
+    MGE_motif_string_dict = {}
+    for index, row in df.iterrows():
+        MGE_motif_string_dict[row['motif_identifier']] = int(row['motif_loci_num'])
+    return MGE_motif_string_dict
+
 def main_96plex(fig_dir, bin_freq=0.3):
     data_dir ="/home/shuaiw/borg/paper/linkage/pure2/m64004_210929_143746.p100/"
     plasmid_list_file = "/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list"
@@ -1192,9 +1200,13 @@ def main_96plex(fig_dir, bin_freq=0.3):
         host = plasmid_host_dict[my_MGE][2][0]
         print (my_MGE, host)
         my_MGE_motif_file = os.path.join(data_dir, f"motifs/{my_MGE}.motifs.csv")
+        my_MGE_profile_file = os.path.join(data_dir, f"profiles/{my_MGE}.motifs.profile.csv")
         my_host_motif_file = os.path.join(data_dir, f"motifs/{host}.motifs.csv")
+
+
         if not os.path.exists(my_MGE_motif_file) or not os.path.exists(my_host_motif_file):
             continue
+        MGE_motif_string_dict = read_MGE_motif_string(my_MGE_profile_file)
 
         my_host_motif_df = pd.read_csv(my_host_motif_file)
         host_motif_num, host_motifs, unique_motifs_identifier = get_unique_motifs(my_host_motif_df)
@@ -1202,6 +1214,7 @@ def main_96plex(fig_dir, bin_freq=0.3):
         # Get unique motifs from MGE motif file
         my_MGE_motif_df = pd.read_csv(my_MGE_motif_file)
         MGE_motif_num, MGE_motifs, MGE_unique_motifs_identifier = get_unique_motifs(my_MGE_motif_df)
+
 
         ## get motif set for MGE and host, based on profile_df_melted,
         # # only consider motifs in host_motifs
@@ -1214,21 +1227,25 @@ def main_96plex(fig_dir, bin_freq=0.3):
             (profile_df_melted['motif_identifier'].isin(unique_motifs_identifier))
         ]['motif_identifier'])
 
+
+
         intersection = MGE_motif_set.intersection(host_motif_set)
         union = MGE_motif_set.union(host_motif_set)
         if len(union) == 0:
             jaccard = 0.0
         else:
             jaccard = len(intersection) / len(union)
-        
-        # Calculate filtered Jaccard: only consider motifs that exist in MGE motif file
+
+        ## check host_motif_set, and only retain the motifs that has a value over 0 in MGE_motif_string_dict
+        MGE_string_host_motif_set = {motif for motif in host_motif_set if MGE_motif_string_dict.get(motif, 0) > 0}
+
         MGE_motif_set_filtered = set(profile_df_melted[
             (profile_df_melted['contig'] == my_MGE) &
-            (profile_df_melted['motif_identifier'].isin(MGE_unique_motifs_identifier))
+            (profile_df_melted['motif_identifier'].isin(MGE_string_host_motif_set))
         ]['motif_identifier'])
         host_motif_set_filtered = set(profile_df_melted[
             (profile_df_melted['contig'] == host) &
-            (profile_df_melted['motif_identifier'].isin(MGE_unique_motifs_identifier))
+            (profile_df_melted['motif_identifier'].isin(MGE_string_host_motif_set))
         ]['motif_identifier'])
         
         intersection_filtered = MGE_motif_set_filtered.intersection(host_motif_set_filtered)
@@ -1237,6 +1254,10 @@ def main_96plex(fig_dir, bin_freq=0.3):
             jaccard_filtered = 0.0
         else:
             jaccard_filtered = len(intersection_filtered) / len(union_filtered)
+
+
+
+
         
         my_96plex_data.append([my_MGE, host, len(intersection), len(union), jaccard, 
                               len(intersection_filtered), len(union_filtered), jaccard_filtered])
