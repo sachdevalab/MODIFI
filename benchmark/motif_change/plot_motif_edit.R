@@ -50,6 +50,18 @@ find_zero_edit_diff_jaccard <- function(df) {
 # Run anomaly detection
 anomalies <- find_zero_edit_diff_jaccard(dna_motif_corr_df)
 
+# Calculate Pearson correlation between edit distance and jaccard
+cat("\n=== Correlation Analysis ===\n")
+pearson_corr <- cor(dna_motif_corr_df$dnadiff, dna_motif_corr_df$jaccard, method = "pearson")
+cat("Pearson correlation between DNA edit distance and Motif Jaccard Index:", 
+    round(pearson_corr, 4), "\n")
+
+# Perform correlation test for p-value
+cor_test <- cor.test(dna_motif_corr_df$dnadiff, dna_motif_corr_df$jaccard, method = "pearson")
+cat("P-value:", format.pval(cor_test$p.value, digits = 4), "\n")
+cat("95% Confidence Interval: [", round(cor_test$conf.int[1], 4), ",", 
+    round(cor_test$conf.int[2], 4), "]\n\n")
+
 # Create scatter plot
 p <- ggplot(dna_motif_corr_df, aes(x = dnadiff, y = jaccard)) +
   geom_point(alpha = 0.5) +
@@ -112,7 +124,7 @@ p_violin <- ggplot(dna_motif_corr_df, aes(x = reorder(bin_label_with_n, dnadiff_
   )
 
 # Save violin plot
-ggsave(violin_output_file, plot = p_violin, width = 8, height = 6)
+ggsave(violin_output_file, plot = p_violin, width = 6, height = 4)
 cat("Saved violin plot to:", violin_output_file, "\n")
 
 # Create bar plot showing mean jaccard for main bins (filtered)
