@@ -618,7 +618,7 @@ def main_isolation():
         os.makedirs(tmp_res, exist_ok=True)
         os.makedirs(paper_fig_dir, exist_ok=True)
 
-
+        """
         # depth_dict = depth_filter(all_dir, min_depth = 10)
         drep_clu_dict = read_drep_cluster(drep_clu_file, {})
         represent_ctg_set = collect_represent_ctgs(dereplicated_genomes_dir)
@@ -668,7 +668,7 @@ def main_isolation():
 
                 motif_variation_flag = cluster_obj.check_diff_motifs()
                 similarity_data_cluster, motif_clade_num, jaccard_matrix = cluster_obj.pairwise_compare(bin_freq=0.6)
-                dna_motif_corr = update_corr(dnadiff_mat, jaccard_matrix, dna_motif_corr)
+                dna_motif_corr = update_corr(dnadiff_mat, jaccard_matrix, dna_motif_corr, cluster_obj)
                 # variation_data.append([cluster, len(members), motif_variation_flag])
                 # similarity_data += similarity_data_cluster
                 # clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
@@ -681,27 +681,35 @@ def main_isolation():
         # plot_variation_fraction(variation_data, paper_fig_dir)
         # plot_similarity_dist(similarity_data, paper_fig_dir)
         # plot_clade_size(clade_data, paper_fig_dir)
-        plot_dna_motif_corr(dna_motif_corr, paper_fig_dir)
+        ## dna_motif_corr to df 
+        dna_motif_corr_df = pd.DataFrame(dna_motif_corr, columns=["cluster", "contig1", "contig2", "dnadiff", "jaccard"])
+        dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"), index=False)
+        """
+        dna_motif_corr_df = pd.read_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"))
+        plot_dna_motif_corr(dna_motif_corr_df, paper_fig_dir)
+        
         # print ("all done")
     # batch_dnadiff(dnadiff_list_all)
     
 # 
 
-def update_corr(dnadiff_mat, jaccard_matrix, dna_motif_corr):
-    # Flatten the upper triangle of the matrices to get pairwise comparisons
-    triu_indices = np.triu_indices_from(dnadiff_mat, k=1)
-    dnadiff_values = dnadiff_mat[triu_indices]
-    jaccard_values = jaccard_matrix[triu_indices]
-    for i in range(len(dnadiff_values)):
-        dna_motif_corr.append((dnadiff_values[i], jaccard_values[i]))
+def update_corr(dnadiff_mat, jaccard_matrix, dna_motif_corr, cluster_obj):
+    for i in range(len(cluster_obj.members)):
+        for j in range(i+1, len(cluster_obj.members)):
+            dna_motif_corr.append((cluster_obj.cluster, cluster_obj.members[i], cluster_obj.members[j], dnadiff_mat[i][j], jaccard_matrix[i][j]))
+            if dnadiff_mat[i][j] == 0 and jaccard_matrix[i][j] < 1:
+                print ("!!!>>>>>", cluster_obj.cluster, cluster_obj.members[i], cluster_obj.members[j],\
+                        dnadiff_mat[i][j], jaccard_matrix[i][j])
     return dna_motif_corr
 
-def plot_dna_motif_corr(dna_motif_corr, paper_fig_dir):
+def plot_dna_motif_corr(dna_motif_corr_df, paper_fig_dir):
+    
     output_file = os.path.join(paper_fig_dir, "dna_motif_corr.pdf")
-    if len(dna_motif_corr) == 0:
+    if len(dna_motif_corr_df) == 0:
         print(f"[⚠️] No data to plot for {output_file}")
         return
-    dnadiff_values, jaccard_values = zip(*dna_motif_corr)
+    dnadiff_values = dna_motif_corr_df["dnadiff"]
+    jaccard_values = dna_motif_corr_df["jaccard"]
     plt.figure(figsize=(6, 6))
     plt.scatter(dnadiff_values, jaccard_values, alpha=0.5)
     plt.xlabel("DNA Edit Distance")

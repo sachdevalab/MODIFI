@@ -1054,7 +1054,8 @@ class My_cluster(object):
         filtered_df = self.profile_df[self.profile_df['motifString'].isin(unique_motifs)]
 
         df_pivot = filtered_df.pivot(index='contig', columns='motifString', values='fraction').fillna(0)
-        contig_list = df_pivot.index.tolist()
+        # contig_list = df_pivot.index.tolist()
+        contig_list = self.members
         profile_matrix = df_pivot.values
         if len(df_pivot) < 2:
             print("Warning: Insufficient data for pairwise comparison.")
