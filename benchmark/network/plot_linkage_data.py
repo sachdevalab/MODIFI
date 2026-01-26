@@ -30,6 +30,8 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
 
         host_lineage = ctg_taxa_dict[linkage_obj.host] if linkage_obj.host in ctg_taxa_dict else "NA"
         host_taxa = get_detail_taxa_name(host_lineage)
+        ## get phylum of host
+        host_phylum = classify_taxa(host_lineage, "phylum")
 
         ## skip the linkage if host taxa is unclassfied
         if re.search("Unclassified", host_taxa):
@@ -45,7 +47,7 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
             G.add_node(mge_clu_dict[linkage_obj.mge], label=linkage_obj.mge, type=MGE_type_dict[linkage_obj.mge])
 
         gc_data.append([linkage_obj.mge, linkage_obj.host, MGE_type_dict[linkage_obj.mge], linkage_obj.MGE_gc, linkage_obj.host_gc, linkage_obj.cos_sim, 
-                        linkage_obj.MGE_cov, linkage_obj.host_cov, environment, prefix, linkage_obj.mge_len, host_taxa])
+                        linkage_obj.MGE_cov, linkage_obj.host_cov, environment, prefix, linkage_obj.mge_len, host_taxa, host_phylum])
 
         represent_ctg_lineage = ctg_taxa_dict[linkage_obj.host] if linkage_obj.host in ctg_taxa_dict else "NA"
         ctg_phylum = classify_taxa(represent_ctg_lineage, "phylum")
@@ -407,7 +409,7 @@ if __name__ == "__main__":
 
     gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_type", "MGE_gc", "host_gc", 
                                            "cos_sim", "MGE_cov", "host_cov", 
-                                           "environment", "sample", "mge_len", "host_taxa"])
+                                           "environment", "sample", "mge_len", "host_taxa", "host_phylum"])
     ## sort gc_df by mge_len descending
     gc_df = gc_df.sort_values(by='mge_len', ascending=False)
     ## save gc_df to a csv file
