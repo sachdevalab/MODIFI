@@ -636,47 +636,97 @@ def main_isolation():
         variation_data = []
         similarity_data = []
         clade_data = []
+        cluster_id = 0
+        dnadiff_list_all = []
+        dna_motif_corr = []
         for cluster, members in drep_clu_dict.items():
             if len(members) > cutoff:
-                print ("cluster", cluster, len(members), len(variation_data))
+                # print ("cluster", cluster, len(members), len(variation_data))
 
                 # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
                 #                                 fig_dir, tmp_res, "isolation", min_frac=0.5, min_sites=500)
                 
                 cluster_obj = My_cluster(cluster, members) 
-                cluster_obj.pairwise_edit_distance(seq_dir, edit_dir)
+                dnadiff_list, dnadiff_mat = cluster_obj.pairwise_edit_distance(seq_dir, edit_dir)
+                print ("#####cluster_id", cluster, cluster_id, len(drep_clu_dict))
+                cluster_id += 1
                 # break
-        #         cluster_obj.load_df(tmp_res)
-        #         print (">>>>", cluster_obj.profile_df)
-        #         cluster_obj.manual_filter_motifs()
+                dnadiff_list_all += dnadiff_list
+                cluster_obj.load_df(tmp_res)
+                print (">>>>", cluster_obj.profile_df)
+                cluster_obj.manual_filter_motifs()
 
-        #         if len(cluster_obj.profile_df) < 2:
-        #             print ("skip cluster with less than 2 contigs with motif profiles")
-        #             continue
+                if len(cluster_obj.profile_df) < 2:
+                    print ("skip cluster with less than 2 contigs with motif profiles")
+                    continue
 
-        #         ### get taxa of cluster
-        #         represent_ctg = select_represent(represent_ctg_set, members)
-        #         represent_ctg_lineage = ctg_taxa_dict[represent_ctg] if represent_ctg in ctg_taxa_dict else "NA"
-        #         cluster_phylum = classify_taxa(represent_ctg_lineage, "phylum")
-        #         cluster_species = classify_taxa(represent_ctg_lineage, "species")
+                ### get taxa of cluster
+                represent_ctg = select_represent(represent_ctg_set, members)
+                represent_ctg_lineage = ctg_taxa_dict[represent_ctg] if represent_ctg in ctg_taxa_dict else "NA"
+                cluster_phylum = classify_taxa(represent_ctg_lineage, "phylum")
+                cluster_species = classify_taxa(represent_ctg_lineage, "species")
 
-        #         motif_variation_flag = cluster_obj.check_diff_motifs()
-        #         similarity_data_cluster, motif_clade_num = cluster_obj.pairwise_compare(bin_freq=0.6)
+                motif_variation_flag = cluster_obj.check_diff_motifs()
+                similarity_data_cluster, motif_clade_num, jaccard_matrix = cluster_obj.pairwise_compare(bin_freq=0.6)
+                dna_motif_corr = update_corr(dnadiff_mat, jaccard_matrix, dna_motif_corr)
+                # variation_data.append([cluster, len(members), motif_variation_flag])
+                # similarity_data += similarity_data_cluster
+                # clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
 
-        #         variation_data.append([cluster, len(members), motif_variation_flag])
-        #         similarity_data += similarity_data_cluster
-        #         clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
-
-        #         if motif_variation_flag == "variation" or motif_clade_num > 1:
-        #             plot_name = f"{fig_dir}/{cluster}.pdf"
-        #             cluster_obj.plot_profile(cluster, plot_name, cluster_species)
-        #         # if len(variation_data) > 10:
-        #         #     break
+                # if motif_variation_flag == "variation" or motif_clade_num > 1:
+                #     plot_name = f"{fig_dir}/{cluster}.pdf"
+                #     cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+                # if len(variation_data) > 10:
+                #     break
         # plot_variation_fraction(variation_data, paper_fig_dir)
         # plot_similarity_dist(similarity_data, paper_fig_dir)
         # plot_clade_size(clade_data, paper_fig_dir)
+        plot_dna_motif_corr(dna_motif_corr, paper_fig_dir)
         # print ("all done")
+    # batch_dnadiff(dnadiff_list_all)
+    
 # 
+
+def update_corr(dnadiff_mat, jaccard_matrix, dna_motif_corr):
+    # Flatten the upper triangle of the matrices to get pairwise comparisons
+    triu_indices = np.triu_indices_from(dnadiff_mat, k=1)
+    dnadiff_values = dnadiff_mat[triu_indices]
+    jaccard_values = jaccard_matrix[triu_indices]
+    for i in range(len(dnadiff_values)):
+        dna_motif_corr.append((dnadiff_values[i], jaccard_values[i]))
+    return dna_motif_corr
+
+def plot_dna_motif_corr(dna_motif_corr, paper_fig_dir):
+    output_file = os.path.join(paper_fig_dir, "dna_motif_corr.pdf")
+    if len(dna_motif_corr) == 0:
+        print(f"[⚠️] No data to plot for {output_file}")
+        return
+    dnadiff_values, jaccard_values = zip(*dna_motif_corr)
+    plt.figure(figsize=(6, 6))
+    plt.scatter(dnadiff_values, jaccard_values, alpha=0.5)
+    plt.xlabel("DNA Edit Distance")
+    plt.ylabel("Motif Jaccard Index")
+    plt.title("DNA vs Motif Correlation")
+    plt.savefig(output_file)
+    plt.close()
+
+def batch_dnadiff(dnadiff_list_all):
+    ## construct a batch script to run all dnadiff commands, use 10 scripts
+    n_scripts = 30
+    h = open("batch_all.sh", "w")
+    scripts = [[] for _ in range(n_scripts)]
+    for i, cmd in enumerate(dnadiff_list_all):
+        scripts[i % n_scripts].append(cmd)
+    for i, script_cmds in enumerate(scripts):
+        script_file = f"scripts/dnadiff_batch_{i}.sh"
+        with open(script_file, "w") as f:
+            f.write("#!/bin/bash\n")
+            for cmd in script_cmds:
+                f.write(cmd + "\n")
+        # os.system(f"chmod +x {script_file}")
+        print (f"nohup bash scripts/dnadiff_batch_{i}.sh &", file = h)
+    h.close()
+
 def main_asthma():
     all_dir = "/home/shuaiw/borg/paper/run2/"
     seq_dir = "/home/shuaiw/borg/paper/asthma/B_longum"

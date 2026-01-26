@@ -102,7 +102,7 @@ plot_network <- function(gml_file, output_file) {
   # Create layout using graphopt (similar to neato)
   cat("\nComputing layout...\n")
   set.seed(42)
-  layout <- layout_with_graphopt(G)
+  layout <- layout_with_kk(G)
   
   # Create ggraph plot
   cat("Creating plot...\n")
@@ -229,7 +229,7 @@ plot_network <- function(gml_file, output_file) {
   
   # Save plot
   cat("Saving plot to:", output_file, "\n")
-  ggsave(output_file, plot = combined_plot, width = 9, height = 9, dpi = 600)
+  ggsave(output_file, plot = combined_plot, width = 9, height = 10, dpi = 600)
   
   cat("Done!\n")
 }
@@ -238,7 +238,7 @@ plot_network <- function(gml_file, output_file) {
 if (!interactive()) {
   paper_fig_dir <- "../../tmp/figures/multi_env_linkage/network_99"
   gml_file <- file.path(paper_fig_dir, "whole_network.gml")
-  output_file <- file.path(paper_fig_dir, "network_plot.png")
+  output_file <- file.path(paper_fig_dir, "network_plot.pdf")
   
   plot_network(gml_file, output_file)
 }

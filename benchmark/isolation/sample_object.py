@@ -1060,6 +1060,7 @@ class My_cluster(object):
             print("Warning: Insufficient data for pairwise comparison.")
             return [], 0
         similarity_matrix = cosine_similarity(profile_matrix)
+        jaccard_matrix = np.zeros((len(contig_list), len(contig_list)))
         ## also count Jaccard similarity, binary presence/absence with cutoff 0.3
         binary_df = df_pivot.applymap(lambda x: 1 if x >= bin_freq else 0)
         binary_matrix = binary_df.values
@@ -1069,8 +1070,10 @@ class My_cluster(object):
         for i in range(n):
             for j in range(i+1, n):
                 jaccard = jaccard_score(binary_matrix[i], binary_matrix[j])
+                jaccard_matrix[i][j] = jaccard
+                jaccard_matrix[j][i] = jaccard
                 data.append([similarity_matrix[i][j], jaccard])
-        return data, self.uniq_clade_num(binary_matrix)
+        return data, self.uniq_clade_num(binary_matrix), jaccard_matrix
 
     def uniq_clade_num(self, binary_matrix):
         ### cluster the binary matrix rows and count unique clades, 
@@ -1100,23 +1103,31 @@ class My_cluster(object):
         self.profile_df = self.profile_df[~self.profile_df['motifString'].isin(self.filtered_motifs)]
 
     def pairwise_edit_distance(self, seq_dir, edit_dir):
+        dnadiff_list = []
+        dnadiff_mat = np.zeros((len(self.members), len(self.members)))
         for i in range(len(self.members)):
             for j in range(i+1, len(self.members)):
                 # compute edit distance between self.members[i] and self.members[j]
                 
                 genome_1_fasta = os.path.join(seq_dir, self.cluster, f"{self.members[i]}.fa")
                 genome_2_fasta = os.path.join(seq_dir, self.cluster, f"{self.members[j]}.fa")
-                print (f"Edit distance between {self.members[i]} and {self.members[j]}: ")
+                # print (f"Edit distance between {self.members[i]} and {self.members[j]}: ")
                 prefix = os.path.join(edit_dir, f"{self.members[i]}_{self.members[j]}")
                 cmd = f"dnadiff -p {prefix} {genome_1_fasta} {genome_2_fasta}"
-                os.system(cmd)
+                
                 dnadiff_report = f"{prefix}.report"
+                if not os.path.exists(dnadiff_report):
+                    # os.system(cmd)
+                    dnadiff_list.append(cmd)
                 total_snps, total_indels, edit_distance = read_dnadiff_report(dnadiff_report)
-                print (f"Total SNPs: {total_snps}, Total Indels: {total_indels}, Edit Distance: {edit_distance}")
-                ## remove tmp files except the report
-                for file in os.listdir(edit_dir):
-                    if file.startswith(f"{self.members[i]}_{self.members[j]}") and not file.endswith(".report"):
-                        os.remove(os.path.join(edit_dir, file))
+                dnadiff_mat[i][j] = edit_distance
+                dnadiff_mat[j][i] = edit_distance
+                # print (f"Total SNPs: {total_snps}, Total Indels: {total_indels}, Edit Distance: {edit_distance}")
+                # ## remove tmp files except the report
+                # for file in os.listdir(edit_dir):
+                #     if file.startswith(f"{self.members[i]}_{self.members[j]}") and not file.endswith(".report"):
+                #         os.remove(os.path.join(edit_dir, file))
+        return dnadiff_list, dnadiff_mat
 
 def read_dnadiff_report(dnadiff_report):
     ## read total TotalSNPs and TotalIndels from dnadiff report
