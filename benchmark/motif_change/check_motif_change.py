@@ -475,8 +475,9 @@ def plot_similarity_dist(similarity_data, paper_fig_dir):
     plt.tight_layout()
     plt.savefig(f"{paper_fig_dir}/similarity_distributions.pdf")
 
-def plot_clade_size(clade_data, paper_fig_dir):
-    clade_df = pd.DataFrame(clade_data, columns=["clade_num", "cluster", "member_num", "phylum", "species"])
+def plot_clade_size(clade_df, paper_fig_dir):
+    
+    
     ## plot distribution of clade sizes
     plt.figure(figsize=(4,4))
     sns.histplot(clade_df['clade_num'], bins=30, kde=True, color="salmon")
@@ -492,7 +493,7 @@ def plot_clade_size(clade_data, paper_fig_dir):
     top20_df['combined_label'] = top20_df.apply(lambda row: f"{row['species']}\n({row['cluster']}, n={row['member_num']})", axis=1)
 
     plt.figure(figsize=(8,4))
-    ax = sns.barplot(x="clade_num", y="combined_label", data=top20_df, palette="viridis")
+    ax = sns.barplot(x="clade_num", y="combined_label", data=top20_df, color="steelblue")
     
     # Adjust layout to accommodate longer labels
     plt.subplots_adjust(left=0.4)  # Make more space for y-axis labels
@@ -506,6 +507,42 @@ def plot_clade_size(clade_data, paper_fig_dir):
     plt.title("Top 10 Species with Highest Motif Clade Numbers", fontsize=14)
     plt.tight_layout()
     plt.savefig(f"{paper_fig_dir}/top20_species_clade_numbers.pdf", bbox_inches='tight')
+
+
+def plot_stacked_bar(clade_df, paper_fig_dir):
+    cutoffs = [2,3,4,5,6,7,8,9,10]
+    cutoff_dict = defaultdict(int)
+    stack_data = []
+
+    def phylum_filter():
+        ## select the top 5 phyla based on the count at cutoff 2
+        top_phyla = clade_df[clade_df['member_num'] >= 2].groupby('phylum').size().sort_values(ascending=False).head(5).index.tolist()
+        return top_phyla
+
+    top_phyla = phylum_filter()
+
+    for cutoff in cutoffs:
+        phylum_variation_dict = defaultdict(int)
+        phylum_normal_dict = defaultdict(int)
+        for i, row in clade_df.iterrows():
+            if row['phylum'] not in top_phyla:
+                phylum = "Others"
+            else:
+                phylum = row['phylum']
+            if row['member_num'] >= cutoff:
+                cutoff_dict[cutoff] += 1
+                if row['motif_variation_flag'] == 'variation':
+                    phylum_variation_dict[phylum] += 1
+                else:
+                    phylum_normal_dict[phylum] += 1
+        for phylum, count in phylum_variation_dict.items():
+            stack_data.append([cutoff, phylum, 'variation', count])
+        for phylum, count in phylum_normal_dict.items():
+            stack_data.append([cutoff, phylum, 'normal', count])
+    stack_df = pd.DataFrame(stack_data, columns=["cutoff", "phylum", "motif_variation_flag", "count"])
+    print (stack_df)
+    print (cutoff_dict)
+    stack_df.to_csv(f"{paper_fig_dir}/motif_variation_counts_by_phylum.csv", index=False)
 
 def collect_represent_ctgs(dereplicated_genomes_dir):
     represent_ctg_set = set()
@@ -559,17 +596,17 @@ def main_meta():
         similarity_data = []
         clade_data = []
         for cluster, members in drep_clu_dict.items():
-            if cluster != "161_4":
-                continue
+            # if cluster != "161_4":
+            #     continue
             if len(members) > cutoff:
                 print ("cluster", cluster, len(members), len(variation_data))
 
-                cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-                                                fig_dir, tmp_res, min_frac=0.5, min_sites=500)
+                # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
+                #                                 fig_dir, tmp_res, min_frac=0.5, min_sites=500)
                 
-                # cluster_obj = My_cluster(cluster, members) 
-                # cluster_obj.load_df(tmp_res)
-                # cluster_obj.manual_filter_motifs()
+                cluster_obj = My_cluster(cluster, members) 
+                cluster_obj.load_df(tmp_res)
+                cluster_obj.manual_filter_motifs()
 
                 if len(cluster_obj.profile_df) < 2:
                     print ("skip cluster with less than 2 contigs with motif profiles")
@@ -582,18 +619,22 @@ def main_meta():
                 cluster_name = get_detail_taxa_name(represent_ctg_lineage)
 
                 motif_variation_flag = cluster_obj.check_diff_motifs()
-
+                similarity_data_cluster, motif_clade_num, jaccard_matrix = cluster_obj.pairwise_compare(bin_freq=0.6)
+                clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_name, motif_variation_flag]]
                 
-                similarity_data_cluster, motif_clade_num = cluster_obj.pairwise_compare(bin_freq=0.6)
-                variation_data.append([cluster, len(members), motif_variation_flag])
-                similarity_data += similarity_data_cluster
-                clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_name]]
-                print ("###############################", represent_ctg_lineage)
-                if motif_variation_flag == "variation" or motif_clade_num > 1:
-                    plot_name = f"{fig_dir}/{cluster}.pdf"
-                    cluster_obj.plot_profile(cluster, plot_name, cluster_name)
+                # variation_data.append([cluster, len(members), motif_variation_flag])
+                # similarity_data += similarity_data_cluster
+                
+                # print ("###############################", represent_ctg_lineage)
+                # if motif_variation_flag == "variation" or motif_clade_num > 1:
+                #     plot_name = f"{fig_dir}/{cluster}.pdf"
+                #     cluster_obj.plot_profile(cluster, plot_name, cluster_name)
                 # if len(variation_data) > 10:
                 #     break
+        clade_df = pd.DataFrame(clade_data, columns=["clade_num", "cluster", "member_num", "phylum", "species", "motif_variation_flag"])
+        clade_df.to_csv(os.path.join(paper_fig_dir, "clade_data.csv"), index=False)
+        # clade_df = pd.read_csv(os.path.join(paper_fig_dir, "clade_data.csv"))
+        plot_stacked_bar(clade_df, paper_fig_dir)
         # plot_variation_fraction(variation_data, paper_fig_dir)
         # plot_similarity_dist(similarity_data, paper_fig_dir)
         # plot_clade_size(clade_data, paper_fig_dir)
@@ -671,22 +712,26 @@ def main_isolation():
                 dna_motif_corr = update_corr(dnadiff_mat, jaccard_matrix, dna_motif_corr, cluster_obj)
                 # variation_data.append([cluster, len(members), motif_variation_flag])
                 # similarity_data += similarity_data_cluster
-                # clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species]]
+                clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species, motif_variation_flag]]
 
                 # if motif_variation_flag == "variation" or motif_clade_num > 1:
                 #     plot_name = f"{fig_dir}/{cluster}.pdf"
                 #     cluster_obj.plot_profile(cluster, plot_name, cluster_species)
                 # if len(variation_data) > 10:
                 #     break
+        """
         # plot_variation_fraction(variation_data, paper_fig_dir)
         # plot_similarity_dist(similarity_data, paper_fig_dir)
-        # plot_clade_size(clade_data, paper_fig_dir)
-        ## dna_motif_corr to df 
-        dna_motif_corr_df = pd.DataFrame(dna_motif_corr, columns=["cluster", "contig1", "contig2", "dnadiff", "jaccard"])
-        dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"), index=False)
-        """
-        dna_motif_corr_df = pd.read_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"))
-        plot_dna_motif_corr(dna_motif_corr_df, paper_fig_dir)
+        # clade_df = pd.DataFrame(clade_data, columns=["clade_num", "cluster", "member_num", "phylum", "species", "motif_variation_flag"])
+        # clade_df.to_csv(os.path.join(paper_fig_dir, "clade_data.csv"), index=False)
+        clade_df = pd.read_csv(os.path.join(paper_fig_dir, "clade_data.csv"))
+        plot_stacked_bar(clade_df, paper_fig_dir)
+        # ## dna_motif_corr to df 
+        # dna_motif_corr_df = pd.DataFrame(dna_motif_corr, columns=["cluster", "contig1", "contig2", "dnadiff", "jaccard"])
+        # dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"), index=False)
+        
+        # dna_motif_corr_df = pd.read_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"))
+        # plot_dna_motif_corr(dna_motif_corr_df, paper_fig_dir)
         
         # print ("all done")
     # batch_dnadiff(dnadiff_list_all)
@@ -755,6 +800,6 @@ def main_asthma():
     cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
 if __name__ == "__main__":
-    # main_meta()
-    main_isolation()
+    main_meta()
+    # main_isolation()
     # main_asthma()
