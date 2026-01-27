@@ -126,7 +126,7 @@ plot_heatmap <- function(data_file, heat_map) {
   ht <- do.call(Heatmap, heatmap_args)
   
   # Save to file
-  png(heat_map, width = 8, height = 10, units = "in", res = 400)
+  pdf(heat_map, width = 4, height = 6)
   draw(ht, heatmap_legend_side = "top", annotation_legend_side = "top")
   dev.off()
   
@@ -134,7 +134,7 @@ plot_heatmap <- function(data_file, heat_map) {
 }
 
 # Main execution
-data_file <- "180_4.csv"
-heat_map <- "../../tmp/figures/inversion/motif_change_heatmap.png"
+data_file <- "180_4_updated.csv"
+heat_map <- "../../tmp/figures/inversion/motif_change_heatmap.pdf"
 
 plot_heatmap(data_file, heat_map)
