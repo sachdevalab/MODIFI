@@ -57,24 +57,34 @@ cat("Pearson correlation between DNA edit distance and Motif Jaccard Index:",
     round(pearson_corr, 4), "\n")
 
 # Perform correlation test for p-value
-cor_test <- cor.test(dna_motif_corr_df$dnadiff, dna_motif_corr_df$jaccard, method = "pearson")
-cat("P-value:", format.pval(cor_test$p.value, digits = 4), "\n")
-cat("95% Confidence Interval: [", round(cor_test$conf.int[1], 4), ",", 
-    round(cor_test$conf.int[2], 4), "]\n\n")
+cor_test_pearson <- cor.test(dna_motif_corr_df$dnadiff, dna_motif_corr_df$jaccard, method = "pearson")
+cat("Pearson P-value:", format.pval(cor_test_pearson$p.value, digits = 4), "\n")
+cat("Pearson 95% Confidence Interval: [", round(cor_test_pearson$conf.int[1], 4), ",", 
+    round(cor_test_pearson$conf.int[2], 4), "]\n\n")
 
-# Create scatter plot
+# Format p-value for display
+if (cor_test_pearson$p.value < 0.001) {
+  p_text <- "P < 0.001"
+} else {
+  p_text <- sprintf("P = %.3f", cor_test_pearson$p.value)
+}
+
+# Create scatter plot with Pearson correlation line
 p <- ggplot(dna_motif_corr_df, aes(x = dnadiff, y = jaccard)) +
-  geom_point(alpha = 0.5) +
+  geom_point(alpha = 0.3, size = 1, color = "gray40") +
+  geom_smooth(method = "lm", color = "blue", se = TRUE, alpha = 0.2, linewidth = 1) +
+  annotate("text", x = max(dna_motif_corr_df$dnadiff) * 0.65, y = max(dna_motif_corr_df$jaccard) * 0.95,
+           label = sprintf("Pearson r = %.3f\n%s", pearson_corr, p_text),
+           hjust = 0, size = 5, fontface = "bold") +
   labs(
     x = "DNA Edit Distance",
-    y = "Motif Jaccard Index",
-    title = "DNA vs Motif Correlation"
+    y = "Motif Jaccard Index"
   ) +
   theme_bw() +
   theme(
-    plot.title = element_text(hjust = 0.5, size = 14),
     axis.title = element_text(size = 12),
-    axis.text = element_text(size = 10)
+    axis.text = element_text(size = 10),
+    panel.grid.minor = element_blank()
   )
 
 # Save plot
@@ -93,7 +103,7 @@ bin_counts <- dna_motif_corr_df %>%
   group_by(bin_label, dnadiff_bin) %>%
   summarise(n = n(), .groups = "drop") %>%
   arrange(dnadiff_bin) %>%
-  mutate(bin_label_with_n = paste0(bin_label, "\nn=", n))
+  mutate(bin_label_with_n = bin_label)
 
 # Filter bins with at least 100 samples
 bin_counts_filtered <- bin_counts %>%
@@ -106,202 +116,51 @@ dna_motif_corr_df <- dna_motif_corr_df %>%
 
 cat("Bins after filtering (n >= 100):", nrow(bin_counts_filtered), "\n")
 
-# Create violin plot
-p_violin <- ggplot(dna_motif_corr_df, aes(x = reorder(bin_label_with_n, dnadiff_bin), y = jaccard)) +
-  geom_violin(fill = "lightblue", alpha = 0.7) +
-  geom_boxplot(width = 0.1, outlier.shape = NA, alpha = 0.5) +
-  labs(
-    x = "DNA Edit Distance Bin (5k intervals, n≥100)",
-    y = "Motif Jaccard Index",
-    title = "Motif Jaccard Distribution by DNA Edit Distance"
+# Create plot with mean points and quartile error bars
+# Calculate mean and quartiles for each bin
+mean_jaccard_for_line <- dna_motif_corr_df %>%
+  group_by(dnadiff_bin, bin_label_with_n) %>%
+  summarise(
+    mean_jaccard = mean(jaccard, na.rm = TRUE),
+    q25 = quantile(jaccard, 0.25, na.rm = TRUE),
+    q75 = quantile(jaccard, 0.75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(dnadiff_bin) %>%
+  mutate(x_pos = row_number())
+
+p_violin <- ggplot(mean_jaccard_for_line, 
+                   aes(x = x_pos, y = mean_jaccard)) +
+#   geom_smooth(method = "loess", color = "black", fill = "gray80", 
+#               se = TRUE, linewidth = 1.2, span = 0.75, alpha = 0.3) +
+  geom_line(color = "black", linewidth = 0.8, alpha = 0.5) +
+  geom_errorbar(aes(ymin = q25, ymax = q75),
+                width = 0.4, color = "black", linewidth = 0.8, alpha = 0.7) +
+  geom_point(color = "black", size = 1.5, shape = 19) +
+  annotate("text", x = max(mean_jaccard_for_line$x_pos) * 0.55, y = 0.92,
+           label = sprintf("Pearson r = %.3f\n%s", pearson_corr, p_text),
+           hjust = 0, size = 5, color = "black") +
+  scale_x_continuous(
+    breaks = mean_jaccard_for_line$x_pos,
+    labels = mean_jaccard_for_line$bin_label_with_n
   ) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 14),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 10),
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
-
-# Save violin plot
-ggsave(violin_output_file, plot = p_violin, width = 6, height = 4)
-cat("Saved violin plot to:", violin_output_file, "\n")
-
-# Create bar plot showing mean jaccard for main bins (filtered)
-mean_jaccard_main <- dna_motif_corr_df %>%
-  group_by(bin_label_with_n, dnadiff_bin) %>%
-  summarise(mean_jaccard = mean(jaccard, na.rm = TRUE), .groups = "drop")
-
-p_bar_main <- ggplot(mean_jaccard_main, aes(x = reorder(bin_label_with_n, dnadiff_bin), y = mean_jaccard)) +
-  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
   labs(
-    x = "DNA Edit Distance Bin (5k intervals, n≥100)",
-    y = "Mean Motif Jaccard Index",
-    title = "Mean Motif Jaccard by DNA Edit Distance"
+    x = "Within-strain edit distance",
+    y = "Jaccard Similarity"
   ) +
   ylim(0, 1) +
-  theme_bw() +
+  theme_minimal() +
   theme(
-    plot.title = element_text(hjust = 0.5, size = 14),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 10),
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.title = element_text(size = 13, color = "black"),
+    axis.text = element_text(size = 11, color = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.5),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA)
   )
 
-# Create subplot for edit distance < 10000 with bin size 1000
-dna_motif_corr_df_subset <- read_csv(dna_motif_corr_file, show_col_types = FALSE) %>%
-  filter(dnadiff < 10000)
-
-if (nrow(dna_motif_corr_df_subset) > 0) {
-  # Bin edit distance by 1000
-  dna_motif_corr_df_subset <- dna_motif_corr_df_subset %>%
-    mutate(
-      dnadiff_bin = floor(dnadiff / 1000) * 1000,
-      bin_label = paste0(dnadiff_bin / 1000, "-", (dnadiff_bin + 1000) / 1000, "k")
-    )
-  
-  # Count samples in each bin
-  bin_counts_subset <- dna_motif_corr_df_subset %>%
-    group_by(bin_label, dnadiff_bin) %>%
-    summarise(n = n(), .groups = "drop") %>%
-    arrange(dnadiff_bin) %>%
-    mutate(bin_label_with_n = paste0(bin_label, "\nn=", n))
-  
-  # Add count labels to data
-  dna_motif_corr_df_subset <- dna_motif_corr_df_subset %>%
-    left_join(bin_counts_subset, by = c("bin_label", "dnadiff_bin"))
-  
-  # Create violin plot for subset
-  p_violin_subset <- ggplot(dna_motif_corr_df_subset, aes(x = reorder(bin_label_with_n, dnadiff_bin), y = jaccard)) +
-    geom_violin(fill = "lightcoral", alpha = 0.7) +
-    geom_boxplot(width = 0.1, outlier.shape = NA, alpha = 0.5) +
-    labs(
-      x = "DNA Edit Distance Bin (1k intervals)",
-      y = "Motif Jaccard Index",
-      title = "Motif Jaccard Distribution (Edit Distance < 10k)"
-    ) +
-    theme_bw() +
-    theme(
-      plot.title = element_text(hjust = 0.5, size = 14),
-      axis.title = element_text(size = 12),
-      axis.text = element_text(size = 10),
-      axis.text.x = element_text(angle = 45, hjust = 1)
-    )
-  
-  # Create bar plot for subset (< 10k)
-  mean_jaccard_subset <- dna_motif_corr_df_subset %>%
-    group_by(bin_label_with_n, dnadiff_bin) %>%
-    summarise(mean_jaccard = mean(jaccard, na.rm = TRUE), .groups = "drop")
-  
-  p_bar_subset <- ggplot(mean_jaccard_subset, aes(x = reorder(bin_label_with_n, dnadiff_bin), y = mean_jaccard)) +
-    geom_bar(stat = "identity", fill = "coral", alpha = 0.7) +
-    labs(
-      x = "DNA Edit Distance Bin (1k intervals)",
-      y = "Mean Motif Jaccard Index",
-      title = "Mean Motif Jaccard (Edit Distance < 10k)"
-    ) +
-    ylim(0, 1) +
-    theme_bw() +
-    theme(
-      plot.title = element_text(hjust = 0.5, size = 14),
-      axis.title = element_text(size = 12),
-      axis.text = element_text(size = 10),
-      axis.text.x = element_text(angle = 45, hjust = 1)
-    )
-  
-  # Combine both violin plots
-  combined_plot <- grid.arrange(p_violin, p_violin_subset, ncol = 1)
-  ggsave(combined_violin_file, plot = combined_plot, width = 8, height = 10)
-  cat("Saved combined violin plot to:", combined_violin_file, "\n")
-  
-  # Create another subplot for edit distance < 1000 with bin size 100
-  dna_motif_corr_df_subset2 <- read_csv(dna_motif_corr_file, show_col_types = FALSE) %>%
-    filter(dnadiff < 1000)
-  
-  if (nrow(dna_motif_corr_df_subset2) > 0) {
-    # Bin edit distance by 100
-    dna_motif_corr_df_subset2 <- dna_motif_corr_df_subset2 %>%
-      mutate(
-        dnadiff_bin = floor(dnadiff / 100) * 100,
-        bin_label = paste0(dnadiff_bin, "-", dnadiff_bin + 100)
-      )
-    
-    # Count samples in each bin
-    bin_counts_subset2 <- dna_motif_corr_df_subset2 %>%
-      group_by(bin_label, dnadiff_bin) %>%
-      summarise(n = n(), .groups = "drop") %>%
-      arrange(dnadiff_bin) %>%
-      mutate(bin_label_with_n = paste0(bin_label, "\nn=", n))
-    
-    # Add count labels to data
-    dna_motif_corr_df_subset2 <- dna_motif_corr_df_subset2 %>%
-      left_join(bin_counts_subset2, by = c("bin_label", "dnadiff_bin"))
-    
-    # Create violin plot for subset2
-    p_violin_subset2 <- ggplot(dna_motif_corr_df_subset2, aes(x = reorder(bin_label_with_n, dnadiff_bin), y = jaccard)) +
-      geom_violin(fill = "lightgreen", alpha = 0.7) +
-      geom_boxplot(width = 0.1, outlier.shape = NA, alpha = 0.5) +
-      labs(
-        x = "DNA Edit Distance Bin (100 bp intervals)",
-        y = "Motif Jaccard Index",
-        title = "Motif Jaccard Distribution (Edit Distance < 1k)"
-      ) +
-      theme_bw() +
-      theme(
-        plot.title = element_text(hjust = 0.5, size = 14),
-        axis.title = element_text(size = 12),
-        axis.text = element_text(size = 10),
-        axis.text.x = element_text(angle = 45, hjust = 1)
-      )
-    
-    # Create bar plot for subset2 (< 1k)
-    mean_jaccard_subset2 <- dna_motif_corr_df_subset2 %>%
-      group_by(bin_label_with_n, dnadiff_bin) %>%
-      summarise(mean_jaccard = mean(jaccard, na.rm = TRUE), .groups = "drop")
-    
-    p_bar_subset2 <- ggplot(mean_jaccard_subset2, aes(x = reorder(bin_label_with_n, dnadiff_bin), y = mean_jaccard)) +
-      geom_bar(stat = "identity", fill = "lightgreen", alpha = 0.7) +
-      labs(
-        x = "DNA Edit Distance Bin (100 bp intervals)",
-        y = "Mean Motif Jaccard Index",
-        title = "Mean Motif Jaccard (Edit Distance < 1k)"
-      ) +
-      ylim(0, 1) +
-      theme_bw() +
-      theme(
-        plot.title = element_text(hjust = 0.5, size = 14),
-        axis.title = element_text(size = 12),
-        axis.text = element_text(size = 10),
-        axis.text.x = element_text(angle = 45, hjust = 1)
-      )
-    
-    # Combine all three violin plots
-    combined_plot_all <- grid.arrange(p_violin, p_violin_subset, p_violin_subset2, ncol = 1)
-    combined_all_file <- file.path(paper_fig_dir, "dna_motif_corr_violin_all.pdf")
-    ggsave(combined_all_file, plot = combined_plot_all, width = 8, height = 14)
-    cat("Saved all three violin plots to:", combined_all_file, "\n")
-    
-    # Combine all three bar plots
-    combined_bar_all <- grid.arrange(p_bar_main, p_bar_subset, p_bar_subset2, ncol = 1)
-    combined_bar_file <- file.path(paper_fig_dir, "dna_motif_corr_barplot_all.pdf")
-    ggsave(combined_bar_file, plot = combined_bar_all, width = 8, height = 14)
-    cat("Saved all three bar plots to:", combined_bar_file, "\n")
-    
-    # Combine violin and bar plots side by side for each scale
-    combined_violin_bar <- grid.arrange(
-      p_violin, p_bar_main,
-      p_violin_subset, p_bar_subset,
-      p_violin_subset2, p_bar_subset2,
-      ncol = 2
-    )
-    combined_violin_bar_file <- file.path(paper_fig_dir, "dna_motif_corr_combined_all.pdf")
-    ggsave(combined_violin_bar_file, plot = combined_violin_bar, width = 14, height = 16)
-    cat("Saved combined violin and bar plots to:", combined_violin_bar_file, "\n")
-    
-  } else {
-    cat("[⚠️] No data with edit distance < 1000 for third subplot\n")
-  }
-  
-} else {
-  cat("[⚠️] No data with edit distance < 10000 for subset plot\n")
-}
+# Save plot
+ggsave(violin_output_file, plot = p_violin, width = 4, height = 4)
+cat("Saved plot to:", violin_output_file, "\n")
