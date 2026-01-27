@@ -108,16 +108,16 @@ bin_counts <- dna_motif_corr_df %>%
   arrange(dnadiff_bin) %>%
   mutate(bin_label_with_n = bin_label)
 
-# Filter bins with at least 100 samples
+# Filter bins with at least 10 samples
 bin_counts_filtered <- bin_counts %>%
-  filter(n >= 100)
+  filter(n >= 10)
 
 # Add count labels to data and filter
 dna_motif_corr_df <- dna_motif_corr_df %>%
   left_join(bin_counts, by = c("bin_label", "dnadiff_bin")) %>%
-  filter(n >= 100)
+  filter(n >= 10)
 
-cat("Bins after filtering (n >= 100):", nrow(bin_counts_filtered), "\n")
+cat("Bins after filtering (n >= 10):", nrow(bin_counts_filtered), "\n")
 
 # Create plot with mean points and quartile error bars
 # Calculate mean and quartiles for each bin

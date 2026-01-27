@@ -569,6 +569,7 @@ def main_meta():
         drep_clu_file = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/data_tables/Cdb.csv"
         dereplicated_genomes_dir = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/dereplicated_genomes/"
         seq_dir = "/home/shuaiw/borg/paper/motif_change/seq_drep/"
+        edit_dir = "/home/shuaiw/borg/paper/motif_change/meta_edit_dist/"
         fig_dir = f"/home/shuaiw/borg/paper/motif_change/plot_drep2_{ANI}/"
         tmp_res = f"/home/shuaiw/borg/paper/motif_change/result_drep2_{ANI}/"
         paper_fig_dir = f"../../tmp/figures/strain_diff/drep_{ANI}/"
@@ -595,6 +596,9 @@ def main_meta():
         variation_data = []
         similarity_data = []
         clade_data = []
+        cluster_id = 0
+        dnadiff_list_all = []
+        dna_motif_corr = []
         for cluster, members in drep_clu_dict.items():
             # if cluster != "161_4":
             #     continue
@@ -605,6 +609,12 @@ def main_meta():
                 #                                 fig_dir, tmp_res, min_frac=0.5, min_sites=500)
                 
                 cluster_obj = My_cluster(cluster, members) 
+                dnadiff_list, dnadiff_mat = cluster_obj.pairwise_edit_distance(seq_dir, edit_dir)
+                
+                print ("#####cluster_id", cluster, cluster_id, len(drep_clu_dict))
+                cluster_id += 1
+                # break
+                dnadiff_list_all += dnadiff_list
                 cluster_obj.load_df(tmp_res)
                 cluster_obj.manual_filter_motifs()
 
@@ -621,6 +631,7 @@ def main_meta():
                 motif_variation_flag = cluster_obj.check_diff_motifs()
                 similarity_data_cluster, motif_clade_num, jaccard_matrix = cluster_obj.pairwise_compare(bin_freq=0.6)
                 clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_name, motif_variation_flag]]
+                dna_motif_corr = update_corr(dnadiff_mat, jaccard_matrix, dna_motif_corr, cluster_obj)
                 
                 # variation_data.append([cluster, len(members), motif_variation_flag])
                 # similarity_data += similarity_data_cluster
@@ -631,14 +642,20 @@ def main_meta():
                 #     cluster_obj.plot_profile(cluster, plot_name, cluster_name)
                 # if len(variation_data) > 10:
                 #     break
-        clade_df = pd.DataFrame(clade_data, columns=["clade_num", "cluster", "member_num", "phylum", "species", "motif_variation_flag"])
-        clade_df.to_csv(os.path.join(paper_fig_dir, "clade_data.csv"), index=False)
-        # clade_df = pd.read_csv(os.path.join(paper_fig_dir, "clade_data.csv"))
-        plot_stacked_bar(clade_df, paper_fig_dir)
+        # clade_df = pd.DataFrame(clade_data, columns=["clade_num", "cluster", "member_num", "phylum", "species", "motif_variation_flag"])
+        # clade_df.to_csv(os.path.join(paper_fig_dir, "clade_data.csv"), index=False)
+        # # clade_df = pd.read_csv(os.path.join(paper_fig_dir, "clade_data.csv"))
+        # plot_stacked_bar(clade_df, paper_fig_dir)
         # plot_variation_fraction(variation_data, paper_fig_dir)
         # plot_similarity_dist(similarity_data, paper_fig_dir)
         # plot_clade_size(clade_data, paper_fig_dir)
         # print ("all done")
+        dna_motif_corr_df = pd.DataFrame(dna_motif_corr, columns=["cluster", "contig1", "contig2", "dnadiff", "jaccard"])
+        dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"), index=False)
+        
+        # dna_motif_corr_df = pd.read_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"))
+        plot_dna_motif_corr(dna_motif_corr_df, paper_fig_dir)
+    # batch_dnadiff(dnadiff_list_all)
 
 def main_isolation():
     all_dir = "/home/shuaiw/borg/paper/isolation/batch2_results/"

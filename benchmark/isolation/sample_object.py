@@ -1121,6 +1121,8 @@ class My_cluster(object):
                 if not os.path.exists(dnadiff_report):
                     # os.system(cmd)
                     dnadiff_list.append(cmd)
+                    print ("## dnadiff report not found, adding command to list:", cmd)
+            # else:
                 total_snps, total_indels, edit_distance = read_dnadiff_report(dnadiff_report)
                 dnadiff_mat[i][j] = edit_distance
                 dnadiff_mat[j][i] = edit_distance
