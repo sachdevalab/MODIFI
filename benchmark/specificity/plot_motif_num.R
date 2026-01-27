@@ -188,6 +188,48 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
   # Combine plots in 2x2 layout
   combined_plot <- arrangeGrob(p1, p2, p3, p4, ncol = 2, nrow = 2)
   
+  # Calculate proportion of genomes with motifs per sample grouped by environment
+  sample_proportions <- df_all_data %>%
+    group_by(environment, sample) %>%
+    summarise(
+      total_genomes = n(),
+      genomes_with_motifs = sum(motif_num > 0),
+      proportion = (genomes_with_motifs / total_genomes) * 100,
+      .groups = "drop"
+    )
+  
+  # Filter environments with sufficient data
+  envs_to_include <- env_summary %>%
+    filter(total_ctgs >= ctg_num_cutoff) %>%
+    pull(environment)
+  
+  sample_proportions_filtered <- sample_proportions %>%
+    filter(environment %in% envs_to_include)
+  
+  # Order environments by median proportion
+  env_order_box <- sample_proportions_filtered %>%
+    group_by(environment) %>%
+    summarise(median_prop = median(proportion)) %>%
+    arrange(desc(median_prop)) %>%
+    pull(environment)
+  
+  sample_proportions_filtered$environment <- factor(sample_proportions_filtered$environment, 
+                                                     levels = env_order_box)
+  
+  # Create boxplot of proportion per sample by environment
+  p5 <- ggplot(sample_proportions_filtered, aes(x = environment, y = proportion)) +
+    geom_boxplot(fill = "#A0A0A0", outlier.size = 1, width = 0.6) +
+    geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, color = "#404040") +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, 100)) +
+    labs(title = "",
+         x = NULL,
+         y = "Proportion of genomes\nwith motifs per sample (%)") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+          axis.text.y = element_text(size = 10),
+          plot.title = element_text(size = 11, hjust = 0.5, face = "bold"),
+          panel.grid.major.x = element_blank())
+  
   # Save the combined plot
   ggsave(paste0(fig_dir, "/proportion_motif.pdf"), 
          combined_plot, 
@@ -232,6 +274,15 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
          dpi = 300)
   
   cat(sprintf("Plot saved to %s/motif_num_phylum_boxplot.pdf\n", fig_dir))
+  
+  # Save p5 separately
+  ggsave(paste0(fig_dir, "/proportion_per_sample_by_env_boxplot.pdf"), 
+         p5, 
+         width = 3, 
+         height = 4, 
+         dpi = 300)
+  
+  cat(sprintf("Plot saved to %s/proportion_per_sample_by_env_boxplot.pdf\n", fig_dir))
 }
 
 # Main execution

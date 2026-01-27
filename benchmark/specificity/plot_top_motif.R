@@ -42,29 +42,6 @@ top20_df <- df_all_data %>%
   arrange(desc(motif_num)) %>%
   head(20)
 
-# Define phylum color palette
-PHYLUM_COLORS <- c(
-  "Pseudomonadota" = "#d8b365",
-  "Bacillota" = "#f46d43",
-  "Bacillota_A" = "#8da0cb",
-  "Desulfobacterota" = "#fc8d62",
-  "Actinomycetota" = "#66c2a5",
-  "Bacteroidota" = "#e78ac3",
-  "Campylobacterota" = "#a6d854",
-  "Acidobacteriota" = "#1b9e77",
-  "Verrucomicrobiota" = "#7570b3",
-  "Chloroflexota" = "#e7298a",
-  # Archaea phyla
-  "Thermoproteota" = "#b15928",
-  "Thermoplasmatota" = "#fdbf6f",
-  "Halobacteriota" = "#ff7f00",
-  "Aenigmatarchaeota" = "#cab2d6",
-  "Nanoarchaeota" = "#6a3d9a",
-  "Hadarchaeota" = "#fb9a99",
-  "Asgardarchaeota" = "#e31a1c",
-  "Micrarchaeota" = "#a6cee3",
-  "Others" = "#e6e6e6"
-)
 
 # Define environment color palette
 ENV_COLORS <- c(
@@ -80,23 +57,22 @@ ENV_COLORS <- c(
 )
 
 # Create combined labels that include species and contig (without n= prefix)
-# Map phylum to color category (use "Others" for phyla not in the palette)
 top20_df <- top20_df %>%
   mutate(
-    combined_label = paste0(species, "\n(", contig, ")"),
-    phylum_color = ifelse(phylum %in% names(PHYLUM_COLORS), phylum, "Others")
+    combined_label = paste0(species, "\n(", contig, ")")
   )
 
 # Create horizontal barplot with motif numbers displayed in the bars
 p <- ggplot(top20_df, aes(x = motif_num, y = reorder(combined_label, motif_num))) +
-  geom_col(aes(fill = phylum_color), show.legend = FALSE) +
+  geom_col(fill = "skyblue", show.legend = FALSE) +
   # Add environment color indicator on the right side of bars
   geom_segment(aes(x = motif_num + 0.5, xend = motif_num + 0.5, 
                    y = as.numeric(reorder(combined_label, motif_num)) - 0.4,
                    yend = as.numeric(reorder(combined_label, motif_num)) + 0.4,
                    color = environment), size = 3) +
   geom_text(aes(label = motif_num), hjust = 1.2, color = "white", size = 4, fontface = "bold") +
-  scale_fill_manual(values = PHYLUM_COLORS) +
+  # Add phylum name inside the bar on the left side
+  geom_text(aes(label = phylum), x = 2, hjust = 0, color = "black", size = 3.5) +
   scale_color_manual(values = ENV_COLORS, name = "Environment") +
   labs(x = "Number of Motifs",
        y = "") +
@@ -113,5 +89,5 @@ p <- ggplot(top20_df, aes(x = motif_num, y = reorder(combined_label, motif_num))
 # Save plot as PDF
 ggsave(file.path(fig_dir, "top20_genome_motif.pdf"), 
        plot = p, 
-       width = 6, 
-       height = 10)
+       width = 7, 
+       height = 9)
