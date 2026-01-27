@@ -41,6 +41,46 @@ PHYLUM_COLORS = {
 }
 
 
+
+BAC_PHYLUM_COLORS = {
+    "Pseudomonadota":    "#d8b365",  # tan / brown
+    "Bacillota":         "#f46d43",  # orange
+    "Bacillota_A":       "#8da0cb",  # blue-lavender
+    "Desulfobacterota":       "#fc8d62",  # light orange / salmon (same family as Bacillota)
+    "Actinomycetota":    "#66c2a5",  # teal-green
+    "Bacteroidota":      "#e78ac3",  # pink
+    "Campylobacterota":  "#a6d854",  # light green
+    "Acidobacteriota":   "#1b9e77",  # dark green
+    "Verrucomicrobiota": "#7570b3",  # muted purple
+    "Chloroflexota":   "#e7298a",  # magenta
+    "Bacillota_C":    "#b15928",  # brown/rust
+    "Nitrospirota":  "#fdbf6f",  # light orange/yellow
+    "Bacillota_I":    "#ff7f00",  # bright orange
+    "Desulfobacterota_B": "#cab2d6",  # light purple
+    "Patescibacteria":     "#6a3d9a",  # deep purple
+    "Gemmatimonadota":      "#fb9a99",  # light red/pink
+    "Others":            "#e6e6e6"   # very light neutral (only gray)
+}
+
+
+ARC_PHYLUM_COLORS = {
+    # Archaea phyla
+    "Thermoproteota":    "#b15928",  # brown/rust
+    "Thermoplasmatota":  "#fdbf6f",  # light orange/yellow
+    "Halobacteriota":    "#ff7f00",  # bright orange
+    "Aenigmatarchaeota": "#cab2d6",  # light purple
+    "Nanoarchaeota":     "#6a3d9a",  # deep purple
+    "Hadarchaeota":      "#fb9a99",  # light red/pink
+    "Asgardarchaeota":   "#e31a1c",  # red
+    "Micrarchaeota":     "#a6cee3",  # light blue
+    "Nanobdellota":    "#66c2a5",  # teal-green
+    "Methanobacteriota":      "#e78ac3",  # pink
+    "B1Sed10-29":  "#a6d854",  # light green
+    "Others":            "#e6e6e6"   # very light neutral (only gray)
+
+}
+
+
 header = """TREE_COLORS
 #use this template to define branch colors and styles, colored ranges and label colors/font styles/backgrounds
 #lines starting with a hash are comments and ignored during parsing
@@ -1431,9 +1471,12 @@ def count_good_ctgs(df_all_data):
     print (f"Total Archaea contigs: {archaea_count}")
 
 
-def color_tree(tree_file, tree_results):
+def color_tree(tree_file, tree_results, micro_type = "bacteria"):
     from Bio import Phylo
-    
+    if micro_type == "bacteria":
+        PHYLUM_COLORS = BAC_PHYLUM_COLORS
+    elif micro_type == "archaea":
+        PHYLUM_COLORS = ARC_PHYLUM_COLORS
     df_all_data = pd.read_csv(f"{fig_dir}/motif_num_all_samples.csv")
     count_good_ctgs(df_all_data)
     motif_num_anno = gradient_header + "\n"
@@ -1461,10 +1504,10 @@ def color_tree(tree_file, tree_results):
     
     # Sort and get top 8
     sorted_phyla = sorted(tree_phylum_counts.items(), key=lambda x: x[1], reverse=True)
-    top8_phyla = [p[0] for p in sorted_phyla[:8]]
+    top8_phyla = [p[0] for p in sorted_phyla[:14]]
     
     print(f"\nTop 8 phyla by tree node count:")
-    for phylum, count in sorted_phyla[:8]:
+    for phylum, count in sorted_phyla[:20]:
         print(f"  {phylum}: {count} nodes")
     ## save all the phyla with node counts in to a CSV file
     phylum_counts_df = pd.DataFrame(sorted_phyla, columns=['Phylum', 'Node_Count'])
@@ -1573,8 +1616,8 @@ if __name__ == "__main__":
     bacteria_tree = "/home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_tree/gtdbtk.unrooted.tree"
     archaea_tree = "/home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_tree/archaea.unrooted.tree"
     archea_tree_results = "/home/shuaiw/borg/paper/specificity/archea_tree/"
-    color_tree(bacteria_tree, tree_results)
-    # color_tree(archaea_tree, archea_tree_results)
+    # color_tree(bacteria_tree, tree_results, "bacteria")
+    color_tree(archaea_tree, archea_tree_results, "archaea")
     # plot_motif_len(fig_dir)
     # sample_env_dict = read_metadata(meta_file)
     # main(all_dir, fig_dir, sample_env_dict)

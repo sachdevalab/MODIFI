@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from sample_object import My_sample, Isolation_sample
 
-PHYLUM_COLORS = {
+BAC_PHYLUM_COLORS = {
     "Pseudomonadota":    "#d8b365",  # tan / brown
     "Bacillota":         "#f46d43",  # orange
     "Bacillota_A":       "#8da0cb",  # blue-lavender
@@ -21,6 +21,13 @@ PHYLUM_COLORS = {
     "Acidobacteriota":   "#1b9e77",  # dark green
     "Verrucomicrobiota": "#7570b3",  # muted purple
     "Chloroflexota":   "#e7298a",  # magenta
+
+    "Bacillota_C":    "#b15928",  # brown/rust
+    "Nitrospirota":  "#fdbf6f",  # light orange/yellow
+    "Bacillota_I":    "#ff7f00",  # bright orange
+    "Desulfobacterota_B": "#cab2d6",  # light purple
+    "Patescibacteria":     "#6a3d9a",  # deep purple
+    "Gemmatimonadota":      "#fb9a99",  # light red/pink
     "Others":            "#e6e6e6"   # very light neutral (only gray)
 }
 
@@ -324,14 +331,14 @@ def color_phylum(run_taxa_dict, tree_results, sample_meta_dict):
     # Assign colors from PHYLUM_COLORS dictionary
     phylum_color = {}
     for phylum in phylum_list:
-        if phylum in PHYLUM_COLORS:
-            phylum_color[phylum] = PHYLUM_COLORS[phylum]
+        if phylum in BAC_PHYLUM_COLORS:
+            phylum_color[phylum] = BAC_PHYLUM_COLORS[phylum]
         else:
             # Use "Others" color for phylums not in the dictionary
-            phylum_color[phylum] = PHYLUM_COLORS["Others"]
+            phylum_color[phylum] = BAC_PHYLUM_COLORS["Others"]
     
-    # Add default color for unknown
-    phylum_color["unknown"] = "#cccccc"
+    # Add default color for unknown (use same as Others)
+    phylum_color["unknown"] = BAC_PHYLUM_COLORS["Others"]
     
     print(f"Found {len(phylum_list)} unique phylums using predefined colors:")
     for phylum, color in phylum_color.items():
@@ -408,5 +415,5 @@ if __name__ == "__main__":
     genome_dir = "/home/shuaiw/borg/paper/isolation//GTDB_tree/genomes"
     genome_list = "/home/shuaiw/borg/paper/specificity/iso_genome.list"  ## for drep
     run_taxa_dict, sample_meta_dict, filtered_df = single_run(resultdir, genome_dir) ## collect isolation genomes with high dp
-    collect_iso_ctgsall_dir(resultdir, genome_list, filtered_df)
-    # color_phylum(run_taxa_dict, tree_results, sample_meta_dict)
+    # collect_iso_ctgsall_dir(resultdir, genome_list, filtered_df)
+    color_phylum(run_taxa_dict, tree_results, sample_meta_dict)

@@ -180,7 +180,8 @@ class My_sample(object):
             print (f"[⚠️] Motif file not found: {self.all_motif_file}")
             return None, None
         df = pd.read_csv(self.all_motif_file)
-        return get_unique_motifs(df, min_frac=min_frac, min_sites=min_sites)
+        motif_num, unique_motifs, unique_motifs_identifier = get_unique_motifs(df, min_frac=min_frac, min_sites=min_sites)
+        return motif_num, unique_motifs
 
     def simple_load_motifs(self):
         if not os.path.exists(self.all_motif_file):

@@ -7,7 +7,7 @@ Each phylum from the PHYLUM_COLORS dictionary will be a leaf in the tree.
 import random
 
 
-PHYLUM_COLORS = {
+BAC_PHYLUM_COLORS = {
     "Pseudomonadota":    "#d8b365",  # tan / brown
     "Bacillota":         "#f46d43",  # orange
     "Bacillota_A":       "#8da0cb",  # blue-lavender
@@ -18,19 +18,14 @@ PHYLUM_COLORS = {
     "Acidobacteriota":   "#1b9e77",  # dark green
     "Verrucomicrobiota": "#7570b3",  # muted purple
     "Chloroflexota":   "#e7298a",  # magenta
-    # Archaea phyla
-    "Thermoproteota":    "#b15928",  # brown/rust
-    "Thermoplasmatota":  "#fdbf6f",  # light orange/yellow
-    "Halobacteriota":    "#ff7f00",  # bright orange
-    "Aenigmatarchaeota": "#cab2d6",  # light purple
-    "Nanoarchaeota":     "#6a3d9a",  # deep purple
-    "Hadarchaeota":      "#fb9a99",  # light red/pink
-    "Asgardarchaeota":   "#e31a1c",  # red
-    "Micrarchaeota":     "#a6cee3",  # light blue
-    
+    "Bacillota_C":    "#b15928",  # brown/rust
+    "Nitrospirota":  "#fdbf6f",  # light orange/yellow
+    "Bacillota_I":    "#ff7f00",  # bright orange
+    "Desulfobacterota_B": "#cab2d6",  # light purple
+    "Patescibacteria":     "#6a3d9a",  # deep purple
+    "Gemmatimonadota":      "#fb9a99",  # light red/pink
     "Others":            "#e6e6e6"   # very light neutral (only gray)
 }
-
 
 def generate_balanced_tree(taxa_list, branch_length=1.0):
     """
@@ -182,7 +177,7 @@ def main():
     
     # Set random seed for reproducibility
     random.seed(42)
-    PHYLA = list(PHYLUM_COLORS.keys())
+    PHYLA = list(BAC_PHYLUM_COLORS .keys())
     
     # Generate balanced tree
     phyla_sorted = sorted(PHYLA)
@@ -207,7 +202,7 @@ def main():
     print(f"Generated: {random_path}")
     
     # Generate color annotation
-    color_annotation = generate_color_annotation(PHYLUM_COLORS)
+    color_annotation = generate_color_annotation(BAC_PHYLUM_COLORS )
     color_path = os.path.join(output_dir, "phylum_colors.txt")
     with open(color_path, "w") as f:
         f.write(color_annotation)
@@ -221,7 +216,7 @@ def main():
     print(f"Generated: {label_path}")
     
     # Generate colored ranges
-    colored_ranges = generate_colored_ranges(PHYLUM_COLORS)
+    colored_ranges = generate_colored_ranges(BAC_PHYLUM_COLORS )
     colorstrip_path = os.path.join(output_dir, "phylum_colorstrip.txt")
     with open(colorstrip_path, "w") as f:
         f.write(colored_ranges)
