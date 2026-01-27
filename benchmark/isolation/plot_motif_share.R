@@ -111,7 +111,68 @@ plot_cross_taxa <- function(fig_dir) {
   ggsave(paste0(fig_dir, "/jaccard_similarity_by_taxa_relation.pdf"), 
          p2, width = 6, height = 5, dpi = 400)
   
-  cat("\nPlot saved successfully!\n")
+  # Calculate mean Jaccard similarity by mge_type and relation
+  stats_by_mge <- jaccard_all %>%
+    group_by(relation, mge_type) %>%
+    summarise(
+      mean = mean(jaccard_similarity_filtered2, na.rm = TRUE),
+      se = sd(jaccard_similarity_filtered2, na.rm = TRUE) / sqrt(n()),
+      count = n(),
+      .groups = 'drop'
+    )
+  
+  # Complete the data to include all combinations
+  all_relations <- levels(jaccard_all$relation)
+  all_mge_types <- unique(jaccard_all$mge_type)
+  all_combinations <- expand.grid(relation = all_relations, mge_type = all_mge_types, stringsAsFactors = FALSE)
+  
+  stats_by_mge <- all_combinations %>%
+    left_join(stats_by_mge, by = c("relation", "mge_type")) %>%
+    mutate(
+      mean = ifelse(is.na(mean), 0, mean),
+      se = ifelse(is.na(se), 0, se),
+      count = ifelse(is.na(count), 0, count)
+    )
+  
+  # Convert relation to factor with proper levels
+  stats_by_mge$relation <- factor(stats_by_mge$relation, levels = relation_labels)
+  
+  cat("\n=== Mean Jaccard Similarity by Relation and MGE Type ===\n")
+  print(as.data.frame(stats_by_mge), row.names = FALSE)
+  
+  # Create barplot with mge_type as hue
+  p3 <- ggplot(stats_by_mge, aes(x = relation, y = mean, fill = mge_type)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
+                  position = position_dodge(width = 0.7),
+                  width = 0.2, linewidth = 0.5) +
+    geom_text(aes(label = count, y = mean + se), 
+              position = position_dodge(width = 0.7), 
+              vjust = -0.5, size = 3, color = "black") +
+    labs(
+      x = "MGE-Genome Taxonomic Relationship",
+      y = "Mean Jaccard Similarity",
+      fill = "MGE Type"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+      axis.text.y = element_text(size = 12),
+      axis.title = element_text(size = 14),
+      plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+      panel.grid.major.y = element_line(colour = "gray90"),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background = element_rect(fill = "white", colour = NA),
+      legend.position = "top"
+    )
+  
+  # Save separate plot with MGE type breakdown
+  ggsave(paste0(fig_dir, "/jaccard_similarity_by_taxa_relation_mge.pdf"), 
+         p3, width = 8, height = 5, dpi = 400)
+  
+  cat("\nPlots saved successfully!\n")
 }
 
 # Main execution
