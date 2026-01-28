@@ -30,11 +30,12 @@ get_detail_taxa_name <- function(lineage) {
 df_all_data <- read_csv(file.path(fig_dir, "motif_num_all_samples.csv"))
 
 # Extract species from lineage using the get_detail_taxa_name function
-# Remove p__ prefix from phylum names
+# Remove p__ prefix from phylum names and replace WOR-3 with Stahlbacteria
 df_all_data <- df_all_data %>%
   mutate(
     species = sapply(lineage, get_detail_taxa_name),
-    phylum = str_replace(phylum, "^p__", "")
+    phylum = str_replace(phylum, "^p__", ""),
+    phylum = str_replace(phylum, "WOR-3", "Stahlbacteria")
   )
 
 # Get top 20 genomes by motif number

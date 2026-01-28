@@ -216,11 +216,47 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
   sample_proportions_filtered$environment <- factor(sample_proportions_filtered$environment, 
                                                      levels = env_order_box)
   
-  # Create boxplot of proportion per sample by environment
+  # Create comparison list for all pairwise comparisons between environments
+  # Exclude ocean as it may have only one observation
+  envs_to_compare <- setdiff(as.character(env_order_box), "ocean")
+  env_pairs <- combn(envs_to_compare, 2, simplify = FALSE)
+  pairwise_comparisons <- list()
+  
+  for (pair in env_pairs) {
+    n1 <- sum(sample_proportions_filtered$environment == pair[1])
+    n2 <- sum(sample_proportions_filtered$environment == pair[2])
+    if (n1 >= 2 && n2 >= 2) {
+      pairwise_comparisons[[length(pairwise_comparisons) + 1]] <- c(pair[1], pair[2])
+    }
+  }
+  
+  # Create boxplot of proportion per sample by environment with t.test
   p5 <- ggplot(sample_proportions_filtered, aes(x = environment, y = proportion)) +
-    geom_boxplot(fill = "#A0A0A0", outlier.size = 1, width = 0.6) +
-    geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, color = "#404040") +
-    scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, 100)) +
+    geom_boxplot(fill = "#A0A0A0", outlier.shape = NA, width = 0.6) +
+    geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, color = "#404040")
+  
+    # Add significance marks at the top, split lines for each comparison
+    if (length(pairwise_comparisons) > 0) {
+      # Stack the lines at the top, e.g. 103, 108, 113, ...
+      y_positions <- seq(103, 103 + (length(pairwise_comparisons) - 1) * 10, by = 10)
+      p5 <- p5 + geom_signif(comparisons = pairwise_comparisons,
+                             test = "t.test",
+                             map_signif_level = c("***" = 0.001, "**" = 0.01, "*" = 0.05),
+                             y_position = y_positions,
+                             tip_length = 0.02,
+                             textsize = 3,
+                             na.rm = TRUE)
+    }
+  
+  p5 <- p5 +
+      scale_y_continuous(
+        expand = expansion(mult = c(0, 0)),
+        limits = c(0, 130),
+        breaks = seq(0, 100, 25),
+        labels = seq(0, 100, 25),
+        oob = scales::squish
+      ) +
+      coord_cartesian(ylim = c(0, 130), clip = "off") +
     labs(title = "",
          x = NULL,
          y = "Proportion of genomes\nwith motifs per sample (%)") +
