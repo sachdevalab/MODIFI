@@ -5,6 +5,7 @@ import pandas as pd
 import argparse
 from pathlib import Path
 import re
+from Bio.Seq import Seq
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'motif_change'))
@@ -107,19 +108,83 @@ def personal_plot(profile_df):
     # Update the pivot_df index with the new labels before creating heatmap
     pivot_df.index = y_labels
     
-    fig, ax = plt.subplots(figsize=(20, 15))
+    # Plot independent dendrogram tree
+    fig_tree = plt.figure(figsize=(13, 13))
+    ax_tree = fig_tree.add_subplot(111)
+    dendro_tree = dendrogram(row_linkage, orientation='right', ax=ax_tree,
+                            labels=y_labels, color_threshold=0, leaf_font_size=8,
+                            no_plot=False, count_sort=False, distance_sort=False)
     
-    # Create heatmap with yticklabels set to show all labels
+    # Get the leaf positions from dendrogram
+    leaf_positions = dendro_tree['leaves']
+    icoord = np.array(dendro_tree['icoord'])
+    dcoord = np.array(dendro_tree['dcoord'])
+    
+    # Normalize all horizontal distances to create uniform branch lengths (cladogram style)
+    # Redraw the dendrogram with uniform spacing
+    ax_tree.clear()
+    
+    # Create cladogram by setting all branches to unit length
+    def make_cladogram(linkage_matrix):
+        """Convert linkage matrix to have uniform branch lengths"""
+        Z = linkage_matrix.copy()
+        # Set all distances to 1 for uniform branch lengths
+        Z[:, 2] = 1
+        return Z
+    
+    cladogram_linkage = make_cladogram(row_linkage)
+    dendro_tree = dendrogram(cladogram_linkage, orientation='right', ax=ax_tree,
+                            labels=y_labels, color_threshold=0, leaf_font_size=8)
+    
+    # Get the leaf positions from dendrogram
+    leaf_positions = dendro_tree['leaves']
+    
+    # Draw horizontal lines from leaves to labels for better visibility
+    for i, (leaf_idx, y_pos) in enumerate(zip(leaf_positions, range(5, len(leaf_positions)*10+5, 10))):
+        # Get the x position of the leaf (rightmost point)
+        leaf_x = 0
+        ax_tree.plot([leaf_x, -2.0], [y_pos, y_pos], 'k--', linewidth=0.5, alpha=0.5, dashes=(5, 5))
+    
+    ax_tree.set_xlabel("Distance", fontsize=14)
+    ax_tree.set_yticklabels(ax_tree.get_yticklabels(), fontsize=7, ha='right')
+    ax_tree.set_title(f"{cluster_species} - Hierarchical Clustering", fontsize=16, pad=15)
+    ax_tree.spines['top'].set_visible(False)
+    ax_tree.spines['right'].set_visible(False)
+    ax_tree.spines['left'].set_visible(False)
+    plt.tight_layout()
+    tree_plot_name = plot_name.replace('.pdf', '_tree.pdf')
+    plt.savefig(tree_plot_name, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Saved tree plot to: {tree_plot_name}")
+    
+    # Create figure with subplots for dendrogram and heatmap
+    fig = plt.figure(figsize=(22, 15))
+    gs = fig.add_gridspec(1, 2, width_ratios=[1, 10], wspace=0.02)
+    
+    # Plot dendrogram on the left - with no_plot first to get the proper ordering
+    ax_dendro = fig.add_subplot(gs[0])
+    # Use the same linkage but plot it correctly oriented
+    dendro_plot = dendrogram(row_linkage, orientation='left', ax=ax_dendro, 
+                             no_labels=True, color_threshold=0)
+    ax_dendro.set_xticks([])
+    ax_dendro.set_yticks([])
+    ax_dendro.spines['top'].set_visible(False)
+    ax_dendro.spines['right'].set_visible(False)
+    ax_dendro.spines['bottom'].set_visible(False)
+    ax_dendro.spines['left'].set_visible(False)
+    ax_dendro.invert_yaxis()  # Invert to match heatmap orientation
+    
+    # Plot heatmap on the right
+    ax_heatmap = fig.add_subplot(gs[1])
     sns.heatmap(pivot_df, cmap="YlGnBu", annot=False, fmt=".2f", 
-                cbar_kws={'label': 'Fraction'}, ax=ax, yticklabels=True, xticklabels=True)
-    
+                cbar_kws={'label': 'Fraction'}, ax=ax_heatmap, yticklabels=True, xticklabels=True)
     
     # Set labels and formatting
-    ax.set_xlabel("Motif String", fontsize=12)
-    ax.set_ylabel("Contig", fontsize=12)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha='right', fontsize=6)
-    ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=6)
-    ax.set_title(f"{cluster_species}", fontsize=14, pad=20)
+    ax_heatmap.set_xlabel("Motif String", fontsize=12)
+    ax_heatmap.set_ylabel("Contig", fontsize=12)
+    ax_heatmap.set_xticklabels(ax_heatmap.get_xticklabels(), rotation=90, ha='right', fontsize=6)
+    ax_heatmap.set_yticklabels(ax_heatmap.get_yticklabels(), rotation=0, fontsize=6)
+    ax_heatmap.set_title(f"{cluster_species}", fontsize=14, pad=20)
     
 
     
@@ -182,6 +247,18 @@ def count_mod_freq(all_dir, borg_anno_dict, score_cutoff = 30):
     print (df)
     return df
 
+def get_unique_motif(motifs_to_keep):
+    ## only keep one for each reverse complementary motif pair
+    unique_motifs = set()
+    unique_motif_ids = set()
+    for motif_id in motifs_to_keep:
+        motif_string = motif_id.split("_")[0]
+        rev_comp = str(Seq(motif_string).reverse_complement())
+        if rev_comp not in unique_motifs:
+            unique_motifs.add(motif_string)
+            unique_motif_ids.add(motif_id)
+    return list(unique_motif_ids)
+
 if __name__ == "__main__":
     
     all_dir = "/home/shuaiw/borg/paper/gg_run2/"
@@ -193,7 +270,7 @@ if __name__ == "__main__":
     os.system(f"cat {all_dir}/*/borg/{cluster_species}_contigs_summary.tsv > {borg_file}")
     plot_name = os.path.join(seq_dir, f"{cluster_species}_motif_profile_all.pdf")
     
-
+    # """
     # Load BORG data
     borg_data = My_Borg(borg_file)
     high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
@@ -213,11 +290,15 @@ if __name__ == "__main__":
     for member in all_members:
         if member not in members:
             members.append(member)
-            borg_anno_dict[member[0]] = ['HOST', all_anno_dict[member[0]][3:]+"<GTDB"]
+            borg_anno_dict[member[0]] = ['HOST', all_anno_dict[member[0]][3:]+"<GTDB>"]
     # # print (borg_anno_dict)
     # count_mod_freq(all_dir, borg_anno_dict)
 
-    # print (members)
+    manual_members = [("SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META_16008_L", "soil_2")]
+    for member in manual_members:
+        if member not in members:
+            members.append(member)
+            borg_anno_dict[member[0]] = ['HOST', "<Manual host>"]
 
 
     # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
@@ -246,6 +327,12 @@ if __name__ == "__main__":
     # Remove motifs where all contigs have fraction < 0.2
     motif_max_fractions = profile_df.groupby('motifString')['fraction'].max()
     motifs_to_keep = motif_max_fractions[motif_max_fractions >= 0.4].index
+
+    ## only keep one for each reverse complementary motif pair
+    unique_motif_ids = get_unique_motif(motifs_to_keep)
+    print ("###get unique motifs", len(motifs_to_keep), len(unique_motif_ids))
+    motifs_to_keep = unique_motif_ids
+
     profile_df = profile_df[profile_df['motifString'].isin(motifs_to_keep)]
     print(f"Kept {len(motifs_to_keep)} motifs with max fraction >= 0.2")
     
@@ -255,10 +342,12 @@ if __name__ == "__main__":
     profile_df = profile_df[profile_df['contig'].isin(contigs_to_keep)]
     print(f"Kept {len(contigs_to_keep)} contigs with max fraction >= 0.2")
 
+    profile_df.to_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv", index=False)
 
-
+    # """
+    ## store the profile_df in a CSV file
     
-    
+    profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv")
     personal_plot(profile_df)
 
 
