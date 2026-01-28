@@ -5,6 +5,7 @@ library(ggplot2)
 library(tidyr)
 library(gridExtra)
 library(ggsignif)
+library(readr)
 
 count_good_ctgs <- function(df_all_data, fig_dir) {
   # Count statistics
@@ -196,7 +197,8 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
       genomes_with_motifs = sum(motif_num > 0),
       proportion = (genomes_with_motifs / total_genomes) * 100,
       .groups = "drop"
-    )
+    ) %>%
+    filter(total_genomes >= 5)
   
   # Filter environments with sufficient data
   envs_to_include <- env_summary %>%
@@ -205,6 +207,9 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
   
   sample_proportions_filtered <- sample_proportions %>%
     filter(environment %in% envs_to_include)
+
+  ## store sample_proportions_filtered to a csv
+  readr::write_csv(sample_proportions_filtered, file.path(fig_dir, "sample_proportions_filtered.csv"))
   
   # Order environments by median proportion
   env_order_box <- sample_proportions_filtered %>%
@@ -230,10 +235,20 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
     }
   }
   
+sample_proportions_filtered
+
   # Create boxplot of proportion per sample by environment with t.test
   p5 <- ggplot(sample_proportions_filtered, aes(x = environment, y = proportion)) +
     geom_boxplot(fill = "#A0A0A0", outlier.shape = NA, width = 0.6) +
-    geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, color = "#404040")
+    geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, color = "#404040") +
+    # Highlight samples with proportion == 0
+    geom_point(data = subset(sample_proportions_filtered, proportion == 0),
+           aes(x = environment, y = proportion),
+           color = "red", size = 3, shape = 17, inherit.aes = FALSE) +
+    # Label those samples
+    geom_text(data = subset(sample_proportions_filtered, proportion == 0),
+          aes(x = environment, y = proportion, label = sample),
+          vjust = 1.5, color = "red", size = 2.5, angle = 45, inherit.aes = FALSE)
   
     # Add significance marks at the top, split lines for each comparison
     if (length(pairwise_comparisons) > 0) {
