@@ -8,49 +8,79 @@ library(tidyr)
 # Read data
 gc_df <- read_csv("../../tmp/figures/multi_env_linkage/network_99/mge_host_gc_cov.csv", show_col_types = FALSE)
 
-# Rename 'novel' to 'unknown' for consistency and set factor order
 gc_df <- gc_df %>%
-  mutate(MGE_type_clean = ifelse(MGE_type == "novel", "unknown", MGE_type)) %>%
-  mutate(MGE_type_clean = factor(MGE_type_clean, levels = c("plasmid", "virus", "unknown")))
+  mutate(MGE_type = factor(MGE_type, levels = c("plasmid", "virus")))
 
-# Count linkages by environment
-env_counts <- gc_df %>%
-  group_by(environment, MGE_type_clean, .drop = FALSE) %>%
+
+# Count linkages per sample by environment and MGE type
+env_sample_counts <- gc_df %>%
+  group_by(environment, sample, MGE_type, .drop = FALSE) %>%
   summarise(count = n(), .groups = "drop")
 
-# Order environments by total count
+# Only retain environments with >=5 samples (for both MGE types combined)
+env_sample_counts <- env_sample_counts %>%
+  group_by(environment) %>%
+  filter(n_distinct(sample) >= 5) %>%
+  ungroup()
+
+# Order environments by total count (for consistent x-axis order)
 env_order <- gc_df %>%
   count(environment, sort = TRUE) %>%
   pull(environment)
+env_sample_counts$environment <- factor(env_sample_counts$environment, levels = env_order)
 
-env_counts$environment <- factor(env_counts$environment, levels = env_order)
-
-# Count linkages by phylum (top 10)
-phylum_counts <- gc_df %>%
-  group_by(host_phylum, MGE_type_clean, .drop = FALSE) %>%
-  summarise(count = n(), .groups = "drop")
-
+# Count linkages per sample by phylum and MGE type (top 10 phyla)
 top_phyla <- gc_df %>%
   count(host_phylum, sort = TRUE) %>%
   head(10) %>%
   pull(host_phylum)
 
-phylum_counts_filtered <- phylum_counts %>%
-  filter(host_phylum %in% top_phyla)
+phylum_sample_counts <- gc_df %>%
+  filter(host_phylum %in% top_phyla) %>%
+  group_by(host_phylum, sample, MGE_type, .drop = FALSE) %>%
+  summarise(count = n(), .groups = "drop")
+phylum_sample_counts$host_phylum <- factor(phylum_sample_counts$host_phylum, levels = top_phyla)
 
-phylum_counts_filtered$host_phylum <- factor(phylum_counts_filtered$host_phylum, levels = top_phyla)
+# Only retain phyla with >=5 samples (for both MGE types combined)
+phylum_sample_counts <- phylum_sample_counts %>%
+  group_by(host_phylum) %>%
+  filter(n_distinct(sample) >= 5) %>%
+  ungroup()
+
 
 # Create color palette
-mge_colors <- c("plasmid" = "#0000FF", "virus" = "#FF0000", "unknown" = "#FFA500")
+mge_colors <- c("plasmid" = "#0000FF", "virus" = "#FF0000")
 
-# Plot 1: By environment (without legend)
-p1 <- ggplot(env_counts, aes(x = environment, y = count, fill = MGE_type_clean)) +
-  geom_bar(stat = "identity", position = "dodge") +
+# Load ggpubr for significance annotation
+if (!requireNamespace("ggpubr", quietly = TRUE)) {
+  install.packages("ggpubr", repos = "https://cloud.r-project.org")
+}
+library(ggpubr)
+# Ensure symnum is available (from stats)
+if (!exists("symnum")) symnum <- get("symnum", envir = asNamespace("stats"))
+
+
+# Boxplot 1: Linkages per sample by environment (filtered, with significance)
+# Precompute p-values for each environment
+env_pvals <- env_sample_counts %>%
+  group_by(environment) %>%
+  filter(length(unique(MGE_type)) == 2) %>%
+  summarise(p = tryCatch(t.test(count ~ MGE_type)$p.value, error = function(e) NA_real_)) %>%
+  mutate(star = symnum(p, corr = FALSE, na = FALSE, cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), symbols = c("***", "**", "*", ".", "")))
+
+# Get y position for annotation
+env_ypos <- env_sample_counts %>% group_by(environment) %>% summarise(y = max(count, na.rm = TRUE) * 1.1)
+env_pvals <- left_join(env_pvals, env_ypos, by = "environment")
+
+p1 <- ggplot(env_sample_counts, aes(x = environment, y = count, fill = MGE_type)) +
+  geom_boxplot(outlier.shape = NA, position = position_dodge(width = 0.8)) +
+  geom_jitter(aes(color = MGE_type), position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8), size = 0.8, alpha = 0.5, show.legend = FALSE) +
   scale_fill_manual(values = mge_colors, name = "MGE Type") +
+  scale_color_manual(values = mge_colors, guide = "none") +
   labs(
     x = "Environment",
-    y = "Number of Linkages",
-    title = "Linkages by Environment"
+    y = "Linkages per Sample",
+    title = ""
   ) +
   theme_bw() +
   theme(
@@ -59,16 +89,33 @@ p1 <- ggplot(env_counts, aes(x = environment, y = count, fill = MGE_type_clean))
     axis.text = element_text(size = 10),
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "none"
-  )
+  ) +
+  geom_text(data = env_pvals, aes(x = environment, y = y, label = star), inherit.aes = FALSE, vjust = 0, size = 6)
 
-# Plot 2: By phylum (without legend)
-p2 <- ggplot(phylum_counts_filtered, aes(x = host_phylum, y = count, fill = MGE_type_clean)) +
-  geom_bar(stat = "identity", position = "dodge") +
+ggsave("../../tmp/figures/multi_env_linkage/network_99/linkage_counts_env_boxplot.pdf", 
+       plot = p1, width = 3, height = 5)
+
+# Boxplot 2: Linkages per sample by phylum (filtered, with significance)
+# Precompute p-values for each phylum
+phylum_pvals <- phylum_sample_counts %>%
+  group_by(host_phylum) %>%
+  filter(length(unique(MGE_type)) == 2) %>%
+  summarise(p = tryCatch(t.test(count ~ MGE_type)$p.value, error = function(e) NA_real_)) %>%
+  mutate(star = symnum(p, corr = FALSE, na = FALSE, cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), symbols = c("***", "**", "*", ".", "")))
+
+# Get y position for annotation
+phylum_ypos <- phylum_sample_counts %>% group_by(host_phylum) %>% summarise(y = max(count, na.rm = TRUE) * 1.1)
+phylum_pvals <- left_join(phylum_pvals, phylum_ypos, by = "host_phylum")
+
+p2 <- ggplot(phylum_sample_counts, aes(x = host_phylum, y = count, fill = MGE_type)) +
+  geom_boxplot(outlier.shape = NA, position = position_dodge(width = 0.8)) +
+  geom_jitter(aes(color = MGE_type), position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8), size = 0.8, alpha = 0.5, show.legend = FALSE) +
   scale_fill_manual(values = mge_colors, name = "MGE Type") +
+  scale_color_manual(values = mge_colors, guide = "none") +
   labs(
     x = "Host Phylum",
-    y = "Number of Linkages",
-    title = "Linkages by Phylum (Top 10)"
+    y = "Linkages per Sample",
+    title = ""
   ) +
   theme_bw() +
   theme(
@@ -77,46 +124,43 @@ p2 <- ggplot(phylum_counts_filtered, aes(x = host_phylum, y = count, fill = MGE_
     axis.text = element_text(size = 10),
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "none"
-  )
+  ) +
+  geom_text(data = phylum_pvals, aes(x = host_phylum, y = y, label = star), inherit.aes = FALSE, vjust = 0, size = 6)
 
-# Extract legend from a plot with legend
-p_legend <- ggplot(env_counts, aes(x = environment, y = count, fill = MGE_type_clean)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  scale_fill_manual(values = mge_colors, name = "MGE Type") +
-  theme_bw() +
-  theme(legend.position = "bottom")
+ggsave("../../tmp/figures/multi_env_linkage/network_99/linkage_counts_phylum_boxplot.pdf", 
+       plot = p2, width = 7, height = 5)
 
-# Combine plots with shared legend
-library(gridExtra)
-library(grid)
 
-# Extract the legend
-get_legend <- function(myggplot) {
-  tmp <- ggplot_gtable(ggplot_build(myggplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-  legend <- tmp$grobs[[leg]]
-  return(legend)
+# T-tests for environment
+cat("\n=== T-tests: Plasmid vs Virus by Environment (≥5 samples) ===\n")
+for (env in unique(env_sample_counts$environment)) {
+  dat <- env_sample_counts %>% filter(environment == env)
+  if (length(unique(dat$MGE_type)) == 2) {
+    t_res <- try(t.test(count ~ MGE_type, data = dat), silent = TRUE)
+    if (!inherits(t_res, "try-error")) {
+      cat(sprintf("%s: p = %.4g\n", as.character(env), t_res$p.value))
+    }
+  }
 }
 
-legend <- get_legend(p_legend)
-
-# Arrange plots in 2 rows with shared legend at bottom
-combined <- grid.arrange(
-  arrangeGrob(p1, p2, nrow = 2),
-  legend,
-  nrow = 2,
-  heights = c(10, 1)
-)
-
-ggsave("../../tmp/figures/multi_env_linkage/network_99/linkage_counts_combined.pdf", 
-       plot = combined, width = 7, height = 8)
+# T-tests for phylum
+cat("\n=== T-tests: Plasmid vs Virus by Phylum (≥5 samples) ===\n")
+for (phy in unique(phylum_sample_counts$host_phylum)) {
+  dat <- phylum_sample_counts %>% filter(host_phylum == phy)
+  if (length(unique(dat$MGE_type)) == 2) {
+    t_res <- try(t.test(count ~ MGE_type, data = dat), silent = TRUE)
+    if (!inherits(t_res, "try-error")) {
+      cat(sprintf("%s: p = %.4g\n", as.character(phy), t_res$p.value))
+    }
+  }
+}
 
 # Print summary statistics
-cat("\n=== Linkage Count Summary ===\n\n")
-cat("By Environment:\n")
-print(env_counts %>% pivot_wider(names_from = MGE_type_clean, values_from = count, values_fill = 0))
+cat("\n=== Linkage Count Summary (Per Sample, Filtered) ===\n\n")
+cat("By Environment (per sample, ≥5 samples):\n")
+print(env_sample_counts %>% pivot_wider(names_from = MGE_type, values_from = count, values_fill = 0))
 
-cat("\nBy Phylum (Top 10):\n")
-print(phylum_counts_filtered %>% pivot_wider(names_from = MGE_type_clean, values_from = count, values_fill = 0))
+cat("\nBy Phylum (Top 10, per sample, ≥5 samples):\n")
+print(phylum_sample_counts %>% pivot_wider(names_from = MGE_type, values_from = count, values_fill = 0))
 
-cat("\nPlot saved to ../../tmp/figures/multi_env_linkage/network_99/linkage_counts_combined.pdf\n")
+cat("\nBoxplots saved to linkage_counts_env_boxplot.pdf and linkage_counts_phylum_boxplot.pdf\n")

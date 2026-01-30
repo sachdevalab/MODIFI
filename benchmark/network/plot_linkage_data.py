@@ -22,6 +22,8 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
     """
     Get the edge data from the host summary file.
     """
+    # sample_obj.specificity_cutoff = 0.001
+    # sample_obj.final_score_cutoff = 0.8
     our_linkages, our_ctg_linkages, linkage_info_list = sample_obj.read_linkage_dict()
 
     
@@ -36,7 +38,9 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
         ## skip the linkage if host taxa is unclassfied
         if re.search("Unclassified", host_taxa):
             continue
-
+        # print (f"Processing linkage: host={linkage_obj.host}, mge={linkage_obj.mge} {MGE_type_dict[linkage_obj.mge]}")
+        if MGE_type_dict[linkage_obj.mge] == "novel":
+            continue
 
         if linkage_obj.host in host_clu_dict:
             host_clu = host_clu_dict[linkage_obj.host]
@@ -57,13 +61,15 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
 
     return G, gc_data, cluster_anno_dict
     
-def plot_network2(G,paper_fig_dir ):
+def plot_network2(G,paper_fig_dir ,fig_name="network_test_plot2"):
 
     
-    plt.figure(1, figsize=(12, 14))
+    # plt.figure(1, figsize=(12, 14))
+    plt.figure(1, figsize=(9, 9))
     
     # layout graphs with positions using graphviz neato
-    pos = nx.nx_agraph.graphviz_layout(G, prog="neato")
+    # pos = nx.nx_agraph.graphviz_layout(G, prog="neato")
+    pos = nx.nx_agraph.graphviz_layout(G, prog="fdp")
     
     # Separate nodes by type
     virus_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'virus']
@@ -72,7 +78,7 @@ def plot_network2(G,paper_fig_dir ):
     host_nodes = [n for n, d in G.nodes(data=True) if d.get('type') not in ['virus', 'plasmid', 'novel']]
     
     # Draw edges first (so they appear behind nodes)
-    nx.draw_networkx_edges(G, pos, edge_color='gray', alpha=0.8, width=0.5)
+    nx.draw_networkx_edges(G, pos, edge_color='black', alpha=1, width=1)
     
     # Define colors for each node type
     node_size = 50
@@ -140,7 +146,7 @@ def plot_network2(G,paper_fig_dir ):
               fontsize=14, pad=20)
     plt.axis('off')
     plt.tight_layout()
-    plt.savefig(f"{paper_fig_dir}/network_test_plot2.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"{paper_fig_dir}/{fig_name}.png", dpi=300, bbox_inches='tight')
     plt.close()
 
 def read_metadata(meta_file):
@@ -366,6 +372,10 @@ def get_completness(checkm_report):
     for index, row in df.iterrows():
         return row['Completeness'], row["Contamination"]
 
+# def compare_MGEs(whole_G, paper_fig_dir):
+#     ## in the graph, count the degree of virus and plasmids, and output to a csv file
+
+
 if __name__ == "__main__":  
     ANI = 99
     meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
@@ -378,6 +388,7 @@ if __name__ == "__main__":
     if not os.path.exists(paper_fig_dir):
         os.makedirs(paper_fig_dir)
 
+    """
     sample_env_dict = read_metadata(meta_file)
     drep_clu_dict, host_clu_dict = read_drep_cluster(drep_clu_file)
     mge_clu_dict = read_mge_cluster(mge_clu_file)
@@ -403,7 +414,7 @@ if __name__ == "__main__":
 
     plot_network2(whole_G, paper_fig_dir)
     ## save whole_G to file by gml
-    nx.write_gml(whole_G, f"{paper_fig_dir}/whole_network.gml")
+    nx.write_gml(whole_G, f"{paper_fig_dir}/whole_network2.gml")
 
     profile_network(whole_G, ctg_taxa_dict)
 
@@ -416,8 +427,17 @@ if __name__ == "__main__":
     gc_df.to_csv(f"{paper_fig_dir}/mge_host_gc_cov.csv", index=False)
     plot_gc(gc_df, paper_fig_dir)
     analyze_MGEs(gc_df, mge_clu_dict)
-
+    """
     # secondary_chr(all_dir)
 
 
-    
+    whole_G = nx.read_gml(f"{paper_fig_dir}/whole_network2.gml")
+
+    # ## output the top 5 connected components, and count the number of nodes in it
+    # connected_components = sorted(nx.connected_components(whole_G), key=len, reverse=True)
+    # for i, component in enumerate(connected_components[:5]):
+    #     print(f"Connected component {i+1} has {len(component)} nodes")
+    # ## plot the largest connected component
+    # largest_component = connected_components[0]
+    # subgraph = whole_G.subgraph(largest_component)
+    # plot_network2(subgraph, paper_fig_dir, fig_name = "largest_connected_component")

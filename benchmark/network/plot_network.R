@@ -17,220 +17,168 @@ plot_network <- function(gml_file, output_file) {
   if ("weight" %in% edge_attr_names(G)) {
     G <- delete_edge_attr(G, "weight")
   }
-  
+
   cat("Network loaded:\n")
   cat("  Nodes:", vcount(G), "\n")
   cat("  Edges:", ecount(G), "\n")
-  
-  # Get node types
-  if (!"type" %in% vertex_attr_names(G)) {
-    stop("Graph does not have 'type' vertex attribute")
-  }
-  
-  node_types <- V(G)$type
-  cat("  Node types:", unique(node_types), "\n")
-  
-  # Count each type
-  virus_count <- sum(node_types == "virus")
-  plasmid_count <- sum(node_types == "plasmid")
-  novel_count <- sum(node_types == "novel")
-  host_count <- sum(!node_types %in% c("virus", "plasmid", "novel"))
-  
-  cat("  Virus nodes:", virus_count, "\n")
-  cat("  Plasmid nodes:", plasmid_count, "\n")
-  cat("  Unknown nodes:", novel_count, "\n")
-  cat("  Host nodes:", host_count, "\n")
-  
-  # Prepare node data frame
-  # Check if name attribute exists, otherwise use vertex index
-  if ("name" %in% vertex_attr_names(G)) {
-    node_names <- V(G)$name
-  } else {
-    node_names <- as.character(1:vcount(G))
-  }
-  
-  nodes_df <- data.frame(
-    name = node_names,
-    type = node_types,
-    is_host = !node_types %in% c("virus", "plasmid", "novel"),
-    stringsAsFactors = FALSE
-  )
-  
-  # For host nodes, each unique cluster gets a unique color
-  # Get unique host types (phyla)
-  host_types <- unique(nodes_df$type[nodes_df$is_host])
-  
-  # Assign colors to host clusters
+
+  # Get connected components
+  # Use igraph::decompose to get all components as subgraphs
+  comp_list <- decompose(G)
+  # Only keep components with >5 nodes
+  comp_list <- Filter(function(g) vcount(g) > 5, comp_list)
+  # Sort by size descending
+  comp_list <- comp_list[order(sapply(comp_list, vcount), decreasing = TRUE)]
+  plots <- list()
+
+  # --- GLOBAL COLOR/SHAPE MAPS ---
+  all_types <- unique(V(G)$type)
+  host_types <- setdiff(all_types, c("virus", "plasmid", "novel"))
+  host_palette <- NULL
   if (length(host_types) > 0) {
-    # Use colorRampPalette to generate enough colors
-    if (length(host_types) <= 20) {
-      host_palette <- colorRampPalette(brewer.pal(12, "Set3"))(length(host_types))
-    } else {
-      host_palette <- colorRampPalette(brewer.pal(12, "Set3"))(length(host_types))
-    }
+    host_palette <- colorRampPalette(brewer.pal(12, "Set3"))(length(host_types))
     names(host_palette) <- host_types
   }
-  
-  # Assign colors to all nodes
-  nodes_df$color <- sapply(1:nrow(nodes_df), function(i) {
-    type <- nodes_df$type[i]
-    if (type == "virus") {
-      return("red")
-    } else if (type == "plasmid") {
-      return("blue")
-    } else if (type == "novel") {
-      return("orange")
+  color_map <- setNames(rep("gray", length(all_types)), all_types)
+  shape_map <- setNames(rep(22, length(all_types)), all_types)
+  color_map["virus"] <- "red"
+  color_map["plasmid"] <- "blue"
+  color_map["novel"] <- "orange"
+  shape_map["virus"] <- 24
+  shape_map["plasmid"] <- 21
+  shape_map["novel"] <- 23
+  if (!is.null(host_palette)) {
+    color_map[names(host_palette)] <- host_palette
+    shape_map[names(host_palette)] <- 22
+  }
+
+  # --- Circular layout for each component, arranged in a single panel ---
+  # Compute circular layouts and offset each component
+  layout_list <- list()
+  node_df_list <- list()
+  edge_df_list <- list()
+  x_offset <- 0
+  y_offset <- 0
+  ncol_grid <- 6  # Number of columns in the grid arrangement
+  grid_ncol <- ncol_grid
+  grid_spacing <- 8  # Spacing between component centers
+    nrow_grid <- ceiling(length(comp_list) / ncol_grid)
+  for (i in seq_along(comp_list)) {
+    subG <- comp_list[[i]]
+    node_types <- V(subG)$type
+    if ("name" %in% vertex_attr_names(subG)) {
+      node_names <- V(subG)$name
     } else {
-      # Host node - use phylum color
-      return(host_palette[type])
+      node_names <- as.character(1:vcount(subG))
     }
-  })
-  
-  # Assign shapes
-  nodes_df$shape <- sapply(nodes_df$type, function(type) {
-    if (type == "virus") {
-      return(23)  # filled diamond
-    } else if (type == "plasmid") {
-      return(21)  # filled circle
-    } else if (type == "novel") {
-      return(24)  # filled triangle up
-    } else {
-      return(22)  # filled square for hosts
-    }
-  })
-  
-  # Create layout using graphopt (similar to neato)
-  cat("\nComputing layout...\n")
-  set.seed(42)
-  layout <- layout_with_kk(G)
-  
-  # Create ggraph plot
-  cat("Creating plot...\n")
-  
-  p <- ggraph(G, layout = layout) +
-    # Draw edges first
-    geom_edge_link(color = "gray", alpha = 0.8, width = 0.5) +
-    # Draw nodes
-    geom_node_point(aes(fill = I(nodes_df$color), shape = I(nodes_df$shape)), 
-                    size = 3, alpha = 0.8, color = "black", stroke = 0.3) +
-    # Prepare legend manually
-    theme_void() +
-    theme(
-      legend.position = "bottom",
-      legend.box = "horizontal",
-      legend.text = element_text(size = 10),
-      legend.title = element_blank()
+    nodes_df <- data.frame(
+      name = node_names,
+      type = node_types,
+      color = color_map[node_types],
+      shape = as.numeric(shape_map[node_types]),
+      stringsAsFactors = FALSE
     )
-  
-  # Create custom legend
-  legend_data <- data.frame(
-    label = character(),
-    color = character(),
-    shape = numeric(),
-    stringsAsFactors = FALSE
-  )
-  
-  if (plasmid_count > 0) {
-    legend_data <- rbind(legend_data, 
-                        data.frame(label = "Plasmid (○)",
-                                  color = "blue", shape = 21))
-  }
-  if (virus_count > 0) {
-    legend_data <- rbind(legend_data, 
-                        data.frame(label = "Virus (◆)",
-                                  color = "red", shape = 23))
-  }
-  if (novel_count > 0) {
-    legend_data <- rbind(legend_data, 
-                        data.frame(label = "Unknown (▲)",
-                                  color = "orange", shape = 24))
-  }
-  
-  # Add host label with square symbol
-  if (host_count > 0) {
-    legend_data <- rbind(legend_data,
-                        data.frame(label = "Host (■)",
-                                  color = "gray60", shape = 22))
-  }
-  
-  # Add top 6 host types
-  if (host_count > 0) {
-    host_type_counts <- nodes_df %>%
-      filter(is_host) %>%
-      group_by(type) %>%
-      summarise(count = n(), .groups = "drop") %>%
-      arrange(desc(count)) %>%
-      head(6)
-    
-    for (i in 1:nrow(host_type_counts)) {
-      type <- host_type_counts$type[i]
-      count <- host_type_counts$count[i]
-      legend_data <- rbind(legend_data, 
-                          data.frame(label = sprintf("  %s (%d)", type, count),
-                                    color = host_palette[type], shape = 22))
+    V(subG)$color <- nodes_df$color
+    V(subG)$shape <- nodes_df$shape
+
+    # Circular layout
+    circ_layout <- layout_in_circle(subG)
+    # Center the layout at (x_offset, y_offset)
+    circ_layout[,1] <- circ_layout[,1] + x_offset
+    circ_layout[,2] <- circ_layout[,2] + y_offset
+    nodes_df$x <- circ_layout[,1]
+    nodes_df$y <- circ_layout[,2]
+    nodes_df$comp <- i
+    layout_list[[i]] <- circ_layout
+    node_df_list[[i]] <- nodes_df
+
+    # Edges for plotting
+    edges <- as.data.frame(igraph::as_data_frame(subG, what = "edges"))
+    if (nrow(edges) > 0) {
+      edges$x <- circ_layout[match(edges$from, node_names), 1]
+      edges$y <- circ_layout[match(edges$from, node_names), 2]
+      edges$xend <- circ_layout[match(edges$to, node_names), 1]
+      edges$yend <- circ_layout[match(edges$to, node_names), 2]
+      edge_df_list[[i]] <- edges
     }
-    
-    remaining_host_types <- length(host_types) - min(6, nrow(host_type_counts))
-    if (remaining_host_types > 0) {
-      legend_data <- rbind(legend_data, 
-                          data.frame(label = sprintf("  ... +%d others", remaining_host_types),
-                                    color = "lightgray", shape = 22))
+
+    # Update offsets for grid arrangement
+    if (i %% grid_ncol == 0) {
+      x_offset <- 0
+      y_offset <- y_offset - grid_spacing
+    } else {
+      x_offset <- x_offset + grid_spacing
     }
   }
-  
-  # Create manual legend using grid and arrange below plot
-  library(grid)
-  library(gridExtra)
+
+  all_nodes <- do.call(rbind, node_df_list)
+  all_edges <- do.call(rbind, edge_df_list)
+
+  # Plot all components in a single ggplot panel
+  library(ggplot2)
   library(cowplot)
-  
-  # Create legend as a separate plot
-  create_legend_plot <- function(legend_data) {
-    n_items <- nrow(legend_data)
-    n_cols <- 3  # 3 columns for legend
-    n_rows <- ceiling(n_items / n_cols)
-    
-    # Create empty plot for legend
-    legend_plot <- ggplot() + 
-      theme_void() +
-      xlim(0, n_cols) +
-      ylim(0, n_rows)
-    
-    # Add points and text for each legend item
-    for (i in 1:n_items) {
-      col_idx <- (i - 1) %% n_cols
-      row_idx <- n_rows - floor((i - 1) / n_cols)
-      
-      # Add point
-      legend_plot <- legend_plot +
-        annotate("point", x = col_idx + 0.1, y = row_idx - 0.5,
-                shape = legend_data$shape[i], 
-                color = legend_data$color[i],
-                fill = legend_data$color[i],
-                size = 3)
-      
-      # Add text
-      legend_plot <- legend_plot +
-        annotate("text", x = col_idx + 0.2, y = row_idx - 0.5,
-                label = legend_data$label[i], 
-                hjust = 0, size = 3.5)
-    }
-    
-    return(legend_plot)
-  }
-  
-  legend_plot <- create_legend_plot(legend_data)
-  
-  # Combine main plot and legend
-  combined_plot <- plot_grid(
-    p, legend_plot,
-    ncol = 1,
-    rel_heights = c(1, 0.15)
+  p <- ggplot() +
+    geom_segment(data = all_edges, aes(x = x, y = y, xend = xend, yend = yend), color = "gray", alpha = 0.7, linewidth = 0.4) +
+    geom_point(data = all_nodes, aes(x = x, y = y, fill = color, shape = shape), size = 5, color = "black", stroke = 0.3, alpha = 0.95) +
+    scale_fill_identity(name = "Type/Phylum", guide = "legend", labels = names(color_map), breaks = unname(color_map)) +
+    scale_shape_identity(name = "Type/Phylum", guide = "legend", labels = names(shape_map), breaks = as.numeric(shape_map)) +
+    theme_void() +
+    theme(legend.position = "bottom", legend.box = "horizontal")
+
+  # Legend extraction as before
+  dummy_types <- names(color_map)
+  dummy_df <- data.frame(
+    color = unname(color_map),
+    shape = as.numeric(shape_map),
+    type = dummy_types
   )
-  
-  # Save plot
+  dummy_plot <- ggplot(dummy_df, aes(x = type, y = 1, fill = color, shape = shape)) +
+    geom_point(size = 6, show.legend = TRUE) +
+    scale_fill_identity(name = "Type/Phylum", guide = "legend", labels = dummy_types, breaks = unname(color_map)) +
+    scale_shape_identity(name = "Type/Phylum", guide = "legend", labels = dummy_types, breaks = as.numeric(shape_map)) +
+    theme_void() +
+    theme(legend.position = "bottom", legend.box = "horizontal")
+  get_legend <- function(myplot) {
+    tmp <- cowplot::plot_grid(myplot, ncol = 1)
+    g <- ggplotGrob(tmp)
+    legend_index <- which(sapply(g$grobs, function(x) x$name) == "guide-box")
+    if (length(legend_index) == 0) return(NULL)
+    g$grobs[[legend_index]]
+  }
+  legend <- get_legend(dummy_plot)
+  if (is.null(legend)) {
+    warning("No legend could be extracted. The plot will be saved without a legend.")
+    legend <- NULL
+  }
+
+  # Remove legends from all plots
+  plots_nolegend <- lapply(plots, function(p) p + theme(legend.position = "none"))
+
+  # Pad plot list to fill the grid
+  n_plots <- length(plots_nolegend)
+  total_slots <- nrow_grid * ncol_grid
+  if (n_plots < total_slots) {
+    empty_plot <- function() ggplot() + theme_void()
+    plots_nolegend <- c(plots_nolegend, replicate(total_slots - n_plots, empty_plot(), simplify = FALSE))
+  }
+
+  # Combine plots
+  combined_plot <- plot_grid(plotlist = plots_nolegend, ncol = ncol_grid, align = "hv", rel_widths = rep(1, ncol_grid), rel_heights = rep(1, nrow_grid), hjust = -0.1, vjust = 1.1)
+
+  # Add legend if available
+  if (!is.null(legend)) {
+    final_plot <- plot_grid(combined_plot, legend, ncol = 1, rel_heights = c(1, 0.08))
+  } else {
+    final_plot <- combined_plot
+  }
+
   cat("Saving plot to:", output_file, "\n")
-  ggsave(output_file, plot = combined_plot, width = 9, height = 10, dpi = 600)
-  
+  # Set width and height for a compact, publication-ready layout
+    plot_width <- 5 * ncol_grid  
+    plot_height <- 5 * nrow_grid 
+  plot_width <- min(plot_width, 20)
+  plot_height <- min(plot_height, 20)
+  ggsave(output_file, plot = final_plot, width = plot_width, height = plot_height, dpi = 600, limitsize = FALSE)
   cat("Done!\n")
 }
 
