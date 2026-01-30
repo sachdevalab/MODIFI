@@ -15,6 +15,22 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 from sample_object import get_detail_taxa_name,get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa
 
+def export_mge_degrees(G, out_csv):
+    """
+    Count the degree of each virus and plasmid node in the graph G and output to a CSV file.
+    Only virus and plasmid nodes are included.
+    """
+    rows = []
+    for node, degree in G.degree:
+        node_type = G.nodes[node].get('type', None)
+        if node_type in ['virus', 'plasmid']:
+            rows.append({'node': node, 'type': node_type, 'degree': int(degree)})
+    if rows:
+        df = pd.DataFrame(rows)
+        df.to_csv(out_csv, index=False)
+    else:
+        print('No virus or plasmid nodes found in the graph.')
+
 
 
 def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix, 
@@ -372,9 +388,6 @@ def get_completness(checkm_report):
     for index, row in df.iterrows():
         return row['Completeness'], row["Contamination"]
 
-# def compare_MGEs(whole_G, paper_fig_dir):
-#     ## in the graph, count the degree of virus and plasmids, and output to a csv file
-
 
 if __name__ == "__main__":  
     ANI = 99
@@ -432,6 +445,9 @@ if __name__ == "__main__":
 
 
     whole_G = nx.read_gml(f"{paper_fig_dir}/whole_network2.gml")
+
+    # Output degree of virus and plasmids to CSV (only virus and plasmid nodes)
+    export_mge_degrees(whole_G, f"{paper_fig_dir}/virus_plasmid_degrees.csv")
 
     # ## output the top 5 connected components, and count the number of nodes in it
     # connected_components = sorted(nx.connected_components(whole_G), key=len, reverse=True)

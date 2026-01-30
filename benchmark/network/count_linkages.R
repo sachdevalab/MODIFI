@@ -88,12 +88,12 @@ p1 <- ggplot(env_sample_counts, aes(x = environment, y = count, fill = MGE_type)
     axis.title = element_text(size = 12),
     axis.text = element_text(size = 10),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "none"
+    legend.position = "right"
   ) +
   geom_text(data = env_pvals, aes(x = environment, y = y, label = star), inherit.aes = FALSE, vjust = 0, size = 6)
 
 ggsave("../../tmp/figures/multi_env_linkage/network_99/linkage_counts_env_boxplot.pdf", 
-       plot = p1, width = 3, height = 5)
+       plot = p1, width = 4, height = 5)
 
 # Boxplot 2: Linkages per sample by phylum (filtered, with significance)
 # Precompute p-values for each phylum
@@ -164,3 +164,47 @@ cat("\nBy Phylum (Top 10, per sample, ≥5 samples):\n")
 print(phylum_sample_counts %>% pivot_wider(names_from = MGE_type, values_from = count, values_fill = 0))
 
 cat("\nBoxplots saved to linkage_counts_env_boxplot.pdf and linkage_counts_phylum_boxplot.pdf\n")
+
+degree_df <- read_csv("/home/shuaiw/mGlu/tmp/figures/multi_env_linkage/network_99/virus_plasmid_degrees.csv", show_col_types = FALSE)
+
+# Prepare degree data (only plasmid and virus)
+degree_df <- degree_df %>%
+  filter(type %in% c("plasmid", "virus")) %>%
+  mutate(type = factor(type, levels = c("plasmid", "virus")))
+
+# Bar plot: mean ± SD of degree by MGE type
+# Compute summary (mean, sd, n)
+deg_summary <- degree_df %>%
+  group_by(type) %>%
+  summarise(mean_deg = mean(degree, na.rm = TRUE),
+            sd_deg = sd(degree, na.rm = TRUE),
+            n = n(), .groups = "drop")
+
+# Compute t-test p-value for annotation
+tt <- try(t.test(degree ~ type, data = degree_df), silent = TRUE)
+if (!inherits(tt, "try-error")) {
+  pval_text <- format.pval(tt$p.value, digits = 3, eps = 1e-4)
+} else {
+  pval_text <- "NA"
+}
+
+p_deg <- ggplot(deg_summary, aes(x = type, y = mean_deg, fill = type)) +
+  geom_bar(stat = "identity", width = 0.6, color = "black") +
+  geom_errorbar(aes(ymin = mean_deg - sd_deg, ymax = mean_deg + sd_deg), width = 0.2) +
+  scale_fill_manual(values = mge_colors) +
+  labs(x = "", y = "Degree", title = "") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size = 14),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10)) +
+  annotate("text", x = 1.5, y = max(deg_summary$mean_deg + deg_summary$sd_deg, na.rm = TRUE) * 1.05, label = paste0("p = ", pval_text), size = 5) +
+  theme(legend.position = "none")
+
+ggsave("../../tmp/figures/multi_env_linkage/network_99/virus_plasmid_degree_barplot.pdf", plot = p_deg, width = 3, height = 5)
+
+# Print t-test result
+if (!inherits(tt, "try-error")) {
+  cat(sprintf("\nT-test (degree) plasmid vs virus: p = %.4g\n", tt$p.value))
+} else {
+  cat("\nT-test (degree) failed or insufficient data.\n")
+}
