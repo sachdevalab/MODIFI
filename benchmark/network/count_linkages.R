@@ -48,9 +48,6 @@ phylum_sample_counts <- phylum_sample_counts %>%
   ungroup()
 
 
-# Create color palette
-mge_colors <- c("plasmid" = "#0000FF", "virus" = "#FF0000")
-
 # Load ggpubr for significance annotation
 if (!requireNamespace("ggpubr", quietly = TRUE)) {
   install.packages("ggpubr", repos = "https://cloud.r-project.org")
@@ -73,10 +70,10 @@ env_ypos <- env_sample_counts %>% group_by(environment) %>% summarise(y = max(co
 env_pvals <- left_join(env_pvals, env_ypos, by = "environment")
 
 p1 <- ggplot(env_sample_counts, aes(x = environment, y = count, fill = MGE_type)) +
-  geom_boxplot(outlier.shape = NA, position = position_dodge(width = 0.8)) +
-  geom_jitter(aes(color = MGE_type), position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8), size = 0.8, alpha = 0.5, show.legend = FALSE) +
-  scale_fill_manual(values = mge_colors, name = "MGE Type") +
-  scale_color_manual(values = mge_colors, guide = "none") +
+  geom_boxplot(aes(fill = MGE_type), outlier.shape = NA, position = position_dodge(width = 0.8), alpha = 1, color = "black", size = 0.5) +
+  geom_jitter(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8), color = "black", size = 1.2, alpha = 1, show.legend = FALSE) +
+  scale_fill_discrete(name = "MGE Type") +
+  scale_color_discrete(guide = "none") +
   labs(
     x = "Environment",
     y = "Linkages per Sample",
@@ -108,10 +105,10 @@ phylum_ypos <- phylum_sample_counts %>% group_by(host_phylum) %>% summarise(y = 
 phylum_pvals <- left_join(phylum_pvals, phylum_ypos, by = "host_phylum")
 
 p2 <- ggplot(phylum_sample_counts, aes(x = host_phylum, y = count, fill = MGE_type)) +
-  geom_boxplot(outlier.shape = NA, position = position_dodge(width = 0.8)) +
-  geom_jitter(aes(color = MGE_type), position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8), size = 0.8, alpha = 0.5, show.legend = FALSE) +
-  scale_fill_manual(values = mge_colors, name = "MGE Type") +
-  scale_color_manual(values = mge_colors, guide = "none") +
+  geom_boxplot(aes(fill = MGE_type), outlier.shape = NA, position = position_dodge(width = 0.8), alpha = 1, color = "black", size = 0.5) +
+  geom_jitter(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8), color = "black", size = 1.2, alpha = 1, show.legend = FALSE) +
+  scale_fill_discrete(name = "MGE Type") +
+  scale_color_discrete(guide = "none") +
   labs(
     x = "Host Phylum",
     y = "Linkages per Sample",
@@ -191,7 +188,7 @@ if (!inherits(tt, "try-error")) {
 p_deg <- ggplot(deg_summary, aes(x = type, y = mean_deg, fill = type)) +
   geom_bar(stat = "identity", width = 0.6, color = "black") +
   geom_errorbar(aes(ymin = mean_deg - sd_deg, ymax = mean_deg + sd_deg), width = 0.2) +
-  scale_fill_manual(values = mge_colors) +
+  scale_fill_discrete() +
   labs(x = "", y = "Degree", title = "") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5, size = 14),

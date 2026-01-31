@@ -2044,5 +2044,6 @@ sbatch --job-name=drep \
     --S_algorithm skani \
     -ms 10000 \
     -sa 0.99 \
+    --ignoreGenomeQuality \
     -nc 0.7 /home/shuaiw/mGlu/tmp/figures/multi_env_linkage/network_99/dRep_99_out"
             

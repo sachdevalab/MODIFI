@@ -553,7 +553,8 @@ def component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa
 
     # choose top 14 hosts: prefer hosts from top species and higher degree
     hosts_sorted = sorted(host_nodes, key=lambda n: (species_counts.get(host_species.get(n, 'NA'), 0), subgraph.degree[n]), reverse=True)
-    top_hosts = hosts_sorted[:14]
+    # top_hosts = hosts_sorted[:14]
+    top_hosts = hosts_sorted
     skip_heatmap = False
     if not top_hosts:
         print('No host nodes available for heatmap.')
@@ -598,7 +599,7 @@ def component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa
         print('Skipping heatmap generation due to no hosts.')
     else:
 
-        figsize = (max(6, len(binary_matrix.columns) * 0.6), max(6, len(binary_matrix.index) * 0.25))
+        figsize = (max(6, len(binary_matrix.columns) * 0.4), max(6, len(binary_matrix.index) * 0.25))
         # attempt hierarchical clustering on non-virus rows, keep viruses at bottom
         try:
             import scipy.cluster.hierarchy as sch
@@ -637,7 +638,7 @@ def component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa
             ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
             ax.set_ylabel('MGE cluster')
             ax.set_xlabel('Host cluster')
-            ax.set_title('Binary heatmap: plasmid/virus presence across host hosts (clustered)')
+            ax.set_title('')
 
             # color MGE row labels by type
             yticklabels = ax.get_yticklabels()
@@ -725,7 +726,8 @@ if __name__ == "__main__":
     host_list_file =  "../../tmp/figures/multi_env_linkage/linked_host_list.txt"
     mge_clu_file = "/home/shuaiw/borg/paper/MGE/cluster/megablast.cluster.95ani.tsv"
     paper_fig_dir = f"../../tmp/figures/multi_env_linkage/network_{ANI}/"
-    drep_clu_file = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/data_tables/Cdb.csv"
+    # drep_clu_file = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/data_tables/Cdb.csv"
+    drep_clu_file = "/home/shuaiw/mGlu/tmp/figures/multi_env_linkage/network_99/dRep_99_out/data_tables/Cdb.csv"
     all_dir = "/home/shuaiw/borg/paper/run2/"
     host_ctg_set = set()
     ## mkdir paper_fig_dir if not exists
