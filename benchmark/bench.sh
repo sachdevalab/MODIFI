@@ -2032,4 +2032,17 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
                 --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
                 --threads 64 " \
                 --job-name=soil_110
+
+
+sbatch --job-name=drep \
+  --partition standard \
+  --wrap "dRep dereplicate \
+    -p 64 \
+    -g /home/shuaiw/mGlu/tmp/figures/multi_env_linkage/linked_host_list.txt \
+    -comp 50 \
+    -con 10 \
+    --S_algorithm skani \
+    -ms 10000 \
+    -sa 0.99 \
+    -nc 0.7 /home/shuaiw/mGlu/tmp/figures/multi_env_linkage/network_99/dRep_99_out"
             
