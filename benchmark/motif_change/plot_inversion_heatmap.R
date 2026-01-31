@@ -68,27 +68,19 @@ plot_heatmap <- function(data_file, heat_map) {
   
   sample_colors <- setNames(sample_color_vals, unique_samples)
   
-  # Create row annotation
+  # Create row annotation (only Type; sample annotation removed)
   row_ha <- rowAnnotation(
     Type = type_labels,
-    Sample = sample_labels,
     col = list(
-      Type = type_colors,
-      Sample = sample_colors
+      Type = type_colors
     ),
-    show_annotation_name = TRUE,
+    show_annotation_name = FALSE,
     annotation_name_side = "top",
     annotation_legend_param = list(
       Type = list(
-        title = "Type",
+        title = "Genome",
         ncol = 2,
-        title_gp = gpar(fontsize = 10, fontface = "bold"),
-        labels_gp = gpar(fontsize = 9)
-      ),
-      Sample = list(
-        title = "Sample",
-        ncol = 3,
-        title_gp = gpar(fontsize = 10, fontface = "bold"),
+        title_gp = gpar(fontsize = 9),
         labels_gp = gpar(fontsize = 9)
       )
     )
@@ -97,7 +89,7 @@ plot_heatmap <- function(data_file, heat_map) {
   # Create heatmap
   heatmap_args <- list(
     matrix = heatmap_data,
-    name = "Fraction",
+    name = "Modification Fraction",
     col = colorRamp2(
       c(0, 0.5, 1),
       c("white", "#fc8d59", "#67001f")
@@ -108,16 +100,16 @@ plot_heatmap <- function(data_file, heat_map) {
     clustering_distance_columns = "euclidean",
     show_row_names = TRUE,
     show_column_names = TRUE,
-    row_names_gp = gpar(fontsize = 10),
-    column_names_gp = gpar(fontsize = 8),
+    row_names_gp = gpar(fontsize = 9),
+    column_names_gp = gpar(fontsize = 9),
     column_names_rot = 45,
     column_names_side = "bottom",
     left_annotation = row_ha,
     heatmap_legend_param = list(
-      title = "Fraction",
+      title = "Modification Fraction",
       direction = "horizontal",
       legend_width = unit(4, "cm"),
-      title_gp = gpar(fontsize = 10, fontface = "bold"),
+      title_gp = gpar(fontsize = 9),
       labels_gp = gpar(fontsize = 9)
     ),
     rect_gp = gpar(col = "gray90", lwd = 0.5)
@@ -126,7 +118,7 @@ plot_heatmap <- function(data_file, heat_map) {
   ht <- do.call(Heatmap, heatmap_args)
   
   # Save to file
-  pdf(heat_map, width = 4, height = 6)
+  pdf(heat_map, width = 4, height = 5)
   draw(ht, heatmap_legend_side = "top", annotation_legend_side = "top")
   dev.off()
   
