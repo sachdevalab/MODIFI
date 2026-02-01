@@ -948,7 +948,6 @@ class My_contig(My_sample):
                {rev_loci_num} reverse) in range {start}-{end}\
                 , Ratios: {total_ratio:.4f} ({for_ratio:.4f} forward, {rev_ratio:.4f} reverse)")
 
-
     def load_RM(self):
         self.RM_dict = defaultdict(list)
         if not os.path.exists(self.RM_file):
