@@ -26,7 +26,7 @@ def read_ref(ref):
         # return str(record.seq), record.id
     return REF
 
-def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
+def get_motif_sites(REF, motif_new, exact_pos, modified_loci, max_len = 1000000000):
     motif_len = len(motif_new)
     rev_exact_pos = motif_len - exact_pos + 1
     motif_sites = {}
@@ -41,6 +41,7 @@ def get_motif_sites(REF, motif_new, exact_pos, modified_loci):
     record_modified_sites = {}
 
     for r, contig in REF.items():
+        contig = contig[:max_len]
         for site in nt_search(str(contig), motif_new)[1:]:
             # for i in range(site, site + motif_len):
             #     motif_sites[r + ":" + str(i) + "+"] = motif_new
@@ -228,6 +229,64 @@ def profile_heatmap(prefix_list, motif_list, all_dir, tmp_res_file, cluster_obj,
 
     return cluster_obj
 
+def profile_heatmap_fast(prefix_list, motif_list, all_dir, tmp_res_file, cluster_obj, data_type="meta", score_cutoff = 30, n_threads=32, max_len=1000000000):
+    """Compute motif fraction profiles in parallel, one thread per contig.
+
+    Args:
+        prefix_list: list of (prefix, contig) pairs
+        motif_list: list of (motif, exact_pos) pairs
+        all_dir: base directory for samples
+        tmp_res_file: output csv path passed to cluster_obj.get_profile
+        cluster_obj: My_cluster-like object with get_profile method
+        data_type: passed to My_contig
+        score_cutoff: cutoff for modified loci
+        n_threads: number of worker threads (defaults to 32)
+    """
+    import concurrent.futures
+
+
+    def process_contig(item):
+        prefix, contig = item
+        rows = []
+        try:
+            ctg_obj = My_contig(prefix, all_dir, contig, data_type)
+            ## skip if files do not exist
+            if not os.path.exists(ctg_obj.gff) or not os.path.exists(ctg_obj.ipd_ratio_file) or not os.path.exists(ctg_obj.ctg_ref):
+                return rows
+            REF = read_ref(ctg_obj.ctg_ref)
+            modified_loci = get_modified_ratio(ctg_obj.gff, score_cutoff)
+            for motif_new, exact_pos in motif_list:
+                motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci, max_len = max_len)
+                rows.append([contig, motif_new + "_" + str(exact_pos), motif_profile[-2]])
+            print (f"Completed {prefix}/{contig}")
+        except Exception as e:
+            sys.stderr.write(f"Error processing {prefix}/{contig}: {e}\n")
+        return rows
+
+    data = []
+    total = len(prefix_list)
+    processed = 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=n_threads) as executor:
+        futures = {executor.submit(process_contig, item): item for item in prefix_list}
+        for fut in concurrent.futures.as_completed(futures):
+            processed += 1
+            try:
+                rows = fut.result()
+                if rows:
+                    data.extend(rows)
+            except Exception as e:
+                item = futures.get(fut)
+                sys.stderr.write(f"Unhandled error processing {item}: {e}\n")
+            # Report progress every 100 contigs
+            if processed % 10 == 0 or processed == total:
+                print(f"Processed {processed}/{total} contigs")
+                sys.stdout.flush()
+
+    df = pd.DataFrame(data, columns=["contig", "motifString", "fraction"]) if data else pd.DataFrame(columns=["contig", "motifString", "fraction"])
+    cluster_obj.get_profile(df, tmp_res_file)
+
+    return cluster_obj
+
 def clean_profile(prefix_list, motif_list, all_dir, data_type="meta", score_cutoff = 30):
     data = []
     for prefix, contig in prefix_list:
@@ -338,7 +397,7 @@ def find_species_drep(contig, all_dir, prefix, data_type="meta", min_frac=0.3, m
     motif_set = set()
     for contig in species_contigs:
         ctg_obj = My_contig(prefix, all_dir, contig, data_type)
-        print (ctg_obj.motif_file)
+        # print (ctg_obj.motif_file)
         motif_df = ctg_obj.read_motif(min_frac, min_sites)
         if motif_df is None:
             continue
@@ -396,6 +455,45 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
     cluster_obj = profile_heatmap(all_contig_list, motif_list, all_dir, tmp_res_file, cluster_obj,data_type, score_cutoff)
     
     return cluster_obj
+
+def given_species_drep_fast(all_dir, members, seq_dir, cluster, fig_dir, 
+                       tmp_res, data_type="meta", min_frac=0.3, min_sites=100, score_cutoff = 30, max_len=1000000000):
+    
+    all_motif_set = set()
+    all_contig_list = []
+    tmp_res_file = f"{tmp_res}/{cluster}.csv"
+    cluster_obj = My_cluster(cluster, members)
+    if isinstance(members[0], str):
+        new_members = [(contig,"_".join(contig.split("_")[:-2])) for contig in members]
+        # print ("&&&", new_members)
+        members = new_members
+    for contig, prefix in members:
+        # print (contig)
+        # prefix = "_".join(contig.split("_")[:-2])
+        ctg_obj = My_contig(prefix, all_dir, contig, data_type)
+        ref = ctg_obj.ctg_ref
+
+        close_genome_dir = os.path.join(seq_dir, cluster)
+        if not os.path.exists(close_genome_dir):
+            os.makedirs(close_genome_dir)
+
+        if os.path.exists(ref):
+            os.system(f"cp {ref} {close_genome_dir}/")
+
+        motif_set, contig_list = find_species_drep(contig, all_dir, prefix, data_type, min_frac, min_sites)
+
+        all_motif_set.update(motif_set)
+        all_contig_list.extend(contig_list)
+    print (f"Total contigs for cluster {cluster}: {len(all_contig_list)}")
+    print (f"Total motifs for cluster {cluster}: {len(all_motif_set)}")
+    motif_list = []
+    for motif in all_motif_set:
+        motif_name, motif_pos = motif.split("_")
+        motif_list.append([motif_name, int(motif_pos)])
+    cluster_obj = profile_heatmap_fast(all_contig_list, motif_list, all_dir, tmp_res_file, cluster_obj,data_type, score_cutoff, max_len=max_len)
+    
+    return cluster_obj
+
 
 def depth_filter(all_dir, min_depth = 10):
     depth_dict = {}

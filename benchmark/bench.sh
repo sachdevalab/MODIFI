@@ -2046,4 +2046,34 @@ sbatch --job-name=drep \
     -sa 0.99 \
     --ignoreGenomeQuality \
     -nc 0.7 /home/shuaiw/mGlu/tmp/figures/multi_env_linkage/network_99/dRep_99_out"
+
+
+
+sbatch --job-name=inf14 \
+--partition standard \
+--wrap "python /home/shuaiw/mGlu/main.py \
+        --work_dir /home/shuaiw/borg/paper/motif_change/methyl/infant_14 \
+        --unaligned_bam /home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_5G1_pacbio.bam  \
+        --whole_ref /home/shuaiw/borg/paper/run2/infant_2/infant_2.hifiasm.p_ctg.rename.fa \
+        --read_type hifi \
+        --min_len 1000 \
+        --min_cov 3 \
+        --min_frac 0.3 \
+        --min_score 30 \
+        --min_sites 100 \
+        --threads 64"
+
+   sbatch --job-name=inf2 \
+  --partition standard \
+  --wrap "python /home/shuaiw/mGlu/main.py \
+          --work_dir /home/shuaiw/borg/paper/motif_change/methyl/infant_2 \
+          --unaligned_bam /home/shuaiw/borg/paper/aws/infant/NANO_2_INF1240040_2G1_pacbio.bam  \
+          --whole_ref /home/shuaiw/borg/paper/run2/infant_2/infant_2.hifiasm.p_ctg.rename.fa \
+          --read_type hifi \
+          --min_len 1000 \
+          --min_cov 3 \
+          --min_frac 0.3 \
+          --min_score 30 \
+          --min_sites 100 \
+          --threads 64"
             

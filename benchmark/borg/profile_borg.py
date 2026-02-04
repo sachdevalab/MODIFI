@@ -6,11 +6,19 @@ import argparse
 from pathlib import Path
 import re
 from Bio.Seq import Seq
+import matplotlib.pyplot as plt
+import seaborn as sns
+import umap
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+import networkx as nx
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'motif_change'))
 from sample_object import get_unique_motifs, My_sample, get_ctg_taxa, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa,get_detail_taxa_name
-from check_motif_change import given_species_drep
+from check_motif_change import given_species_drep, given_species_drep_fast
 from find_borg import find_assembly
 
 class Borg_Entry:
@@ -196,6 +204,8 @@ def personal_plot(profile_df):
 def collect_host_genus(all_dir, fasta_dict):
     members  = []
     anno_dict = {}
+    non_Mp_members = []
+    non_Mp_anno_dict = {}
     ctg_taxa_dict = get_ctg_taxa(all_dir)
     for my_dir in os.listdir(all_dir):
         prefix = my_dir
@@ -220,12 +230,15 @@ def collect_host_genus(all_dir, fasta_dict):
             taxon = get_detail_taxa_name(ctg_lineage)
             # print (ctg_genus)
             if ctg_genus == "g__Methanoperedens":
-                print (ctg, ctg_lineage)
+                # print (ctg, ctg_lineage)
                 # os.system(f"cp {ctg_obj.ctg_ref} /home/shuaiw/borg/paper/borg_data/align/refs")
                 members.append((ctg, prefix))
                 anno_dict[ctg] = taxon
+            elif ctg_genus != "g__" and not re.search("Unclassified", ctg_lineage):
+                non_Mp_members.append((ctg, prefix))
+                non_Mp_anno_dict[ctg] = taxon
     print (f"Total host contigs collected: {len(members)}")
-    return members, anno_dict
+    return members, anno_dict, non_Mp_members, non_Mp_anno_dict
 
 def count_mod_freq(all_dir, borg_anno_dict, score_cutoff = 30):
     data = []
@@ -259,94 +272,156 @@ def get_unique_motif(motifs_to_keep):
             unique_motif_ids.add(motif_id)
     return list(unique_motif_ids)
 
+def extract_sample_name(contig_name):
+    parts = str(contig_name).split('_')
+    if len(parts) >= 8:
+        return '_'.join(parts[:8])
+    else:
+        return contig_name
+
 def umap_plot(profile_df, plot_name):
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    import umap
+
 
     # Add sample column extracted from contig name (first 8 underscore-separated parts)
-    def extract_sample_name(contig_name):
-        parts = str(contig_name).split('_')
-        if len(parts) >= 8:
-            return '_'.join(parts[:8])
-        else:
-            return contig_name
 
-    profile_df['sample'] = profile_df['contig'].apply(extract_sample_name)
 
-    # Create pivot table for UMAP
+    
+    
+    ## Randomly retain 5 Non-Mp contigs
+    non_mp_df = profile_df[profile_df['Genome'] == 'Non-Mp']
+    other_df = profile_df[profile_df['Genome'] != 'Non-Mp']
+    
+    if len(non_mp_df) > 0:
+        # Get unique Non-Mp contigs and randomly sample 5
+        unique_non_mp_contigs = non_mp_df['contig'].unique()
+        np.random.seed(42)
+        selected_contigs = np.random.choice(unique_non_mp_contigs, size=min(50, len(unique_non_mp_contigs)), replace=False)
+        non_mp_retained = non_mp_df[non_mp_df['contig'].isin(selected_contigs)]
+        profile_df = pd.concat([other_df, non_mp_retained], ignore_index=True)
+        print(f"Retained {len(selected_contigs)} Non-Mp contigs out of {len(unique_non_mp_contigs)}")
+    else:
+        profile_df = other_df
+        print("No Non-Mp contigs found")
+
+    # Create pivot table for dimensionality reduction
     pivot_df = profile_df.pivot(index='contig', columns='motifString', values='fraction')
     pivot_df = pivot_df.fillna(0)  # Fill NaN values with 0
+    
 
-    # Perform UMAP dimensionality reduction
-    reducer = umap.UMAP(n_neighbors=5, min_dist=0.3, metric='correlation', random_state=42)
-    embedding = reducer.fit_transform(pivot_df)
 
-    # Create a DataFrame for the embedding
-    umap_df = pd.DataFrame(embedding, columns=['UMAP1', 'UMAP2'], index=pivot_df.index)
+    print("\n=== Creating network graph based on Pearson correlation ===")
 
-    # Determine genome type per contig for marker shapes
+    # Calculate Pearson correlation matrix
+    similarity_matrix = pivot_df.T.corr(method='pearson').values
+
+
+    ## get a jaccard matrix as well with binary cutoff of 0.5
+    from sklearn.metrics import pairwise_distances
+    # Binarize the matrix with cutoff 0.5
+    pivot_binary = (pivot_df >= 0.4).astype(int)
+    # # # Calculate Jaccard distance and convert to similarity
+    # jaccard_distances = pairwise_distances(pivot_binary.values, metric='jaccard')
+    # similarity_matrix = 1 - jaccard_distances
+
+    ## get  another matrix recording the number of shared motifs 
+    # Calculate shared motif counts
+    # similarity_matrix = np.dot(pivot_binary.values, pivot_binary.values.T)
+
+
+    # for motif in pivot_df.columns:
+    #     val1 = pivot_df.at['SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_155_C', motif]
+    #     val2 = pivot_df.at['SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_724567_L', motif]
+    #     print (motif, round(val1,3), round(val2,3))
+
+
+    # Get genome type for each contig
     if 'Genome' in profile_df.columns:
-        # derive one genome label per contig (first occurrence) and reindex to pivot_df order
         genome_per_contig = profile_df.groupby('contig')['Genome'].first()
-        genome_series = genome_per_contig.reindex(pivot_df.index).fillna('NA')
+        contig_genome_map = genome_per_contig.reindex(pivot_df.index).to_dict()
     else:
-        # fallback: infer from BORG_Ref presence
         contig_to_borg = profile_df.groupby('contig')['BORG_Ref'].first()
-        genome_series = contig_to_borg.reindex(pivot_df.index).apply(lambda v: 'BORG' if (pd.notna(v) and v != 'NA') else 'HOST')
+        contig_genome_map = {c: ('BORG' if (pd.notna(v) and v != 'NA') else 'HOST') 
+                            for c, v in contig_to_borg.reindex(pivot_df.index).items()}
+    
+    # Build graph
+    G = nx.Graph()
+    for i, contig1 in enumerate(pivot_df.index):
+        # Add node with genome type attribute
+        G.add_node(contig1, Genome=contig_genome_map.get(contig1, 'NA'))
+        for j, contig2 in enumerate(pivot_df.index):
+            if i < j:
+                similarity = similarity_matrix[i, j]
+                if similarity > 0.7:
+                    G.add_edge(contig1, contig2, weight=similarity)
 
-    umap_df['Genome'] = genome_series.values
-
-    # Dynamically assign marker shapes to each unique genome type
-    unique_genomes = umap_df['Genome'].unique().tolist()
-    marker_shapes = ['o', 's', '^', 'D', 'P', 'X', '*', 'v', '<', '>', 'h', 'H', '8', 'p']  # extend as needed
-    markers_map = {genome: marker_shapes[i % len(marker_shapes)] for i, genome in enumerate(unique_genomes)}
-
-    # Color points by sample
-    if 'sample' not in profile_df.columns:
-        # ensure sample column exists (fallback to contig-based extraction)
-        def extract_sample_name(contig_name):
-            parts = str(contig_name).split('_')
-            return '_'.join(parts[:8]) if len(parts) >= 8 else contig_name
-        profile_df['sample'] = profile_df['contig'].apply(extract_sample_name)
-        # re-create pivot and umap_df index to align (should already match)
-        # note: umap_df index is pivot_df.index which matches profile_df contigs used above
-
-    sample_names = list(umap_df.index.map(lambda c: profile_df.loc[profile_df['contig'] == c, 'sample'].iloc[0]))
-    umap_df['sample'] = sample_names
-    unique_samples = umap_df['sample'].unique().tolist()
-    n_samples = len(unique_samples)
-    import seaborn as sns
-    if n_samples <= 20:
-        colors = sns.color_palette("tab20", n_samples)
+                    ## if the edge is between none-Mp contig and others, print it out
+                    if (contig_genome_map.get(contig1, 'NA') == 'Non-Mp' or 
+                        contig_genome_map.get(contig2, 'NA') == 'Non-Mp'):
+                        if not (contig_genome_map.get(contig1, 'NA') == 'Non-Mp' and 
+                                contig_genome_map.get(contig2, 'NA') == 'Non-Mp'):
+                            print(f"Edge between Non-Mp contig {contig1} and {contig2} with similarity {similarity:.2f}")
+                            ## print their shared motifs
+                            shared_motifs = pivot_binary.columns[(pivot_binary.loc[contig1] == 1) & (pivot_binary.loc[contig2] == 1)].tolist()
+                            print(f"Shared motifs: {shared_motifs}")
+    
+    print(f"Network has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges")
+    
+    # Get unique genome types and create color palette
+    unique_genomes = list(set(contig_genome_map.values()))
+    n_genomes = len(unique_genomes)
+    if n_genomes <= 10:
+        genome_colors = sns.color_palette("tab10", n_genomes)
+    elif n_genomes <= 20:
+        genome_colors = sns.color_palette("tab20", n_genomes)
     else:
-        colors = sns.color_palette("hls", n_samples)
-    sample_palette = dict(zip(unique_samples, colors))
-
-    # Plot UMAP using shapes to distinguish genome type and color by sample
-    plt.figure(figsize=(15, 8))
-    ax = sns.scatterplot(
-        data=umap_df,
-        x='UMAP1', y='UMAP2',
-        hue='sample',
-        style='Genome',
-        markers=markers_map,
-        palette=sample_palette,
-        s=60,
-        edgecolor='black',
-        linewidth=0.3,
-        alpha=0.6,
-        legend='brief'
-    )
-    plt.title('UMAP Projection of Motif Profiles', fontsize=16)
-    plt.xlabel('UMAP1', fontsize=14)
-    plt.ylabel('UMAP2', fontsize=14)
-    plt.grid(True)
-    # Move legend to the right outside the plot
-    ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0, title='Sample', fontsize=8)
-    # Leave space on the right for the legend
-    plt.tight_layout(rect=[0, 0, 0.83, 1])
-    plt.savefig(plot_name.replace('.pdf', '_umap.pdf'), dpi=300, bbox_inches='tight')
+        genome_colors = sns.color_palette("hls", n_genomes)
+    genome_palette = dict(zip(unique_genomes, genome_colors))
+    
+    # Plot the network
+    fig, ax = plt.subplots(figsize=(16, 14))
+    pos = nx.spring_layout(G, seed=42, k=0.5, iterations=50)
+    
+    # Draw edges with width proportional to weight
+    edges = G.edges()
+    weights = [G[u][v]['weight'] for u, v in edges]
+    nx.draw_networkx_edges(G, pos, edgelist=edges, width=[w*3 for w in weights], 
+                          alpha=0.3, edge_color='gray', ax=ax)
+    
+    # Draw nodes colored by genome type
+    for genome_type in unique_genomes:
+        nodelist = [node for node in G.nodes() if G.nodes[node]['Genome'] == genome_type]
+        nx.draw_networkx_nodes(G, pos, nodelist=nodelist, 
+                              node_color=[genome_palette[genome_type]], 
+                              node_size=300, alpha=0.9, 
+                              edgecolors='black', linewidths=1, 
+                              label=genome_type, ax=ax)
+    
+    # Draw labels with smaller font
+    nx.draw_networkx_labels(G, pos, font_size=6, font_color='black', ax=ax)
+    
+    ax.set_title('Network of Genomes Based on Motif Profile Pearson Correlation (>0.3)', 
+                fontsize=16, pad=20)
+    ax.legend(title='Genome Type', fontsize=10, loc='upper left', frameon=True)
+    ax.axis('off')
+    
+    plt.tight_layout()
+    network_file = plot_name.replace('.pdf', '_network.pdf')
+    plt.savefig(network_file, dpi=300, bbox_inches='tight')
+    print(f"Saved network plot to: {network_file}")
+    
+    ## save the graph in gml format - convert all attributes to strings
+    gml_file = plot_name.replace('.pdf', '_network.gml')
+    G_copy = G.copy()
+    # Convert all edge weights to strings
+    for u, v in G_copy.edges():
+        G_copy[u][v]['weight'] = str(G_copy[u][v]['weight'])
+    # Convert all node attributes to strings
+    for node in G_copy.nodes():
+        for key, value in G_copy.nodes[node].items():
+            G_copy.nodes[node][key] = str(value)
+    nx.write_gml(G_copy, gml_file)
+    print(f"Saved network to GML format: {gml_file}")
+    
     plt.show()
 
 def load_ece_classification():
@@ -364,7 +439,7 @@ def load_ece_classification():
 if __name__ == "__main__":
     
     all_dir = "/home/shuaiw/borg/paper/gg_run2/"
-    seq_dir = "/home/shuaiw/borg/paper/borg_data/profile/"
+    seq_dir = "/home/shuaiw/borg/paper/borg_data/profile3/"
     cluster = "profile"
 
     cluster_species = "borg"
@@ -372,7 +447,7 @@ if __name__ == "__main__":
     os.system(f"cat {all_dir}/*/borg/{cluster_species}_contigs_summary.tsv > {borg_file}")
     plot_name = os.path.join(seq_dir, f"{cluster_species}_motif_profile_all.pdf")
     
-    
+    # """
     # Load BORG data
     borg_data = My_Borg(borg_file)
     high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
@@ -394,9 +469,9 @@ if __name__ == "__main__":
         # print (entry.borg_ref)
     # members = ["soil_1_1336_L", "soil_s4_1_109_C"]
     
-    # """
+    
     fasta_dict = find_assembly()
-    all_members, all_anno_dict = collect_host_genus(all_dir, fasta_dict)
+    all_members, all_anno_dict, non_Mp_members, non_Mp_anno_dict = collect_host_genus(all_dir, fasta_dict)
     ## if member in all members not in members, add to members, also update borg_anno_dict
     for member in all_members:
         if member not in members:
@@ -414,15 +489,28 @@ if __name__ == "__main__":
             borg_indicator[member[0]] = 'Mp'
 
 
-    # cluster_obj = given_species_drep(all_dir, members, seq_dir, cluster,
-    #                                 seq_dir, seq_dir, min_frac=0.3, 
-    #                                 min_sites=50, score_cutoff = 20)
+    ### add non-Mp members as well, randomly select 100 members
+    import random
+    from sklearn.metrics.pairwise import cosine_similarity
+    random.seed(42)
+    selected_non_Mp = random.sample(non_Mp_members, min(75, len(non_Mp_members)))
+    for member in selected_non_Mp:
+        if member not in members:
+            members.append(member)
+            borg_anno_dict[member[0]] = ['Non-Mp', non_Mp_anno_dict[member[0]][3:]+"<GTDB>"]
+            borg_indicator[member[0]] = 'Non-Mp'
+
+    print (len(members), "members in total")
+    for m in members:
+        print (m, borg_anno_dict[m[0]], borg_indicator[m[0]])
+    cluster_obj = given_species_drep_fast(all_dir, members, seq_dir, cluster,
+                                    seq_dir, seq_dir, min_frac=0.6, 
+                                    min_sites=20, score_cutoff = 30, max_len=100000)
     # cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
-    cluster_obj = My_cluster(cluster, members) 
-    cluster_obj.load_df(seq_dir)
+    # cluster_obj = My_cluster(cluster, members) 
+    # cluster_obj.load_df(seq_dir)
 
-    ## remove all rows with motifstring contains GATCH_4
 
     ## add a column to indicate borg_ref
     cluster_obj.profile_df['BORG_Ref'] = cluster_obj.profile_df['contig'].apply(lambda x: borg_anno_dict[x][1] if x in borg_anno_dict else 'NA')
@@ -435,7 +523,9 @@ if __name__ == "__main__":
 
     remove_motifs = ['GATCH_4','BATC_2','RGAYCY_3','YGATCB_3','BGATATC_5',"GGHCCD_5","HGGCC_5","YCDVH_2","YCTAARAR_2",\
                      "YGATCBB_3","GGNCCH_5","GGCCH_4","DCCWGG_3","CCCTGH_3","GGNDCC_5","RGATCT_5","RGATCY_5","RGAYCB_3",\
-                       "DYCACGRND_3","YCDV_2", "YDCCGGHR_3","VSAB_3",""]
+                       "DYCACGRND_3","YCDV_2", "YDCCGGHR_3","VSAB_3","VNNNNNNNNNNNNNGCAYNNNNNNHTNGC_17","HNNNNCAGNNNNNNGTAG_7",\
+                        "HNDNNNBGATCHNV_11","GGACCANNNNNNNNNNND_3","DNNNNNNNNNNSAGCTSNNNNNNNNNNHB_15","DNNNDYCTAADR_7","DNNGAGNNNNNNNTTTG_5",\
+                            "DGAGNNNNNGGC_3","DGADNNNNNNTCGC_3","CTAGNNNNNBH_1"]
     # profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df.tsv")
     profile_df = profile_df[~profile_df['motifString'].isin(remove_motifs)]
     
@@ -463,11 +553,11 @@ if __name__ == "__main__":
     ## store the profile_df in a CSV file
     
     profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv")
-    # personal_plot(profile_df)
     umap_plot(profile_df, plot_name)
-
-
-
-
-
-
+    # personal_plot(profile_df)
+    # profile_df['sample'] = profile_df['contig'].apply(extract_sample_name)
+    # ## get a df for each sample
+    # for sample in profile_df['sample'].unique():
+    #     sample_df = profile_df[profile_df['sample'] == sample]
+    #     sample_plot_name = plot_name.replace('.pdf', f'_{sample}_heatmap.pdf')
+    #     umap_plot(sample_df, sample_plot_name)
