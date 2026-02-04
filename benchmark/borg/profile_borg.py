@@ -468,7 +468,23 @@ if __name__ == "__main__":
             
         # print (entry.borg_ref)
     # members = ["soil_1_1336_L", "soil_s4_1_109_C"]
-    
+
+
+    mini_c_members = [("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_940373_C", "soil_110"),\
+                      ("SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_METAMDBG_425607_C","soil_80"),\
+                      ("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_941939_C","soil_110"),\
+                      ("SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_722797_C", "soil_100"),\
+                      ("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_942697_C", "soil_110"),\
+                      ("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_943671_C", "soil_110"),\
+                        ("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_941860_C", "soil_110"),\
+                        ("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_944115_C", "soil_110"),\
+                        ("SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_724504_C", "soil_100"),\
+                      ("SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_724616_C", "soil_100")]
+    for member in mini_c_members:
+        if member not in members:
+            members.append(member)
+            borg_anno_dict[member[0]] = ['Mini_Chr', "<Manual Mini_Chr>"]
+            borg_indicator[member[0]] = 'Mini_Chr'
     
     fasta_dict = find_assembly()
     all_members, all_anno_dict, non_Mp_members, non_Mp_anno_dict = collect_host_genus(all_dir, fasta_dict)
@@ -480,6 +496,8 @@ if __name__ == "__main__":
             borg_indicator[member[0]] = 'Mp'
     # # print (borg_anno_dict)
     # count_mod_freq(all_dir, borg_anno_dict)
+
+
 
     manual_members = [("SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META_16008_L", "soil_2")]
     for member in manual_members:
@@ -493,7 +511,7 @@ if __name__ == "__main__":
     import random
     from sklearn.metrics.pairwise import cosine_similarity
     random.seed(42)
-    selected_non_Mp = random.sample(non_Mp_members, min(75, len(non_Mp_members)))
+    selected_non_Mp = random.sample(non_Mp_members, min(30, len(non_Mp_members)))
     for member in selected_non_Mp:
         if member not in members:
             members.append(member)

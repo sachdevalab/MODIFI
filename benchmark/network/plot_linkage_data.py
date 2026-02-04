@@ -61,8 +61,8 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
     """
     Get the edge data from the host summary file.
     """
-    sample_obj.specificity_cutoff = 0.001
-    sample_obj.final_score_cutoff = 0.8
+    # sample_obj.specificity_cutoff = 0.001
+    # sample_obj.final_score_cutoff = 0.8
     our_linkages, our_ctg_linkages, linkage_info_list = sample_obj.read_linkage_dict()
 
     host_clu_lineage_dict = {}
@@ -343,36 +343,39 @@ def read_mge_cluster(mge_clu_file):
             clu_mge_dict[cluster].append(mge)
     return mge_clu_dict, clu_mge_dict
 
-def count_cross_phylum(whole_G, ctg_taxa_dict, clu_mge_dict=None, rank='class'):
+def count_cross_phylum(whole_G, ctg_taxa_dict, clu_mge_dict=None, rank='phylum'):
     """
     Analyze MGE nodes (virus/plasmid/novel) and count how many are linked to >1
     taxonomic groups at the specified rank (default: 'class').
     """
     cross_count = {'virus': 0, 'plasmid': 0, 'novel': 0}
     type_count = {'virus': 0, 'plasmid': 0, 'novel': 0}
-
+    print ("")
     for node, degree in whole_G.degree:
         node_type = whole_G.nodes[node].get('type')
         if node_type in ['virus', 'plasmid', 'novel']:
             type_count[node_type] += 1
             neighbors = list(whole_G.neighbors(node))
+            neighbors_names = []
             groups = set()
             for neighbor in neighbors:
                 neigh_type = whole_G.nodes[neighbor].get('type')
                 if neigh_type in ['virus', 'plasmid', 'novel']:
                     continue
                 neighbor_label = whole_G.nodes[neighbor].get('label', neighbor)
+                
                 lineage = ctg_taxa_dict.get(neighbor_label, "NA")
                 try:
                     group = classify_taxa(lineage, rank)
                 except Exception:
                     group = "NA"
-                if group and not re.search("Unclassified", str(group)) and group != "NA":
+                if group and not re.search("Unclassified", str(group)) and group != "NA" and not re.search("unknown", str(group).lower()):
                     groups.add(group)
-
+                    neighbors_names.append((neighbor, group))
+            
             if len(groups) > 1:
                 clu_info = clu_mge_dict.get(node, 'NA') if clu_mge_dict else 'NA'
-                print(f"{node} ({node_type}) is linked to multiple {rank}s: {groups}, {clu_info}")
+                print(f"{node} ({node_type}) is linked to multiple {rank}s: {groups}, mge_cluster: {clu_info}, host contigs: {neighbors_names}")
                 cross_count[node_type] += 1
 
     print(f"Cross-{rank} linked MGEs:")
@@ -770,7 +773,7 @@ if __name__ == "__main__":
     ## save whole_G to file by gml
     nx.write_gml(whole_G, f"{paper_fig_dir}/whole_network2.gml")
 
-    profile_network(whole_G, ctg_taxa_dict)
+    profile_network(whole_G, ctg_taxa_dict, clu_mge_dict)
 
     gc_df = pd.DataFrame(gc_data, columns=["MGE", "host", "MGE_type", "MGE_gc", "host_gc", 
                                            "cos_sim", "MGE_cov", "host_cov", 
@@ -790,15 +793,15 @@ if __name__ == "__main__":
 
     # Output degree of virus and plasmids to CSV (only virus and plasmid nodes)
     export_mge_degrees(whole_G, f"{paper_fig_dir}/virus_plasmid_degrees.csv")
-    count_cross_phylum(whole_G, ctg_taxa_dict, clu_mge_dict, rank='genus')
+    count_cross_phylum(whole_G, ctg_taxa_dict, clu_mge_dict, rank='phylum')
 
-    ## output the top 5 connected components, and count the number of nodes in it
-    connected_components = sorted(nx.connected_components(whole_G), key=len, reverse=True)
-    for i, component in enumerate(connected_components[:5]):
-        print(f"Connected component {i+1} has {len(component)} nodes")
-    ## plot the largest connected component
+    # ## output the top 5 connected components, and count the number of nodes in it
+    # connected_components = sorted(nx.connected_components(whole_G), key=len, reverse=True)
+    # for i, component in enumerate(connected_components[:5]):
+    #     print(f"Connected component {i+1} has {len(component)} nodes")
+    # ## plot the largest connected component
 
 
-    component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa_dict, paper_fig_dir, clu_host_dict)
+    # component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa_dict, paper_fig_dir, clu_host_dict)
   
-    # plot_network2(subgraph, paper_fig_dir, fig_name = "largest_connected_component")
+    # # plot_network2(subgraph, paper_fig_dir, fig_name = "largest_connected_component")
