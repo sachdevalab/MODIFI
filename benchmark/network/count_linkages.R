@@ -20,7 +20,7 @@ env_sample_counts <- gc_df %>%
 # Only retain environments with >=5 samples (for both MGE types combined)
 env_sample_counts <- env_sample_counts %>%
   group_by(environment) %>%
-  filter(n_distinct(sample) >= 5) %>%
+  filter(n_distinct(sample) >= 2) %>%
   ungroup()
 
 # Order environments by total count (for consistent x-axis order)
@@ -85,12 +85,12 @@ p1 <- ggplot(env_sample_counts, aes(x = environment, y = count, fill = MGE_type)
     axis.title = element_text(size = 12),
     axis.text = element_text(size = 10),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "right"
+    legend.position = "top"
   ) +
   geom_text(data = env_pvals, aes(x = environment, y = y, label = star), inherit.aes = FALSE, vjust = 0, size = 6)
 
 ggsave("../../tmp/figures/multi_env_linkage/network_99/linkage_counts_env_boxplot.pdf", 
-       plot = p1, width = 4, height = 5)
+       plot = p1, width = 4, height = 6)
 
 # Boxplot 2: Linkages per sample by phylum (filtered, with significance)
 # Precompute p-values for each phylum

@@ -152,7 +152,7 @@ analyze_jaccard <- function(fig_dir) {
     geom_bar(stat = "identity", position = "dodge", width = 0.7) +
     geom_text(aes(label = total_count), 
               position = position_dodge(width = 0.7), 
-              vjust = 1.5, size = 3, color = "white") +
+              vjust = -0.5, size = 3, color = "black") +
     ylim(0, 1) +
     labs(
       x = "Phylum",
@@ -204,7 +204,7 @@ analyze_jaccard <- function(fig_dir) {
     geom_bar(stat = "identity", position = "dodge", width = 0.7) +
     geom_text(aes(label = total_count), 
               position = position_dodge(width = 0.7), 
-              vjust = 1.5, size = 3, color = "white") +
+              vjust = -0.5, size = 3, color = "black") +
     ylim(0, 1) +
     labs(
       x = "Phylum",
@@ -279,9 +279,9 @@ analyze_jaccard <- function(fig_dir) {
     geom_errorbar(aes(ymin = mean - se, ymax = mean + se),
                   position = position_dodge(width = 0.7),
                   width = 0.2, linewidth = 0.5) +
-    geom_text(aes(label = count), 
+    geom_text(aes(label = count, y = mean + se), 
               position = position_dodge(width = 0.7), 
-              vjust = 1.5, size = 3, color = "white") +
+              vjust = -0.5, size = 3, color = "black") +
     ylim(0, 1) +
     labs(
       x = "Phylum",
@@ -323,9 +323,9 @@ analyze_jaccard <- function(fig_dir) {
     geom_errorbar(aes(ymin = mean - se, ymax = mean + se),
                   position = position_dodge(width = 0.7),
                   width = 0.2, linewidth = 0.5) +
-    geom_text(aes(label = count), 
+    geom_text(aes(label = count, y = mean + se), 
               position = position_dodge(width = 0.7), 
-              vjust = 1.5, size = 3, color = "white") +
+              vjust = -0.5, size = 3, color = "black") +
     ylim(0, 1) +
     labs(
       x = "Phylum",
@@ -355,7 +355,7 @@ analyze_jaccard <- function(fig_dir) {
   )
   
   ggsave(paste0(fig_dir, "/jaccard_boxplot_by_phylum_mge.pdf"), 
-         combined_plot_56, width = 8, height = 5, dpi = 400)
+         combined_plot_56, width = 8.5, height = 5, dpi = 400)
   
   cat("\nPlots saved successfully!\n")
 }
