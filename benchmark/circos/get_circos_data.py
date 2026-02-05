@@ -465,7 +465,7 @@ def plot_line(df, out_dir, new_ref, contig_name, depth="NA"):
             # break
 
 def manual_main():
-    out_dir = "/home/shuaiw/borg/paper/circos/borg_rev/"
+    out_dir = "/home/shuaiw/borg/paper/circos/linear/"
 
     # sample = "infant_2"
     # contig = "infant_2_60_C"
@@ -528,10 +528,15 @@ def manual_main():
     # out_dir = os.path.join(out_dir, sample)
     # motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
 
-    sample = "soil_s1_2"
-    contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
+    # sample = "soil_s1_2"
+    # contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
+
+    sample = "infant_14"
+    contig = "infant_2_3_C"
     out_dir = os.path.join(out_dir, sample)
-    motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
+    motif_list = [["ATGCAT", 5], ["CAANNNNNNRTGA", 3], ["CAYNNNNNNTAYG", 2]]
 
     # sample = "soil_s3_1"
     # contig = "SRVP18_trench_6_60cm_scaf_214_117_86_FINAL"
@@ -557,7 +562,7 @@ def manual_main():
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     print (out_dir)
-    work_dir = f"/home/shuaiw/borg/paper/borg_data/borg_for4/{sample}/{sample}_methylation3/"
+    work_dir = f"/home/shuaiw/methylation/data/borg/paper/motif_change/methyl/infant_14/"
     # work_dir = f"/home/shuaiw/borg/paper/run3/{sample}/{sample}_methylation3/"
     
     my_ref = f"{work_dir}/contigs/{contig}.fa"
@@ -720,9 +725,9 @@ if __name__ == "__main__":
     score_cutoff = 30
     # auto_main()
     # auto_main_jumbo()
-    # manual_main()
+    manual_main()
     # auto_main_borg()
-    main_ecoli()
+    # main_ecoli()
 
 
 

@@ -1,0 +1,1 @@
+blastn -query /home/shuaiw/borg/paper/borg_data/ece_LD/22_ECE_and_Mp_seqs.fasta -subject /home/shuaiw/borg/paper/curated_genome/SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI.contigs.fa -out test.out -outfmt 7	
