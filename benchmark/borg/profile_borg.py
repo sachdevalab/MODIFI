@@ -304,7 +304,7 @@ def umap_plot(profile_df, plot_name):
         print("No Non-Mp contigs found")
 
     # Create pivot table for dimensionality reduction
-    pivot_df = profile_df.pivot(index='contig', columns='motifString', values='fraction')
+    pivot_df = profile_df.pivot(index='contig', columns='motifString', values='fraction' )
     pivot_df = pivot_df.fillna(0)  # Fill NaN values with 0
     
 
@@ -347,7 +347,7 @@ def umap_plot(profile_df, plot_name):
     G = nx.Graph()
     for i, contig1 in enumerate(pivot_df.index):
         # Add node with genome type attribute
-        G.add_node(contig1, Genome=contig_genome_map.get(contig1, 'NA'))
+        G.add_node(contig1, Genome=contig_genome_map.get(contig1, 'NA'), Sample = profile_df[profile_df['contig'] == contig1]['sample'].iloc[0])
         for j, contig2 in enumerate(pivot_df.index):
             if i < j:
                 similarity = similarity_matrix[i, j]
@@ -447,7 +447,7 @@ if __name__ == "__main__":
     os.system(f"cat {all_dir}/*/borg/{cluster_species}_contigs_summary.tsv > {borg_file}")
     plot_name = os.path.join(seq_dir, f"{cluster_species}_motif_profile_all.pdf")
     
-    # """
+    """
     # Load BORG data
     borg_data = My_Borg(borg_file)
     high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
@@ -567,13 +567,14 @@ if __name__ == "__main__":
 
     profile_df.to_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv", index=False)
 
-    # """
+    """
     ## store the profile_df in a CSV file
     
     profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv")
+    profile_df['sample'] = profile_df['contig'].apply(extract_sample_name)
     umap_plot(profile_df, plot_name)
     # personal_plot(profile_df)
-    # profile_df['sample'] = profile_df['contig'].apply(extract_sample_name)
+    # 
     # ## get a df for each sample
     # for sample in profile_df['sample'].unique():
     #     sample_df = profile_df[profile_df['sample'] == sample]
