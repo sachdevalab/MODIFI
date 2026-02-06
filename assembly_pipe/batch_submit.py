@@ -252,7 +252,7 @@ def batch_soil():
     """
     Read a list of BAM files from a given file.
     """
-    outdir = "/home/shuaiw/borg/paper/gg_run2/"
+    outdir = "/home/shuaiw/borg/paper/gg_run3/"
     prefix_table = "prefix_table_soil.tab"
     w = open("run_soil.sh", 'w')
     i = 1
@@ -266,20 +266,20 @@ def batch_soil():
             environment = items[3]
 
             work_dir = os.path.join(outdir, prefix)
-            # cmd = f"""
-            # sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_mge.smk --config \\
-            #     hifi_bam={hifi_bam} \\
-            #     prefix={prefix} \\
-            #     work_dir={work_dir} \\
-            #     ref={ref} -j 64"  --job-name={prefix}
-            # """
             cmd = f"""
-            snakemake -s soil_ggkbase_host.smk --config \\
+            sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_opt2.smk --config \\
                 hifi_bam={hifi_bam} \\
                 prefix={prefix} \\
                 work_dir={work_dir} \\
-                ref={ref} -j 64
+                ref={ref} -j 64"  --job-name={prefix}
             """
+            # cmd = f"""
+            # snakemake -s soil_ggkbase_opt2.smk --config \\
+            #     hifi_bam={hifi_bam} \\
+            #     prefix={prefix} \\
+            #     work_dir={work_dir} \\
+            #     ref={ref} -j 64
+            # """
             print(cmd, file=w)
     w.close()
 

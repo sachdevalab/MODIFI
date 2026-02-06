@@ -2077,3 +2077,11 @@ sbatch --job-name=inf14 \
           --min_sites 100 \
           --threads 64"
             
+   sbatch --job-name=gtdb \
+  --partition standard \
+  --wrap "gtdbtk classify_wf \
+          --genome_dir /home/shuaiw/borg/paper/gg_run3/soil_1/bins \
+          --out_dir /home/shuaiw/borg/paper/gg_run3/soil_1/GTDB \
+          --skip_ani_screen \
+          --cpus 64 \
+          -x fasta"
