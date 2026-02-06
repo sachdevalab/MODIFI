@@ -20,7 +20,7 @@ env_sample_counts <- gc_df %>%
 # Only retain environments with >=5 samples (for both MGE types combined)
 env_sample_counts <- env_sample_counts %>%
   group_by(environment) %>%
-  filter(n_distinct(sample) >= 2) %>%
+  filter(n_distinct(sample) >= 3) %>%
   ungroup()
 
 # Order environments by total count (for consistent x-axis order)
@@ -37,9 +37,10 @@ top_phyla <- gc_df %>%
 
 phylum_sample_counts <- gc_df %>%
   filter(host_phylum %in% top_phyla) %>%
+  mutate(host_phylum = gsub("^p__", "", host_phylum)) %>%
   group_by(host_phylum, sample, MGE_type, .drop = FALSE) %>%
   summarise(count = n(), .groups = "drop")
-phylum_sample_counts$host_phylum <- factor(phylum_sample_counts$host_phylum, levels = top_phyla)
+phylum_sample_counts$host_phylum <- factor(phylum_sample_counts$host_phylum, levels = gsub("^p__", "", top_phyla))
 
 # Only retain phyla with >=5 samples (for both MGE types combined)
 phylum_sample_counts <- phylum_sample_counts %>%
@@ -90,7 +91,7 @@ p1 <- ggplot(env_sample_counts, aes(x = environment, y = count, fill = MGE_type)
   geom_text(data = env_pvals, aes(x = environment, y = y, label = star), inherit.aes = FALSE, vjust = 0, size = 6)
 
 ggsave("../../tmp/figures/multi_env_linkage/network_99/linkage_counts_env_boxplot.pdf", 
-       plot = p1, width = 4, height = 6)
+       plot = p1, width = 3.5, height = 6)
 
 # Boxplot 2: Linkages per sample by phylum (filtered, with significance)
 # Precompute p-values for each phylum

@@ -61,8 +61,8 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
     """
     Get the edge data from the host summary file.
     """
-    # sample_obj.specificity_cutoff = 0.001
-    # sample_obj.final_score_cutoff = 0.8
+    sample_obj.specificity_cutoff = 0.001
+    sample_obj.final_score_cutoff = 0.8
     our_linkages, our_ctg_linkages, linkage_info_list = sample_obj.read_linkage_dict()
 
     host_clu_lineage_dict = {}
@@ -601,7 +601,8 @@ def component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa
     if skip_heatmap:
         print('Skipping heatmap generation due to no hosts.')
     else:
-
+        ## store the matrix for potential reuse
+        binary_matrix.to_csv(os.path.join(paper_fig_dir, 'largest_component_binary_matrix.csv'))
         figsize = (max(6, len(binary_matrix.columns) * 0.4), max(6, len(binary_matrix.index) * 0.25))
         # attempt hierarchical clustering on non-virus rows, keep viruses at bottom
         try:
@@ -786,7 +787,7 @@ if __name__ == "__main__":
     analyze_MGEs(gc_df, mge_clu_dict)
 
     # secondary_chr(all_dir)
-
+    # """
 
     whole_G = nx.read_gml(f"{paper_fig_dir}/whole_network2.gml")
     print (f"Loaded graph with {whole_G.number_of_nodes()} nodes and {whole_G.number_of_edges()} edges")
@@ -795,13 +796,13 @@ if __name__ == "__main__":
     export_mge_degrees(whole_G, f"{paper_fig_dir}/virus_plasmid_degrees.csv")
     count_cross_phylum(whole_G, ctg_taxa_dict, clu_mge_dict, rank='phylum')
 
-    # ## output the top 5 connected components, and count the number of nodes in it
-    # connected_components = sorted(nx.connected_components(whole_G), key=len, reverse=True)
-    # for i, component in enumerate(connected_components[:5]):
-    #     print(f"Connected component {i+1} has {len(component)} nodes")
-    # ## plot the largest connected component
+    ## output the top 5 connected components, and count the number of nodes in it
+    connected_components = sorted(nx.connected_components(whole_G), key=len, reverse=True)
+    for i, component in enumerate(connected_components[:5]):
+        print(f"Connected component {i+1} has {len(component)} nodes")
+    ## plot the largest connected component
 
 
-    # component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa_dict, paper_fig_dir, clu_host_dict)
+    component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa_dict, paper_fig_dir, clu_host_dict)
   
     # # plot_network2(subgraph, paper_fig_dir, fig_name = "largest_connected_component")
