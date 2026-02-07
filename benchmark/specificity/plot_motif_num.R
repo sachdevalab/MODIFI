@@ -46,6 +46,18 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
       proportion = sum(motif_num > 0) / n() * 100
     )
   
+  # Count number of unique samples per environment
+  sample_counts <- df_all_data %>%
+    group_by(environment) %>%
+    summarise(n_samples = n_distinct(sample))
+  
+  cat("\n=== Sample counts by environment ===\n")
+  for (i in 1:nrow(sample_counts)) {
+    cat(sprintf("Environment: %s, Number of samples: %d\n",
+                sample_counts$environment[i], sample_counts$n_samples[i]))
+  }
+  cat(sprintf("Total unique samples across all environments: %d\n\n", n_distinct(df_all_data$sample)))
+  
   for (i in 1:nrow(env_summary)) {
     cat(sprintf("Environment: %s, Total contigs: %d, Contigs with motif number > 0: %d, Proportion: %.2f%%\n",
                 env_summary$environment[i], env_summary$total_ctgs[i], 
@@ -130,6 +142,49 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
 
   # Create comparison list for ocean vs other environments
   ocean_comparisons <- lapply(setdiff(env_order, "ocean"), function(env) c("ocean", env))
+
+  # Calculate and print p-values for ocean vs other environments
+  cat("\n=== T-test p-values: Ocean vs Other Environments (Motif Number) ===\n")
+  for (comp in ocean_comparisons) {
+    ocean_data <- df_filtered_env$motif_num[df_filtered_env$environment == comp[1]]
+    other_data <- df_filtered_env$motif_num[df_filtered_env$environment == comp[2]]
+    
+    if (length(ocean_data) > 0 && length(other_data) > 0) {
+      test_result <- t.test(ocean_data, other_data)
+      cat(sprintf("%s vs %s: p-value = %.4e (mean: %.2f vs %.2f)\n", 
+                  comp[1], comp[2], test_result$p.value,
+                  mean(ocean_data), mean(other_data)))
+    }
+  }
+  
+  # Calculate all pairwise comparisons for motif number and print only if p < 0.05
+  cat("\n=== Additional Significant Pairwise Comparisons (Motif Number, p < 0.05) ===\n")
+  env_list <- as.character(env_order)
+  all_pairs <- combn(env_list, 2, simplify = FALSE)
+  significant_found <- FALSE
+  
+  for (pair in all_pairs) {
+    # Skip if it's an ocean comparison (already printed above)
+    if ("ocean" %in% pair) next
+    
+    data1 <- df_filtered_env$motif_num[df_filtered_env$environment == pair[1]]
+    data2 <- df_filtered_env$motif_num[df_filtered_env$environment == pair[2]]
+    
+    if (length(data1) > 0 && length(data2) > 0) {
+      test_result <- t.test(data1, data2)
+      if (test_result$p.value < 0.05) {
+        cat(sprintf("%s vs %s: p-value = %.4e (mean: %.2f vs %.2f)\n", 
+                    pair[1], pair[2], test_result$p.value,
+                    mean(data1), mean(data2)))
+        significant_found <- TRUE
+      }
+    }
+  }
+  
+  if (!significant_found) {
+    cat("No additional significant pairwise comparisons found (p < 0.05)\n")
+  }
+  cat("\n")
 
   # Plot 3: Environment motif number distribution (box plot)
   p3 <- ggplot(df_filtered_env, aes(x = environment, y = motif_num)) +
@@ -236,6 +291,21 @@ count_good_ctgs <- function(df_all_data, fig_dir) {
   }
   
 sample_proportions_filtered
+
+  # Calculate and print p-values for pairwise environment comparisons
+  cat("\n=== T-test p-values: Pairwise Environment Comparisons (Proportion per Sample) ===\n")
+  for (pair in pairwise_comparisons) {
+    data1 <- sample_proportions_filtered$proportion[sample_proportions_filtered$environment == pair[1]]
+    data2 <- sample_proportions_filtered$proportion[sample_proportions_filtered$environment == pair[2]]
+    
+    if (length(data1) >= 2 && length(data2) >= 2) {
+      test_result <- t.test(data1, data2)
+      cat(sprintf("%s (n=%d) vs %s (n=%d): p-value = %.4e (mean: %.2f%% vs %.2f%%)\n", 
+                  pair[1], length(data1), pair[2], length(data2),
+                  test_result$p.value, mean(data1), mean(data2)))
+    }
+  }
+  cat("\n")
 
   # Create boxplot of proportion per sample by environment with t.test
   p5 <- ggplot(sample_proportions_filtered, aes(x = environment, y = proportion)) +

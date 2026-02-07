@@ -1617,10 +1617,10 @@ if __name__ == "__main__":
     archaea_tree = "/home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_tree/archaea.unrooted.tree"
     archea_tree_results = "/home/shuaiw/borg/paper/specificity/archea_tree/"
     # color_tree(bacteria_tree, tree_results, "bacteria")
-    color_tree(archaea_tree, archea_tree_results, "archaea")
+    # color_tree(archaea_tree, archea_tree_results, "archaea")
     # plot_motif_len(fig_dir)
-    # sample_env_dict = read_metadata(meta_file)
-    # main(all_dir, fig_dir, sample_env_dict)
+    sample_env_dict = read_metadata(meta_file)
+    main(all_dir, fig_dir, sample_env_dict)
 
     # plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)

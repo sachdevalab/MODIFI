@@ -43,6 +43,19 @@ top20_df <- df_all_data %>%
   arrange(desc(motif_num)) %>%
   head(20)
 
+# Print top 20 genomes with their motif numbers and environments
+cat("\n=== Top 20 Genomes by Motif Number ===\n")
+cat(sprintf("%-50s %-15s %-20s %s\n", "Species", "Contig", "Environment", "Motif Count"))
+cat(paste(rep("-", 110), collapse = ""), "\n")
+for (i in 1:nrow(top20_df)) {
+  cat(sprintf("%-50s %-15s %-20s %d\n", 
+              substr(top20_df$species[i], 1, 50),
+              substr(top20_df$contig[i], 1, 15),
+              top20_df$environment[i],
+              top20_df$motif_num[i]))
+}
+cat("\n")
+
 
 # Define environment color palette
 ENV_COLORS <- c(
