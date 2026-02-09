@@ -436,10 +436,18 @@ def load_ece_classification():
                 ece_dict[ctg_name] = ece_type
     return ece_dict
 
+def get_mini_chr_list():
+    mini_chr_list = []
+    with open("/home/shuaiw/borg/paper/curated_genome/curated_genome.list", 'r') as f:
+        for line in f:
+            field = line.strip().split()
+            mini_chr_list.append((field[0], field[1]))
+    return mini_chr_list
+
 if __name__ == "__main__":
     
-    all_dir = "/home/shuaiw/borg/paper/gg_run2/"
-    seq_dir = "/home/shuaiw/borg/paper/borg_data/profile3/"
+    all_dir = "/home/shuaiw/borg/paper/gg_run3/"
+    seq_dir = "/home/shuaiw/borg/paper/borg_data/profile4/"
     cluster = "profile"
 
     cluster_species = "borg"
@@ -447,7 +455,7 @@ if __name__ == "__main__":
     os.system(f"cat {all_dir}/*/borg/{cluster_species}_contigs_summary.tsv > {borg_file}")
     plot_name = os.path.join(seq_dir, f"{cluster_species}_motif_profile_all.pdf")
     
-    """
+    # """
     # Load BORG data
     borg_data = My_Borg(borg_file)
     high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
@@ -470,16 +478,28 @@ if __name__ == "__main__":
     # members = ["soil_1_1336_L", "soil_s4_1_109_C"]
 
 
-    mini_c_members = [("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_940373_C", "soil_110"),\
-                      ("SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_METAMDBG_425607_C","soil_80"),\
-                      ("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_941939_C","soil_110"),\
-                      ("SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_722797_C", "soil_100"),\
-                      ("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_942697_C", "soil_110"),\
-                      ("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_943671_C", "soil_110"),\
-                        ("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_941860_C", "soil_110"),\
-                        ("SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_METAMDBG_944115_C", "soil_110"),\
-                        ("SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_724504_C", "soil_100"),\
-                      ("SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_724616_C", "soil_100")]
+    mini_c_members = [("FINAL_Ghosilch_Klingon_101kb_SR-VP_07_25_2022_A1_100cm_39_0_complete", "soil_100"),\
+                      ("FINAL_79kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_38_7_complete","soil_100"),\
+                      ("FINAL_340kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_39_43_complete","soil_100"),\
+                      ("FINAL_272kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_39_43_complete", "soil_100"),\
+                      ("FINAL_157kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_40_9_complete", "soil_110"),\
+                      ("FINAL_269kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_42_21_complete", "soil_110"),\
+                        ("FINAL_4-11MB_Methanoperedens_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_42_23_complete", "soil_110"),\
+                        ("FINAL_87kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_39_4_complete", "soil_110"),\
+                        ("FINAL_65kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_40_4_complete", "soil_110"),\
+                    ("FINAL_53kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_39_7_complete", "soil_110"),\
+                    ("FINAL_2-77MB_Methanoperedens_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_43_10_complete", "soil_80"),\
+                    ("FINAL_77kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_39_7_complete", "soil_80"),\
+                    ("FINAL_233kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_41_10_complete", "soil_80"),\
+                    ("FINAL_283kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_39_10_complete", "soil_80"),\
+                    ("FINAL_2-49MB_Methanoperedens_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_44_12_complete", "soil_80"),\
+                    ("FINAL_2-50MB_Methanoperedens_SR-VP_07_25_2022_A1_90cm_PACBIO-HIFI_44_8_complete", "soil_90"),\
+                    ("FINAL_2-50MB_Methanoperedens_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_44_16_complete", "soil_80"),\
+                        ("FINAL_2-76MB_Methanoperedens_SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_43_20_complete", "soil_2"),\
+                        ("FINAL_2-81MB_Methanoperedens_SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_43_28_complete", "soil_2"),\
+                        ("FINAL_2-74MB_Methanoperedens_SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_43_43_complete", "soil_1"),\
+                        ("FINAL_2-58MB_Methanoperedens_SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_43_25_complete", "soil_1"),\
+                      ("FINAL_62kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_40_11_complete", "soil_110")]
     for member in mini_c_members:
         if member not in members:
             members.append(member)
@@ -519,6 +539,11 @@ if __name__ == "__main__":
             borg_indicator[member[0]] = 'Non-Mp'
 
     print (len(members), "members in total")
+
+    ## remove all member from sample soil_100
+    members = [m for m in members if m[1] != "soil_100"]
+    print (len(members), "members after removing soil_100")
+
     for m in members:
         print (m, borg_anno_dict[m[0]], borg_indicator[m[0]])
     cluster_obj = given_species_drep_fast(all_dir, members, seq_dir, cluster,
@@ -567,7 +592,7 @@ if __name__ == "__main__":
 
     profile_df.to_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv", index=False)
 
-    """
+    # """
     ## store the profile_df in a CSV file
     
     profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv")

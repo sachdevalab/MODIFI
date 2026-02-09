@@ -283,7 +283,7 @@ if __name__ == "__main__":
         borg_ref = "/home/shuaiw/borg/paper/borg_data/all_borg_mini.fa"
         
         # all_dir = "/home/shuaiw/borg/paper/borg_data/borg_for2/"
-        all_dir = "/home/shuaiw/borg/paper/gg_run2/"
+        all_dir = "/home/shuaiw/borg/paper/gg_run3/"
         fasta_dict = find_assembly()
         # for prefix in ["soil_1", "soil_2", "soil_s1_1","soil_s1_2","soil_s3_1","soil_s3_2","soil_s4_1","soil_s4_2"]:
         #     work_dir = f"{all_dir}/{prefix}/borg/"
@@ -292,7 +292,7 @@ if __name__ == "__main__":
             assembly_fasta = fasta_dict[prefix]
             work_dir = f"{all_dir}/{prefix}/borg/"
             find_borg_func(assembly_fasta, work_dir, borg_ref, prefix, all_dir, ece_type="borg")
-    else:
-        # Use command line interface
-        all_dir = "/home/shuaiw/borg/paper/run2/"
-        main()
+    # else:
+    #     # Use command line interface
+    #     all_dir = "/home/shuaiw/borg/paper/gg_run3/"
+    #     main()
