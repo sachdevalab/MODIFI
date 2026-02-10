@@ -81,15 +81,41 @@ def read_contact_values(contact_value_file):
     return contact_values
 
 def plot_hic(fig_dir, df):
-    plt.figure(figsize=(6, 6))
-    ax = sns.boxplot(x="Sample", y="Contact Value", hue="Type", data=df, palette=["#FF6347", "#4682B4"])
+    ## store the df in csv
+    
+    ## compare the contact values between our linkages and random pairs using t-test
+    our_linkages_values = df[df["Type"] == "Our Linkages"]["Contact Value"].values
+    random_pairs_values = df[df["Type"] == "Random Pairs"]["Contact Value"].values
+    t_stat, p_value = ttest_ind(our_linkages_values, random_pairs_values, equal_var=False)
+    print (f"T-test results: t-statistic = {t_stat:.4f}, p-value = {p_value:.4e}")
+    print (f"Average contact value for our linkages: {np.mean(our_linkages_values) if len(our_linkages_values) > 0 else 0}")
+    print (f"Average contact value for random pairs: {np.mean(random_pairs_values) if len(random_pairs_values) > 0 else 0}")
+    ## also get p value for each sample
+    
+    for sample in df["Sample"].unique():
+        sample_our_linkages_values = df[(df["Type"] == "Our Linkages") & (df["Sample"] == sample)]["Contact Value"].values
+        sample_random_pairs_values = df[(df["Type"] == "Random Pairs") & (df["Sample"] == sample)]["Contact Value"].values
+        t_stat, p_value = ttest_ind(sample_our_linkages_values, sample_random_pairs_values, equal_var=False)
+        print(f"Sample {sample} T-test results: t-statistic = {t_stat:.4f}, p-value = {p_value:.4e}")
+    
+    # Plot all samples together
+    print (df)
+    
+    ## Print average contact values
+    print(f"Average contact value for our linkages: {df[df['Type'] == 'Our Linkages']['Contact Value'].mean()}")
+    print(f"Average contact value for random pairs: {df[df['Type'] == 'Random Pairs']['Contact Value'].mean()}")
+    
+    plt.figure(figsize=(4, 5))
+    sns.boxplot(x="Sample", y="Contact Value", hue="Type", data=df)
     plt.yscale('log')
-    plt.ylabel("Contact Values (log scale)", fontsize=12)
-    plt.legend(title="Type", fontsize=12, title_fontsize=12)
-    plt.grid(True, axis='y', alpha=0.3)
+    plt.ylabel('Contact Value (log scale)')
+    plt.title("")
+    plt.xticks(rotation=30, ha='right')
+    plt.legend(loc='best')
     plt.tight_layout()
-    plt.savefig(f'{fig_dir}/bin3c_boxplot.png', dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
+    plt.savefig(os.path.join(fig_dir, "bin3c_boxplot.pdf"))
     plt.close()
+
 
 def compare_contact(mge, bin_name, contact_values):
     skip = False
@@ -171,6 +197,7 @@ if __name__ == "__main__":
     data = []
     all_dir = "/home/shuaiw/borg/paper/run2/"
     fig_dir = "../../tmp/figures/link_accuracy/"
+    """
     for prefix in ["cow_bioreactor_1", "cow_bioreactor_4", "cow_bioreactor_5"]:
     # for prefix in ["cow_bioreactor_1"]:
         sample_obj = My_sample(prefix, all_dir, methy_v=4)
@@ -207,6 +234,10 @@ if __name__ == "__main__":
             data.append([prefix, "Random Pairs", value])
 
     df = pd.DataFrame(data, columns=["Sample", "Type", "Contact Value"])
+
+    df.to_csv(os.path.join(fig_dir, "contact_values.csv"), index=False)
+    """
+    df = pd.read_csv(os.path.join(fig_dir, "contact_values.csv"))
     plot_hic(fig_dir, df)
 
 

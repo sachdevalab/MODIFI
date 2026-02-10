@@ -613,6 +613,10 @@ def plot_stacked_bar(clade_df, paper_fig_dir):
     stack_data = []
 
     def phylum_filter():
+        ## first count number of phyla with member_num >= 2, and print the count of each phylum
+        phylum_counts = clade_df[clade_df['member_num'] >= 2].groupby('phylum').size().sort_values(ascending=False)
+        print (phylum_counts, "phyla with member_num >= 2")
+        print ("number of phyla with member_num >= 2", len(phylum_counts))
         ## select the top 5 phyla based on the count at cutoff 2
         top_phyla = clade_df[clade_df['member_num'] >= 2].groupby('phylum').size().sort_values(ascending=False).head(5).index.tolist()
         return top_phyla
@@ -676,7 +680,7 @@ def main_meta():
         os.makedirs(tmp_res, exist_ok=True)
         os.makedirs(paper_fig_dir, exist_ok=True)
 
-
+        """
         # depth_dict = depth_filter(all_dir, min_depth = 10)
         drep_clu_dict = read_drep_cluster(drep_clu_file, {})
         represent_ctg_set = collect_represent_ctgs(dereplicated_genomes_dir)
@@ -742,17 +746,19 @@ def main_meta():
                 #     break
         # clade_df = pd.DataFrame(clade_data, columns=["clade_num", "cluster", "member_num", "phylum", "species", "motif_variation_flag"])
         # clade_df.to_csv(os.path.join(paper_fig_dir, "clade_data.csv"), index=False)
-        # # clade_df = pd.read_csv(os.path.join(paper_fig_dir, "clade_data.csv"))
-        # plot_stacked_bar(clade_df, paper_fig_dir)
+        """
+        clade_df = pd.read_csv(os.path.join(paper_fig_dir, "clade_data.csv"))
+        plot_stacked_bar(clade_df, paper_fig_dir)
+        
         # plot_variation_fraction(variation_data, paper_fig_dir)
         # plot_similarity_dist(similarity_data, paper_fig_dir)
         # plot_clade_size(clade_data, paper_fig_dir)
         # print ("all done")
-        dna_motif_corr_df = pd.DataFrame(dna_motif_corr, columns=["cluster", "contig1", "contig2", "dnadiff", "jaccard"])
-        dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"), index=False)
+        # dna_motif_corr_df = pd.DataFrame(dna_motif_corr, columns=["cluster", "contig1", "contig2", "dnadiff", "jaccard"])
+        # dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"), index=False)
         
         # dna_motif_corr_df = pd.read_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"))
-        plot_dna_motif_corr(dna_motif_corr_df, paper_fig_dir)
+        # plot_dna_motif_corr(dna_motif_corr_df, paper_fig_dir)
     # batch_dnadiff(dnadiff_list_all)
 
 def main_isolation():

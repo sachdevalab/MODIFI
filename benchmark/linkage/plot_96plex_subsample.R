@@ -45,9 +45,18 @@ p3 <- ggplot(df2, aes(x = proportion, y = depth )) +
   labs(x = "Subsample Rate (%)", y = "Depth") +
   ylim(0, 220) 
 ## print mean and median depth for each proportion
+cat("\n=== Mean and Median Depth by Subsample Rate ===\n")
 df2 %>%
   group_by(proportion) %>%
-  summarise(mean_depth = mean(depth), median_depth = median(depth)) %>%
+  summarise(mean_depth = mean(depth), median_depth = median(depth), n = n()) %>%
+  arrange(as.numeric(as.character(proportion))) %>%
+  {
+    for (i in 1:nrow(.)) {
+      cat(sprintf("Subsample Rate: %s%%, Mean Depth: %.2f, Median Depth: %.2f (n=%d)\n",
+                  .$proportion[i], .$mean_depth[i], .$median_depth[i], .$n[i]))
+    }
+    .
+  } %>%
   print()
 
 

@@ -273,6 +273,18 @@ analyze_jaccard <- function(fig_dir) {
       count = ifelse(is.na(count), 0, count)
     )
   
+    # Print mean Jaccard similarity (not filtered) by phylum and MGE type
+  cat("\n--- Mean Jaccard Similarity (not filtered) by Phylum and MGE Type ---\n")
+  for (i in 1:nrow(jaccard_stats)) {
+    cat(sprintf("%s - %s: mean = %.4f ± %.4f (n=%d)\n", 
+                jaccard_stats$phylum[i],
+                jaccard_stats$mge_type[i],
+                jaccard_stats$mean[i],    
+                jaccard_stats$se[i],
+                jaccard_stats$count[i]))
+  }
+  cat("\n")
+
   # Create barplot for jaccard_similarity by phylum and mge_type
   p5 <- ggplot(jaccard_stats, aes(x = phylum, y = mean, fill = mge_type)) +
     geom_bar(stat = "identity", position = "dodge", width = 0.7) +
@@ -316,6 +328,18 @@ analyze_jaccard <- function(fig_dir) {
       se = ifelse(is.na(se), 0, se),
       count = ifelse(is.na(count), 0, count)
     )
+  
+  # Print mean Jaccard similarity (filtered) by phylum and MGE type
+  cat("\n--- Mean Jaccard Similarity (filtered) by Phylum and MGE Type ---\n")
+  for (i in 1:nrow(jaccard_filtered_stats)) {
+    cat(sprintf("%s - %s: mean = %.4f ± %.4f (n=%d)\n", 
+                jaccard_filtered_stats$phylum[i],
+                jaccard_filtered_stats$mge_type[i],
+                jaccard_filtered_stats$mean[i],
+                jaccard_filtered_stats$se[i],
+                jaccard_filtered_stats$count[i]))
+  }
+  cat("\n")
   
   # Create barplot for jaccard_similarity_filtered by phylum and mge_type
   p6 <- ggplot(jaccard_filtered_stats, aes(x = phylum, y = mean, fill = mge_type)) +

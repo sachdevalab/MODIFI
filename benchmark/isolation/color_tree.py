@@ -289,8 +289,8 @@ def filter_df(df, min_dp = 10):
         species = lineage.split(";")[-1][3:] if ";" in lineage else "Unclassified"
         phylum = lineage.split(";")[1][3:] if ";" in lineage else "Unclassified"
         if species == "":
-            print (lineage)
-            print (row)
+            # print (lineage)
+            # print (row)
             species = "Unclassified"
             no_species_count += 1
         else:
@@ -416,4 +416,4 @@ if __name__ == "__main__":
     genome_list = "/home/shuaiw/borg/paper/specificity/iso_genome.list"  ## for drep
     run_taxa_dict, sample_meta_dict, filtered_df = single_run(resultdir, genome_dir) ## collect isolation genomes with high dp
     # collect_iso_ctgsall_dir(resultdir, genome_list, filtered_df)
-    color_phylum(run_taxa_dict, tree_results, sample_meta_dict)
+    # color_phylum(run_taxa_dict, tree_results, sample_meta_dict)
