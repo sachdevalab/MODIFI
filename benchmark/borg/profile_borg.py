@@ -540,9 +540,9 @@ if __name__ == "__main__":
 
     print (len(members), "members in total")
 
-    ## remove all member from sample soil_100
-    members = [m for m in members if m[1] != "soil_100"]
-    print (len(members), "members after removing soil_100")
+    # ## remove all member from sample soil_100
+    # members = [m for m in members if m[1] != "soil_100"]
+    # print (len(members), "members after removing soil_100")
 
     for m in members:
         print (m, borg_anno_dict[m[0]], borg_indicator[m[0]])

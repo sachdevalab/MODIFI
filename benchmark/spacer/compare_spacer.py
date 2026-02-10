@@ -40,17 +40,20 @@ def plot_bar(df, fig_dir):
     # Melt for grouped barplot
     df_melted = df.melt(id_vars=["Sample"], var_name="Linkage Type", value_name="Count")
 
+    # Define colors matching the provided colormap
+    colors = {"Our Linkages": "#E57373", "Spacer Linkages": "#4DD0E1", "Consistent Linkages": "#4DD0E1"}
+    
     fig, axs = plt.subplots(2, 1, figsize=(12, 10), sharex=True)
 
     # First subplot: grouped barplot
-    sns.barplot(data=df_melted, x="Sample", y="Count", hue="Linkage Type", ax=axs[0])
+    sns.barplot(data=df_melted, x="Sample", y="Count", hue="Linkage Type", ax=axs[0], palette=colors)
     axs[0].set_title("Linkage Comparison", fontsize=14)
     axs[0].set_yscale('log')
     axs[0].tick_params(axis='x', rotation=90, labelsize=8)
     axs[0].tick_params(axis='y', labelsize=8)
 
     # Second subplot: only consistent linkages
-    sns.barplot(data=df, x="Sample", y="Consistent Linkages", ax=axs[1], color="tab:blue")
+    sns.barplot(data=df, x="Sample", y="Consistent Linkages", ax=axs[1], color="#4DD0E1")
     axs[1].set_title("Consistent Linkages Only", fontsize=14)
     axs[1].tick_params(axis='x', rotation=90, labelsize=8)
     axs[1].tick_params(axis='y', labelsize=8)
@@ -61,11 +64,12 @@ def plot_bar(df, fig_dir):
 def plot_mge_type_bar(df, fig_dir):
     ## plot stacked barplot of consistent linkages by MGE type
     df_pivot = df.pivot(index='Sample', columns='MGE Type', values='Consistent Linkages')
-    df_pivot.plot(kind='bar', stacked=True, figsize=(6, 6))
-    plt.ylabel("Number of Consistent Linkages", fontsize=12)
-    plt.xlabel("Sample", fontsize=12)
-    plt.xticks(rotation=90, fontsize=8)
-    plt.yticks(fontsize=8)
+    # Use custom colors based on the provided colormap
+    ax = df_pivot.plot(kind='bar', stacked=True, figsize=(6, 6), color=['#F8766D', '#00BFC4'])
+    plt.ylabel("Number of Consistent Linkages", fontsize=10)
+    plt.xlabel("Sample", fontsize=10)
+    plt.xticks(rotation=90, fontsize=10)
+    plt.yticks(fontsize=10)
     plt.gca().yaxis.set_major_locator(plt.MaxNLocator(integer=True))
     plt.tight_layout()
     plt.savefig(f"{fig_dir}/mge_type_consistent_linkages.pdf")
@@ -76,14 +80,30 @@ if __name__ == "__main__":
     fig_dir = "../../tmp/figures/link_accuracy/"
     mge_type_consistent_dict_all = defaultdict(int)
     mge_type_df = []
-    for my_dir in os.listdir(all_dir):
-        prefix = my_dir
-        print (f"Processing {prefix}...")
+    
+    # Load linkages from CSV file
+    print("Loading linkages from CSV file...")
+    csv_file = "/home/shuaiw/mGlu/tmp/figures/multi_env_linkage/network_99/mge_host_gc_cov.csv"
+    linkage_df = pd.read_csv(csv_file)
+    print(f"Loaded {len(linkage_df)} linkages from {csv_file}")
+    
+    # Group by sample
+    for prefix, sample_group in linkage_df.groupby('sample'):
+        print(f"Processing {prefix}...")
         sample_obj = My_sample(prefix, all_dir)
-
+        
+        # Read MGE types
         sample_obj.read_MGE()
-        our_linkages, our_ctg_linkages, linkage_info_list = sample_obj.read_linkage_dict()
-        spacer_linkage_dict = sample_obj.read_spacer(mismatch_allowed=5)
+        
+        # Reconstruct our_linkages dictionary from CSV data
+        our_linkages = defaultdict(list)
+        for _, row in sample_group.iterrows():
+            mge = row['MGE']
+            host = row['host']
+            our_linkages[mge].append(host)
+        
+        # Read spacer linkages for comparison
+        spacer_linkage_dict = sample_obj.read_spacer(mismatch_allowed=0)
 
         consistent_num, spacer_linkage_num, our_linkage_num, mge_type_consistent_dict = compare_linkage(our_linkages, spacer_linkage_dict, sample_obj)
         mge_type_consistent_dict_all = {k: mge_type_consistent_dict_all.get(k, 0) + mge_type_consistent_dict.get(k, 0) for k in set(mge_type_consistent_dict_all) | set(mge_type_consistent_dict)}

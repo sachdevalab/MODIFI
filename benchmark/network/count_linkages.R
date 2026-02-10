@@ -11,6 +11,21 @@ gc_df <- read_csv("../../tmp/figures/multi_env_linkage/network_99/mge_host_gc_co
 gc_df <- gc_df %>%
   mutate(MGE_type = factor(MGE_type, levels = c("plasmid", "virus")))
 
+## count the mean cos_sim  and std for all linkages, and for plasmid and virus separately
+gc_summary <- gc_df %>%
+  group_by(MGE_type) %>%
+  summarise(mean_cos_sim = mean(cos_sim, na.rm = TRUE),
+            sd_cos_sim = sd(cos_sim, na.rm = TRUE),
+            n = n(), .groups = "drop")
+cat("=== Cosine Similarity Summary ===\n")
+print(gc_summary)
+## also print the overall mean and sd
+overall_summary <- gc_df %>%
+  summarise(mean_cos_sim = mean(cos_sim, na.rm = TRUE),
+            sd_cos_sim = sd(cos_sim, na.rm = TRUE),
+            n = n())
+cat("\nOverall Cosine Similarity:\n")
+print(overall_summary)
 
 # Count linkages per sample by environment and MGE type
 env_sample_counts <- gc_df %>%
@@ -20,7 +35,7 @@ env_sample_counts <- gc_df %>%
 # Only retain environments with >=5 samples (for both MGE types combined)
 env_sample_counts <- env_sample_counts %>%
   group_by(environment) %>%
-  filter(n_distinct(sample) >= 3) %>%
+  filter(n_distinct(sample) >= 5) %>%
   ungroup()
 
 # Order environments by total count (for consistent x-axis order)
@@ -29,24 +44,24 @@ env_order <- gc_df %>%
   pull(environment)
 env_sample_counts$environment <- factor(env_sample_counts$environment, levels = env_order)
 
-# Count linkages per sample by phylum and MGE type (top 10 phyla)
-top_phyla <- gc_df %>%
+# Count linkages per sample by phylum and MGE type (top 10 phyla with >=5 samples)
+# First filter phyla with >=5 samples, then select top 10 by count
+phyla_with_enough_samples <- gc_df %>%
+  group_by(host_phylum) %>%
+  filter(n_distinct(sample) >= 5) %>%
+  ungroup()
+
+top_phyla <- phyla_with_enough_samples %>%
   count(host_phylum, sort = TRUE) %>%
-  head(10) %>%
+  head(7) %>%
   pull(host_phylum)
 
-phylum_sample_counts <- gc_df %>%
+phylum_sample_counts <- phyla_with_enough_samples %>%
   filter(host_phylum %in% top_phyla) %>%
   mutate(host_phylum = gsub("^p__", "", host_phylum)) %>%
   group_by(host_phylum, sample, MGE_type, .drop = FALSE) %>%
   summarise(count = n(), .groups = "drop")
 phylum_sample_counts$host_phylum <- factor(phylum_sample_counts$host_phylum, levels = gsub("^p__", "", top_phyla))
-
-# Only retain phyla with >=5 samples (for both MGE types combined)
-phylum_sample_counts <- phylum_sample_counts %>%
-  group_by(host_phylum) %>%
-  filter(n_distinct(sample) >= 5) %>%
-  ungroup()
 
 
 # Load ggpubr for significance annotation

@@ -522,6 +522,15 @@ def component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa
     print("Node counts by type in largest connected component:")
     for t, c in sorted(type_counts.items(), key=lambda x: x[1], reverse=True):
         print(f"{t}: {c}")
+    
+    ## print the degree of the top nodes in largest component
+    top_nodes = sorted(subgraph.degree, key=lambda x: x[1], reverse=True)[:10]
+    print("Top 10 nodes by degree in largest connected component:")
+    for node, degree in top_nodes:
+        # also print the type and label of the node
+        node_type = subgraph.nodes[node].get('type', 'unknown')
+        node_label = subgraph.nodes[node].get('label', node)
+        print(f"{node}: {degree} ({node_type}, {node_label})")
 
     ## according to all_host_clu_lineage_dict, print the species for each host node in largest component
     print("Host nodes and their species in largest connected component:")
@@ -596,7 +605,7 @@ def component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa
     binary_matrix = binary_matrix.reindex(new_index)
 
     print('Binary matrix (rows=MGE cluster id, cols=Host cluster id) — showing head:')
-    print(binary_matrix.head(50))
+    # print(binary_matrix.head(50))
     # build and save heatmap from `binary_matrix`
     if skip_heatmap:
         print('Skipping heatmap generation due to no hosts.')
@@ -791,6 +800,17 @@ if __name__ == "__main__":
 
     whole_G = nx.read_gml(f"{paper_fig_dir}/whole_network2.gml")
     print (f"Loaded graph with {whole_G.number_of_nodes()} nodes and {whole_G.number_of_edges()} edges")
+    ## priny node number for each type
+    type_counts = defaultdict(int)
+    for n, d in whole_G.nodes(data=True):
+        node_type = d.get('type', 'unknown')
+        type_counts[node_type] += 1
+    print("Node counts by type in whole graph:")
+    for t, c in sorted(type_counts.items(), key=lambda x: x[1], reverse=True):
+        print(f"{t}: {c}")
+    ## count host nodes number
+    host_count = sum(1 for n, d in whole_G.nodes(data=True) if d.get('type') not in ['virus', 'plasmid', 'novel'])
+    print(f"Number of host nodes: {host_count}")
 
     # Output degree of virus and plasmids to CSV (only virus and plasmid nodes)
     export_mge_degrees(whole_G, f"{paper_fig_dir}/virus_plasmid_degrees.csv")
