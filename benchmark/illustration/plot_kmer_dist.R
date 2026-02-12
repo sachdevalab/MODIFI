@@ -50,12 +50,11 @@ p2 <- ggplot(df_selected, aes(x = ipd, fill = kmer, color = kmer)) +
   theme_bw() +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        legend.position = c(0.85, 0.75),
-        legend.background = element_rect(fill = "white", color = "black", linewidth = 0.5),
-        legend.title = element_text(size = 12, face = "bold"),
-        legend.text = element_text(size = 10),
+        legend.position = c(0.65, 0.55),
+        legend.title = element_text(size = 11 ),
+        legend.text = element_text(size = 11),
         axis.text = element_text(size = 11),
-        axis.title = element_text(size = 13, face = "bold")) +
+        axis.title = element_text(size = 11)) +
   labs(x = "IPD", 
        y = "Density",
        fill = "K-mer",
@@ -65,8 +64,8 @@ p2 <- ggplot(df_selected, aes(x = ipd, fill = kmer, color = kmer)) +
 # Save the density plot
 ggsave("/home/shuaiw/mGlu/tmp/figures/framework/kmer_ipd_density_selected.png", 
        plot = p2, 
-       width = 5.5, 
-       height = 4, 
+       width = 4, 
+       height = 3, 
        units = "in", dpi = 400)
 
 # Print selected kmers and their mean IPD values
