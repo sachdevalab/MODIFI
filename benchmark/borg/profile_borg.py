@@ -14,7 +14,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 import networkx as nx
-
+import random
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics import pairwise_distances
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'motif_change'))
 from sample_object import get_unique_motifs, My_sample, get_ctg_taxa, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa,get_detail_taxa_name
@@ -281,12 +283,6 @@ def extract_sample_name(contig_name):
 
 def umap_plot(profile_df, plot_name):
 
-
-    # Add sample column extracted from contig name (first 8 underscore-separated parts)
-
-
-    
-    
     ## Randomly retain 5 Non-Mp contigs
     non_mp_df = profile_df[profile_df['Genome'] == 'Non-Mp']
     other_df = profile_df[profile_df['Genome'] != 'Non-Mp']
@@ -295,7 +291,7 @@ def umap_plot(profile_df, plot_name):
         # Get unique Non-Mp contigs and randomly sample 5
         unique_non_mp_contigs = non_mp_df['contig'].unique()
         np.random.seed(42)
-        selected_contigs = np.random.choice(unique_non_mp_contigs, size=min(50, len(unique_non_mp_contigs)), replace=False)
+        selected_contigs = np.random.choice(unique_non_mp_contigs, size=min(100, len(unique_non_mp_contigs)), replace=False)
         non_mp_retained = non_mp_df[non_mp_df['contig'].isin(selected_contigs)]
         profile_df = pd.concat([other_df, non_mp_retained], ignore_index=True)
         print(f"Retained {len(selected_contigs)} Non-Mp contigs out of {len(unique_non_mp_contigs)}")
@@ -312,27 +308,12 @@ def umap_plot(profile_df, plot_name):
     print("\n=== Creating network graph based on Pearson correlation ===")
 
     # Calculate Pearson correlation matrix
-    similarity_matrix = pivot_df.T.corr(method='pearson').values
-
-
-    ## get a jaccard matrix as well with binary cutoff of 0.5
-    from sklearn.metrics import pairwise_distances
-    # Binarize the matrix with cutoff 0.5
+    similarity_matrix = pivot_df.T.corr(method='spearman').values
     pivot_binary = (pivot_df >= 0.4).astype(int)
-    # # # Calculate Jaccard distance and convert to similarity
-    # jaccard_distances = pairwise_distances(pivot_binary.values, metric='jaccard')
-    # similarity_matrix = 1 - jaccard_distances
-
-    ## get  another matrix recording the number of shared motifs 
-    # Calculate shared motif counts
-    # similarity_matrix = np.dot(pivot_binary.values, pivot_binary.values.T)
-
-
-    # for motif in pivot_df.columns:
-    #     val1 = pivot_df.at['SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_155_C', motif]
-    #     val2 = pivot_df.at['SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_724567_L', motif]
-    #     print (motif, round(val1,3), round(val2,3))
-
+    ## remove the contigs without motifs (all zeros in binary matrix)
+    contigs_with_motifs = pivot_binary.index[pivot_binary.sum(axis=1) > 0]
+    pivot_binary = pivot_binary.loc[contigs_with_motifs]
+    pivot_df = pivot_df.loc[contigs_with_motifs]
 
     # Get genome type for each contig
     if 'Genome' in profile_df.columns:
@@ -351,7 +332,7 @@ def umap_plot(profile_df, plot_name):
         for j, contig2 in enumerate(pivot_df.index):
             if i < j:
                 similarity = similarity_matrix[i, j]
-                if similarity > 0.7:
+                if similarity > 0.5:
                     G.add_edge(contig1, contig2, weight=similarity)
 
                     ## if the edge is between none-Mp contig and others, print it out
@@ -409,12 +390,10 @@ def umap_plot(profile_df, plot_name):
     plt.savefig(network_file, dpi=300, bbox_inches='tight')
     print(f"Saved network plot to: {network_file}")
     
-    ## save the graph in gml format - convert all attributes to strings
+    ## save the graph in gml format - convert all attributes to strings except weight
     gml_file = plot_name.replace('.pdf', '_network.gml')
     G_copy = G.copy()
-    # Convert all edge weights to strings
-    for u, v in G_copy.edges():
-        G_copy[u][v]['weight'] = str(G_copy[u][v]['weight'])
+    # Keep edge weights as numbers (don't convert to strings)
     # Convert all node attributes to strings
     for node in G_copy.nodes():
         for key, value in G_copy.nodes[node].items():
@@ -458,7 +437,8 @@ if __name__ == "__main__":
     # """
     # Load BORG data
     borg_data = My_Borg(borg_file)
-    high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
+    high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=2.0)
+    print (f"Total BORG entries: {len(borg_data.borg_entries)}, High depth BORG entries (depth >= 5.0): {len(high_dp_borgs)}")
     
     members = []
     borg_anno_dict = {}
@@ -528,17 +508,17 @@ if __name__ == "__main__":
 
 
     ### add non-Mp members as well, randomly select 100 members
-    import random
-    from sklearn.metrics.pairwise import cosine_similarity
+
     random.seed(42)
-    selected_non_Mp = random.sample(non_Mp_members, min(30, len(non_Mp_members)))
+    print (f"Total non-Mp members: {len(non_Mp_members)}")
+    selected_non_Mp = random.sample(non_Mp_members, min(20, len(non_Mp_members)))
     for member in selected_non_Mp:
         if member not in members:
             members.append(member)
             borg_anno_dict[member[0]] = ['Non-Mp', non_Mp_anno_dict[member[0]][3:]+"<GTDB>"]
             borg_indicator[member[0]] = 'Non-Mp'
 
-    print (len(members), "members in total")
+    print (len(members), "members in total", len(selected_non_Mp), "Non-Mp members")
 
     # ## remove all member from sample soil_100
     # members = [m for m in members if m[1] != "soil_100"]
@@ -546,9 +526,10 @@ if __name__ == "__main__":
 
     for m in members:
         print (m, borg_anno_dict[m[0]], borg_indicator[m[0]])
+
     cluster_obj = given_species_drep_fast(all_dir, members, seq_dir, cluster,
                                     seq_dir, seq_dir, min_frac=0.6, 
-                                    min_sites=20, score_cutoff = 30, max_len=100000)
+                                    min_sites=100, score_cutoff = 30, max_len=100000)
     # cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
     # cluster_obj = My_cluster(cluster, members) 
