@@ -1148,11 +1148,11 @@ def plot_MTase(df_all_data, fig_dir):
     plt.savefig(f"{fig_dir}/MTase_vs_motif_num.png", dpi=300, bbox_inches='tight')
 
     ## print all the rows with motif_num > RM_num
-    df_motif_more = df_all_data[df_all_data['motif_num'] > df_all_data['RM_num']]
+    # df_motif_more = df_all_data[df_all_data['motif_num'] > df_all_data['RM_num']]
     ## output all the rows with motif_num > RM_num
     ## sort column order, first sample then motif_num and RM_num
-    df_motif_more = df_motif_more[['sample', 'motif_num', 'RM_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len']]
-    df_motif_more.to_csv(f"{fig_dir}/motif_num_greater_than_MTase_num.csv", index=False)
+    # df_motif_more = df_motif_more[['sample', 'motif_num', 'RM_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len']]
+    # df_motif_more.to_csv(f"{fig_dir}/motif_num_greater_than_MTase_num.csv", index=False)
 
 def read_metadata(meta_file):
     sample_env_dict = {}
@@ -1617,10 +1617,10 @@ if __name__ == "__main__":
     archaea_tree = "/home/shuaiw/borg/paper/isolation/GTDB_tree/meta_gtdb_tree/archaea.unrooted.tree"
     archea_tree_results = "/home/shuaiw/borg/paper/specificity/archea_tree/"
     # color_tree(bacteria_tree, tree_results, "bacteria")
-    # color_tree(archaea_tree, archea_tree_results, "archaea")
+    color_tree(archaea_tree, archea_tree_results, "archaea")
     # plot_motif_len(fig_dir)
-    sample_env_dict = read_metadata(meta_file)
-    main(all_dir, fig_dir, sample_env_dict)
+    # sample_env_dict = read_metadata(meta_file)
+    # main(all_dir, fig_dir, sample_env_dict)
 
     # plot_coding(meta_dir, fig_dir)
     # rerun(fig_dir)
