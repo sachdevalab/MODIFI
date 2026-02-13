@@ -309,11 +309,14 @@ def umap_plot(profile_df, plot_name):
 
     # Calculate Pearson correlation matrix
     similarity_matrix = pivot_df.T.corr(method='spearman').values
-    pivot_binary = (pivot_df >= 0.4).astype(int)
+    pivot_binary = (pivot_df >= 0.2).astype(int)
     ## remove the contigs without motifs (all zeros in binary matrix)
     contigs_with_motifs = pivot_binary.index[pivot_binary.sum(axis=1) > 0]
     pivot_binary = pivot_binary.loc[contigs_with_motifs]
     pivot_df = pivot_df.loc[contigs_with_motifs]
+
+    ## add jaccrad similarity matrix
+    jaccard_similarity = 1 - pairwise_distances(pivot_binary.values, metric='jaccard')
 
     # Get genome type for each contig
     if 'Genome' in profile_df.columns:
@@ -326,15 +329,17 @@ def umap_plot(profile_df, plot_name):
     
     # Build graph
     G = nx.Graph()
+    edge_data = []
     for i, contig1 in enumerate(pivot_df.index):
         # Add node with genome type attribute
         G.add_node(contig1, Genome=contig_genome_map.get(contig1, 'NA'), Sample = profile_df[profile_df['contig'] == contig1]['sample'].iloc[0])
         for j, contig2 in enumerate(pivot_df.index):
             if i < j:
-                similarity = similarity_matrix[i, j]
-                if similarity > 0.5:
+                # similarity = similarity_matrix[i, j]
+                similarity = jaccard_similarity[i, j]
+                if similarity > 0.4:
                     G.add_edge(contig1, contig2, weight=similarity)
-
+                    edge_data.append((contig1, contig_genome_map.get(contig1, 'NA'), contig2, contig_genome_map.get(contig2, 'NA'), similarity))
                     ## if the edge is between none-Mp contig and others, print it out
                     if (contig_genome_map.get(contig1, 'NA') == 'Non-Mp' or 
                         contig_genome_map.get(contig2, 'NA') == 'Non-Mp'):
@@ -346,7 +351,10 @@ def umap_plot(profile_df, plot_name):
                             print(f"Shared motifs: {shared_motifs}")
     
     print(f"Network has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges")
-    
+    ## edge data to dataframe, and save to csv
+    edge_df = pd.DataFrame(edge_data, columns=['Contig1', 'Genome1', 'Contig2', 'Genome2', 'Similarity'])
+    edge_df.to_csv(plot_name.replace('.pdf', '_network_edges.csv'), index=False)
+    print(f"Saved edge data to: {plot_name.replace('.pdf', '_network_edges.csv')}")
     # Get unique genome types and create color palette
     unique_genomes = list(set(contig_genome_map.values()))
     n_genomes = len(unique_genomes)
@@ -437,7 +445,10 @@ if __name__ == "__main__":
     # """
     # Load BORG data
     borg_data = My_Borg(borg_file)
-    high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=2.0)
+    high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
+    ## print name of the high depth BORG entries
+    for i, entry in enumerate(high_dp_borgs):
+        print(f"{i+1}. {entry}")
     print (f"Total BORG entries: {len(borg_data.borg_entries)}, High depth BORG entries (depth >= 5.0): {len(high_dp_borgs)}")
     
     members = []
@@ -511,7 +522,7 @@ if __name__ == "__main__":
 
     random.seed(42)
     print (f"Total non-Mp members: {len(non_Mp_members)}")
-    selected_non_Mp = random.sample(non_Mp_members, min(20, len(non_Mp_members)))
+    selected_non_Mp = random.sample(non_Mp_members, min(100, len(non_Mp_members)))
     for member in selected_non_Mp:
         if member not in members:
             members.append(member)
@@ -528,9 +539,9 @@ if __name__ == "__main__":
         print (m, borg_anno_dict[m[0]], borg_indicator[m[0]])
 
     cluster_obj = given_species_drep_fast(all_dir, members, seq_dir, cluster,
-                                    seq_dir, seq_dir, min_frac=0.6, 
-                                    min_sites=100, score_cutoff = 30, max_len=100000)
-    # cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+                                    seq_dir, seq_dir, min_frac=0.3, 
+                                    min_sites=100, score_cutoff = 30, max_len=1000000)
+    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
 
     # cluster_obj = My_cluster(cluster, members) 
     # cluster_obj.load_df(seq_dir)

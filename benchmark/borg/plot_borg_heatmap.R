@@ -5,7 +5,7 @@ library(ggdendro)
 library(grid)
 library(gridExtra)
 library(ComplexHeatmap)
-library(circlize)
+suppressPackageStartupMessages(library(circlize))
 library(RColorBrewer)
 
 personal_plot <- function(profile_df, cluster_species, plot_name) {
@@ -71,6 +71,33 @@ personal_plot <- function(profile_df, cluster_species, plot_name) {
   # Create a vector of colors for each label based on sample
   label_colors <- sapply(sample_names, function(s) sample_colors_palette[s])
   
+  # Remove columns (motifs) with zero variance to avoid correlation issues
+  col_vars <- apply(pivot_matrix, 2, var)
+  valid_cols <- col_vars > 0 & !is.na(col_vars)
+  
+  if (sum(valid_cols) < 2) {
+    stop("Not enough motifs with variance for clustering. Need at least 2 motifs with varying values.")
+  }
+  
+  pivot_matrix <- pivot_matrix[, valid_cols]
+  cat(paste0("Removed ", sum(!valid_cols), " motifs with zero variance. Keeping ", sum(valid_cols), " motifs.\n"))
+  
+  # Remove rows (contigs) with zero variance as well
+  row_vars <- apply(pivot_matrix, 1, var)
+  valid_rows <- row_vars > 0 & !is.na(row_vars)
+  
+  if (sum(valid_rows) < 2) {
+    stop("Not enough contigs with variance for clustering. Need at least 2 contigs with varying values.")
+  }
+  
+  if (sum(!valid_rows) > 0) {
+    cat(paste0("Removed ", sum(!valid_rows), " contigs with zero variance. Keeping ", sum(valid_rows), " contigs.\n"))
+    pivot_matrix <- pivot_matrix[valid_rows, ]
+    contig_names <- contig_names[valid_rows]
+    y_labels_all <- y_labels_all[valid_rows]
+    label_colors <- label_colors[valid_rows]
+  }
+  
   # Perform hierarchical clustering on rows (contigs) and columns (motifs)
   # Using correlation distance and ward.D2 method (equivalent to ward in scipy)
   
@@ -123,5 +150,7 @@ personal_plot <- function(profile_df, cluster_species, plot_name) {
 }
 
 # Example usage (uncomment and modify as needed):
-profile_df <- read.csv("/home/shuaiw/borg/paper/borg_data/profile//profile_profile_df_filtered.csv")
-personal_plot(profile_df, cluster_species = "borg", plot_name = "/home/shuaiw/borg/paper/borg_data/profile/borg_profile_heatmap.pdf")
+profile_df <- read.csv("/home/shuaiw/borg/paper/borg_data/profile4//profile_profile_df_filtered.csv")
+## remove Genome Non-Mp
+profile_df <- profile_df %>% filter(Genome != "Non-Mp")
+personal_plot(profile_df, cluster_species = "borg", plot_name = "/home/shuaiw/borg/paper/borg_data/profile4/borg_profile_heatmap.pdf")
