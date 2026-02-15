@@ -100,26 +100,7 @@ work_dir=/home/shuaiw/methylation/data/borg/bench/merge_WGA" --job-name=merge
   work_dir=/home/shuaiw/methylation/data/borg/bench/breakdb" --job-name=breakdb
 
 
-        sbatch  --partition standard --wrap "snakemake --config \
- whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
- whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/C227/native\
-  kmer_mean_db=/home/shuaiw/borg/bench/breakdb/control/control_db.up7.down3.mean.dat\
-  kmer_num_db=/home/shuaiw/borg/bench/breakdb/control/control_db.up7.down3.num.dat" --job-name=native
 
-
-          sbatch  --partition standard --wrap "snakemake --config \
- whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/C227/WGA.align.bam \
- whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/C227/WGA2" --job-name=WGA
-
-
-          sbatch  --partition standard --wrap "snakemake --config \
- whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
- whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
-  work_dir=/home/shuaiw/methylation/data/borg/bench/C227/native2\
-  kmer_mean_db=/home/shuaiw/borg/bench/C227/WGA2/control/control_db.up7.down3.mean.dat\
-  kmer_num_db=/home/shuaiw/borg/bench/C227/WGA2/control/control_db.up7.down3.num.dat" --job-name=native
 
 
    sbatch  --partition standard --wrap "snakemake --config \
@@ -439,35 +420,7 @@ python cal_invasion_score.py \
   --job-name=soil2
 
 
-sbatch  --partition standard --wrap "python main.py \
-  --work_dir /home/shuaiw/borg/allison/ecoli/native \
-  --whole_bam /home/shuaiw/borg/allison/ecoli/soil_p0.01_C227_align.align.bam \
-  --whole_ref /home/shuaiw/borg/allison/ecoli/soil_ecoli.fa \
-  --read_type subreads \
-  --min_len 1000 \
-  --max_NM 3000 \
-  --min_cov 1 \
-  --min_frac 0.4 \
-  --min_score 30 \
-  --min_sites 30 \
-  --run_steps control compare motif profile merge \
-  --threads 64 "\
-  --job-name=c227
 
-sbatch  --partition standard --wrap "python main.py \
-  --work_dir /home/shuaiw/borg/allison/ecoli/WGA \
-  --whole_bam /home/shuaiw/borg/allison/ecoli/soil_p0.01_C227_WGA_align.align.bam \
-  --whole_ref /home/shuaiw/borg/allison/ecoli/soil_ecoli.fa \
-  --read_type subreads \
-  --min_len 1000 \
-  --max_NM 3000 \
-  --min_cov 1 \
-  --min_frac 0.4 \
-  --min_score 30 \
-  --min_sites 30 \
-  --run_steps profile merge \
-  --threads 64 "\
-  --job-name=c227_WGA
 
 
 
@@ -2085,3 +2038,96 @@ sbatch --job-name=inf14 \
           --skip_ani_screen \
           --cpus 64 \
           -x fasta"
+
+
+        sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/C227/native\
+  kmer_mean_db=/home/shuaiw/borg/bench/breakdb/control/control_db.up7.down3.mean.dat\
+  kmer_num_db=/home/shuaiw/borg/bench/breakdb/control/control_db.up7.down3.num.dat" --job-name=native
+
+
+          sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/C227/WGA.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/C227/WGA2" --job-name=WGA
+
+
+          sbatch  --partition standard --wrap "snakemake --config \
+ whole_bam=/home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
+ whole_ref=/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  work_dir=/home/shuaiw/methylation/data/borg/bench/C227/native2\
+  kmer_mean_db=/home/shuaiw/borg/bench/C227/WGA2/control/control_db.up7.down3.mean.dat\
+  kmer_num_db=/home/shuaiw/borg/bench/C227/WGA2/control/control_db.up7.down3.num.dat" --job-name=native
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/base/pure/control3 \
+  --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/WGA.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  --read_type subreads \
+  --min_cov 10 \
+  --min_iden 0 \
+  --min_score 30 \
+  --threads 10 "\
+  --job-name=WGA
+
+sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/base/pure/native \
+  --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  --read_type subreads \
+  --min_cov 0 \
+  --min_score 30 \
+  --min_iden 0 \
+  --kmer_mean_db /home/shuaiw/borg/paper/base/pure/control2/control/control_db.up7.down3.mean.dat \
+  --kmer_num_db /home/shuaiw/borg/paper/base/pure/control2/control/control_db.up7.down3.num.dat \
+  --threads 10"\
+  --job-name=native
+
+sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/base/pure/native_no_control \
+  --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  --read_type subreads \
+  --min_cov 0 \
+  --min_score 30 \
+  --min_iden 0 \
+  --threads 10"\
+  --job-name=native
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/base/meta/native \
+  --whole_bam /home/shuaiw/borg/allison/ecoli/soil_p0.01_C227_align.align.bam \
+  --whole_ref /home/shuaiw/borg/allison/ecoli/soil_ecoli.fa \
+  --read_type subreads \
+  --min_cov 0 \
+  --min_score 0 \
+  --threads 10 "\
+  --job-name=meta_c227
+
+sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/base/meta/control \
+  --whole_bam /home/shuaiw/borg/allison/ecoli/soil_p0.01_C227_WGA_align.align.bam \
+  --whole_ref /home/shuaiw/borg/allison/ecoli/soil_ecoli.fa \
+  --read_type subreads \
+  --min_cov 0 \
+  --min_score 0 \
+  --threads 10 "\
+  --job-name=meta_WGA
+
+
+sbatch  --partition standard --wrap " python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/base/mock3 \
+  --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/align/Mock_JF8.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/bam/Mock_JF8.fa \
+  --read_type subreads \
+  --min_len 1000 \
+  --min_cov 1 \
+  --min_frac 0.4 \
+  --min_score 30 \
+  --min_sites 30 \
+  --threads 16"\
+  --job-name=J8_mock

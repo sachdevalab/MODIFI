@@ -65,28 +65,29 @@ def get_modified_ratio(gff):
         pos = int(line[3]) 
         strand = line[6]
         score = int(line[5])
-        if score <= score_cutoff:
-            continue
+        # if score <= score_cutoff:
+        #     continue
         modified_loci[ref + ":" + str(pos) + strand] = score
     print ("no. of modified loci", len(modified_loci))
     return modified_loci
 
 def read_ipd_ratio(csv_file, cutoff = 0.05, coverage = 10):
-    ipd_ratio_dict = {}
-    # df = pd.read_csv(csv_file, nrows = 100000)
+    """Deprecated - use read_ipd_ratio_from_df instead"""
     df = pd.read_csv(csv_file)
-    df = df[df['coverage'] >= coverage]
-    for index, row in df.iterrows():
-        # print (row['refName'], row['tpl'], row['strand'], row['coverage'], row['ipd_ratio'])
-        if row['strand'] == 1:
-            strand_string = "-"
-        else:
-            strand_string = "+"
-        tag = row['refName'] + ":" + str(row['tpl']+1) + strand_string
-        if row['pvalue'] < cutoff:
-            ipd_ratio_dict[tag] = 1
-        else:
-            ipd_ratio_dict[tag] = 0
+    return read_ipd_ratio_from_df(df, cutoff, coverage)
+
+def read_ipd_ratio_from_df(df, cutoff = 0.05, coverage = 10):
+    """Optimized version that works with pre-loaded DataFrame"""
+    # Filter by coverage
+    df = df[df['coverage'] >= coverage].copy()
+    
+    # Vectorized operations - much faster than iterrows()
+    df['strand_string'] = df['strand'].map({1: "-", 0: "+"})
+    df['tag'] = df['refName'] + ":" + (df['tpl'] + 1).astype(str) + df['strand_string']
+    df['modified'] = (df['pvalue'] < cutoff).astype(int)
+    
+    # Convert to dictionary in one operation
+    ipd_ratio_dict = df.set_index('tag')['modified'].to_dict()
     return ipd_ratio_dict
 
          
@@ -99,8 +100,8 @@ if __name__ == "__main__":
 
     my_ref = "/home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa"
 
-    native_csv = "/home/shuaiw/methylation/data/borg/bench/C227/native2/ipd_ratio/CP011331.1.ipd3.csv"
-    control_csv = "/home/shuaiw/methylation/data/borg/bench/C227/WGA2/ipd_ratio/CP011331.1.ipd3.csv"
+    # native_csv = "/home/shuaiw/methylation/data/borg/bench/C227/native2/ipd_ratio/CP011331.1.ipd3.csv"
+    # control_csv = "/home/shuaiw/methylation/data/borg/bench/C227/WGA2/ipd_ratio/CP011331.1.ipd3.csv"
 
     # native_csv = "/home/shuaiw/borg/allison/ecoli/native/ipd_ratio/CP011331.1.ipd3.csv"
     # control_csv = "/home/shuaiw/borg/allison/ecoli/WGA/ipd_ratio/CP011331.1.ipd3.csv"
@@ -110,21 +111,40 @@ if __name__ == "__main__":
     # profile = "/home/shuaiw/borg/test.csv"
 
 
+    native_csv = "/home/shuaiw/borg/paper/base/pure/native/ipd_ratio/CP011331.1.ipd3.csv"
+    control_csv = "/home/shuaiw/borg/paper/base/pure/control/ipd_ratio/CP011331.1.ipd3.csv"
+    output_csv = "../../tmp/figures/base_benchmark/ecoli_base_pure.csv"
+
+    # native_csv = "/home/shuaiw/borg/paper/base/meta/native/ipd_ratio/CP011331.1.ipd3.csv"
+    # control_csv = "/home/shuaiw/borg/paper/base/meta/control/ipd_ratio/CP011331.1.ipd3.csv"
+    # output_csv = "../../tmp/figures/base_benchmark/ecoli_base_meta.csv"
+
     REF = read_ref(my_ref)
+    
+    # Read CSV files once instead of 56 times
+    print("Loading CSV files...")
+    native_df = pd.read_csv(native_csv)
+    control_df = pd.read_csv(control_csv)
+    print("CSV files loaded.")
+    
     data = []
     for coverage in [5, 10, 15, 20]:
         for cutoff in [0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.2]:
-            native_ipd_ratio_dict = read_ipd_ratio(native_csv, cutoff, coverage)
-
+            print ("coverage", coverage, "cutoff", cutoff)
+            
+            # Use pre-loaded DataFrames instead of reading files repeatedly
+            native_ipd_ratio_dict = read_ipd_ratio_from_df(native_df, cutoff, coverage)
             recall, native_motif_loci_num, native_motif_modify_num = get_motif_sites(REF, motif_new, exact_pos, native_ipd_ratio_dict)
-            control_ipd_ratio_dict = read_ipd_ratio(control_csv, cutoff, coverage)
+            
+            control_ipd_ratio_dict = read_ipd_ratio_from_df(control_df, cutoff, coverage)
             FDR, motif_loci_num, motif_modify_num = get_motif_sites(REF, motif_new, exact_pos, control_ipd_ratio_dict)
+            
             print ("recall", recall)
             print ("FDR", FDR)
             data.append([coverage, cutoff, recall, FDR, native_motif_loci_num, native_motif_modify_num , motif_loci_num, motif_modify_num])
     df = pd.DataFrame(data, columns=['coverage', 'cutoff', 'recall', 'FDR', 'native_motif_loci_num', 'native_motif_modify_num', 'motif_loci_num', 'motif_modify_num'])
     ## save df
-    df.to_csv("../../tmp/results/ecoli_base2.csv", index = False)
+    df.to_csv(output_csv, index = False)
 
 
 
