@@ -2171,5 +2171,4 @@ python /home/shuaiw/mGlu/main.py \
   --min_iden 0 \
   --kmer_mean_db /home/shuaiw/borg/paper/base/pure/control2/control/control_db.up7.down3.mean.dat \
   --kmer_num_db /home/shuaiw/borg/paper/base/pure/control2/control/control_db.up7.down3.num.dat \
-  --run_steps compare motif \
   --threads 10

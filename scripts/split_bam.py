@@ -164,15 +164,16 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, pbindex_b
     new_header['SQ'] = [sq for sq in new_header['SQ'] if sq['SN'] == contig]
 
     ## first count the number of reads that are valid
-    read_number = 0
+    raw_read_number = 0
     total_bases = 0
     for read in samfile.fetch(contig):
+        raw_read_number += 1
         passed = test_read(read, contig_len, max_NM, q, min_iden)
         if not passed:
             continue
-        read_number += 1
+        
         total_bases += read.query_alignment_length
-    # print (f"Read number for {contig} is {read_number}")
+
     mean_depth = total_bases / contig_len if contig_len > 0 else 0
     mean_depth = round(mean_depth, 2)
     print(f"Mean depth for {contig}: {mean_depth:.2f}")
@@ -202,7 +203,7 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, pbindex_b
 
         contig_samfile.write(read)
         valid_num += 1
-    print (f"Finished {contig}, {valid_num} reads are written")
+    print (f"Finished {contig}, {valid_num} reads are written, raw read number is {raw_read_number}.")
 
     contig_samfile.close()
     samfile.close()
