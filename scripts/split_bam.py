@@ -184,7 +184,7 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, pbindex_b
         downsample_rate = 1
     else:
         downsample_rate = min(float(max_depth) / mean_depth, 1.0)
-    print (f"Downsample rate is {downsample_rate*100}%.")
+    print (f"Sample rate is {downsample_rate*100}%.")
 
 
     contig_samfile = pysam.AlignmentFile(contig_bam, "wb", header=new_header)

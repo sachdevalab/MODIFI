@@ -2131,3 +2131,45 @@ sbatch  --partition standard --wrap " python /home/shuaiw/mGlu/main.py \
   --min_sites 30 \
   --threads 16"\
   --job-name=J8_mock
+
+
+
+python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/base/pure/native_previous_bam \
+  --whole_bam /home/shuaiw/methylation/data/borg/bench/C227/native2/bams/CP011331.1.bam \
+  --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  --read_type subreads \
+  --min_cov 1 \
+  --min_score 30 \
+  --min_iden 0 \
+  --kmer_mean_db /home/shuaiw/borg/paper/base/pure/control2/control/control_db.up7.down3.mean.dat \
+  --kmer_num_db /home/shuaiw/borg/paper/base/pure/control2/control/control_db.up7.down3.num.dat \
+  --threads 10
+
+
+sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/base/pure/native_old_control \
+  --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  --read_type subreads \
+  --min_cov 0 \
+  --min_score 30 \
+  --min_iden 0.8 \
+  --kmer_mean_db /home/shuaiw/methylation/data/borg/bench/C227/WGA2/control/control_db.up7.down3.mean.dat \
+  --kmer_num_db /home/shuaiw/methylation/data/borg/bench/C227/WGA2/control/control_db.up7.down3.num.dat \
+  --threads 10"\
+  --job-name=native
+
+
+python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/base/pure/native_previous_bam \
+  --whole_bam /home/shuaiw/methylation/data/borg/bench/C227/native2/bams/CP011331.1.bam \
+  --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  --read_type subreads \
+  --min_cov 1 \
+  --min_score 30 \
+  --min_iden 0 \
+  --kmer_mean_db /home/shuaiw/borg/paper/base/pure/control2/control/control_db.up7.down3.mean.dat \
+  --kmer_num_db /home/shuaiw/borg/paper/base/pure/control2/control/control_db.up7.down3.num.dat \
+  --run_steps compare motif \
+  --threads 10

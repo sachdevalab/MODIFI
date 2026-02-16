@@ -116,7 +116,7 @@ def parse_arguments():
     parser.add_argument("--read_type", choices=["subreads", "hifi"], default="hifi",
                         help="Type of reads in BAM file.")
     parser.add_argument("--min_iden", type=float, default=None,
-                        help="Minimum identity allowed for read alignment (default: 0.97 for hifi, 0.9 for subreads).")
+                        help="Minimum identity allowed for read alignment (default: 0.97 for hifi, 0.85 for subreads).")
     # parser.add_argument("--max_NM", type=int, default=None,
     #                     help="Maximum number of mismatches allowed (None to disable).")
     parser.add_argument("--min_len", type=int, default=1000,
@@ -176,7 +176,7 @@ def parse_arguments():
         if args.read_type == "hifi":
             args.min_iden = 0.97
         elif args.read_type == "subreads":
-            args.min_iden = 0.9
+            args.min_iden = 0.85
     
     # Validate that either whole_bam or unaligned_bam is provided, but not both
     if args.whole_bam and args.unaligned_bam:
