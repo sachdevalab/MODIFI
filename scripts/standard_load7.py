@@ -22,7 +22,7 @@ from tqdm import tqdm
 # Raw ipd record
 ipdRec = [('tpl', '<u4'), ('strand', '<i8'), ('ipd', '<f4')]
 mapQvThreshold = 0
-maxAlignments = 10000 ##1500
+maxAlignments = 10000 ##1500  this is only for hifi
 randomSeed = None
 max_region = 100000
 # MAX_NM = 3
@@ -56,7 +56,7 @@ def _subreadNormalizationFactor(rawIpds):
 def _loadRawIpds(alignments, refGroupId, each_ref, ref_seq, complement_ref_seq, start, end, factor=1.0):
     t0 = time.time()
     # (start, end) = (0, each_ref.Length)
-
+    maxAlignments = 100000 
     MIN_IDENTITY = 0.0  
     MIN_READLENGTH = 50
 
@@ -67,7 +67,7 @@ def _loadRawIpds(alignments, refGroupId, each_ref, ref_seq, complement_ref_seq, 
                 (hit.readLength >= MIN_READLENGTH))]
     # logging.info("Retrieved %d hits" % len(hits), round(time.time()-t0))
     if len(hits) > 0:
-        print ("Retrieved %d hits" % len(hits), "time", round(time.time()-t0), "downsample ratio", round(100*maxAlignments/len(hits), 4), "%")
+        print ("Retrieved %d hits" % len(hits), "time", round(time.time()-t0), "sample ratio", round(100*maxAlignments/len(hits), 4), "%")
     if len(hits) > maxAlignments:
         # XXX a bit of a hack - to ensure deterministic behavior when
         # running in parallel, re-seed the RNG before each call
@@ -267,7 +267,7 @@ def _loadRawIpds_hifi(contig_bam, alignments, refGroupId, each_ref, ref_seq, com
         hits = np.random.choice(
             hits, size=maxAlignments, replace=False)
     if len(hits) > 0:
-        print ("downsample ratio", round(100*maxAlignments/len(hits), 4), "%")
+        print ("sample ratio", round(100*maxAlignments/len(hits), 4), "%")
             
     # Maintain separate lists for each strand to speed up sorting
     s0dict = defaultdict(list)

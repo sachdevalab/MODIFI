@@ -2162,7 +2162,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
 
 
 python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/paper/base/pure/native_previous_bam \
+  --work_dir /home/shuaiw/borg/paper/base/pure/native_previous_bam2 \
   --whole_bam /home/shuaiw/methylation/data/borg/bench/C227/native2/bams/CP011331.1.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
   --read_type subreads \
@@ -2171,4 +2171,4 @@ python /home/shuaiw/mGlu/main.py \
   --min_iden 0 \
   --kmer_mean_db /home/shuaiw/borg/paper/base/pure/control2/control/control_db.up7.down3.mean.dat \
   --kmer_num_db /home/shuaiw/borg/paper/base/pure/control2/control/control_db.up7.down3.num.dat \
-  --threads 10
+  --threads 10 
