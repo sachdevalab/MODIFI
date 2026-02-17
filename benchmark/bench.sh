@@ -2063,12 +2063,11 @@ sbatch --job-name=inf14 \
 
 
 sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/paper/base/pure/control3 \
+  --work_dir /home/shuaiw/borg/paper/base/pure/control \
   --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/WGA.align.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
   --read_type subreads \
-  --min_cov 10 \
-  --min_iden 0 \
+  --min_cov 1 \
   --min_score 30 \
   --threads 10 "\
   --job-name=WGA
