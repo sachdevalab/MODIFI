@@ -36,12 +36,16 @@ def load_binaries():
         smrt_bin = Path(config.get("smrtlink_bin", ""))
         if not smrt_bin.exists():
             raise FileNotFoundError(f"SMRT Link path not found: {smrt_bin}")
-
-        motif_maker_bin = motif_maker_bin or str(smrt_bin / "pbmotifmaker")
-        if not Path(motif_maker_bin).exists():
-            motif_maker_bin = str(smrt_bin / "motifmaker")  # fallback name
-        pbmm2_bin = pbmm2_bin or str(smrt_bin / "pbmm2")
-        pbindex_bin = pbindex_bin or str(smrt_bin / "pbindex")
+        
+        if not motif_maker_bin:
+            motif_maker_bin = motif_maker_bin or str(smrt_bin / "pbmotifmaker")
+            if not Path(motif_maker_bin).exists():
+                motif_maker_bin = str(smrt_bin / "motifmaker")  # fallback name
+        if not pbmm2_bin:
+            pbmm2_bin = pbmm2_bin or str(smrt_bin / "pbmm2")
+        if not pbindex_bin:
+            pbindex_bin = pbindex_bin or str(smrt_bin / "pbindex")
+            
         print(f"✅ Loaded binaries from {config_file}")
     else:
         raise FileNotFoundError(

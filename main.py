@@ -104,7 +104,8 @@ def parse_arguments():
 
     parser.add_argument("-v", "--version", action="version", version=f"mGlu {__version__}")
     parser.add_argument("--whole_bam", type=str, required=False,
-                        help="Input aligned BAM file with kinetic data (HiFi or subreads). Use this for pre-aligned BAM files.")
+                        help="Input aligned BAM file with kinetic data (HiFi or subreads). Use this for pre-aligned BAM files.\
+                              Must be aligned by pbmm2 to ensure kinetic tags are present.")
     parser.add_argument("--unaligned_bam", type=str, required=False,
                         help="Input unaligned BAM file with kinetic data (HiFi or subreads). Will be aligned using pbmm2.")
     parser.add_argument("--whole_ref", type=str, required=True,
@@ -139,9 +140,9 @@ def parse_arguments():
     parser.add_argument("--min_score", type=int, default=30,
                         help="Minimum score for modification calling.")
     parser.add_argument("--mge_file", type=str, default="NA",
-                        help="MGE table file (sep by tab), can be output of Genomad, with at least one column with header: seq_name.")
+                        help="MGE table file (sep by tab), can be output of geNomad, with at least one column with header: seq_name.")
     parser.add_argument("--bin_file", type=str, required=False, default=None,
-                        help="Path to the binning file containing contig-to-bin mappings.")
+                        help="Path to the binning file containing contig-to-bin mappings. Sep by tab, with two columns: contig_name and bin_name, no headers. ")
     parser.add_argument("--threads", type=int, default=64,
                         help="Number of threads to use for processing.")
     parser.add_argument("--up", type=int, default=7,
@@ -154,11 +155,11 @@ def parse_arguments():
     parser.add_argument("--visu_ipd", action="store_true",
                         help="Enable visulization of IPD distribution.")
     parser.add_argument("--binning", action="store_true",
-                        help="Enable binning based on methylation.")
+                        help="Enable binning based on methylation (in testing).")
     parser.add_argument("--annotate_rm", action="store_true",
                         help="Enable RM system annotation, MicrobeMod should be installed.")
     parser.add_argument("--rm_gene_file", type=str,
-                        help="RM gene annotation file by MicrobeMod, with suffix .rm.genes.tsv.")
+                        help="RM gene annotation file by MicrobeMod, with suffix .rm.genes.tsv (only for testing)")
     parser.add_argument(
         "--run_steps",
         nargs="+",
@@ -166,17 +167,19 @@ def parse_arguments():
             "split", "load", "control", "compare", "motif", "profile", "merge", "host", "anno"
         ],
         default=["split", "load", "control", "compare", "motif", "profile", "merge", "host"],
-        help="Steps to run in the pipeline (default: all), for easy test."
+        help="Steps to run in the pipeline (default: all), sep by space. Only for easy testing."
     )
 
     args = parser.parse_args()
     
     # Set min_iden default based on read_type if not explicitly provided
     if args.min_iden is None:
-        if args.read_type == "hifi":
+        if args.read_type.lower() == "hifi":
             args.min_iden = 0.97
-        elif args.read_type == "subreads":
+        elif args.read_type.lower() == "subreads":
             args.min_iden = 0.85
+        else:
+            raise ValueError(f"Unknown read type: {args.read_type}. Must be 'hifi' or 'subreads'")
     
     # Validate that either whole_bam or unaligned_bam is provided, but not both
     if args.whole_bam and args.unaligned_bam:

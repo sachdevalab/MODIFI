@@ -5,8 +5,9 @@
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS-lightgrey.svg)](#)
 [![PacBio](https://img.shields.io/badge/PacBio-SMRT-yellow.svg)](#)
 
-**mGlu** is a software package for detecting DNA base modifications and inferring host–mobile genetic element (MGE) linkages from **PacBio SMRT metagenomic sequencing** data.  
-It enables precise methylation calling, motif discovery, and host–MGE association in complex microbial communities.
+**mGlu** is a software package for detecting DNA base modifications and inferring host–mobile genetic element (MGE) linkages from **PacBio metagenomic sequencing** data.  
+It enables precise modification calling, motif discovery, and host–MGE association in complex microbial communities.
+It supports both `subreads` and `HiFi` reads type.
 
 ---
 
@@ -15,47 +16,143 @@ It enables precise methylation calling, motif discovery, and host–MGE associat
 ### 1️⃣ Create and activate environment
 
 ```bash
-conda create -n methy3 python=3.12
-conda activate methy3
+conda create -n mglu -f env.yml
+conda activate mglu
 ```
 
-### 2️⃣ Install dependencies
+### 2️⃣ Add the `SMRT Link` path
+mGlu requires three tools from SMRT Link: `pbmotifmaker`, `pbmm2`, and `pbindex`. If they are in the system path, mGlu will automatically detect them. If not, you can set the path for SMRT Link tools in `mGlu/config.yaml` as follows:
+
+```bash
+smrtlink_bin: /home/shuaiw/smrtlink/
+```
+
+### 3️⃣ Additional module required for subreads
+Install the `pbcore` module only if you want to handle `subreads`.
 
 ```bash
 pip install git+https://github.com/PacificBiosciences/pbcore.git
-pip install numpy seaborn scipy
-conda install -c bioconda samtools
 ```
 
-> ⚠️ Note: Some PacBio BAMs may trigger an integer overflow error in `pbcore`.  
-> See [PacificBiosciences/pbcore#127](https://github.com/PacificBiosciences/pbcore/issues/127) for details.
-
-### 3️⃣ Add the `motifMaker` utility
-
-```bash
-add motifMaker
-```
-SMRT Link server software cannot be installed on Mac OS or Windows systems. So mGlu not support Mac OS and Windows.
 ---
 
 ## ⚡ Quick Start
 
-### Step 1. Align PacBio reads to contigs
+### Step 1. Distinguish input read type
+mGlu supports both `subreads` and `HiFi` read types. Ensure your input PacBio BAM file contains IPD tags. This should be a **BAM** file used to store kinetics information, not necessarily an alignment BAM. The required IPD tags are:
+
+| Read Type | IPD Tag (kinetics) | Description | 
+|-----------|--------------------|--------------| 
+| hifi | `fi` | Forward IPD (codec V1) |
+| hifi | `ri` | Reverse IPD (codec V1) |
+| subreads | `ip` | IPD (raw frames or codec V1) |
+
+> ⚠️ **Note:** FASTQ files do not contain kinetics information and cannot be used.
+
+For more information about PacBio BAM format specifications, see: https://pacbiofileformats.readthedocs.io/en/11.0/BAM.html
+
+### Step 2. Run mGlu for modification detection
+Example command:
 
 ```bash
-~/smrtlink/pbmm2 align --preset CCS -j $threads   $work_dir/${prefix}.p_ctg.fa $hifi_bam $work_dir/${prefix}.raw.bam
-
-samtools sort -T $work_dir/${prefix} -@ $threads   -o $work_dir/${prefix}.align.bam $work_dir/${prefix}.raw.bam
-
-rm $work_dir/${prefix}.raw.bam
-samtools index $work_dir/${prefix}.align.bam
-/home/shuaiw/smrtlink/pbindex $work_dir/${prefix}.align.bam
+python mGlu/main.py \
+    --work_dir /path-to/output \
+    --unaligned_bam raw.hifi_reads.bam \
+    --whole_ref metagenomic_assembly.fasta \
+    --read_type hifi 
 ```
 
-### Step 2. Run mGlu for methylation detection
+For more information, run:
+```bash
+python mGlu/main.py --help
+```
+
+--- 
+## 📖 Detailed Usage Guidelines
+
+### Using pre-aligned BAM files
+If you have already aligned the reads using pbmm2, use the `--whole_bam` option:
 
 ```bash
-python /home/shuaiw/Methy/main.py   --work_dir /home/shuaiw/methylation/data/borg/new_test12   --whole_bam /home/shuaiw/methylation/data/borg/b_contigs/11.align.bam   --whole_ref /home/shuaiw/methylation/data/borg/b_contigs/contigs/11.fa   --read_type subreads
+python mGlu/main.py \
+    --work_dir /path-to/output \
+    --whole_bam pbmm2.aligned.sorted.bam \
+    --whole_ref metagenomic_assembly.fasta \
+    --read_type hifi 
+```
+
+### Using subreads
+For subread data, specify `--read_type subreads`:
+
+```bash
+python mGlu/main.py \
+    --work_dir /path-to/output \
+    --unaligned_bam raw.subreads.bam \
+    --whole_ref metagenomic_assembly.fasta \
+    --read_type subreads 
+```
+
+### MGE-host linkage inference
+If you have an MGE table file, provide it using `--mge_file` and mGlu will automatically infer MGE-host linkages:
+
+```bash
+python mGlu/main.py \
+    --work_dir /path-to/output \
+    --whole_bam pbmm2.aligned.sorted.bam \
+    --whole_ref metagenomic_assembly.fasta \
+    --read_type hifi \
+    --mge_file MGE_list.tab
+```
+
+The MGE table file can be the output from [geNomad](https://github.com/apcamargo/genomad) or generated manually. It should be a tab-separated file with at least one column with the header `seq_name`. Here is an example:
+
+```
+seq_name	length	topology	n_genes	genetic_code	plasmid_score	fdr	n_hallmarks	marker_enrichment	conjugation_genes	amr_genes
+ERR6535514_2_L	6291	DTR	8	11	0.9997	0.0003	2	1.8745	NA	NA
+```
+
+### Assign MGE to host bins
+If you have binning results and want to assign MGEs to host bins, provide the bin file using `--bin_file`:
+
+```bash
+python mGlu/main.py \
+    --work_dir /path-to/output \
+    --whole_bam pbmm2.aligned.sorted.bam \
+    --whole_ref metagenomic_assembly.fasta \
+    --read_type hifi \
+    --mge_file MGE_list.tab \
+    --bin_file my_bin.tab
+```
+
+The `bin_file` should be a tab-separated file with two columns (no header required): contig name and bin name. Example:
+
+```
+RuReacBro_20230708_10_0h_50ppm_r1_scaffold_53   RuReacBro_20230708_10_0h_50ppm_r1_maxbin.017_rmcirc
+RuReacBro_20230708_10_0h_50ppm_r1_scaffold_66   RuReacBro_20230708_10_0h_50ppm_r1_maxbin.017_rmcirc
+RuReacBro_20230708_10_0h_50ppm_r1_scaffold_73   RuReacBro_20230708_10_0h_50ppm_r1_maxbin.017_rmcirc
+RuReacBro_20230708_10_0h_50ppm_r1_scaffold_77   RuReacBro_20230708_10_0h_50ppm_r1_maxbin.017_rmcirc
+RuReacBro_20230708_10_0h_50ppm_r1_scaffold_84   RuReacBro_20230708_10_0h_50ppm_r1_maxbin.017_rmcirc
+...
+```
+
+### Using control databases
+For isolate genomes or low-complexity metagenomes, use our pre-built control database:
+
+```bash
+python mGlu/main.py \
+    --work_dir /path-to/output \
+    --whole_bam isolate.pbmm2.aligned.sorted.bam \
+    --whole_ref metagenomic_assembly.fasta \
+    --read_type hifi \
+    --kmer_mean_db mGlu/control/control_db.up7.down3.mean.dat \
+    --kmer_num_db mGlu/control/control_db.up7.down3.num.dat
+```
+
+Alternatively, you can use the control database generated from your own high-complexity metagenomes. These files will be stored at:
+
+```
+high_complexity_mGlu_output/control/control_db.up7.down3.mean.dat 
+high_complexity_mGlu_output/control/control_db.up7.down3.num.dat 
 ```
 
 ---
@@ -63,28 +160,63 @@ python /home/shuaiw/Methy/main.py   --work_dir /home/shuaiw/methylation/data/bor
 ## ⚙️ Command-line Options
 
 ```bash
-usage: main.py [-h] --whole_bam WHOLE_BAM --whole_ref WHOLE_REF --work_dir WORK_DIR
-               [--maxAlignments MAXALIGNMENTS] [--read_type {subreads,hifi}]
-               [--max_NM MAX_NM] [--min_len MIN_LEN] [--min_cov MIN_COV]
-               [--kmer_mean_db KMER_MEAN_DB] [--kmer_num_db KMER_NUM_DB]
-               [--no-clean] [--min_frac MIN_FRAC] [--min_sites MIN_SITES]
-               [--min_score MIN_SCORE] [--plasmid_file PLASMID_FILE] [--threads THREADS]
+usage: main.py [-h] [-v] [--whole_bam WHOLE_BAM] [--unaligned_bam UNALIGNED_BAM] --whole_ref WHOLE_REF --work_dir WORK_DIR
+               [--read_type {subreads,hifi}] [--min_iden MIN_IDEN] [--min_len MIN_LEN] [--min_cov MIN_COV] [--min_ctg_cov MIN_CTG_COV]
+               [--kmer_mean_db KMER_MEAN_DB] [--kmer_num_db KMER_NUM_DB] [--clean] [--segment] [--min_frac MIN_FRAC]
+               [--min_sites MIN_SITES] [--min_score MIN_SCORE] [--mge_file MGE_FILE] [--bin_file BIN_FILE] [--threads THREADS] [--up UP]
+               [--down DOWN] [--detect_misassembly] [--visu_ipd] [--binning] [--annotate_rm] [--rm_gene_file RM_GENE_FILE]
+               [--run_steps {split,load,control,compare,motif,profile,merge,host,anno} [{split,load,control,compare,motif,profile,merge,host,anno} ...]]
+
+Run methylation-based MGE-host linkage discovery pipeline.
+
+options:
+  -h, --help            show this help message and exit
+  -v, --version         show program's version number and exit
+  --whole_bam WHOLE_BAM
+                        Input aligned BAM file with kinetic data (HiFi or subreads). Use this for pre-aligned BAM files. Must be aligned
+                        by pbmm2 to ensure kinetic tags are present. (default: None)
+  --unaligned_bam UNALIGNED_BAM
+                        Input unaligned BAM file with kinetic data (HiFi or subreads). Will be aligned using pbmm2. (default: None)
+  --whole_ref WHOLE_REF
+                        Reference FASTA file for contigs. (default: None)
+  --work_dir WORK_DIR   Working directory for all output files. (default: None)
+  --read_type {subreads,hifi}
+                        Type of reads in BAM file. (default: hifi)
+  --min_iden MIN_IDEN   Minimum identity allowed for read alignment (default: 0.97 for hifi, 0.85 for subreads). (default: None)
+  --min_len MIN_LEN     Minimum contig length to process. (default: 1000)
+  --min_cov MIN_COV     Minimum read coverage required to retain a base. (default: 1)
+  --min_ctg_cov MIN_CTG_COV
+                        Minimum read coverage required to retain a contig. (default: 5)
+  --kmer_mean_db KMER_MEAN_DB
+                        Path to optional k-mer mean IPD database. (default: None)
+  --kmer_num_db KMER_NUM_DB
+                        Path to optional k-mer count database. (default: None)
+  --clean               Enable cleaning step (default: False)
+  --segment             Enable segmentation of the contigs by depth, increase recall for low-depth contigs, but cost more time.
+                        (default: False)
+  --min_frac MIN_FRAC   Minimum methylation fraction to retain a motif. (default: 0.4)
+  --min_sites MIN_SITES
+                        Minimum number of methylated sites per motif. (default: 30)
+  --min_score MIN_SCORE
+                        Minimum score for modification calling. (default: 30)
+  --mge_file MGE_FILE   MGE table file (sep by tab), can be output of geNomad, with at least one column with header: seq_name. (default:
+                        NA)
+  --bin_file BIN_FILE   Path to the binning file containing contig-to-bin mappings. (default: None)
+  --threads THREADS     Number of threads to use for processing. (default: 64)
+  --up UP               Number of upstream bases to consider for k-mer analysis. (default: 7)
+  --down DOWN           Number of downstream bases to consider for k-mer analysis. (default: 3)
+  --detect_misassembly  Enable detection of misassembly in the pipeline. (default: False)
+  --visu_ipd            Enable visulization of IPD distribution. (default: False)
+  --binning             Enable binning based on methylation (in testing). (default: False)
+  --annotate_rm         Enable RM system annotation, MicrobeMod should be installed. (default: False)
+  --rm_gene_file RM_GENE_FILE
+                        RM gene annotation file by MicrobeMod, with suffix .rm.genes.tsv (only for testing) (default: None)
+  --run_steps {split,load,control,compare,motif,profile,merge,host,anno} [{split,load,control,compare,motif,profile,merge,host,anno} ...]
+                        Steps to run in the pipeline (default: all), sep by space. Only for easy testing. (default: ['split', 'load',
+                        'control', 'compare', 'motif', 'profile', 'merge', 'host'])
 ```
 
-| Option | Description |
-|--------|--------------|
-| `--whole_bam` | Input BAM file with kinetic data (HiFi or subreads). |
-| `--whole_ref` | Reference FASTA file for contigs. |
-| `--work_dir` | Working directory for all output files. |
-| `--read_type` | Read type: `subreads` or `hifi`. |
-| `--max_NM` | Max number of mismatches allowed. |
-| `--min_len` | Minimum contig length to process. |
-| `--min_cov` | Minimum read coverage required per base. |
-| `--kmer_mean_db` | Path to optional k-mer mean IPD database. |
-| `--min_frac` | Minimum methylation fraction to retain a motif. |
-| `--min_sites` | Minimum number of methylated sites per motif. |
-| `--min_score` | Minimum score for modification calling. |
-| `--threads` | Number of threads to use. |
+
 
 ---
 

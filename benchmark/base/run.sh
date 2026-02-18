@@ -50,7 +50,7 @@ python /home/shuaiw/mGlu/main.py \
 
 
 python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/paper/base/pure/native_no_control \
+  --work_dir /home/shuaiw/borg/paper/base/pure/test \
   --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
   --read_type subreads \
