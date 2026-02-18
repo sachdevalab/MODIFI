@@ -68,6 +68,17 @@ python mGlu/main.py --help
 --- 
 ## 📖 Detailed Usage Guidelines
 
+### Using unaligned BAM files
+If your BAM file contains unaligned reads, mGlu will automatically align them using pbmm2. Just run
+
+```bash
+python mGlu/main.py \
+    --work_dir /path-to/output \
+    --unaligned_bam raw.hifi_reads.bam \
+    --whole_ref metagenomic_assembly.fasta \
+    --read_type hifi 
+```
+
 ### Using pre-aligned BAM files
 If you have already aligned the reads using pbmm2, use the `--whole_bam` option:
 
@@ -96,7 +107,7 @@ If you have an MGE table file, provide it using `--mge_file`, and mGlu will auto
 ```bash
 python mGlu/main.py \
     --work_dir /path-to/output \
-    --whole_bam pbmm2.aligned.sorted.bam \
+    --unaligned_bam raw.hifi_reads.bam \
     --whole_ref metagenomic_assembly.fasta \
     --read_type hifi \
     --mge_file MGE_list.tab
@@ -107,6 +118,7 @@ The MGE table file can be the output from [geNomad](https://github.com/apcamargo
 ```
 seq_name	length	topology	n_genes	genetic_code	plasmid_score	fdr	n_hallmarks	marker_enrichment	conjugation_genes	amr_genes
 ERR6535514_2_L	6291	DTR	8	11	0.9997	0.0003	2	1.8745	NA	NA
+...
 ```
 
 ### Assigning MGEs to host bins
@@ -115,7 +127,7 @@ If you have binning results and want to assign MGEs to host bins, provide the bi
 ```bash
 python mGlu/main.py \
     --work_dir /path-to/output \
-    --whole_bam pbmm2.aligned.sorted.bam \
+    --unaligned_bam raw.hifi_reads.bam \
     --whole_ref metagenomic_assembly.fasta \
     --read_type hifi \
     --mge_file MGE_list.tab \
@@ -139,7 +151,7 @@ For isolate genomes or low-complexity metagenomes, use our pre-built control dat
 ```bash
 python mGlu/main.py \
     --work_dir /path-to/output \
-    --whole_bam isolate.pbmm2.aligned.sorted.bam \
+    --unaligned_bam raw.hifi_reads.bam \
     --whole_ref metagenomic_assembly.fasta \
     --read_type hifi \
     --kmer_mean_db mGlu/control/control_db.up7.down3.mean.dat \
@@ -185,7 +197,7 @@ cat <output_dir>/Genomad/sample_summary/sample_virus_summary.tsv \
 ```bash
 python mGlu/main.py \
     --work_dir /path-to/output \
-    --whole_bam pbmm2.aligned.sorted.bam \
+    --unaligned_bam raw.hifi_reads.bam \
     --whole_ref metagenomic_assembly.fasta \
     --read_type hifi \
     --mge_file all_MGEs.tsv
