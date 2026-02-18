@@ -141,36 +141,36 @@ Example: python mGlu/main.py \\
                         help="Path to optional k-mer mean IPD database.")
     parser.add_argument("--kmer_num_db", type=str, default=None,
                         help="Path to optional k-mer count database.")
-    parser.add_argument("--clean", action="store_true", dest="clean", help="Enable cleaning step")
-    parser.add_argument("--segment", action="store_true", dest="segment", 
-                        help="Enable segmentation of the contigs by depth, increase recall for low-depth contigs, but cost more time.")
     parser.add_argument("--min_frac", type=float, default=0.4,
                         help="Minimum methylation fraction to retain a motif.")
     parser.add_argument("--min_sites", type=int, default=30,
                         help="Minimum number of methylated sites per motif.")
     parser.add_argument("--min_score", type=int, default=30,
-                        help="Minimum score for modification calling.")
+                        help="Minimum modification score for motif calling.")
     parser.add_argument("--mge_file", type=str, default="NA",
                         help="MGE table file (sep by tab), can be output of geNomad, with at least one column with header: seq_name.")
-    parser.add_argument("--bin_file", type=str, required=False, default=None,
-                        help="Path to the binning file containing contig-to-bin mappings. Sep by tab, with two columns: contig_name and bin_name, no headers. ")
     parser.add_argument("--threads", type=int, default=64,
                         help="Number of threads to use for processing.")
     parser.add_argument("--up", type=int, default=7,
                         help="Number of upstream bases to consider for k-mer analysis.")
     parser.add_argument("--down", type=int, default=3,
                         help="Number of downstream bases to consider for k-mer analysis.")
-    ## add a new parameter to control the whether to use detect misassembly
-    parser.add_argument("--detect_misassembly", action="store_true",
-                        help="Enable detection of misassembly in the pipeline.")
+    parser.add_argument("--clean", action="store_true", dest="clean", help="Enable cleaning step")
+    parser.add_argument("--bin_file", type=str, required=False, default=None,
+                        help="Path to the binning file containing contig-to-bin mappings. Sep by tab, with two columns: contig_name and bin_name, no headers. ")
+    parser.add_argument("--segment", action="store_true", dest="segment", 
+                        help="Enable segmentation of the contigs by depth, increase recall for low-depth contigs, but cost more time.")
     parser.add_argument("--visu_ipd", action="store_true",
                         help="Enable visulization of IPD distribution.")
-    parser.add_argument("--binning", action="store_true",
-                        help="Enable binning based on methylation (in testing).")
     parser.add_argument("--annotate_rm", action="store_true",
                         help="Enable RM system annotation, MicrobeMod should be installed.")
     parser.add_argument("--rm_gene_file", type=str,
                         help="RM gene annotation file by MicrobeMod, with suffix .rm.genes.tsv (only for testing)")
+    ## add a new parameter to control the whether to use detect misassembly
+    parser.add_argument("--detect_misassembly", action="store_true",
+                        help="Enable manual detection of misassembly by IPD ratio line continuity.")
+    parser.add_argument("--binning", action="store_true",
+                        help="Enable binning based on methylation (in testing).")
     parser.add_argument(
         "--run_steps",
         nargs="+",
