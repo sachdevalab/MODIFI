@@ -97,9 +97,20 @@ def record_resource_usage(step_name, func, *args, **kwargs):
     return result
 
 def parse_arguments():
+    # Custom formatter to combine default values and raw description formatting
+    class CustomFormatter(argparse.RawDescriptionHelpFormatter, argparse.ArgumentDefaultsHelpFormatter):
+        pass
+    
     parser = argparse.ArgumentParser(
-        description="Run methylation-based MGE-host linkage discovery pipeline.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description="""DNA modification detection and MGE-host linkage inference.
+
+Example: python mGlu/main.py \\
+        --work_dir /path-to/output \\
+        --unaligned_bam raw.hifi_reads.bam \\
+        --whole_ref metagenomic_assembly.fasta \\
+        --read_type hifi
+""",
+        formatter_class=CustomFormatter
     )
 
     parser.add_argument("-v", "--version", action="version", version=f"mGlu {__version__}")
