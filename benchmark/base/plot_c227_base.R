@@ -16,14 +16,14 @@ p1 <- ggplot(df, aes(x = FDR, y = recall, color = as.factor(coverage))) +
   theme_minimal() +
   labs(x = "False Positive Rate", y = "Recall", color = "Coverage") +
    ggtitle("C227")+
-  xlim(0, 0.05)  
+  xlim(0, 0.1)  
 
 p2 <- ggplot(df2, aes(x = FDR, y = recall, color = as.factor(coverage))) +
   geom_line() +
   theme_minimal() +
   labs(x = "False Positive Rate", y = "Recall", color = "Coverage")+
    ggtitle("C227+soil")+
-  xlim(0, 0.05) 
+  xlim(0, 0.1) 
 
 
 # Combine plots without legends

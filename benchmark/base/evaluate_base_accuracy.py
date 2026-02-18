@@ -111,13 +111,13 @@ if __name__ == "__main__":
     # profile = "/home/shuaiw/borg/test.csv"
 
 
-    native_csv = "/home/shuaiw/borg/paper/base/pure/native/ipd_ratio/CP011331.1.ipd3.csv"
-    control_csv = "/home/shuaiw/borg/paper/base/pure/control/ipd_ratio/CP011331.1.ipd3.csv"
-    output_csv = "../../tmp/figures/base_benchmark/ecoli_base_pure.csv"
+    # native_csv = "/home/shuaiw/borg/paper/base/pure/native/ipd_ratio/CP011331.1.ipd3.csv"
+    # control_csv = "/home/shuaiw/borg/paper/base/pure/control/ipd_ratio/CP011331.1.ipd3.csv"
+    # output_csv = "../../tmp/figures/base_benchmark/ecoli_base_pure.csv"
 
-    # native_csv = "/home/shuaiw/borg/paper/base/meta/native/ipd_ratio/CP011331.1.ipd3.csv"
-    # control_csv = "/home/shuaiw/borg/paper/base/meta/control/ipd_ratio/CP011331.1.ipd3.csv"
-    # output_csv = "../../tmp/figures/base_benchmark/ecoli_base_meta.csv"
+    native_csv = "/home/shuaiw/borg/paper/base/meta/native/ipd_ratio/CP011331.1.ipd3.csv"
+    control_csv = "/home/shuaiw/borg/paper/base/meta/control/ipd_ratio/CP011331.1.ipd3.csv"
+    output_csv = "../../tmp/figures/base_benchmark/ecoli_base_meta.csv"
 
     REF = read_ref(my_ref)
     

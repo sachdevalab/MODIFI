@@ -47,3 +47,13 @@ python /home/shuaiw/mGlu/main.py \
   --min_score 30 \
   --min_sites 100 \
   --threads 32
+
+
+python /home/shuaiw/mGlu/main.py \
+  --work_dir /home/shuaiw/borg/paper/base/pure/native_no_control \
+  --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
+  --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
+  --read_type subreads \
+  --min_cov 1 \
+  --min_score 30 \
+  --threads 10 
