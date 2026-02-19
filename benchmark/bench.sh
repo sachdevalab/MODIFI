@@ -2161,7 +2161,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
 
 
 python /home/shuaiw/mGlu/main.py \
-  --work_dir /home/shuaiw/borg/paper/base/pure/native_previous_bam2 \
+  --work_dir /home/shuaiw/borg/paper/base/pure/test \
   --whole_bam /home/shuaiw/methylation/data/borg/bench/C227/native2/bams/CP011331.1.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
   --read_type subreads \

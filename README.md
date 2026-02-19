@@ -14,7 +14,9 @@
 ### 1️⃣ Create and activate environment
 
 ```bash
-conda create -n mglu -f env.yml
+git clone https://github.com/wshuai294/mGlu.git
+cd mGlu/
+conda env create -n mglu -f env.yml
 conda activate mglu
 ```
 
@@ -25,20 +27,22 @@ mGlu requires three tools from SMRT Link: `pbmotifmaker`, `pbmm2`, and `pbindex`
 smrtlink_bin: /path/to/your/smrtlink/
 ```
 
-### 3️⃣ Additional module required for subreads
-Install the `pbcore` module only if you want to handle `subreads`.
-
-```bash
-pip install git+https://github.com/PacificBiosciences/pbcore.git
-```
-
-### 4️⃣ Test installation
+### 3️⃣ Test installation
 Verify that mGlu is installed correctly by running the test suite:
 
 ```bash
 cd test/
 bash test.sh
 ```
+
+### 4️⃣ Additional module required for subreads
+Install the `pbcore` module only if you want to handle `subreads`.
+
+```bash
+pip install git+https://github.com/PacificBiosciences/pbcore.git
+```
+
+
 
 ---
 
