@@ -163,7 +163,7 @@ Example: python mGlu/main.py \\
     parser.add_argument("--visu_ipd", action="store_true",
                         help="Enable visulization of IPD distribution.")
     parser.add_argument("--annotate_rm", action="store_true",
-                        help="Enable RM system annotation, MicrobeMod should be installed.")
+                        help="Enable RM system annotation, requiring MicrobeMod installed in system path.")
     parser.add_argument("--rm_gene_file", type=str,
                         help="RM gene annotation file by MicrobeMod, with suffix .rm.genes.tsv (only for testing)")
     ## add a new parameter to control the whether to use detect misassembly

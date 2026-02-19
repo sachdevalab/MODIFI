@@ -219,6 +219,7 @@ python mGlu/main.py \
     --read_type hifi \
     --mge_file all_MGEs.tsv
 ```
+Pro-viruses are ignored in the analysis.
 
 ---
 
