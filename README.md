@@ -35,14 +35,19 @@ cd test/
 bash test.sh
 ```
 
-### 4️⃣ Additional module required for subreads
-Install the `pbcore` module only if you want to handle `subreads`.
+### 4️⃣ Additional environment requirement for subreads
+
+`subreads` require the `pbcore` module, which requires `Python=3.9` and `numpy=1.22.4`. If you want to process `subreads`, build an independent environment:
 
 ```bash
+git clone https://github.com/wshuai294/mGlu.git
+cd mGlu/
+conda env create -n mglu_subreads -f subreads.env.yml
+conda activate mglu_subreads
 pip install git+https://github.com/PacificBiosciences/pbcore.git
 ```
 
-
+> ⚠️ **Note:** We recommend using HiFi reads instead of subreads when possible.
 
 ---
 
