@@ -32,6 +32,14 @@ Install the `pbcore` module only if you want to handle `subreads`.
 pip install git+https://github.com/PacificBiosciences/pbcore.git
 ```
 
+### 4️⃣ Test installation
+Verify that mGlu is installed correctly by running the test suite:
+
+```bash
+cd test/
+bash test.sh
+```
+
 ---
 
 ## ⚡ Quick Start
