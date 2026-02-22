@@ -300,7 +300,9 @@ def filter_df(df, min_dp = 10):
     print (f"Unique species in filtered samples: {len(unique_species)}")
     print (f"Unique phylum in filtered samples: {len(unique_phylum)}")
     print (f"Samples without species information: {no_species_count}")
-
+    ## count average motif number
+    average_motif_num = df_dp['Motif_Num'].mean()
+    print (f"Average motif number in filtered samples: {average_motif_num:.2f} with median {df_dp['Motif_Num'].median():.2f} in {df_dp.shape[0]} samples")
     ## count the proportion of samples in each phylum with motif_num > 0
     print ("\nProportion of samples with Motif_Num > 0 in each phylum:")
     phylum_groups = df_dp.groupby(df_dp['Lineage'].apply(lambda x: x.split(";")[1][3:] if ";" in x else "Unclassified"))

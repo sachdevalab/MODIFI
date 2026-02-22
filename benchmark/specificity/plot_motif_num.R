@@ -413,3 +413,7 @@ df_all_data <- read.csv(paste0(fig_dir, "motif_num_all_samples.csv"))
 
 # Run analysis
 count_good_ctgs(df_all_data, fig_dir)
+
+# Count the average number of motifs per genome
+average_motifs <- mean(df_all_data$motif_num)
+cat(sprintf("Average number of motifs per genome: %.2f, median: %.2f\n", average_motifs, median(df_all_data$motif_num)))
