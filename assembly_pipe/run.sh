@@ -1,5 +1,11 @@
 
             #### number 1
+            sbatch --partition standard --wrap "snakemake -s methylation.smk --config \
+                hifi_bam=/home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam \
+                prefix=96plex \
+                work_dir=/home/shuaiw/borg/paper/run2/96plex -j 64" \
+                --job-name=96plex
+            
 
             #### number 2
             sbatch --partition standard --wrap "snakemake -s methylation.smk --config \

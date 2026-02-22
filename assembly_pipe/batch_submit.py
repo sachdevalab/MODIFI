@@ -13,6 +13,7 @@ def read_list(bam_list, cmd_file, prefix_table):
     orphan = open("run_orphan.sh", 'w')
     drep = open("run_drep.sh", 'w')
     spacer = open("run_spacer.sh", 'w')
+    time = open("run_time.sh", 'w')
     # h = open(prefix_table, 'w')
     i = 1
     with open(prefix_table, 'r') as f:
@@ -126,6 +127,17 @@ def read_list(bam_list, cmd_file, prefix_table):
             """
             print (cmd, file=drep)
 
+            time_cmd = f"""
+                sbatch  --partition standard --wrap "/usr/bin/time -v -o  /home/shuaiw/borg/paper/run2/{prefix}/time.txt python /home/shuaiw/mGlu/main.py \\
+                --work_dir /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation_time \\
+                --whole_bam /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.bam \\
+                --whole_ref /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
+                --read_type hifi \\
+                --clean \\
+                --threads 64" \\
+                --job-name={prefix}
+            """
+            print (time_cmd.strip(), file=time)
             # print (f"{prefix}\t{prefix}\t{hifi_bam}", file=h)
             i += 1
     w.close()
@@ -285,14 +297,14 @@ def batch_soil():
 
 
 if __name__ == "__main__":
-    # bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
-    # cmd_file = "run.sh"
-    # prefix_table = "prefix_table.tab"
-    # read_list(bam_list, cmd_file, prefix_table)
+    bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
+    cmd_file = "run.sh"
+    prefix_table = "prefix_table.tab"
+    read_list(bam_list, cmd_file, prefix_table)
 
     # outdir = "/home/shuaiw/borg/paper/run2/"
     # cmd_file = "run_asthma.sh"
     # prefix_table = "prefix_table_soil.tab"
     # batch_asthma(cmd_file, prefix_table, outdir)
 
-    batch_soil()
+    # batch_soil()
