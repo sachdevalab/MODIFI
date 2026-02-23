@@ -98,6 +98,62 @@ def get_detail_taxa_name(lineage):
             detail_name = lineage[0].strip()
     return detail_name
 
+def count_time(time_info):
+    """
+    Extract CPU time (hours), wall-clock time (hours), and peak memory (GB) from time output.
+    
+    Args:
+        time_info: String containing the time command output or path to a file
+        
+    Returns:
+        tuple: (cpu_time_hours, wallclock_time_hours, peak_memory_gb)
+    """
+    import re
+    
+    # Check if time_info is a file path
+    if os.path.isfile(time_info):
+        with open(time_info, 'r') as f:
+            content = f.read()
+    else:
+        content = time_info
+    
+    # Extract User time (seconds)
+    user_time_match = re.search(r'User time \(seconds\):\s*([\d.]+)', content)
+    user_time = float(user_time_match.group(1)) if user_time_match else 0.0
+    
+    # Extract System time (seconds)
+    system_time_match = re.search(r'System time \(seconds\):\s*([\d.]+)', content)
+    system_time = float(system_time_match.group(1)) if system_time_match else 0.0
+    
+    # Calculate total CPU time in hours
+    cpu_time_hours = (user_time + system_time) / 3600.0
+    
+    # Extract Elapsed (wall clock) time
+    elapsed_match = re.search(r'Elapsed \(wall clock\) time \(h:mm:ss or m:ss\):\s*(\d+):(\d+):(\d+)', content)
+    if elapsed_match:
+        hours = int(elapsed_match.group(1))
+        minutes = int(elapsed_match.group(2))
+        seconds = int(elapsed_match.group(3))
+        wallclock_time_hours = hours + minutes / 60.0 + seconds / 3600.0
+    else:
+        # Try m:ss format
+        elapsed_match = re.search(r'Elapsed \(wall clock\) time \(h:mm:ss or m:ss\):\s*(\d+):(\d+)', content)
+        if elapsed_match:
+            minutes = int(elapsed_match.group(1))
+            seconds = int(elapsed_match.group(2))
+            wallclock_time_hours = minutes / 60.0 + seconds / 3600.0
+        else:
+            wallclock_time_hours = None
+    
+    # Extract Maximum resident set size (kbytes) and convert to GB
+    memory_match = re.search(r'Maximum resident set size \(kbytes\):\s*(\d+)', content)
+    if memory_match:
+        peak_memory_kb = int(memory_match.group(1))
+        peak_memory_gb = peak_memory_kb / (1024.0 * 1024.0)
+    else:
+        peak_memory_gb = None
+    
+    return cpu_time_hours, wallclock_time_hours, peak_memory_gb
 
 class mge_obj:
 
@@ -165,7 +221,7 @@ class My_sample(object):
         self.spacer_linkage_file = f"{all_dir}/{prefix}/spacer/{prefix}_mge_spacer_hits.filter.tsv"
         self.genomad_plasmid = f"{self.all_dir}/{self.prefix}/Genomad/{self.prefix}.hifiasm.p_ctg.rename_summary/{self.prefix}.hifiasm.p_ctg.rename_plasmid_summary.tsv"
         self.genomad_virus = f"{self.all_dir}/{self.prefix}/Genomad/{self.prefix}.hifiasm.p_ctg.rename_summary/{self.prefix}.hifiasm.p_ctg.rename_virus_summary.tsv"
-        
+        self.time_file = f"{self.all_dir}/{self.prefix}/time.txt"
         self.mge_dict = None
         self.mge_genomad_dict = None
         self.depth_dict = None
@@ -545,6 +601,8 @@ class My_sample(object):
         self.mge_genomad_dict = {**genomad_plasmid, **genomad_virus}
         return self.mge_genomad_dict
 
+    def get_time(self):
+        return count_time(self.time_file)
 
 class Linkage_object(object):
 
@@ -1525,17 +1583,19 @@ class My_gene(object):
 if __name__ == "__main__":
     pass
 
-    gff = "/home/shuaiw/borg/paper/gene_anno/meta/soil_1_129_C/prokka/soil_1_129_C.gff"
-    modified_gff = "/home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/gffs/soil_1_129_C.reprocess.gff"
-    genome_file = "/home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/contigs/soil_1_129_C.fa"
-    count_dir = "/home/shuaiw/borg/paper/gene_anno/meta/soil_1_129_C/count/"
-    count_file = os.path.join(count_dir, "soil_1_129_C_region_count.csv")   
-    ## mkdir count_dir if not exists
-    if not os.path.exists(count_dir):
-        os.makedirs(count_dir)
-    my_gene = My_gene(gff, "soil_1_129_C", genome_file)
-    my_gene.collect_regulation_region()
-    my_gene.read_modified_gff(modified_gff)
-    region_info = my_gene.intersect()
-    print(region_info)
-    region_info.to_csv(count_file, index=False)
+    # gff = "/home/shuaiw/borg/paper/gene_anno/meta/soil_1_129_C/prokka/soil_1_129_C.gff"
+    # modified_gff = "/home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/gffs/soil_1_129_C.reprocess.gff"
+    # genome_file = "/home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3/contigs/soil_1_129_C.fa"
+    # count_dir = "/home/shuaiw/borg/paper/gene_anno/meta/soil_1_129_C/count/"
+    # count_file = os.path.join(count_dir, "soil_1_129_C_region_count.csv")   
+    # ## mkdir count_dir if not exists
+    # if not os.path.exists(count_dir):
+    #     os.makedirs(count_dir)
+    # my_gene = My_gene(gff, "soil_1_129_C", genome_file)
+    # my_gene.collect_regulation_region()
+    # my_gene.read_modified_gff(modified_gff)
+    # region_info = my_gene.intersect()
+    # print(region_info)
+    # region_info.to_csv(count_file, index=False)
+    time_file = "/home/shuaiw/borg/paper/run2/96plex/time.txt"
+    print (count_time(time_file))
