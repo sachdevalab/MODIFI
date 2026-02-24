@@ -454,6 +454,17 @@ def motif_worker(ctg_name, seg_ref, seg_gff, motif, min_score, each_thread=1):
         "-j", str(each_thread),
         "--min-score", str(min_score),
     ]
+    if motif_maker_bin.endswith(".jar"):
+        print ("Using MultiMotifMaker for motif finding")
+        cmd = ["java", "-jar", motif_maker_bin, 
+               "find", 
+               "-f", seg_ref, 
+               "-g", seg_gff,
+               "-o", motif, 
+                "-t", str(each_thread), 
+                "-m", str(min_score),
+        ]
+
     # logger.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
     return ctg_name, 0

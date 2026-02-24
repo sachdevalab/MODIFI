@@ -35,18 +35,22 @@ def load_binaries():
             config = yaml.safe_load(cf)
         smrt_bin = Path(config.get("smrtlink_bin", ""))
         if not smrt_bin.exists():
-            raise FileNotFoundError(f"SMRT Link path not found: {smrt_bin}")
-        
-        if not motif_maker_bin:
-            motif_maker_bin = motif_maker_bin or str(smrt_bin / "pbmotifmaker")
-            if not Path(motif_maker_bin).exists():
-                motif_maker_bin = str(smrt_bin / "motifmaker")  # fallback name
-        if not pbmm2_bin:
-            pbmm2_bin = pbmm2_bin or str(smrt_bin / "pbmm2")
-        if not pbindex_bin:
-            pbindex_bin = pbindex_bin or str(smrt_bin / "pbindex")
-            
-        print(f"✅ Loaded binaries from {config_file}")
+            print ("No SMRT Link path defined, use multimotifmaker instead")
+            motif_maker_bin = os.join(sys.path[0], "dependency", "MultiMotifMaker.jar")
+        else:
+            if not motif_maker_bin:
+                motif_maker_bin = motif_maker_bin or str(smrt_bin / "pbmotifmaker")
+                if not Path(motif_maker_bin).exists():
+                    motif_maker_bin = str(smrt_bin / "motifmaker")  # fallback name
+                if not Path(motif_maker_bin).exists():
+                    print ("No motif maker binary found in SMRT Link path, use multimotifmaker instead")
+                    motif_maker_bin = os.join(sys.path[0], "dependency", "MultiMotifMaker.jar")
+            if not pbmm2_bin:
+                pbmm2_bin = pbmm2_bin or str(smrt_bin / "pbmm2")
+            if not pbindex_bin:
+                pbindex_bin = pbindex_bin or str(smrt_bin / "pbindex")
+                
+            print(f"✅ Loaded binaries from {config_file}")
     else:
         raise FileNotFoundError(
             "SMRT Link tools not found in PATH and no config.yaml detected. "
