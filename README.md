@@ -11,7 +11,7 @@
 
 ## 🧩 Installation
 
-### 1️⃣ Create and activate environment
+### 1️⃣ Clone repository and create environment
 
 ```bash
 git clone https://github.com/wshuai294/mGlu.git
@@ -20,206 +20,241 @@ conda env create -n mglu -f env.yml
 conda activate mglu
 ```
 
-### 2️⃣ Add the `SMRT Link` path
-mGlu requires three tools from SMRT Link: `pbmotifmaker`, `pbmm2`, and `pbindex`. If they are in the system path, mGlu will automatically detect them. If not, you can set the path for SMRT Link tools in `mGlu/config.yaml` as follows:
+### 2️⃣ Compile C++ components
+
+```bash
+cd src/
+bash install.sh
+cd ../
+```
+
+### 3️⃣ Configure SMRT Link tools
+
+mGlu requires three tools from SMRT Link: `pbmotifmaker`, `pbmm2`, and `pbindex`. 
+
+- If these tools are already in your system PATH, mGlu will automatically detect them.
+- Otherwise, set the SMRT Link path in `config.yaml`:
 
 ```yaml
 smrtlink_bin: /path/to/your/smrtlink/
 ```
 
-### 3️⃣ Test installation
-Verify that mGlu is installed correctly by running the test suite:
+### 4️⃣ Verify installation
+
+Test that mGlu is installed correctly:
 
 ```bash
 cd test/
 bash test.sh
 ```
 
-### 4️⃣ Additional environment requirement for subreads
+### 5️⃣ [Optional] Setup for subreads
 
-`subreads` require the `pbcore` module, which requires `Python=3.9` and `numpy=1.22.4`. If you want to process `subreads`, build an independent environment:
+> ⚠️ **Note:** We recommend using HiFi reads instead of subreads when possible.
+
+If you need to process subreads, create a separate environment with `pbcore` (requires Python 3.9 and numpy 1.22.4):
 
 ```bash
-git clone https://github.com/wshuai294/mGlu.git
-cd mGlu/
 conda env create -n mglu_subreads -f subreads.env.yml
 conda activate mglu_subreads
 pip install git+https://github.com/PacificBiosciences/pbcore.git
 ```
 
-> ⚠️ **Note:** We recommend using HiFi reads instead of subreads when possible.
-
 ---
 
 ## ⚡ Quick Start
 
-### Step 1: Input read type requirements
-mGlu supports both `subreads` and `HiFi` read types. Ensure your input PacBio BAM file contains IPD tags. This should be a **BAM** file used to store kinetics information, not necessarily an alignment BAM. The required IPD tags are:
+### Input Requirements
 
-| Read Type | IPD Tag (kinetics) | Description | 
-|-----------|--------------------|--------------| 
-| hifi | `fi` | Forward IPD (codec V1) |
-| hifi | `ri` | Reverse IPD (codec V1) |
-| subreads | `ip` | IPD (raw frames or codec V1) |
+mGlu supports both `HiFi` and `subreads`. Your PacBio BAM file **must contain kinetics (IPD) tags**:
 
-> ⚠️ **Note:** FASTQ files do not contain kinetics information and cannot be used.
+| Read Type | Required IPD Tags | Description | 
+|-----------|-------------------|-------------| 
+| HiFi | `fi`, `ri` | Forward/Reverse IPD (codec V1) |
+| Subreads | `ip` | IPD (raw frames or codec V1) |
 
-For more information about PacBio BAM format specifications, see: https://pacbiofileformats.readthedocs.io/en/11.0/BAM.html
+> ⚠️ **Important:** 
+> - FASTQ files do not contain kinetics information and **cannot be used**
+> - The BAM file stores kinetic information; it does not need to be pre-aligned
+> - See [PacBio BAM format specifications](https://pacbiofileformats.readthedocs.io/en/11.0/BAM.html) for details
 
-### Step 2: Run mGlu for modification detection
-Example command:
+### Basic Usage
+
+Run mGlu with unaligned BAM containing kinetics:
 
 ```bash
-python mGlu/main.py \
-    --work_dir /path-to/output \
+python main.py \
+    --work_dir /path/to/output \
     --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref metagenomic_assembly.fasta \
-    --read_type hifi 
+    --whole_ref assembly.fasta \
+    --read_type hifi
 ```
 
-For more information, run:
+For all options:
 ```bash
-python mGlu/main.py --help
+python main.py --help
 ```
 
---- 
-## 📖 Detailed Usage Guidelines
+---
 
-### Using unaligned BAM files
-If your BAM file contains unaligned reads, mGlu will automatically align them using pbmm2. Just run
+## 📖 Detailed Usage
+
+### Input BAM Options
+
+#### Option 1: Unaligned BAM (recommended)
+
+mGlu will automatically align reads using pbmm2:
 
 ```bash
-python mGlu/main.py \
-    --work_dir /path-to/output \
+python main.py \
+    --work_dir /path/to/output \
     --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref metagenomic_assembly.fasta \
-    --read_type hifi 
+    --whole_ref assembly.fasta \
+    --read_type hifi
 ```
 
-### Using pre-aligned BAM files
-If you have already aligned the reads using pbmm2, use the `--whole_bam` option:
+#### Option 2: Pre-aligned BAM
+
+If already aligned with pbmm2 (with kinetics preserved):
 
 ```bash
-python mGlu/main.py \
-    --work_dir /path-to/output \
-    --whole_bam pbmm2.aligned.sorted.bam \
-    --whole_ref metagenomic_assembly.fasta \
-    --read_type hifi 
+python main.py \
+    --work_dir /path/to/output \
+    --whole_bam aligned.sorted.bam \
+    --whole_ref assembly.fasta \
+    --read_type hifi
 ```
 
-### Using subreads
-For subread data, specify `--read_type subreads`:
+#### Option 3: Subreads
+
+For subread data (requires `mglu_subreads` environment):
 
 ```bash
-python mGlu/main.py \
-    --work_dir /path-to/output \
+python main.py \
+    --work_dir /path/to/output \
     --unaligned_bam raw.subreads.bam \
-    --whole_ref metagenomic_assembly.fasta \
-    --read_type subreads 
+    --whole_ref assembly.fasta \
+    --read_type subreads
 ```
 
-### MGE-host linkage inference
-If you have an MGE table file, provide it using `--mge_file`, and mGlu will automatically infer MGE-host linkages:
+### MGE-Host Linkage Inference
+
+Provide an MGE table to automatically infer MGE-host linkages:
 
 ```bash
-python mGlu/main.py \
-    --work_dir /path-to/output \
+python main.py \
+    --work_dir /path/to/output \
     --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref metagenomic_assembly.fasta \
+    --whole_ref assembly.fasta \
     --read_type hifi \
     --mge_file MGE_list.tab
 ```
 
-The MGE table file can be the output from [geNomad](https://github.com/apcamargo/genomad) or generated manually. It should be a tab-separated file with at least one column with the header `seq_name`. Here is an example:
+**MGE table format:** Tab-separated file with at least a `seq_name` column. Can be output from [geNomad](https://github.com/apcamargo/genomad) or manually created:
 
-```
-seq_name	length	topology	n_genes	genetic_code	plasmid_score	fdr	n_hallmarks	marker_enrichment	conjugation_genes	amr_genes
-ERR6535514_2_L	6291	DTR	8	11	0.9997	0.0003	2	1.8745	NA	NA
+```tsv
+seq_name	length	topology	n_genes	genetic_code	plasmid_score	fdr
+ERR6535514_2_L	6291	DTR	8	11	0.9997	0.0003
 ...
 ```
 
-### Assigning MGEs to host bins
-If you have binning results and want to assign MGEs to host bins, provide the bin file using `--bin_file`:
+### Incorporating Binning Results
+
+Assign MGEs to host bins using binning results:
 
 ```bash
-python mGlu/main.py \
-    --work_dir /path-to/output \
+python main.py \
+    --work_dir /path/to/output \
     --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref metagenomic_assembly.fasta \
+    --whole_ref assembly.fasta \
     --read_type hifi \
     --mge_file MGE_list.tab \
-    --bin_file my_bin.tab
+    --bin_file binning.tab
 ```
 
-The `bin_file` should be a tab-separated file with two columns (no header required): contig name and bin name. Example:
+**Bin file format:** Tab-separated, two columns (no header): contig name and bin name
 
-```
-RuReacBro_20230708_10_0h_50ppm_r1_scaffold_53   RuReacBro_20230708_10_0h_50ppm_r1_maxbin.017_rmcirc
-RuReacBro_20230708_10_0h_50ppm_r1_scaffold_66   RuReacBro_20230708_10_0h_50ppm_r1_maxbin.017_rmcirc
-RuReacBro_20230708_10_0h_50ppm_r1_scaffold_73   RuReacBro_20230708_10_0h_50ppm_r1_maxbin.017_rmcirc
-RuReacBro_20230708_10_0h_50ppm_r1_scaffold_77   RuReacBro_20230708_10_0h_50ppm_r1_maxbin.017_rmcirc
-RuReacBro_20230708_10_0h_50ppm_r1_scaffold_84   RuReacBro_20230708_10_0h_50ppm_r1_maxbin.017_rmcirc
+```tsv
+scaffold_53	maxbin.017
+scaffold_66	maxbin.017
+scaffold_73	maxbin.017
 ...
 ```
 
-### Using control databases
-For isolate genomes or low-complexity metagenomes, use our pre-built control database:
+### Using Control Databases
+
+For isolate genomes or low-complexity metagenomes, use a control database for better normalization.
+
+#### Pre-built database:
 
 ```bash
-python mGlu/main.py \
-    --work_dir /path-to/output \
+python main.py \
+    --work_dir /path/to/output \
     --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref metagenomic_assembly.fasta \
+    --whole_ref assembly.fasta \
     --read_type hifi \
-    --kmer_mean_db mGlu/control/control_db.up7.down3.mean.dat \
-    --kmer_num_db mGlu/control/control_db.up7.down3.num.dat
+    --kmer_mean_db control/control_db.up7.down3.mean.dat \
+    --kmer_num_db control/control_db.up7.down3.num.dat
 ```
 
-Alternatively, you can use the control database generated from your own high-complexity metagenomes. These files will be stored at:
+#### Custom database:
+
+Use control database from your own high-complexity metagenome runs (automatically generated in `<work_dir>/control/`):
 
 ```
-high_complexity_mGlu_output/control/control_db.up7.down3.mean.dat 
-high_complexity_mGlu_output/control/control_db.up7.down3.num.dat 
+control/control_db.up7.down3.mean.dat
+control/control_db.up7.down3.num.dat
 ```
 
 
 ---
 
-## 🔬 Standard Metagenomics Analysis Workflow
+---
 
-This example demonstrates a complete workflow from MGE prediction to host linkage inference.
+## 🔬 Complete Metagenomics Workflow
 
-**Prerequisites:** Raw PacBio BAM file and metagenomic assembly.
+End-to-end example from MGE prediction to host linkage inference.
 
-### Step 1: Predict MGEs using geNomad
+**Prerequisites:** 
+- Raw PacBio BAM with kinetics
+- Metagenomic assembly (FASTA)
+
+### Step 1: Predict MGEs with geNomad
 
 ```bash
-genomad end-to-end --relaxed --cleanup --enable-score-calibration \
-    --threads <threads> --sensitivity 7.0 --force-auto \
-    <assembly.fasta> \
-    <output_dir>/Genomad/ \
-    <genomad_database_path>
+genomad end-to-end \
+    --relaxed \
+    --cleanup \
+    --enable-score-calibration \
+    --threads 32 \
+    --sensitivity 7.0 \
+    --force-auto \
+    assembly.fasta \
+    output/genomad/ \
+    /path/to/genomad_db
 ```
 
-### Step 2: Merge geNomad virus and plasmid results
+### Step 2: Combine virus and plasmid predictions
 
 ```bash
-cat <output_dir>/Genomad/sample_summary/sample_virus_summary.tsv \
-    <output_dir>/Genomad/sample_summary/sample_plasmid_summary.tsv \
+cat output/genomad/assembly_summary/assembly_virus_summary.tsv \
+    output/genomad/assembly_summary/assembly_plasmid_summary.tsv \
     > all_MGEs.tsv
 ```
 
-### Step 3: Run mGlu for modification detection and MGE-host linkage inference
+### Step 3: Run mGlu
 
 ```bash
-python mGlu/main.py \
-    --work_dir /path-to/output \
+python main.py \
+    --work_dir output/mglu \
     --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref metagenomic_assembly.fasta \
+    --whole_ref assembly.fasta \
     --read_type hifi \
-    --mge_file all_MGEs.tsv
+    --mge_file all_MGEs.tsv \
+    --threads 32
 ```
-Pro-viruses are ignored in the analysis.
+
+> **Note:** Proviruses are automatically excluded from analysis.
 
 ---
 
@@ -286,105 +321,146 @@ options:
 
 ---
 
-## 📁 Output Overview
+## � Output Files
 
-| File / Folder | Description |
-|----------------|--------------|
-| `motif_profile.csv` | Methylation fraction of each motif per contig. |
-| `motif_heatmap.pdf` | Heatmap visualization of motif profiles (may be empty for large datasets). |
-| `host_summary.csv` | Inferred best host for each MGE. |
-| `gffs/*.reprocess.gff` | Base-level methylation annotations for each genome. |
-| `motifs/*.motifs.csv` | List of detected motifs and metrics for each genome. |
-| `profiles/*.motifs.profile.csv` | Strand-specific methylation ratios for each genome. |
-| `hosts/*.host_prediction.csv` | Linkage scores for all candidate hosts of each MGE. |
-| `hosts/*.motif_data.csv` | Detailed motif data for linkage score calculation of each MGE. |
-| `mean_depth.csv` | Sequencing depth and length for each contig. |
-| `summary.csv` | Summary statistics of modification detection across all genomes. |
-| `RM_systems/*` | RM (Restriction-Modification) gene annotation results. |
-| `figs/*.png` | Quality-control and IPD distribution plots (generated with `--visu_ipd`). |
-| `ipd_ratio/*.pdf` | Line plots of IPD ratio at each motif site along the genome (generated with `--detect_misassembly`). |
+### Main Output Files
+
+| File | Description |
+|------|-------------|
+| `motif_profile.csv` | Methylation fraction matrix: motifs × contigs |
+| `host_summary.csv` | Best predicted host for each MGE |
+| `mean_depth.csv` | Sequencing depth and length per contig |
+| `summary.csv` | Overall modification detection statistics |
+| `motif_heatmap.pdf` | Heatmap of motif profiles (empty for large datasets) |
+
+### Per-Genome Results
+
+| Folder | Contents |
+|--------|----------|
+| `gffs/` | `*.reprocess.gff` – Base-level methylation annotations |
+| `motifs/` | `*.motifs.csv` – Detected motifs and metrics |
+| `profiles/` | `*.motifs.profile.csv` – Strand-specific methylation ratios |
+| `hosts/` | `*.host_prediction.csv`  – Linkage scores for all candidate hosts |
+| `hosts/` | `*.motif_data.csv` – Detailed motif data for scoring |
+
+### Optional Output
+
+| Folder | Contents | Enabled by |
+|--------|----------|------------|
+| `RM_systems/` | RM gene annotations | `--annotate_rm` |
+| `figs/` | IPD distribution plots | `--visu_ipd` |
+| `ipd_ratio/` | IPD ratio line plots | `--detect_misassembly` |
 
 ---
 
-### 📊 Motif File Format (`motifs/*.motifs.csv`)
+### Output Format: Motif File
+
+**File:** `motifs/*.motifs.csv`
 
 | Column | Description |
 |--------|-------------|
-| `motifString` | DNA sequence motif pattern (e.g., TCGAG) |
-| `centerPos` | Position of the modified base within the motif (1-indexed) |
-| `modificationType` | Type of modification detected (e.g., modified_base) |
-| `fraction` | Fraction of motif sites that are modified (0-1) |
-| `nDetected` | Number of modified sites detected for this motif |
-| `nGenome` | Total number of motif sites present in the genome |
-| `groupTag` | Motif group identifier for clustering related motifs |
-| `partnerMotifString` | Complementary or related motif on opposite strand (if applicable) |
-| `meanScore` | Mean modification score across all detected sites |
-| `meanIpdRatio` | Mean IPD ratio across all detected sites |
-| `meanCoverage` | Mean sequencing coverage across all motif sites |
-| `objectiveScore` | Overall confidence score for motif detection |
+| `motifString` | DNA motif sequence (e.g., GATC, TCGAG) |
+| `centerPos` | Modified base position within motif (1-indexed) |
+| `modificationType` | Modification type (e.g., modified_base) |
+| `fraction` | Fraction of modified sites (0–1) |
+| `nDetected` | Number of modified sites detected |
+| `nGenome` | Total motif sites in genome |
+| `groupTag` | Motif group ID for clustering |
+| `partnerMotifString` | Complementary motif (if paired) |
+| `meanScore` | Mean modification score |
+| `meanIpdRatio` | Mean IPD ratio |
+| `meanCoverage` | Mean coverage at motif sites |
+| `objectiveScore` | Overall detection confidence score |
 
 
-### 📊 MGE-Host Linkage Output Format
+### Output Format: MGE-Host Linkage
 
-The MGE-host linkage prediction results contain the following columns:
+**File:** `host_summary.csv`
 
 | Column | Description |
 |--------|-------------|
-| `MGE` | Mobile genetic element (MGE) contig name |
-| `MGE_len` | Length of the MGE contig |
-| `host` | Predicted host contig (bin) name |
-| `final_score` | Overall linkage confidence score (0-1, higher = more confident) |
-| `specificity` | Specificity for MGE-host association |
-| `pvalue` | Statistical significance p-value for the linkage |
-| `self_pvalue` | Self-comparison p-value (control) |
-| `MGE_gc` | GC content of the MGE contig |
-| `host_gc` | GC content of the host contig |
-| `cos_sim` | Cosine similarity between MGE and host 4-mer frequency |
-| `MGE_cov` | Sequencing coverage depth of the MGE |
-| `host_cov` | Sequencing coverage depth of the host |
-| `host_motif_num` | Number of modification motifs detected in the host |
-| `confidence` | Overall confidence score for the prediction |
-| `motif_confidence` | Confidence score specific to motif-based evidence |
-| `total_sites` | Total number of modified sites used in the analysis |
-| `motif_info` | Detailed motif information (format: motif:length:sites:coverage:score:position) |
+| `MGE` | MGE contig name |
+| `MGE_len` | MGE length (bp) |
+| `host` | Predicted host contig/bin |
+| `final_score` | Linkage confidence (0–1, higher is better) |
+| `specificity` | Association specificity |
+| `pvalue` | Statistical significance |
+| `self_pvalue` | Self-comparison control p-value |
+| `MGE_gc` | MGE GC content (%) |
+| `host_gc` | Host GC content (%) |
+| `cos_sim` | 4-mer frequency cosine similarity |
+| `MGE_cov` | MGE sequencing depth |
+| `host_cov` | Host sequencing depth |
+| `host_motif_num` | Number of motifs in host |
+| `confidence` | Overall prediction confidence |
+| `motif_confidence` | Motif-based confidence |
+| `total_sites` | Total modified sites analyzed |
+| `motif_info` | Detailed motif data (format: motif:length:sites:cov:score:pos) |
 
-> **Recommended filtering criteria:** For confident MGE-host linkages, use `final_score > 0.5` and `specificity < 0.01`.
+> **Filtering recommendations:** 
+> - High confidence: `final_score > 0.5` AND `specificity < 0.01`
+> - Medium confidence: `final_score > 0.3` AND `specificity < 0.05`
 
-### 📊 DNA Modification GFF Annotation
+### Output Format: GFF Annotation
 
-| Column | Description |
-|---------|-------------|
+**Files:** `gffs/*.reprocess.gff`
+
+Standard GFF3 format with 9 columns:
+
+| Column | Content |
+|--------|----------|
 | 1 | Contig name |
-| 2 | Method |
-| 3 | Modification type (placeholder, not used) |
-| 4–5 | Position (start–end) |
-| 6 | Score |
-| 7 | Strand |
-| 8 | Frame (not used) |
-| 9 | Additional annotation (coverage, local context, IPD ratio) |
+| 2 | Method (mGlu) |
+| 3 | Feature type (modified_base) |
+| 4–5 | Position (start–end, 1-indexed) |
+| 6 | Modification score |
+| 7 | Strand (+/-) |
+| 8 | Phase (not used) |
+| 9 | Attributes (coverage, context, IPD ratio) |
 
-### 📈 Illustration of IPD normalization (`figs/*.png`)
+### Quality Control Plots
 
-| Subplot | Description |
-|----------|-------------|
+**Files:** `figs/*.png` (generated with `--visu_ipd`)
+
+2×2 subplot grid showing IPD normalization:
+
+| Position | Content |
+|----------|----------|
 | (0,0) | Alignment coverage distribution |
 | (0,1) | Raw IPD value distribution |
 | (1,0) | Control IPD distribution |
-| (1,1) | IPD ratio distribution |
+| (1,1) | Normalized IPD ratio distribution |
 
 ---
 
-## 🧠 Control IPD (k-mer) Database
+## 🧠 Control Database
 
-For isolated genomes or low-complexity metagenomes, an independent control dataset is recommended.  
-The control IPD values are stored in:
+For **isolate genomes** or **low-complexity metagenomes**, using a control database improves IPD normalization and modification calling accuracy.
+
+### Pre-built Database
+
+mGlu includes a pre-built control database:
 
 ```
 control/control_db.up7.down3.mean.dat
 control/control_db.up7.down3.num.dat
 ```
 
-> **Note:** The k-mer window size (e.g., up7/down3) must match between your sample and the control database.
+Use with `--kmer_mean_db` and `--kmer_num_db` flags (see [Using Control Databases](#using-control-databases)).
+
+### Custom Database
+
+For better results, generate a control database from your own **high-complexity metagenomes**:
+
+1. Run mGlu on high-complexity metagenomic samples
+2. Control files are automatically generated in `<work_dir>/control/`
+3. Reuse these files for isolate/low-complexity samples
+
+### Important Notes
+
+- The k-mer window size (e.g., `up7.down3`) **must match** between sample and control
+- Control database accumulates more accurate statistics with larger/more diverse datasets
+- Recommended for: isolates, enriched cultures, low-diversity communities
 
 
 
@@ -393,15 +469,28 @@ control/control_db.up7.down3.num.dat
 
 ## ⚠️ Important Notes
 
-- Coverage > **500×** is automatically subsampled for computational efficiency.  
-- If you encounter:
-  ```text
-  OverflowError: Python integer 3367457666 out of bounds for int32
-  ```
-  reinstall pbcore via:
-  ```bash
-  pip install --force-reinstall git+https://github.com/PacificBiosciences/pbcore.git
-  ```
+### Performance
+- Coverage **>500×** is automatically subsampled for computational efficiency
+- For large metagenomes, use `--threads` to parallelize processing
+- `--segment` flag increases recall for low-depth contigs but requires more time
+
+### Troubleshooting
+
+**OverflowError with pbcore:**
+```text
+OverflowError: Python integer 3367457666 out of bounds for int32
+```
+
+**Solution:** Reinstall pbcore
+```bash
+pip install --force-reinstall git+https://github.com/PacificBiosciences/pbcore.git
+```
+
+### Best Practices
+- Use **HiFi reads** instead of subreads when possible (better accuracy, faster)
+- Provide binning results (`--bin_file`) for more accurate MGE-host assignments
+- Use control database for isolate genomes and low-complexity samples
+- Filter MGE-host linkages: `final_score > 0.5` and `specificity < 0.01`
 
 ---
 
