@@ -28,16 +28,27 @@ bash install.sh
 cd ../
 ```
 
-### 3️⃣ Configure SMRT Link tools
+### 3️⃣ Configure SMRT Link tools ⚠️ **OPTIONAL - Can be skipped**
 
-mGlu requires three tools from SMRT Link: `pbmotifmaker`, `pbmm2`, and `pbindex`. 
+> 💡 **You can skip this step!** mGlu will automatically use tools from conda or fallback to built-in alternatives.
 
-- If these tools are already in your system PATH, mGlu will automatically detect them.
-- Otherwise, set the SMRT Link path in `config.yaml`:
+mGlu requires three PacBio SMRT Link tools: `pbmotifmaker`, `pbmm2`, and `pbindex`.
+
+**Configuration priority (in order):**
+
+1. **Config file first** – If `config.yaml` exists, mGlu will use the path specified there
+2. **System PATH fallback** – If config.yaml is not found or incomplete, mGlu checks system PATH and conda
+3. **MultiMotifMaker.jar** – Used as fallback for motif calling if `pbmotifmaker` is unavailable
+
+**To configure via config.yaml (only if needed):**
+
+Create or edit `config.yaml` in the mGlu directory:
 
 ```yaml
-smrtlink_bin: /path/to/your/smrtlink/
+smrtlink_bin: /path/to/smrtlink/private/bin/
 ```
+
+> **Note:** If you have SMRT Link tools in your PATH (e.g., via conda), no configuration is needed. mGlu will detect and use them automatically.
 
 ### 4️⃣ Verify installation
 
