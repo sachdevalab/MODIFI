@@ -19,56 +19,69 @@ def find_tool(name, alt_names=None):
     return None
 
 def load_binaries():
-    # 1️⃣ Try system PATH first
-    motif_maker_bin = find_tool("pbmotifmaker", alt_names=["motifmaker"])
-    pbmm2_bin = find_tool("pbmm2")
-    pbindex_bin = find_tool("pbindex")
-
-    if all([motif_maker_bin, pbmm2_bin, pbindex_bin]):
-        print("✅ Using binaries found in system PATH.")
-        return motif_maker_bin, pbmm2_bin, pbindex_bin
-
-    # 2️⃣ If not all found, look for config.yaml
+    motif_maker_bin = None
+    pbmm2_bin = None
+    pbindex_bin = None
+    
+    # 1️⃣ Try config.yaml first
     config_file = Path(sys.path[0]) / "config.yaml"
     if config_file.exists():
         with open(config_file, "r") as cf:
             config = yaml.safe_load(cf)
         smrt_bin = Path(config.get("smrtlink_bin", ""))
-        if not smrt_bin.exists():
-            print ("No SMRT Link path defined, use multimotifmaker instead")
-            motif_maker_bin = os.join(sys.path[0], "dependency", "MultiMotifMaker.jar")
+        
+        if smrt_bin.exists():
+            # Try to find tools in SMRT Link directory
+            motif_maker_candidate = smrt_bin / "pbmotifmaker"
+            if not motif_maker_candidate.exists():
+                motif_maker_candidate = smrt_bin / "motifmaker"  # fallback name
+            if motif_maker_candidate.exists():
+                motif_maker_bin = str(motif_maker_candidate)
+            
+            pbmm2_candidate = smrt_bin / "pbmm2"
+            if pbmm2_candidate.exists():
+                pbmm2_bin = str(pbmm2_candidate)
+            
+            pbindex_candidate = smrt_bin / "pbindex"
+            if pbindex_candidate.exists():
+                pbindex_bin = str(pbindex_candidate)
+            
+            if all([motif_maker_bin, pbmm2_bin, pbindex_bin]):
+                print(f"✅ Using binaries from config file: {config_file}")
+                print(f"  pbmotifmaker: {motif_maker_bin}")
+                print(f"  pbmm2: {pbmm2_bin}")
+                print(f"  pbindex: {pbindex_bin}")
+                return motif_maker_bin, pbmm2_bin, pbindex_bin
         else:
-            if not motif_maker_bin:
-                motif_maker_bin = motif_maker_bin or str(smrt_bin / "pbmotifmaker")
-                if not Path(motif_maker_bin).exists():
-                    motif_maker_bin = str(smrt_bin / "motifmaker")  # fallback name
-                if not Path(motif_maker_bin).exists():
-                    print ("No motif maker binary found in SMRT Link path, use multimotifmaker instead")
-                    motif_maker_bin = os.join(sys.path[0], "dependency", "MultiMotifMaker.jar")
-            if not pbmm2_bin:
-                pbmm2_bin = pbmm2_bin or str(smrt_bin / "pbmm2")
-            if not pbindex_bin:
-                pbindex_bin = pbindex_bin or str(smrt_bin / "pbindex")
-                
-            print(f"✅ Loaded binaries from {config_file}")
+            print(f"⚠️  SMRT Link path in config.yaml does not exist: {smrt_bin}")
+    
+    # 2️⃣ Fall back to system PATH
+    print("🔍 Config file not found or incomplete, checking system PATH...")
+    if not motif_maker_bin:
+        motif_maker_bin = find_tool("pbmotifmaker", alt_names=["motifmaker"])
+    if not pbmm2_bin:
+        pbmm2_bin = find_tool("pbmm2")
+    if not pbindex_bin:
+        pbindex_bin = find_tool("pbindex")
+
+    # 3️⃣ If still not all found, use MultiMotifMaker as fallback for motif maker
+    if not motif_maker_bin:
+        print("⚠️  pbmotifmaker not found, using MultiMotifMaker.jar instead")
+        motif_maker_bin = os.path.join(sys.path[0], "dependency", "MultiMotifMaker.jar")
+
+    if all([motif_maker_bin, pbmm2_bin, pbindex_bin]):
+        print("✅ Using binaries found in system PATH.")
+        print(f"  pbmotifmaker: {motif_maker_bin}")
+        print(f"  pbmm2: {pbmm2_bin}")
+        print(f"  pbindex: {pbindex_bin}")
+        return motif_maker_bin, pbmm2_bin, pbindex_bin
     else:
-        raise FileNotFoundError(
-            "SMRT Link tools not found in PATH and no config.yaml detected. "
-            "Please set PATH or create a config.yaml file with:\n"
-            "smrtlink_bin: /path/to/smrtlink/private/bin"
-        )
+        print("❌ Required tools not found. Please ensure motifmaker, pbmm2 and pbindex are installed and in your PATH.")
 
-    # 3️⃣ Validate existence
-    for tool in [motif_maker_bin, pbmm2_bin, pbindex_bin]:
-        if not Path(tool).exists():
-            raise FileNotFoundError(f"❌ Required tool not found: {tool}")
-
-    print(
-        f"Loaded binaries:\n"
-        f"  pbmotifmaker: {motif_maker_bin}\n"
-        f"  pbmm2: {pbmm2_bin}\n"
-        f"  pbindex: {pbindex_bin}"
-    )
+    # 4️⃣ Validate existence of final paths
+    for tool_name, tool_path in [("pbmotifmaker", motif_maker_bin), ("pbmm2", pbmm2_bin), ("pbindex", pbindex_bin)]:
+        if not Path(tool_path).exists():
+            raise FileNotFoundError(f"❌ Required tool not found: {tool_name} at {tool_path}")
 
     return motif_maker_bin, pbmm2_bin, pbindex_bin
 
