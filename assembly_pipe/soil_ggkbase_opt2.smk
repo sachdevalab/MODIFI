@@ -26,6 +26,7 @@ rule call_methy:
             --min_frac 0.3 \
             --min_score 30 \
             --min_sites 100 \
+            --run_steps anno \
           --threads {threads} 
         touch {output.methy_finish}
         """

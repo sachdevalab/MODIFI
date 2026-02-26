@@ -257,7 +257,7 @@ def profile_heatmap_fast(prefix_list, motif_list, all_dir, tmp_res_file, cluster
             modified_loci = get_modified_ratio(ctg_obj.gff, score_cutoff)
             for motif_new, exact_pos in motif_list:
                 motif_profile, record_modified_sites = get_motif_sites(REF, motif_new, exact_pos, modified_loci, max_len = max_len)
-                rows.append([contig, motif_new + "_" + str(exact_pos), motif_profile[-2]])
+                rows.append([contig, motif_new + "_" + str(exact_pos), motif_profile[-2], motif_profile[-4], motif_profile[-3]])
             print (f"Completed {prefix}/{contig}")
         except Exception as e:
             sys.stderr.write(f"Error processing {prefix}/{contig}: {e}\n")
@@ -282,7 +282,7 @@ def profile_heatmap_fast(prefix_list, motif_list, all_dir, tmp_res_file, cluster
                 print(f"Processed {processed}/{total} contigs")
                 sys.stdout.flush()
 
-    df = pd.DataFrame(data, columns=["contig", "motifString", "fraction"]) if data else pd.DataFrame(columns=["contig", "motifString", "fraction"])
+    df = pd.DataFrame(data, columns=["contig", "motifString", "fraction", "motif_loci_num", "motif_modified_num"]) if data else pd.DataFrame(columns=["contig", "motifString", "fraction", "motif_loci_num", "motif_modified_num"])
     cluster_obj.get_profile(df, tmp_res_file)
 
     return cluster_obj
@@ -458,7 +458,7 @@ def given_species_drep(all_dir, members, seq_dir, cluster, fig_dir,
 
 def given_species_drep_fast(all_dir, members, seq_dir, cluster, fig_dir, 
                        tmp_res, data_type="meta", min_frac=0.3, min_sites=100, score_cutoff = 30, max_len=1000000000):
-    
+    contig_derived_motif_dict = {}
     all_motif_set = set()
     all_contig_list = []
     tmp_res_file = f"{tmp_res}/{cluster}.csv"
@@ -484,6 +484,7 @@ def given_species_drep_fast(all_dir, members, seq_dir, cluster, fig_dir,
 
         all_motif_set.update(motif_set)
         all_contig_list.extend(contig_list)
+        contig_derived_motif_dict[contig] = motif_set
     print (f"Total contigs for cluster {cluster}: {len(all_contig_list)}")
     print (f"Total motifs for cluster {cluster}: {len(all_motif_set)}")
     motif_list = []
@@ -492,7 +493,7 @@ def given_species_drep_fast(all_dir, members, seq_dir, cluster, fig_dir,
         motif_list.append([motif_name, int(motif_pos)])
     cluster_obj = profile_heatmap_fast(all_contig_list, motif_list, all_dir, tmp_res_file, cluster_obj,data_type, score_cutoff, max_len=max_len)
     
-    return cluster_obj
+    return cluster_obj, contig_derived_motif_dict
 
 
 def depth_filter(all_dir, min_depth = 10):

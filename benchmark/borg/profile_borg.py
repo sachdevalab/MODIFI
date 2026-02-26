@@ -281,7 +281,7 @@ def extract_sample_name(contig_name):
     else:
         return contig_name
 
-def umap_plot(profile_df, plot_name):
+def umap_plot(profile_df, plot_name, contig_derived_motif_dict):
 
     ## Randomly retain 5 Non-Mp contigs
     non_mp_df = profile_df[profile_df['Genome'] == 'Non-Mp']
@@ -309,15 +309,43 @@ def umap_plot(profile_df, plot_name):
 
     # Calculate Pearson correlation matrix
     similarity_matrix = pivot_df.T.corr(method='spearman').values
-    pivot_binary = (pivot_df >= 0.2).astype(int)
+    pivot_binary = (pivot_df >= 0.4).astype(int)
     ## remove the contigs without motifs (all zeros in binary matrix)
     contigs_with_motifs = pivot_binary.index[pivot_binary.sum(axis=1) > 0]
     pivot_binary = pivot_binary.loc[contigs_with_motifs]
     pivot_df = pivot_df.loc[contigs_with_motifs]
 
     ## add jaccrad similarity matrix
-    jaccard_similarity = 1 - pairwise_distances(pivot_binary.values, metric='jaccard')
-
+    # jaccard_similarity = 1 - pairwise_distances(pivot_binary.values, metric='jaccard')
+    ## manually calculate jaccard similarity matrix, when compute the jaccard similarity between two contigs, only consider the motifs derived from the contigs
+    jaccard_similarity = np.zeros((len(pivot_binary), len(pivot_binary)))
+    ## dict to record shared motifs between contig pairs
+    shared_motifs_dict = {}
+    for i, contig1 in enumerate(pivot_binary.index):
+        for j, contig2 in enumerate(pivot_binary.index):
+            if i < j:
+                motifs1 = contig_derived_motif_dict.get(contig1, set())
+                motifs2 = contig_derived_motif_dict.get(contig2, set())
+                all_motifs = motifs1.union(motifs2)
+                ## use pivot_df to calculate jaccard similarity, while only retaining motifs in all_motifs
+                idx = [pivot_df.columns.get_loc(m) for m in all_motifs if m in pivot_df.columns]
+                if idx:
+                    vec1 = pivot_binary.iloc[i, idx].values
+                    vec2 = pivot_binary.iloc[j, idx].values
+                    # Check if both vectors are all zeros (no motifs present)
+                    if vec1.sum() == 0 and vec2.sum() == 0:
+                        jaccard_similarity[i, j] = 0.0
+                    else:
+                        # Calculate Jaccard similarity
+                        intersection = np.sum((vec1 == 1) & (vec2 == 1))
+                        union = np.sum((vec1 == 1) | (vec2 == 1))
+                        jaccard_similarity[i, j] = intersection / union if union > 0 else 0.0
+                    jaccard_similarity[j, i] = jaccard_similarity[i, j]
+                    # Get shared motifs from the subset we're considering
+                    shared_motifs = [pivot_binary.columns[idx[k]] for k in range(len(vec1)) if vec1[k] == 1 and vec2[k] == 1]
+                    shared_motifs_dict[(contig1, contig2)] = shared_motifs
+                    shared_motifs_dict[(contig2, contig1)] = shared_motifs
+                    
     # Get genome type for each contig
     if 'Genome' in profile_df.columns:
         genome_per_contig = profile_df.groupby('contig')['Genome'].first()
@@ -337,9 +365,13 @@ def umap_plot(profile_df, plot_name):
             if i < j:
                 # similarity = similarity_matrix[i, j]
                 similarity = jaccard_similarity[i, j]
+                shared_motifs = shared_motifs_dict.get((contig1, contig2), [])
+                if len(shared_motifs) > 0:
+                    edge_data.append((contig1, contig_genome_map.get(contig1, 'NA'), contig2, contig_genome_map.get(contig2, 'NA'), similarity, len(shared_motifs)))
+                    G.add_edge(contig1, contig2, weight=len(shared_motifs))
                 if similarity > 0.4:
-                    G.add_edge(contig1, contig2, weight=similarity)
-                    edge_data.append((contig1, contig_genome_map.get(contig1, 'NA'), contig2, contig_genome_map.get(contig2, 'NA'), similarity))
+                    
+                    
                     ## if the edge is between none-Mp contig and others, print it out
                     if (contig_genome_map.get(contig1, 'NA') == 'Non-Mp' or 
                         contig_genome_map.get(contig2, 'NA') == 'Non-Mp'):
@@ -347,12 +379,12 @@ def umap_plot(profile_df, plot_name):
                                 contig_genome_map.get(contig2, 'NA') == 'Non-Mp'):
                             print(f"Edge between Non-Mp contig {contig1} and {contig2} with similarity {similarity:.2f}")
                             ## print their shared motifs
-                            shared_motifs = pivot_binary.columns[(pivot_binary.loc[contig1] == 1) & (pivot_binary.loc[contig2] == 1)].tolist()
+                            
                             print(f"Shared motifs: {shared_motifs}")
     
     print(f"Network has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges")
     ## edge data to dataframe, and save to csv
-    edge_df = pd.DataFrame(edge_data, columns=['Contig1', 'Genome1', 'Contig2', 'Genome2', 'Similarity'])
+    edge_df = pd.DataFrame(edge_data, columns=['Contig1', 'Genome1', 'Contig2', 'Genome2', 'Similarity', 'Shared_Motifs'])
     edge_df.to_csv(plot_name.replace('.pdf', '_network_edges.csv'), index=False)
     print(f"Saved edge data to: {plot_name.replace('.pdf', '_network_edges.csv')}")
     # Get unique genome types and create color palette
@@ -434,7 +466,7 @@ def get_mini_chr_list():
 if __name__ == "__main__":
     
     all_dir = "/home/shuaiw/borg/paper/gg_run3/"
-    seq_dir = "/home/shuaiw/borg/paper/borg_data/profile4/"
+    seq_dir = "/home/shuaiw/borg/paper/borg_data/profile5/"
     cluster = "profile"
 
     cluster_species = "borg"
@@ -514,7 +546,7 @@ if __name__ == "__main__":
     for member in manual_members:
         if member not in members:
             members.append(member)
-            borg_anno_dict[member[0]] = ['HOST', "<Manual host>"]
+            borg_anno_dict[member[0]] = ['HOST', "<Manual added host>"]
             borg_indicator[member[0]] = 'Mp'
 
 
@@ -522,7 +554,7 @@ if __name__ == "__main__":
 
     random.seed(42)
     print (f"Total non-Mp members: {len(non_Mp_members)}")
-    selected_non_Mp = random.sample(non_Mp_members, min(100, len(non_Mp_members)))
+    selected_non_Mp = random.sample(non_Mp_members, min(20, len(non_Mp_members)))
     for member in selected_non_Mp:
         if member not in members:
             members.append(member)
@@ -538,10 +570,9 @@ if __name__ == "__main__":
     for m in members:
         print (m, borg_anno_dict[m[0]], borg_indicator[m[0]])
 
-    cluster_obj = given_species_drep_fast(all_dir, members, seq_dir, cluster,
+    cluster_obj, contig_derived_motif_dict = given_species_drep_fast(all_dir, members, seq_dir, cluster,
                                     seq_dir, seq_dir, min_frac=0.3, 
-                                    min_sites=100, score_cutoff = 30, max_len=1000000)
-    cluster_obj.plot_profile(cluster, plot_name, cluster_species)
+                                    min_sites=100, score_cutoff = 30, max_len=100000)
 
     # cluster_obj = My_cluster(cluster, members) 
     # cluster_obj.load_df(seq_dir)
@@ -553,14 +584,13 @@ if __name__ == "__main__":
     cluster_obj.profile_df['Genome'] = cluster_obj.profile_df['contig'].apply(lambda x: borg_indicator[x] if x in borg_indicator else 'NA')
 
     
-    cluster_obj.profile_df.to_csv(f"{seq_dir}/{cluster}_profile_df.tsv", index=False)
     profile_df = cluster_obj.profile_df
 
     remove_motifs = ['GATCH_4','BATC_2','RGAYCY_3','YGATCB_3','BGATATC_5',"GGHCCD_5","HGGCC_5","YCDVH_2","YCTAARAR_2",\
                      "YGATCBB_3","GGNCCH_5","GGCCH_4","DCCWGG_3","CCCTGH_3","GGNDCC_5","RGATCT_5","RGATCY_5","RGAYCB_3",\
                        "DYCACGRND_3","YCDV_2", "YDCCGGHR_3","VSAB_3","VNNNNNNNNNNNNNGCAYNNNNNNHTNGC_17","HNNNNCAGNNNNNNGTAG_7",\
                         "HNDNNNBGATCHNV_11","GGACCANNNNNNNNNNND_3","DNNNNNNNNNNSAGCTSNNNNNNNNNNHB_15","DNNNDYCTAADR_7","DNNGAGNNNNNNNTTTG_5",\
-                            "DGAGNNNNNGGC_3","DGADNNNNNNTCGC_3","CTAGNNNNNBH_1"]
+                            "DGAGNNNNNGGC_3","DGADNNNNNNTCGC_3","CTAGNNNNNBH_1","GGACCNNNND_4", "BCCAGG_4",""]
     # profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df.tsv")
     profile_df = profile_df[~profile_df['motifString'].isin(remove_motifs)]
     
@@ -589,7 +619,7 @@ if __name__ == "__main__":
     
     profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv")
     profile_df['sample'] = profile_df['contig'].apply(extract_sample_name)
-    umap_plot(profile_df, plot_name)
+    umap_plot(profile_df, plot_name, contig_derived_motif_dict)
     # personal_plot(profile_df)
     # 
     # ## get a df for each sample
