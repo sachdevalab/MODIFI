@@ -2173,8 +2173,7 @@ python /home/shuaiw/mGlu/main.py \
   --threads 10 
 
 
-
-/home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/mGlu/main.py \
           --work_dir /home/shuaiw/borg/paper/gg_run3/soil_1/soil_1_methylation4 \
           --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2024.bam \
           --whole_ref /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
@@ -2187,3 +2186,44 @@ python /home/shuaiw/mGlu/main.py \
             --mge_file soil_115.mge.tsv \
             --run_steps host \
           --threads 64 
+
+sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_opt2.smk --config \
+    hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2023.bam \
+    prefix=soil_90 \
+    work_dir=/home/shuaiw/borg/paper/gg_run3/soil_90 \
+    ref=/home/shuaiw/borg/paper/curated_genome/unique/SR-VP_07_25_2022_A1_90cm_PACBIO-HIFI.contigs.fa -j 64"  --job-name=soil_90
+
+
+sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_opt2.smk --config \
+    hifi_bam=/home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2022.bam \
+    prefix=soil_80 \
+    work_dir=/home/shuaiw/borg/paper/gg_run3/soil_80 \
+    ref=/home/shuaiw/borg/paper/curated_genome/unique/SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI.contigs.fa -j 64"  --job-name=soil_80
+
+python /home/shuaiw/mGlu/main.py \
+          --work_dir /home/shuaiw/borg/paper/borg_data/batch_export2/soil_90 \
+          --unaligned_bam  /home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2023.bam \
+          --whole_ref /home/shuaiw/borg/paper/borg_data/batch_export2/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.fasta \
+          --read_type hifi \
+            --min_len 1000 \
+            --min_cov 3 \
+            --min_frac 0.3 \
+            --min_score 30 \
+            --min_sites 100  \
+            --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
+            --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
+          --threads 10
+
+python /home/shuaiw/mGlu/main.py \
+          --work_dir /home/shuaiw/borg/paper/borg_data/batch_export2/soil_80 \
+          --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2022.bam \
+          --whole_ref /home/shuaiw/borg/paper/borg_data/batch_export2/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.fasta \
+          --read_type hifi \
+            --min_len 1000 \
+            --min_cov 3 \
+            --min_frac 0.3 \
+            --min_score 30 \
+            --min_sites 100  \
+            --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
+            --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
+          --threads 10
