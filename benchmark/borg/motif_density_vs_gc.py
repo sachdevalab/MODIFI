@@ -20,6 +20,47 @@ from scipy.stats import fisher_exact
 from repeat_count import  read_ref
 
 
+def count_motif_composition(motif_seq):
+    """Count GC and AT content in a motif sequence
+    
+    Args:
+        motif_seq: DNA sequence string (only considers A, T, C, G)
+        
+    Returns:
+        dict: Dictionary with counts and percentages
+    """
+    motif_seq = motif_seq.upper()
+    
+    # Count bases (only A, T, C, G)
+    g_count = motif_seq.count('G')
+    c_count = motif_seq.count('C')
+    a_count = motif_seq.count('A')
+    t_count = motif_seq.count('T')
+    
+    gc_count = g_count + c_count
+    at_count = a_count + t_count
+    
+    # Total length based only on A, T, C, G
+    length = gc_count + at_count
+    
+    # Calculate percentages
+    gc_percent = (gc_count / length * 100) if length > 0 else 0
+    at_percent = (at_count / length * 100) if length > 0 else 0
+    
+    return {
+        'motif': motif_seq,
+        'length': length,
+        'G': g_count,
+        'C': c_count,
+        'A': a_count,
+        'T': t_count,
+        'GC_count': gc_count,
+        'AT_count': at_count,
+        'GC_percent': gc_percent,
+        'AT_percent': at_percent
+    }
+
+
 
 def analyze_motif_gc_relationship(REF, host_motifs_file, window_size=5000, output_dir="../../tmp/figures/borg_fig"):
     ## please count the host-targeted methylation site density vs. GC content. 
@@ -49,6 +90,17 @@ def analyze_motif_gc_relationship(REF, host_motifs_file, window_size=5000, outpu
     print(f"MOTIF DENSITY vs GC CONTENT ANALYSIS")
     print(f"{'='*60}")
     print(f"Analyzing {len(host_motifs)} host motifs with window size {window_size} bp\n")
+    
+    # Display motif composition
+    print("Host Motif Composition:")
+    print(f"{'Motif':<20} {'Length':<8} {'GC%':<8} {'AT%':<8} {'G':<4} {'C':<4} {'A':<4} {'T':<4}")
+    print("-" * 70)
+    for motif_info in host_motifs:
+        comp = count_motif_composition(motif_info['motif'])
+        print(f"{comp['motif']:<20} {comp['length']:<8} {comp['GC_percent']:<8.1f} "
+              f"{comp['AT_percent']:<8.1f} {comp['G']:<4} {comp['C']:<4} "
+              f"{comp['A']:<4} {comp['T']:<4}")
+    print()
     
     # Create subplots
     n_motifs = len(host_motifs)
