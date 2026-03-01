@@ -139,7 +139,7 @@ def read_orf_gff(gff_file):
             
             feature_type = fields[2]
             # Only process ORF features
-            if feature_type == 'ORF':
+            if feature_type == 'ORF' or feature_type == 'CDS':
                 seq_id = fields[0]
                 start = int(fields[3])  # GFF format: 1-based start
                 end = int(fields[4])    # GFF format: inclusive end
@@ -479,7 +479,7 @@ def compare_TR(REF, orf_regions, repeat_regions):
     
     return repeat_in_orf, repeat_in_non_orf, orf_bases, non_orf_bases, oddsratio, pvalue
 
-def compare_motif_in_TR(REF, record_motif_sites, orf_regions, repeat_regions):
+def compare_motif_in_TR(REF, record_motif_sites, orf_regions, repeat_regions, Modflag = "no"):
     """Compare motif occurrence in TRs within ORF regions vs TRs in intergenic regions"""
     
     # Count motifs in TRs that are in ORF regions vs intergenic regions
@@ -493,7 +493,7 @@ def compare_motif_in_TR(REF, record_motif_sites, orf_regions, repeat_regions):
     for contig_id, motif_sites in record_motif_sites.items():
         orfs = orf_regions.get(contig_id, [])
         repeats = repeat_regions.get(contig_id, [])
-        
+        # print (Modflag, contig_id)
         # Check all motif positions (both strands)
         all_positions = motif_sites['+'] + motif_sites['-']
         
@@ -579,13 +579,41 @@ def compare_motif_in_TR(REF, record_motif_sites, orf_regions, repeat_regions):
 
 if __name__ == "__main__":
 
-    ORF_anno = "/home/shuaiw/borg/paper/borg_data/batch_export2/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.gff"
-    mod_gff = "/home/shuaiw/borg/paper/borg_data/batch_export2/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR_score30.gff"
-    borg_ref = "/home/shuaiw/borg/paper/borg_data/batch_export2/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.fasta"
-    repeat_bed = "/home/shuaiw/borg/paper/borg_data/batch_export2/repeat.bed"
+    # ORF_anno = "/home/shuaiw/borg/paper/borg_data/batch_export2/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.gff"
+    # mod_gff = "/home/shuaiw/borg/paper/borg_data/batch_export2/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR_score30.gff"
+    # borg_ref = "/home/shuaiw/borg/paper/borg_data/batch_export2/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.fasta"
+    # repeat_bed = "/home/shuaiw/borg/paper/borg_data/batch_export2/repeat.bed"
+
+    folder = "/home/shuaiw/borg/paper/borg_data/batch_export2/black_borgs/"
+
+    # ORF_anno = f"{folder}/SR-VP_07_25_2022_A1_115cm_PACBIO-HIFI_Black_Borg_32_04.prodigal.gff"
+    # mod_gff = f"/home/shuaiw/borg/paper/borg_data/batch_export2/new_run/soil_115/gffs/SR-VP_07_25_2022_A1_115cm_PACBIO-HIFI_Black_Borg_32_04.all.reprocess.gff"
+    # borg_ref = f"{folder}/SR-VP_07_25_2022_A1_115cm_PACBIO-HIFI_Black_Borg_32_04.contigs.fa"
+    # repeat_bed = f"{folder}/SR-VP_07_25_2022_A1_115cm_PACBIO-HIFI_Black_Borg_32_04.repeat.bed"
+
+    # ORF_anno = f"{folder}/SR-VP_07_25_2022_A1_90cm_PACBIO-HIFI_METAMDBG_641677_L.prodigal.gff"
+    # mod_gff = f"/home/shuaiw/borg/paper/borg_data/batch_export2/new_run/soil_90/gffs/SR-VP_07_25_2022_A1_90cm_PACBIO-HIFI_METAMDBG_641677_L.gff"
+    # borg_ref = f"{folder}/SR-VP_07_25_2022_A1_90cm_PACBIO-HIFI_METAMDBG_641677_L.fa"
+    # repeat_bed = f"{folder}/SR-VP_07_25_2022_A1_90cm_PACBIO-HIFI_METAMDBG_641677_L.repeat.bed"
+
+    # ORF_anno = f"{folder}/SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_almost_complete_Black_borg_32_00.prodigal.gff"
+    # mod_gff = f"/home/shuaiw/borg/paper/borg_data/batch_export2/new_run/soil_80/gffs/SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_METAMDBG_428814_L.gff"
+    # borg_ref = f"{folder}/SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_almost_complete_Black_borg_32_00.contigs.fa"
+    # repeat_bed = f"{folder}/SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_almost_complete_Black_borg_32_00.repeat.bed"
+
+    ORF_anno = f"{folder}/SR-VP_07_25_2022_A1_60cm_PACBIO-HIFI_Black_Borg_32_00.prodigal.gff"
+    mod_gff = f"/home/shuaiw/borg/paper/borg_data/batch_export2/new_run/soil_60/gffs/SR-VP_07_25_2022_A1_60cm_PACBIO-HIFI_Black_Borg_32_00.all.reprocess.gff"
+    borg_ref = f"{folder}/SR-VP_07_25_2022_A1_60cm_PACBIO-HIFI_Black_Borg_32_00.contigs.fa"
+    repeat_bed = f"{folder}/SR-VP_07_25_2022_A1_60cm_PACBIO-HIFI_Black_Borg_32_00.repeat.bed"
+
+
+
     host_motifs_file = "/home/shuaiw/borg/paper/gg_run3/soil_60/soil_60_methylation4/motifs/SR-VP_07_25_2022_A1_60cm_PACBIO-HIFI_METAMDBG_551173_L.motifs.csv"
+    
+    
     output_dir="../../tmp/figures/borg_fig"
     motif_new = "YCTK"
+    # motif_new = "GATC"
     exact_pos = 2
 
     modified_loci = get_modified_ratio(mod_gff, score_cutoff = 30)
@@ -618,6 +646,6 @@ if __name__ == "__main__":
     compare_motif_in_TR(REF, record_motif_sites, orf_regions, repeat_regions)
 
     print("\n### Analysis for MODIFIED motif sites in TRs ###")
-    compare_motif_in_TR(REF, record_mod_motif_sites, orf_regions, repeat_regions)
+    compare_motif_in_TR(REF, record_mod_motif_sites, orf_regions, repeat_regions, Modflag="yes")
 
 
