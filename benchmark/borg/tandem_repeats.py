@@ -337,6 +337,15 @@ def write_tandem_output(parallel_tandem_results, id_to_header_seq):
 
     df_tandem_info = pd.DataFrame(tandem_info_type_to_vals)
     
+    # Check if any tandem repeats were found
+    if df_tandem_info.empty:
+        print("No tandem repeats found in the input sequences.")
+        # Create empty output files
+        open(out_bed_path, 'w').close()
+        open(out_table_path, 'w').close()
+        open(out_seqs_table_path, 'w').close()
+        return
+    
     df_tandem_info["sequence_description"] = df_tandem_info["sequence_id"].apply(lambda x: id_to_header_seq[x][0])
 
     with open(out_bed_path, "w") as out_bed_path_fh:
