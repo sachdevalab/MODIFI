@@ -2200,3 +2200,18 @@ sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_opt2.smk --config
     work_dir=/home/shuaiw/borg/paper/gg_run3/soil_80 \
     ref=/home/shuaiw/borg/paper/curated_genome/unique/SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI.contigs.fa -j 64"  --job-name=soil_80
 
+
+python /home/shuaiw/mGlu/main.py \
+          --work_dir /home/shuaiw/borg/paper/gg_run3/soil_2/soil_2_methylation4 \
+          --unaligned_bam no.bam \
+          --whole_ref /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+          --read_type hifi \
+            --min_len 1000 \
+            --min_cov 3 \
+            --min_frac 0.3 \
+            --min_score 30 \
+            --min_sites 100 \
+            --mge_file /home/shuaiw/methylation/data/borg/paper/gg_run3/soil_2/cpr.list \
+            --run_steps host \
+          --threads 64 
+

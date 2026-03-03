@@ -987,6 +987,20 @@ if __name__ == "__main__":
     # borg_ref = f"/home/shuaiw/borg/paper/gg_run3/soil_1/soil_1_methylation4/contigs/{ctg_name}.fa"
     # repeat_bed = f"{folder}/{ctg_name}.repeat.bed"
 
+    # folder = "/home/shuaiw/borg/paper/borg_data/batch_export2/green_borgs"
+    # ctg_name = "SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_723659_L"
+    # ORF_anno = f"{folder}/{ctg_name}.prodigal.gff"
+    # mod_gff = f"/groups/banfield/projects/multienv/methylation/data/borg/paper/gg_run3/soil_100/soil_100_methylation4/gffs/{ctg_name}.gff"
+    # borg_ref = f"/groups/banfield/projects/multienv/methylation/data/borg/paper/gg_run3/soil_100/soil_100_methylation4/contigs/{ctg_name}.fa"
+    # repeat_bed = f"{folder}/{ctg_name}.repeat.bed"
+
+    # folder = "/home/shuaiw/borg/paper/borg_data/batch_export2/Other_borgs"
+    # ctg_name = "SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_HIFIASM-META_Iris_Borg_31-64_00"
+    # ORF_anno = f"{folder}/{ctg_name}.prodigal.gff"
+    # mod_gff = f"/home/shuaiw/borg/paper/borg_data/batch_export2/new_run2/soil_100_Iris/gffs/{ctg_name}.all.gff"
+    # borg_ref = f"{folder}/{ctg_name}.contigs.fa"
+    # repeat_bed = f"{folder}/{ctg_name}.repeat.bed"
+
     output_dir="../../tmp/figures/borg_fig"
     # motif_new = "YCTK"
     # motif_new = "GATC"
@@ -998,6 +1012,27 @@ if __name__ == "__main__":
     # exact_pos = 3
     # counting(mod_gff, borg_ref, motif_new, exact_pos, repeat_bed, ORF_anno)
 
+    ctg_list = [
+        "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_5232_L,Uranus_mini-Borg,soil_1",
+        "SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_717158_L,Uranus_mini-Borg,soil_100",
+        "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_7305_L,Jupiter_mini-Borg,soil_1",
+        "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_6165_L,Jupiter_mini-Borg,soil_1",
+        "SR-VP_07_25_2022_A1_60cm_PACBIO-HIFI_METAMDBG_466444_L,Saturn_mini-Borg,soil_60",
+        "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_21827_L,Saturn_mini-Borg,soil_1",
+        "SR-VP_07_25_2022_A1_115cm_PACBIO-HIFI_METAMDBG_404883_L,Saturn_mini-Borg,soil_115",
+        "SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_METAMDBG_424934_L,Saturn_mini-Borg,soil_80",
+        "SR-VP_07_25_2022_A1_90cm_PACBIO-HIFI_METAMDBG_636226_L,Saturn_mini-Borg,soil_90",
+    ]
+    for entry in ctg_list:
+        ctg_name, borg_name, sample_name = entry.split(",")
+        mod_gff = f"/home/shuaiw/borg/paper/gg_run3/{sample_name}/{sample_name}_methylation4/gffs/{ctg_name}.gff"
+        borg_ref = f"/home/shuaiw/borg/paper/gg_run3/{sample_name}/{sample_name}_methylation4/contigs/{ctg_name}.fa"
+        repeat_bed = f"/home/shuaiw/borg/paper/borg_data/batch_export2/Other_borgs/{ctg_name}.repeat.bed"
+        ORF_anno = f"/home/shuaiw/borg/paper/borg_data/batch_export2/Other_borgs/{ctg_name}.prodigal.gff"
+        print ("######### Processing:", ctg_name)
+        counting(mod_gff, borg_ref, motif_new, exact_pos, repeat_bed, ORF_anno)
+
+    """
     folder = "/home/shuaiw/borg/paper/borg_data/batch_export2/all_borgs"
     ref_folder = "/home/shuaiw/borg/paper/borg_data/all_borgs"
     
@@ -1073,6 +1108,7 @@ if __name__ == "__main__":
     
     print("="*120)
     print(f"Total Borgs analyzed: {len(all_borg_results)}\n")
+    """
 
 
     
