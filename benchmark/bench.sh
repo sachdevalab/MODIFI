@@ -918,7 +918,7 @@ sbatch  --partition standard --wrap "python main.py \
   --threads 64  " \
   --job-name=pipeline
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/ocean_1/ocean_1_methylation \
   --whole_bam /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.hifiasm.p_ctg.rename.fa \
@@ -933,7 +933,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64  " \
   --job-name=ocean_test
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation \
   --whole_bam /home/shuaiw/borg/paper/run2/soil_1/soil_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/soil_1/soil_1.hifiasm.p_ctg.rename.fa \
@@ -959,7 +959,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
 
 snakemake -s annotation.smk --config                 hifi_bam=/home/shuaiw/borg/paper/aws/cow/RuReacBro_20230708_Comb_RF_LR.hifi_reads.bam                 prefix=cow_1                 work_dir=/home/shuaiw/borg/paper/run2/cow_1 -j 64
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/cow_1/cow_1_methylation2 \
   --whole_bam /home/shuaiw/borg/paper/run2/cow_1/cow_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/cow_1/cow_1.hifiasm.p_ctg.rename.fa \
@@ -977,7 +977,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
 
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation3 \
   --whole_bam /home/shuaiw/borg/paper/run2/soil_1/soil_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/soil_1/soil_1.hifiasm.p_ctg.rename.fa \
@@ -995,7 +995,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
 
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/infant_1/infant_1_methylation3 \
   --whole_bam /home/shuaiw/borg/paper/run2/infant_1/infant_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/infant_1/infant_1.hifiasm.p_ctg.rename.fa \
@@ -1011,7 +1011,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=infant_1_test
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation2 \
   --whole_bam /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1.hifiasm.p_ctg.rename.fa \
@@ -1026,7 +1026,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64" \
   --job-name=soil_s1_1_test
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/soil_s3_1/soil_s3_1_methylation2 \
   --whole_bam /home/shuaiw/borg/paper/run2/soil_s3_1/soil_s3_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/soil_s3_1/soil_s3_1.hifiasm.p_ctg.rename.fa \
@@ -1042,7 +1042,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64" \
   --job-name=soil_s3_1_test
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1_methylation2 \
   --whole_bam /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1.hifiasm.p_ctg.rename.fa \
@@ -1067,7 +1067,7 @@ snakemake  -s find_MGE.smk \
 
 sbatch  --partition standard \
      --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p05.run.time\
-      python /home/shuaiw/mGlu/main.py \
+      python /home/shuaiw/MODIFI/main.py \
       --work_dir /home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p05/ \
       --whole_bam /home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p05.align.bam \
       --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
@@ -1083,7 +1083,7 @@ sbatch  --partition standard \
       --threads 64 " \
  --job-name=p05
 
-sbatch  --partition standard --wrap "prefix=soil_s1_2 && python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "prefix=soil_s1_2 && python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/${prefix}/${prefix}_methylation2 \
   --whole_bam /home/shuaiw/borg/paper/run2/${prefix}/${prefix}.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/${prefix}/${prefix}.hifiasm.p_ctg.rename.fa \
@@ -1099,7 +1099,7 @@ sbatch  --partition standard --wrap "prefix=soil_s1_2 && python /home/shuaiw/mGl
   --threads 64" \
   --job-name=soil_1
 
-  sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage//m64004_210929_143746.p100.time python /home/shuaiw/mGlu/main.py \
+  sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage//m64004_210929_143746.p100.time python /home/shuaiw/MODIFI/main.py \
             --work_dir /home/shuaiw/borg/paper/linkage//m64004_210929_143746.p100 \
             --whole_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.align.bam \
             --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
@@ -1135,7 +1135,7 @@ sbatch --partition standard --wrap "snakemake --config \
   work_dir=/home/shuaiw/borg/paper/test/meta_p50_NM3000 max_NM=3000 -j 64" \
   --job-name=meta_p50
 
-sbatch  --partition standard --wrap "prefix=meta_p50_NM3000 && python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "prefix=meta_p50_NM3000 && python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/test/${prefix}/${prefix}_methylation2 \
   --whole_bam /home/shuaiw/borg/paper/test/${prefix}/${prefix}.align.bam \
   --whole_ref /home/shuaiw/borg/paper/test/${prefix}/${prefix}.hifiasm.p_ctg.rename.fa \
@@ -1154,7 +1154,7 @@ sbatch  --partition standard --wrap "prefix=meta_p50_NM3000 && python /home/shua
 
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/cow_1/cow_1_methylation_0.99 \
   --whole_bam /home/shuaiw/borg/paper/run2/cow_1/cow_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/cow_1/cow_1.hifiasm.p_ctg.rename.fa \
@@ -1171,7 +1171,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=cow_0.99
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/cow_1/cow_1_methylation_0.97_clip_all \
   --whole_bam /home/shuaiw/borg/paper/run2/cow_1/cow_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/cow_1/cow_1.hifiasm.p_ctg.rename.fa \
@@ -1188,7 +1188,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=cow_0.97
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/infant_1/infant_1_methylation_0.99_kmer \
   --whole_bam /home/shuaiw/borg/paper/run2/infant_1/infant_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/infant_1/infant_1.hifiasm.p_ctg.rename.fa \
@@ -1222,7 +1222,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/methylatio
   --job-name=pipeline
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/linkage//m64004_210929_143746.p05_97 \
   --whole_bam /home/shuaiw/borg/paper/linkage/m64004_210929_143746.p05.bam \
   --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
@@ -1237,7 +1237,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=p05
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1_methylation3_test \
   --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.hifiasm.p_ctg.rename.fa \
@@ -1251,7 +1251,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64 --segment --visu_ipd" \
   --job-name=bioreactor_1_test
 
- sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p100.run.time python /home/shuaiw/mGlu/main.py \
+ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p100.run.time python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p100/ \
   --whole_bam /home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p100.align.bam \
   --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
@@ -1267,7 +1267,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64" \
   --job-name=p100
 
-  sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p20.run.time python /home/shuaiw/mGlu/main.py \
+  sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p20.run.time python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p20/ \
   --whole_bam /home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p20.align.bam \
   --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
@@ -1284,7 +1284,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=p20
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/infant_2/infant_2_methylation3 \
   --whole_bam /home/shuaiw/borg/paper/run2/infant_2/infant_2.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/infant_2/infant_2.hifiasm.p_ctg.rename.fa \
@@ -1299,7 +1299,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64 --run_steps merge" \
   --job-name=infant_2_methylation3
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_2/cow_bioreactor_2_methylation3 \
   --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_2/cow_bioreactor_2.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_2/cow_bioreactor_2.hifiasm.p_ctg.rename.fa \
@@ -1315,7 +1315,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=infant_2_methylation3
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/infant_7/infant_7_2_C_methylation_kmer \
   --whole_bam /home/shuaiw/borg/paper/run2/infant_7/infant_7_methylation3/bams/infant_7_2_C.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/infant_7/infant_7_methylation3/contigs/infant_7_2_C.fa \
@@ -1339,7 +1339,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
 
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/96plex/96plex_methylation3 \
   --whole_bam /home/shuaiw/borg/paper/run2/96plex/96plex.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/96plex/96plex.hifiasm.p_ctg.rename.fa \
@@ -1354,7 +1354,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --mge_file /home/shuaiw/borg/paper/run2/96plex/all_mge.tsv \
   --job-name=infant_2_methylation3
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_5/cow_bioreactor_5_methylation3 \
   --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_5/cow_bioreactor_5.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_5/cow_bioreactor_5.hifiasm.p_ctg.rename.fa \
@@ -1370,7 +1370,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=cow_bioreactor_5_methylation3
 
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
             --work_dir /home/shuaiw/borg/paper/linkage/pure/m64004_210929_143746.p10 \
             --whole_bam /home/shuaiw/borg/paper/linkage/m64004_210929_143746.p10.bam \
             --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
@@ -1384,7 +1384,7 @@ python /home/shuaiw/mGlu/main.py \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
             --threads 20 --run_steps host
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
             --work_dir /home/shuaiw/borg/paper/linkage/pure/m64004_210929_143746.p50 \
             --whole_bam /home/shuaiw/borg/paper/linkage/m64004_210929_143746.p50.bam \
             --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
@@ -1399,7 +1399,7 @@ python /home/shuaiw/mGlu/main.py \
             --threads 20 --run_steps host
 
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
             --work_dir /home/shuaiw/borg/paper/linkage/pure/m64004_210929_143746.p05 \
             --whole_bam /home/shuaiw/borg/paper/linkage/m64004_210929_143746.p05.bam \
             --whole_ref /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa \
@@ -1414,7 +1414,7 @@ python /home/shuaiw/mGlu/main.py \
             --threads 20 --run_steps host
 
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
             --work_dir /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p05/ \
             --whole_bam /home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p05.align.bam \
             --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
@@ -1429,7 +1429,7 @@ python /home/shuaiw/mGlu/main.py \
             --threads 64 --run_steps host
 
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
             --work_dir /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p10/ \
             --whole_bam /home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p10.align.bam \
             --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
@@ -1443,7 +1443,7 @@ python /home/shuaiw/mGlu/main.py \
             --mge_file /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/ref/merged2.fa.fai.plasmid.list.tsv \
             --threads 64 --run_steps host
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
             --work_dir /home/shuaiw/borg/paper/linkage/meta2/m64004_210929_143746.p30/ \
             --whole_bam /home/shuaiw/borg/paper/linkage/meta/m64004_210929_143746.p30.align.bam \
             --whole_ref /home/shuaiw/borg/contigs/soil_zymo.fa \
@@ -1458,7 +1458,7 @@ python /home/shuaiw/mGlu/main.py \
             --threads 64 --run_steps host
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1_methylation3 \
   --whole_bam /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/cow_bioreactor_1/cow_bioreactor_1.hifiasm.p_ctg.rename.fa \
@@ -1473,7 +1473,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=bioreactor_1_test
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/isolation/SRR27457941/SRR27457941_methylation \
   --whole_bam xx \
   --whole_ref  /home/shuaiw/borg/paper/isolation/SRR27457941//SRR27457941.hifiasm.p_ctg.rename.fa \
@@ -1487,7 +1487,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 2 --run_steps host" \
   --job-name=bioreactor_1_test
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/isolation/archaea/SRR27457941/SRR27457941_methylation \
   --whole_bam xx \
   --whole_ref  /home/shuaiw/borg/paper/isolation/archaea/SRR27457941/SRR27457941.hifiasm.p_ctg.rename.fa \
@@ -1501,7 +1501,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 2 --run_steps profile merge profile" \
   --job-name=bioreactor_1_test
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/isolation/bacteria/ERR9843287/ERR9843287_methylation \
   --whole_bam xx \
   --whole_ref /home/shuaiw/borg/paper/isolation/bacteria/ERR9843287/ERR9843287.hifiasm.p_ctg.rename.fa \
@@ -1515,7 +1515,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 20 --run_steps motif merge profile host" \
   --job-name=bioreactor_1_test
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/isolation/bacteria/ERR9843299/ERR9843299_methylation \
   --whole_bam xx \
   --whole_ref /home/shuaiw/borg/paper/isolation/bacteria/ERR9843299/ERR9843299.hifiasm.p_ctg.rename.fa \
@@ -1530,7 +1530,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=bioreactor_1_test
 
 
-sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/time/soil_subreads.time python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/time/soil_subreads.time python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/time/soil_subreads \
   --whole_bam /home/shuaiw/methylation/data/borg/all_contigs/XRSBK_20221007_S64018_PL100268287-1_C01.align.bam \
   --whole_ref /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
@@ -1542,7 +1542,7 @@ sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper
   --job-name=subreads
 
 
-sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/time/soil_hifi.time  python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "/usr/bin/time -v -o /home/shuaiw/borg/paper/time/soil_hifi.time  python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/time/soil_hifi \
   --whole_bam /home/shuaiw/methylation/data/borg/customized/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.align.bam \
   --whole_ref /home/shuaiw/methylation/data/borg/contigs/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
@@ -1658,7 +1658,7 @@ sbatch --job-name=tree \
 --partition standard \
 --wrap "bash get_tree_robust.sh"
 
-/home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
+/home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/MODIFI/main.py \
     --work_dir /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737_methylation2/ \
     --whole_bam /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737.align.bam \
     --whole_ref /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/SRR16962737.hifiasm.p_ctg.rename.fa \
@@ -1671,11 +1671,11 @@ sbatch --job-name=tree \
     --mge_file /home/shuaiw/borg/paper/isolation/batch2_results//SRR16962737/all_mge.tsv \
     --threads 3 \
     --run_steps host \
-    --kmer_mean_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.mean.dat \
-    --kmer_num_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.num.dat
+    --kmer_mean_db /home/shuaiw/MODIFI/control_db/control_db.up7.down3.mean.dat \
+    --kmer_num_db /home/shuaiw/MODIFI/control_db/control_db.up7.down3.num.dat
 
 
-sbatch --partition standard --job-name=pf3 --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch --partition standard --job-name=pf3 --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/pengfan/result_20251229/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_12_72h_200ppm_r2_HMW_LR.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
@@ -1689,7 +1689,7 @@ sbatch --partition standard --job-name=pf3 --wrap "python /home/shuaiw/mGlu/main
   --bin_file /home/shuaiw/borg/pengfan/10mgs_bins.tab \
   --threads 64"
 
-sbatch --partition standard --job-name=pf4 --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch --partition standard --job-name=pf4 --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/pengfan/result_20251229/RuReacBro_20230708_26_72h_NC_r4_LR_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_26_72h_NC_r4_LR.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
@@ -1704,7 +1704,7 @@ sbatch --partition standard --job-name=pf4 --wrap "python /home/shuaiw/mGlu/main
   --clean \
   --threads 64"
 
-sbatch --partition standard --job-name=pf5 --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch --partition standard --job-name=pf5 --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/pengfan/result_20251229/RuReacBro_20230708_9_72h_NC_r2_HMW_LR_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_9_72h_NC_r2_HMW_LR.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
@@ -1719,7 +1719,7 @@ sbatch --partition standard --job-name=pf5 --wrap "python /home/shuaiw/mGlu/main
   --clean \
   --threads 64"
 
-sbatch --partition standard --job-name=pf6 --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch --partition standard --job-name=pf6 --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/pengfan/result_20251229/RuReacBro_20230708_Comb_RF_HMW_LR_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_Comb_RF_HMW_LR.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
@@ -1734,7 +1734,7 @@ sbatch --partition standard --job-name=pf6 --wrap "python /home/shuaiw/mGlu/main
   --clean \
   --threads 64"
 
-sbatch --partition standard --job-name=pf7 --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch --partition standard --job-name=pf7 --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/pengfan/result_20251229/RuReacBro_20230708_Comb_RF_LR_bin \
   --whole_bam /home/shuaiw/borg/pengfan/align/RuReacBro_20230708_Comb_RF_LR.align.ccs.bam \
   --whole_ref /home/shuaiw/borg/pengfan/contigs/nr_bins_circular_elements.fa \
@@ -1755,7 +1755,7 @@ sbatch --job-name=meta_tree \
 --partition standard \
 --wrap "bash get_tree_robust_meta.sh"
 
-sbatch --partition standard --job-name=s4_1 --wrap "/home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
+sbatch --partition standard --job-name=s4_1 --wrap "/home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/MODIFI/main.py \
     --work_dir /home/shuaiw/borg/paper/borg_data/run2/s4_1_black \
     --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2022.bam \
     --whole_ref /home/shuaiw/borg/paper/borg_data/align/BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.fa \
@@ -1770,7 +1770,7 @@ sbatch --partition standard --job-name=s4_1 --wrap "/home/shuaiw/miniconda3/envs
     --kmer_num_db /home/shuaiw/borg/paper/run2/soil_s4_1/soil_s4_1_methylation3/control/control_db.up7.down3.num.dat"
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run3/soil_1/soil_1_methylation3 \
   --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam \
   --whole_ref /home/shuaiw/borg/paper/curated_genome/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.soil_1.fa \
@@ -1783,7 +1783,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64" \
   --job-name=soil_1
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run3/soil_2/soil_2_methylation3 \
   --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268288-1_D01.ccs.bam \
   --whole_ref /home/shuaiw/borg/paper/curated_genome/SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META.soil_2.fa \
@@ -1796,7 +1796,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64" \
   --job-name=soil_2_m
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/gg_run2/soil_1/soil_1_methylation4 \
   --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam \
   --whole_ref /home/shuaiw/borg/paper/curated_genome/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.soil_1.fa \
@@ -1812,7 +1812,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=soil_1
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/gg_run2/soil_2/soil_2_methylation4 \
   --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268288-1_D01.ccs.bam \
   --whole_ref /home/shuaiw/borg/paper/curated_genome/SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META.soil_2.fa \
@@ -1829,7 +1829,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
 
   
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/gg_run2/soil_115/soil_115_methylation4 \
   --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268288-1_D01.ccs.bam \
   --whole_ref /home/shuaiw/borg/paper/curated_genome/SR-VP_07_25_2022_A1_115cm_PACBIO-HIFI.contigs.fa \
@@ -1844,7 +1844,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 64" \
   --job-name=soil_115_m
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/gg_run2/soil_80/soil_80_methylation4 \
   --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268288-1_D01.ccs.bam \
   --whole_ref /home/shuaiw/borg/paper/curated_genome/SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI.contigs.fa \
@@ -1859,7 +1859,7 @@ python /home/shuaiw/mGlu/main.py \
   --threads 64
 
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
                 --work_dir /home/shuaiw/borg/paper/borg_data/borg_rev4/soil_1/soil_1_methylation3 \
                 --whole_bam /home/shuaiw/borg/paper/borg_data/borg_rev/soil_1/soil_1_methylation3/bams/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.bam \
                 --whole_ref  /home/shuaiw/borg/paper/borg_data/borg_rev/soil_1/soil_1_methylation3/contigs/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.fa \
@@ -1877,7 +1877,7 @@ python /home/shuaiw/mGlu/main.py \
                 --threads 64 --visu_ipd --detect_misassembly" \
                 --job-name=borg_47
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
                 --work_dir /home/shuaiw/borg/paper/borg_data/borg_rev4/soil_s1_2/soil_s1_2_methylation3 \
                 --whole_bam /home/shuaiw/borg/paper/borg_data/borg_rev/soil_s1_2/soil_s1_2_methylation3/bams/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.bam \
                 --whole_ref  /home/shuaiw/borg/paper/borg_data/borg_rev/soil_1/soil_1_methylation3/contigs/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.fa \
@@ -1896,7 +1896,7 @@ python /home/shuaiw/mGlu/main.py \
                 --job-name=borg_47
             
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
                 --work_dir /home/shuaiw/borg/paper/borg_data/borg_for4/soil_1/soil_1_methylation3 \
                 --whole_bam /home/shuaiw/borg/paper/borg_data/borg_for/soil_1/soil_1_methylation3/bams/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.bam \
                 --whole_ref  /home/shuaiw/borg/paper/borg_data/borg_for/soil_1/soil_1_methylation3/contigs/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.fa \
@@ -1914,7 +1914,7 @@ python /home/shuaiw/mGlu/main.py \
                 --threads 64 --visu_ipd --detect_misassembly" \
                 --job-name=borg_48
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
                 --work_dir /home/shuaiw/borg/paper/borg_data/borg_for4/soil_s1_2/soil_s1_2_methylation3 \
                 --whole_bam /home/shuaiw/borg/paper/borg_data/borg_for/soil_s1_2/soil_s1_2_methylation3/bams/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.bam \
                 --whole_ref  /home/shuaiw/borg/paper/borg_data/borg_for/soil_s1_2/soil_s1_2_methylation3/contigs/SRVP18_trench_6_60cm_scaf_214_117_86_FINAL.fa \
@@ -1933,7 +1933,7 @@ python /home/shuaiw/mGlu/main.py \
                 --job-name=borg_48
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/run2/ocean_1/ocean_1_methylation4 \
   --whole_bam /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.align.bam \
   --whole_ref /home/shuaiw/borg/paper/run2/ocean_1/ocean_1.hifiasm.p_ctg.rename.fa \
@@ -1951,7 +1951,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
 
 
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
                 --work_dir /home/shuaiw/borg/paper/borg_data/ece_LD/run/soil_100/soil_100_methylation4 \
                 --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2024.bam \
                 --whole_ref /home/shuaiw/borg/paper/borg_data/ece_LD/22_ECE_and_Mp_seqs.fasta \
@@ -1969,7 +1969,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
                 --job-name=soil_100
             
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
                 --work_dir /home/shuaiw/borg/paper/borg_data/ece_LD/run/soil_110/soil_110_methylation4 \
                 --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2025.bam \
                 --whole_ref /home/shuaiw/borg/paper/borg_data/ece_LD/22_ECE_and_Mp_seqs.fasta \
@@ -1991,20 +1991,20 @@ sbatch --job-name=drep \
   --partition standard \
   --wrap "dRep dereplicate \
     -p 64 \
-    -g /home/shuaiw/mGlu/tmp/figures/multi_env_linkage/linked_host_list.txt \
+    -g /home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/linked_host_list.txt \
     -comp 50 \
     -con 10 \
     --S_algorithm skani \
     -ms 10000 \
     -sa 0.99 \
     --ignoreGenomeQuality \
-    -nc 0.7 /home/shuaiw/mGlu/tmp/figures/multi_env_linkage/network_99/dRep_99_out"
+    -nc 0.7 /home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/network_99/dRep_99_out"
 
 
 
 sbatch --job-name=inf14 \
 --partition standard \
---wrap "python /home/shuaiw/mGlu/main.py \
+--wrap "python /home/shuaiw/MODIFI/main.py \
         --work_dir /home/shuaiw/borg/paper/motif_change/methyl/infant_14 \
         --unaligned_bam /home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_5G1_pacbio.bam  \
         --whole_ref /home/shuaiw/borg/paper/run2/infant_2/infant_2.hifiasm.p_ctg.rename.fa \
@@ -2018,7 +2018,7 @@ sbatch --job-name=inf14 \
 
    sbatch --job-name=inf2 \
   --partition standard \
-  --wrap "python /home/shuaiw/mGlu/main.py \
+  --wrap "python /home/shuaiw/MODIFI/main.py \
           --work_dir /home/shuaiw/borg/paper/motif_change/methyl/infant_2 \
           --unaligned_bam /home/shuaiw/borg/paper/aws/infant/NANO_2_INF1240040_2G1_pacbio.bam  \
           --whole_ref /home/shuaiw/borg/paper/run2/infant_2/infant_2.hifiasm.p_ctg.rename.fa \
@@ -2062,7 +2062,7 @@ sbatch --job-name=inf14 \
   kmer_num_db=/home/shuaiw/borg/bench/C227/WGA2/control/control_db.up7.down3.num.dat" --job-name=native
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/base/pure/control \
   --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/WGA.align.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
@@ -2072,7 +2072,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 10 "\
   --job-name=WGA
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/base/pure/native \
   --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
@@ -2085,7 +2085,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 10"\
   --job-name=native
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/base/pure/native_no_control \
   --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
@@ -2097,7 +2097,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=native
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/base/meta/native \
   --whole_bam /home/shuaiw/borg/allison/ecoli/soil_p0.01_C227_align.align.bam \
   --whole_ref /home/shuaiw/borg/allison/ecoli/soil_ecoli.fa \
@@ -2107,7 +2107,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --threads 10 "\
   --job-name=meta_c227
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/base/meta/control \
   --whole_bam /home/shuaiw/borg/allison/ecoli/soil_p0.01_C227_WGA_align.align.bam \
   --whole_ref /home/shuaiw/borg/allison/ecoli/soil_ecoli.fa \
@@ -2118,7 +2118,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=meta_WGA
 
 
-sbatch  --partition standard --wrap " python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap " python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/base/mock3 \
   --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/align/Mock_JF8.align.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/bam/Mock_JF8.fa \
@@ -2133,7 +2133,7 @@ sbatch  --partition standard --wrap " python /home/shuaiw/mGlu/main.py \
 
 
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/base/pure/native_previous_bam \
   --whole_bam /home/shuaiw/methylation/data/borg/bench/C227/native2/bams/CP011331.1.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
@@ -2146,7 +2146,7 @@ python /home/shuaiw/mGlu/main.py \
   --threads 10
 
 
-sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/base/pure/native_old_control \
   --whole_bam /home/shuaiw/methylation/data/published_data/fanggang/C227/native.align.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
@@ -2160,7 +2160,7 @@ sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \
   --job-name=native
 
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
   --work_dir /home/shuaiw/borg/paper/base/pure/test \
   --whole_bam /home/shuaiw/methylation/data/borg/bench/C227/native2/bams/CP011331.1.bam \
   --whole_ref /home/shuaiw/methylation/data/published_data/fanggang/ref/C227.fa \
@@ -2173,7 +2173,7 @@ python /home/shuaiw/mGlu/main.py \
   --threads 10 
 
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
           --work_dir /home/shuaiw/borg/paper/gg_run3/soil_1/soil_1_methylation4 \
           --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2024.bam \
           --whole_ref /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
@@ -2201,7 +2201,7 @@ sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_opt2.smk --config
     ref=/home/shuaiw/borg/paper/curated_genome/unique/SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI.contigs.fa -j 64"  --job-name=soil_80
 
 
-python /home/shuaiw/mGlu/main.py \
+python /home/shuaiw/MODIFI/main.py \
           --work_dir /home/shuaiw/borg/paper/gg_run3/soil_2/soil_2_methylation4 \
           --unaligned_bam no.bam \
           --whole_ref /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META.contigs.fa \

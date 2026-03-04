@@ -70,7 +70,7 @@ rule gfa_to_fasta:
         # Rohan's version:
         """
         awk '$1==\"S\" {{printf \">%s\\n%s\\n\", $2, $3}}' {input.gfa} > {config[work_dir]}/{config[prefix]}.p_ctg.fa
-        python /home/shuaiw/mGlu/assembly_pipe/gg_rename_assembly_iso.py \
+        python /home/shuaiw/MODIFI/assembly_pipe/gg_rename_assembly_iso.py \
             -i {config[work_dir]}/{config[prefix]}.p_ctg.fa \
             -o {output.fasta} -s {config[prefix]}
         """
@@ -94,7 +94,7 @@ rule map_reads_to_assembly:
 
         samtools index {output.align_bam}
         /home/shuaiw/smrtlink/pbindex {output.align_bam}
-        python /home/shuaiw/mGlu/assembly_pipe/count_assembly.py {config[prefix]} {config[work_dir]} {input.bam}
+        python /home/shuaiw/MODIFI/assembly_pipe/count_assembly.py {config[prefix]} {config[work_dir]} {input.bam}
         """
 
 rule checkM:
@@ -182,7 +182,7 @@ rule call_methylation:
     shell:
         """
         which python
-        /usr/bin/time -v -o {output.time} /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
+        /usr/bin/time -v -o {output.time} /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/MODIFI/main.py \
           --work_dir {config[work_dir]}/{config[prefix]}_methylation2 \
           --whole_bam {input.bam} \
           --whole_ref {input.fa} \
@@ -195,8 +195,8 @@ rule call_methylation:
           --annotate_rm \
           --mge_file {input.mge_file} \
           --threads 30 \
-          --kmer_mean_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.mean.dat \
-          --kmer_num_db /home/shuaiw/mGlu/control_db/control_db.up7.down3.num.dat
+          --kmer_mean_db /home/shuaiw/MODIFI/control_db/control_db.up7.down3.mean.dat \
+          --kmer_num_db /home/shuaiw/MODIFI/control_db/control_db.up7.down3.num.dat
         touch {output.methy_finish}
         """
 

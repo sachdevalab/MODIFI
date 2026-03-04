@@ -128,7 +128,7 @@ def read_list(bam_list, cmd_file, prefix_table):
             print (cmd, file=drep)
 
             time_cmd = f"""
-                sbatch  --partition standard --wrap "/usr/bin/time -v -o  /home/shuaiw/borg/paper/run2/{prefix}/time.txt python /home/shuaiw/mGlu/main.py \\
+                sbatch  --partition standard --wrap "/usr/bin/time -v -o  /home/shuaiw/borg/paper/run2/{prefix}/time.txt python /home/shuaiw/MODIFI/main.py \\
                 --work_dir /home/shuaiw/borg/paper/run2/{prefix}/{prefix}_methylation_time \\
                 --whole_bam /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.align.bam \\
                 --whole_ref /home/shuaiw/borg/paper/run2/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
@@ -209,7 +209,7 @@ def batch_asthma(cmd_file, prefix_table, outdir):
             # """
 
             cmd = f"""
-                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \\
                 --work_dir /home/shuaiw/borg/paper/borg_data/methy/{prefix}/{prefix}_methylation3 \\
                 --whole_bam {outdir}/{prefix}/{prefix}.align.bam \\
                 --whole_ref {outdir}/{prefix}/{prefix}.hifiasm.p_ctg.rename.fa \\
@@ -227,7 +227,7 @@ def batch_asthma(cmd_file, prefix_table, outdir):
             """
 
             borg_cmd_for = f"""
-                sbatch  --partition standard --wrap "python /home/shuaiw/mGlu/main.py \\
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \\
                 --work_dir /home/shuaiw/borg/paper/borg_data/ece_LD/run/{prefix}/{prefix}_methylation4 \\
                 --unaligned_bam {hifi_bam} \\
                 --whole_ref /home/shuaiw/borg/paper/borg_data/ece_LD/22_ECE_and_Mp_seqs.fasta \\

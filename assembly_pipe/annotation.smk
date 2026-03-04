@@ -148,7 +148,7 @@ rule call_host:
     threads: config["threads"]
     shell:
         """
-        /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/main.py \
+        /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/MODIFI/main.py \
           --work_dir {config[work_dir]}/{config[prefix]}_methylation3 \
           --whole_bam {input.bam} \
           --whole_ref {input.fa} \
@@ -224,7 +224,7 @@ rule dRep_99:
 #         genome_gff = f"{config['work_dir']}/prokka/{config['prefix']}.gff",
 #     shell:
 #         """
-#         /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/mGlu/benchmark/orphan/motif_enrichment.py \
+#         /home/shuaiw/miniconda3/envs/methy3/bin/python /home/shuaiw/MODIFI/benchmark/orphan/motif_enrichment.py \
 #             {params.genome_gff} \
 #             {params.methy_dir}
 #         touch {output.enrichment_finish}
