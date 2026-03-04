@@ -1,11 +1,11 @@
-# 🧬 mGlu: DNA Modification Detection from PacBio SMRT Metagenomic Data
+# 🧬 MODIFI: DNA Modification Detection from PacBio SMRT Metagenomic Data
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/Python-≥3.9-blue.svg)](#)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS-lightgrey.svg)](#)
 [![PacBio](https://img.shields.io/badge/PacBio-SMRT-yellow.svg)](#)
 
-**mGlu** is a software package for detecting DNA base modifications and inferring host–mobile genetic element (MGE) linkages from **PacBio metagenomic sequencing** data. It enables precise modification calling, motif discovery, and host–MGE association in complex microbial communities, supporting both `subreads` and `HiFi` read types.
+**MODIFI** is a software package for detecting DNA base modifications and inferring host–mobile genetic element (MGE) linkages from **PacBio metagenomic sequencing** data. It enables precise modification calling, motif discovery, and host–MGE association in complex microbial communities, supporting both `subreads` and `HiFi` read types.
 
 ---
 
@@ -14,10 +14,10 @@
 ### 1️⃣ Clone repository and create environment
 
 ```bash
-git clone https://github.com/wshuai294/mGlu.git
-cd mGlu/
-conda env create -n mglu -f env.yml
-conda activate mglu
+git clone https://github.com/wshuai294/MODIFI.git
+cd MODIFI/
+conda env create -n modifi -f env.yml
+conda activate modifi
 ```
 
 ### 2️⃣ Compile C++ components
@@ -30,29 +30,29 @@ cd ../
 
 ### 3️⃣ Configure SMRT Link tools ⚠️ **OPTIONAL - Can be skipped**
 
-> 💡 **You can skip this step!** mGlu will automatically use tools from conda or fallback to built-in alternatives.
+> 💡 **You can skip this step!** MODIFI will automatically use tools from conda or fallback to built-in alternatives.
 
-mGlu requires three PacBio SMRT Link tools: `pbmotifmaker`, `pbmm2`, and `pbindex`.
+MODIFI requires three PacBio SMRT Link tools: `pbmotifmaker`, `pbmm2`, and `pbindex`.
 
 **Configuration priority (in order):**
 
-1. **Config file first** – If `config.yaml` exists, mGlu will use the path specified there
-2. **System PATH fallback** – If config.yaml is not found or incomplete, mGlu checks system PATH and conda
+1. **Config file first** – If `config.yaml` exists, MODIFI will use the path specified there
+2. **System PATH fallback** – If config.yaml is not found or incomplete, MODIFI checks system PATH and conda
 3. **MultiMotifMaker.jar** – Used as fallback for motif calling if `pbmotifmaker` is unavailable
 
 **To configure via config.yaml (only if needed):**
 
-Create or edit `config.yaml` in the mGlu directory:
+Create or edit `config.yaml` in the MODIFI directory:
 
 ```yaml
 smrtlink_bin: /path/to/smrtlink/private/bin/
 ```
 
-> **Note:** If you have SMRT Link tools in your PATH (e.g., via conda), no configuration is needed. mGlu will detect and use them automatically.
+> **Note:** If you have SMRT Link tools in your PATH (e.g., via conda), no configuration is needed. MODIFI will detect and use them automatically.
 
 ### 4️⃣ Verify installation
 
-Test that mGlu is installed correctly:
+Test that MODIFI is installed correctly:
 
 ```bash
 cd test/
@@ -66,8 +66,8 @@ bash test.sh
 If you need to process subreads, create a separate environment with `pbcore` (requires Python 3.9 and numpy 1.22.4):
 
 ```bash
-conda env create -n mglu_subreads -f subreads.env.yml
-conda activate mglu_subreads
+conda env create -n MODIFI_subreads -f subreads.env.yml
+conda activate MODIFI_subreads
 pip install git+https://github.com/PacificBiosciences/pbcore.git
 ```
 
@@ -77,7 +77,7 @@ pip install git+https://github.com/PacificBiosciences/pbcore.git
 
 ### Input Requirements
 
-mGlu supports both `HiFi` and `subreads`. Your PacBio BAM file **must contain kinetics (IPD) tags**:
+MODIFI supports both `HiFi` and `subreads`. Your PacBio BAM file **must contain kinetics (IPD) tags**:
 
 | Read Type | Required IPD Tags | Description | 
 |-----------|-------------------|-------------| 
@@ -91,7 +91,7 @@ mGlu supports both `HiFi` and `subreads`. Your PacBio BAM file **must contain ki
 
 ### Basic Usage
 
-Run mGlu with unaligned BAM containing kinetics:
+Run MODIFI with unaligned BAM containing kinetics:
 
 ```bash
 python main.py \
@@ -114,7 +114,7 @@ python main.py --help
 
 #### Option 1: Unaligned BAM (recommended)
 
-mGlu will automatically align reads using pbmm2:
+MODIFI will automatically align reads using pbmm2:
 
 ```bash
 python main.py \
@@ -138,7 +138,7 @@ python main.py \
 
 #### Option 3: Subreads
 
-For subread data (requires `mglu_subreads` environment):
+For subread data (requires `MODIFI_subreads` environment):
 
 ```bash
 python main.py \
@@ -253,11 +253,11 @@ cat output/genomad/assembly_summary/assembly_virus_summary.tsv \
     > all_MGEs.tsv
 ```
 
-### Step 3: Run mGlu
+### Step 3: Run MODIFI
 
 ```bash
 python main.py \
-    --work_dir output/mglu \
+    --work_dir output/MODIFI \
     --unaligned_bam raw.hifi_reads.bam \
     --whole_ref assembly.fasta \
     --read_type hifi \
@@ -421,7 +421,7 @@ Standard GFF3 format with 9 columns:
 | Column | Content |
 |--------|----------|
 | 1 | Contig name |
-| 2 | Method (mGlu) |
+| 2 | Method (MODIFI) |
 | 3 | Feature type (modified_base) |
 | 4–5 | Position (start–end, 1-indexed) |
 | 6 | Modification score |
@@ -450,7 +450,7 @@ For **isolate genomes** or **low-complexity metagenomes**, using a control datab
 
 ### Pre-built Database
 
-mGlu includes a pre-built control database:
+MODIFI includes a pre-built control database:
 
 ```
 control/control_db.up7.down3.mean.dat
@@ -463,7 +463,7 @@ Use with `--kmer_mean_db` and `--kmer_num_db` flags (see [Using Control Database
 
 For better results, generate a control database from your own **high-complexity metagenomes**:
 
-1. Run mGlu on high-complexity metagenomic samples
+1. Run MODIFI on high-complexity metagenomic samples
 2. Control files are automatically generated in `<work_dir>/control/`
 3. Reuse these files for isolate/low-complexity samples
 
@@ -507,7 +507,7 @@ pip install --force-reinstall git+https://github.com/PacificBiosciences/pbcore.g
 
 ## 📚 Citation
 
-If you use mGlu in your research, please cite:
+If you use MODIFI in your research, please cite:
 
 > *Manuscript in preparation.*
 
