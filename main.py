@@ -104,7 +104,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description="""DNA modification detection and MGE-host linkage inference.
 
-Example: python mGlu/main.py \\
+Example: python main.py \\
         --work_dir /path-to/output \\
         --unaligned_bam raw.hifi_reads.bam \\
         --whole_ref metagenomic_assembly.fasta \\
@@ -113,7 +113,7 @@ Example: python mGlu/main.py \\
         formatter_class=CustomFormatter
     )
 
-    parser.add_argument("-v", "--version", action="version", version=f"mGlu {__version__}")
+    parser.add_argument("-v", "--version", action="version", version=f"MODIFI v{__version__}")
     parser.add_argument("--whole_bam", type=str, required=False,
                         help="Input aligned BAM file with kinetic data (HiFi or subreads). Use this for pre-aligned BAM files.\
                               Must be aligned by pbmm2 to ensure kinetic tags are present.")
