@@ -7,9 +7,10 @@ import sys
 
 
 # raw_gff = "/home/shuaiw/borg/paper/borg_data/filter_motifs/BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.reprocess.gff"
-raw_gff = "/home/shuaiw/borg/paper/borg_data/batch_export/soil_80/gffs/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.gff"
-# raw_gff = ""
-filtered_gff = raw_gff.replace(".gff", "_score30.gff")
+# raw_gff = "/home/shuaiw/borg/paper/borg_data/batch_export/soil_80/gffs/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.gff"
+raw_gff = "/home/shuaiw/borg/paper/borg_data/batch_export/soil_80_black/gffs/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.reprocess.gff"
+# filtered_gff = raw_gff.replace(".gff", "_score30.gff")
+filtered_gff = "/home/shuaiw/borg/paper/borg_data/batch_export/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR_score30_only_YCTK.gff"
 
 
 def filter_gff(raw_gff, filtered_gff, score_cutoff=30):
@@ -17,6 +18,8 @@ def filter_gff(raw_gff, filtered_gff, score_cutoff=30):
         for line in infile:
             if line.startswith("#"):
                 outfile.write(line)
+                continue
+            if "motif=YCTK" not in line:
                 continue
             parts = line.strip().split('\t')
             if len(parts) < 6:
