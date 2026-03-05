@@ -212,18 +212,84 @@ def analyze_motif_gc_relationship(REF, host_motifs_file, window_size=5000, outpu
     print(f"{'='*60}\n")
 
 
+def overall_density_table(REF_host, REF_borg, host_motifs_file, output_dir="../../tmp/figures/borg_fig"):
+    """Compute overall motif density (per kb) for host ref and borg ref; output a table."""
+    import csv
+
+    host_motifs = []
+    with open(host_motifs_file, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            motif_str = row['motifString']
+            center_pos = int(row['centerPos'])
+            host_motifs.append({
+                'motif': motif_str,
+                'centerPos': center_pos,
+            })
+
+    def total_motif_count_and_length(REF, motif, center_pos):
+        """Sum motif count and total sequence length across all contigs in REF."""
+        total_count = 0
+        total_len = 0
+        for contig_id, seq in REF.items():
+            seq_len = len(seq)
+            total_len += seq_len
+            for site in nt_search(str(seq), motif)[1:]:
+                total_count += 1
+            for site in nt_search(str(seq), Seq(motif).reverse_complement())[1:]:
+                total_count += 1
+        return total_count, total_len
+
+    rows = []
+    for m in host_motifs:
+        motif = m['motif']
+        cp = m['centerPos']
+        count_h, len_h = total_motif_count_and_length(REF_host, motif, cp)
+        count_b, len_b = total_motif_count_and_length(REF_borg, motif, cp)
+        density_host = (count_h / (len_h / 1000.0)) if len_h else 0
+        density_borg = (count_b / (len_b / 1000.0)) if len_b else 0
+        # Fold: borg/host; <1 means depleted in borg
+        fold_borg_over_host = (density_borg / density_host) if density_host else np.nan
+        # Fisher exact: 2x2 table [motif, non-motif] x [host, borg] to test depletion in borg
+        table = [[count_h, len_h - count_h], [count_b, len_b - count_b]]
+        try:
+            odds_ratio, pvalue_fisher = fisher_exact(table, alternative='two-sided')
+        except Exception:
+            odds_ratio, pvalue_fisher = np.nan, np.nan
+        rows.append({
+            'motif': motif,
+            'host_total_count': count_h,
+            'host_total_kb': len_h / 1000.0,
+            'host_density_per_kb': density_host,
+            'borg_total_count': count_b,
+            'borg_total_kb': len_b / 1000.0,
+            'borg_density_per_kb': density_borg,
+            'fold_borg_over_host': fold_borg_over_host,
+            'fisher_pvalue': pvalue_fisher,
+        })
+
+    df = pd.DataFrame(rows)
+    print("\nOverall motif density per kb (host ref vs borg ref):")
+    print(df.to_string(index=False))
+
+    out_path = os.path.join(output_dir, 'motif_density_overall_per_kb.tsv')
+    os.makedirs(output_dir, exist_ok=True)
+    df.to_csv(out_path, sep='\t', index=False)
+    print(f"Table saved to: {out_path}\n")
+    return df
+
 
 if __name__ == "__main__":
     borg_ref = "/home/shuaiw/borg/paper/borg_data/batch_export2/BLACK_Borg-presumed-host-methylation_sites_BLACK-SR-VP_26_10_2019_C_40cm_scaffold_23_FINAL_IR.fasta"
     # borg_ref = "/home/shuaiw/borg/paper/borg_data/batch_export2/black_borgs/SR-VP_07_25_2022_A1_115cm_PACBIO-HIFI_Black_Borg_32_04.contigs.fa"
     host_motifs_file = "/home/shuaiw/borg/paper/gg_run3/soil_60/soil_60_methylation4/motifs/SR-VP_07_25_2022_A1_60cm_PACBIO-HIFI_METAMDBG_551173_L.motifs.csv"
-    output_dir="../../tmp/figures/borg_fig"
-    REF = read_ref(borg_ref)
-
+    host_ref = "/home/shuaiw/borg/paper/borg_data/Methanoperedens_44_19-type__SR-VP_26_10_2019_1_100cm_part_4.fa"
+    output_dir = "../../tmp/figures/borg_fig"
+    REF_borg = read_ref(borg_ref)
+    REF_host = read_ref(host_ref)
 
     if os.path.exists(host_motifs_file):
-        analyze_motif_gc_relationship(REF, host_motifs_file, window_size=10000, 
-                                    output_dir=output_dir)
-    else:
-        print(f"\nHost motifs file not found: {host_motifs_file}")
-        print("Skipping motif-GC relationship analysis")
+        # Overall density per kb for host ref and borg ref (table)
+        overall_density_table(REF_host, REF_borg, host_motifs_file, output_dir=output_dir)
+        # analyze_motif_gc_relationship(REF_borg, host_motifs_file, window_size=10000,
+        #                               output_dir=output_dir)

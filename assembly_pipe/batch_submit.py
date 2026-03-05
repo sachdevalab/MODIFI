@@ -278,12 +278,30 @@ def batch_soil():
             environment = items[3]
 
             work_dir = os.path.join(outdir, prefix)
+            # cmd = f"""
+            # sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_opt2.smk --config \\
+            #     hifi_bam={hifi_bam} \\
+            #     prefix={prefix} \\
+            #     work_dir={work_dir} \\
+            #     ref={ref} -j 64"  --job-name={prefix}
+            # """
             cmd = f"""
-            sbatch  --partition standard --wrap "snakemake -s soil_ggkbase_opt2.smk --config \\
-                hifi_bam={hifi_bam} \\
-                prefix={prefix} \\
-                work_dir={work_dir} \\
-                ref={ref} -j 64"  --job-name={prefix}
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+                        --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/{prefix} \
+                        --unaligned_bam {hifi_bam} \
+                        --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa \
+                        --read_type hifi \
+                            --min_len 1000 \
+                            --min_cov 3 \
+                            --min_frac 0.3 \
+                            --min_score 30 \
+                            --min_sites 100  \
+                            --mge_file borgs_mp_nanopore.borgs.tsv \
+                            --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
+                            --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
+                        --threads 64" \\
+                        --job-name={prefix}
+
             """
             # cmd = f"""
             # snakemake -s soil_ggkbase_opt2.smk --config \\
@@ -297,14 +315,14 @@ def batch_soil():
 
 
 if __name__ == "__main__":
-    bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
-    cmd_file = "run.sh"
-    prefix_table = "prefix_table.tab"
-    read_list(bam_list, cmd_file, prefix_table)
+    # bam_list = "/home/shuaiw/borg/paper/aws/bam.list"
+    # cmd_file = "run.sh"
+    # prefix_table = "prefix_table.tab"
+    # read_list(bam_list, cmd_file, prefix_table)
 
-    # outdir = "/home/shuaiw/borg/paper/run2/"
-    # cmd_file = "run_asthma.sh"
-    # prefix_table = "prefix_table_soil.tab"
+    outdir = "/home/shuaiw/borg/paper/run2/"
+    cmd_file = "run_asthma.sh"
+    prefix_table = "prefix_table_soil.tab"
     # batch_asthma(cmd_file, prefix_table, outdir)
 
-    # batch_soil()
+    batch_soil()
