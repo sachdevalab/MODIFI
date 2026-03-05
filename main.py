@@ -456,18 +456,33 @@ def motif_worker(ctg_name, seg_ref, seg_gff, motif, min_score, each_thread=1):
     ]
     if motif_maker_bin.endswith(".jar"):
         print ("Using MultiMotifMaker for motif finding")
+        raw_motif = motif.replace(".csv", ".raw.csv")
         cmd = ["java", "-jar", motif_maker_bin, 
                "find", 
                "-f", seg_ref, 
                "-g", seg_gff,
-               "-o", motif, 
+               "-o", raw_motif, 
                 "-t", str(each_thread), 
                 "-m", str(min_score),
         ]
 
     # logger.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
+    if motif_maker_bin.endswith(".jar"):
+        raw_motif = motif.replace(".csv", ".raw.csv")
+        # polish the motif
+        polish_motif(raw_motif, motif)
     return ctg_name, 0
+
+def polish_motif(raw_motif, motif):
+    """Read raw motif CSV, convert centerPos to 1-based, round fraction to 4 decimals, write without quotes."""
+    import csv
+    df = pd.read_csv(raw_motif)
+    if "centerPos" in df.columns:
+        df["centerPos"] = df["centerPos"].astype(int) + 1
+    if "fraction" in df.columns:
+        df["fraction"] = df["fraction"].round(4)
+    df.to_csv(motif, index=False, quoting=csv.QUOTE_MINIMAL)
 
 def motif_parallel(args, paras):
     logger.info(f"Detect motif in parallel (memory-aware)... Using {args.threads} threads.")
