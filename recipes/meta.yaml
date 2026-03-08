@@ -1,0 +1,70 @@
+{% set name = "modifi" %}
+{% set version = "0.0.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://github.com/wshuai294/MODIFI/archive/refs/heads/main.tar.gz
+  # sha256: set when pinning a release tarball for reproducibility
+
+build:
+  number: 0
+  noarch: false
+  script:
+    - bash build.sh
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - pkg-config
+    - htslib
+    - pbbam
+  host:
+    - htslib
+    - pbbam
+  run:
+    - python >=3.9
+    - numpy
+    - scipy
+    - pandas
+    - matplotlib
+    - seaborn
+    - statsmodels
+    - biopython
+    - h5py
+    - scikit-learn
+    - pyyaml
+    - pysam
+    - htslib
+    - pbbam
+    - tqdm
+    - joblib
+    - psutil
+    - regex
+    # Optional SMRT Link tools (user can install separately)
+    - pbmm2
+    - pbtk
+    - samtools
+
+test:
+  commands:
+    - modifi --help
+
+about:
+  home: https://github.com/wshuai294/MODIFI
+  license: MIT
+  license_file: LICENSE
+  summary: DNA modification detection from PacBio SMRT metagenomic data
+  description: |
+    MODIFI detects DNA base modifications and infers host–mobile genetic
+    element (MGE) linkages from PacBio metagenomic sequencing data. It supports
+    modification calling, motif discovery, and host–MGE association for both
+    subreads and HiFi read types.
+
+extra:
+  identifiers:
+    - biotools:modifi
+  maintainers:
+    - wshuai294
