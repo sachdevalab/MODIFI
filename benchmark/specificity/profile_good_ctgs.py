@@ -785,7 +785,7 @@ def out_best_ctgs2(ref, best_ref, best_ctgs, best_ctg_dir):
                     SeqIO.write(record, f_out, "fasta")
     print(f"Extracted {len(best_ctgs)} best contigs to {best_ref}")
 
-def count_motifs(best_ctgs, all_dir, prefix, environment, ctg_taxa_dict):
+def count_motifs(best_ctgs, all_dir, prefix, environment, ctg_taxa_dict, checkm2_dict):
     data = []
     has_motif_ctg_num = 0
     motif_num_list = []
@@ -807,7 +807,8 @@ def count_motifs(best_ctgs, all_dir, prefix, environment, ctg_taxa_dict):
         ctg_RM_num = len(ctg_RM_dict)
         # if ctg_phylum == "Unknown":
         #     os.system(f"cp {ctg_obj.ctg_ref} /home/shuaiw/borg/paper/specificity/ming_second_chr")
-        data.append([prefix, unique_motifs_num, environment,ctg, ctg_phylum, ctg_domain, ctg_lineage, ctg_len,ctg_RM_num])
+        completeness, contamination = checkm2_dict.get(ctg, (np.nan, np.nan))
+        data.append([prefix, unique_motifs_num, environment,ctg, ctg_phylum, ctg_domain, ctg_lineage, ctg_len, ctg_RM_num, completeness, contamination])
 
     return data
 
@@ -1201,11 +1202,12 @@ def main(all_dir, fig_dir, sample_env_dict):
                             regulate_motif_num, len(best_ctgs), cpu_time_hours, wallclock_time_hours, peak_memory_gb])
 
         # print (f"Total {len(best_ctgs)} best contigs with depth >= 10 found.")
-        all_data += count_motifs(best_ctgs, all_dir, prefix, sample_env_dict[prefix], ctg_taxa_dict)
+        checkm2_dict = sample_obj.get_checkm2_metrics_by_contig()
+        all_data += count_motifs(best_ctgs, all_dir, prefix, sample_env_dict[prefix], ctg_taxa_dict, checkm2_dict)
         # all_base_data += count_modified_base(all_dir, prefix, best_ctgs, sample_obj.length_dict, sample_env_dict[prefix],ctg_taxa_dict)
         # break
     print ("start plot...")
-    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len', 'RM_num'])
+    df_all_data = pd.DataFrame(all_data, columns=['sample', 'motif_num', 'environment', 'contig', 'phylum', 'domain', 'lineage','ctg_len', 'RM_num', 'completeness', 'contamination'])
     df_genome_data = pd.DataFrame(genome_data, columns=['sample', 'N50', 'genome_size', 'environment', 'map_ratio', 'linkage_num', 'regulate_motif_num','best_ctg_num','cpu_time_hours','wallclock_time_hours','peak_memory_gb'])
     # df_all_base_data = pd.DataFrame(all_base_data, columns=['sample', 'ctg', 'length', 'modified_num', 'modified_motif_num', 'modified_ratio', 'modified_motif_ratio', 'motif_ratio', 'environment','phylum'])
 
@@ -1608,7 +1610,7 @@ def plot_motif_len(fig_dir):
 
 
 if __name__ == "__main__":
-    meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
+    meta_file = "/home/shuaiw/MODIFI/assembly_pipe/prefix_table.tab"
     fig_dir = "../../tmp/figures/multi_env_linkage/"
     genome_list_file =  "/home/shuaiw/borg/paper/specificity/genome.list"
     all_dir = "/home/shuaiw/borg/paper/run2/"

@@ -415,5 +415,11 @@ df_all_data <- read.csv(paste0(fig_dir, "motif_num_all_samples.csv"))
 count_good_ctgs(df_all_data, fig_dir)
 
 # Count the average number of motifs per genome
-average_motifs <- mean(df_all_data$motif_num)
-cat(sprintf("Average number of motifs per genome: %.2f, median: %.2f\n", average_motifs, median(df_all_data$motif_num)))
+## in counting this, only include contigs with completeness > 90%
+filtered_df_all_data <- df_all_data[df_all_data$completeness > 90, ]
+average_motifs <- mean(filtered_df_all_data$motif_num)
+## also count how many contigs with completeness > 90%
+num_contigs_completeness_90 <- nrow(filtered_df_all_data)
+cat(sprintf("Average number of motifs per genome: %.2f, median: %.2f\n", average_motifs, median(filtered_df_all_data$motif_num)))
+cat(sprintf("Number of contigs with completeness > 90%%: %d\n", num_contigs_completeness_90))
+cat(sprintf("Proportion of contigs with completeness > 90%%: %.2f%%\n", num_contigs_completeness_90 / nrow(df_all_data) * 100))

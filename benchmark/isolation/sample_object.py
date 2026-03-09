@@ -556,6 +556,32 @@ class My_sample(object):
         print (f"Total {len(high_quality_ctgs)} high quality contigs found.")
         return high_quality_ctgs
 
+    def get_checkm2_metrics_by_contig(self):
+        """
+        Read CheckM2 quality_report.tsv and return per-contig
+        completeness/contamination metrics.
+        """
+        checkm2_dict = {}
+        if not os.path.exists(self.checkm):
+            print(f"[⚠️] CheckM file not found: {self.checkm}")
+            return checkm2_dict
+
+        df = pd.read_csv(self.checkm, sep="\t", header=0)
+        required_cols = {"Name", "Completeness", "Contamination"}
+        if not required_cols.issubset(df.columns):
+            print(f"[⚠️] CheckM file does not have required columns.")
+            return checkm2_dict
+
+        for _, row in df.iterrows():
+            ctg_name = str(row["Name"])
+            completeness = row["Completeness"]
+            contamination = row["Contamination"]
+            checkm2_dict[ctg_name] = (completeness, contamination)
+            # Some reports store contig names with a fasta extension.
+            if ctg_name.endswith(".fa") or ctg_name.endswith(".fasta"):
+                checkm2_dict[os.path.splitext(ctg_name)[0]] = (completeness, contamination)
+        return checkm2_dict
+
     def get_circular_ctgs(self):
         """
         Get the best contig based on length from a fasta file.
