@@ -1,4 +1,6 @@
 fig_dir <- "../../tmp/figures/multi_env_linkage/"
+library(ggplot2)
+library(patchwork)
 df_all_data <- read.csv(paste0(fig_dir, "motif_num_all_samples.csv"))
 
 # Count genomes with 0 motifs per phylum
@@ -81,6 +83,22 @@ gram_positive_phyla <- c("Bacillota", "Bacillota_A", "Bacillota_C", "Bacillota_I
 archaea_phyla <- c("Aenigmatarchaeota", "Methanobacteriota", "Thermoproteota", 
                    "Halobacteriota", "Nanoarchaeota", "Thermoplasmatota")
 
+# Percentage of domain/type among unmodified genomes (motif_num == 0)
+zero_motif_genomes$phylum_clean <- gsub("^p__", "", zero_motif_genomes$phylum)
+zero_motif_genomes$domain_type <- ifelse(zero_motif_genomes$phylum_clean %in% archaea_phyla, "Archaea",
+                                         ifelse(zero_motif_genomes$phylum_clean %in% gram_positive_phyla,
+                                                "Gram-Positive", "Gram-Negative"))
+
+zero_total <- nrow(zero_motif_genomes)
+zero_gp <- sum(zero_motif_genomes$domain_type == "Gram-Positive")
+zero_gn <- sum(zero_motif_genomes$domain_type == "Gram-Negative")
+zero_archaea <- sum(zero_motif_genomes$domain_type == "Archaea")
+
+cat("Percentage in unmodified genomes (motif_num == 0):\n")
+cat(sprintf("  Gram-Positive: %d / %d (%.2f%%)\n", zero_gp, zero_total, zero_gp / zero_total * 100))
+cat(sprintf("  Gram-Negative: %d / %d (%.2f%%)\n", zero_gn, zero_total, zero_gn / zero_total * 100))
+cat(sprintf("  Archaea: %d / %d (%.2f%%)\n\n", zero_archaea, zero_total, zero_archaea / zero_total * 100))
+
 df_filtered$domain_type <- ifelse(df_filtered$phylum_clean %in% archaea_phyla, "Archaea",
                                    ifelse(df_filtered$phylum_clean %in% gram_positive_phyla, 
                                           "Gram-Positive", "Gram-Negative"))
@@ -140,10 +158,53 @@ if (fisher_result$p.value < 0.05) {
 }
 cat(paste(rep("=", 80), collapse = ""), "\n\n")
 
-# Plot bar chart of proportion with zero motifs
-library(ggplot2)
-library(patchwork)
+# Publication-style enrichment bar plot (Gram-Positive vs Gram-Negative)
+bar_df <- data.frame(
+  group = c("Gram-Positive", "Gram-Negative"),
+  zero = c(gram_pos_zero, gram_neg_zero),
+  total = c(gram_pos_zero + gram_pos_with, gram_neg_zero + gram_neg_with),
+  percentage = c(gram_pos_prop, gram_neg_prop),
+  stringsAsFactors = FALSE
+)
+bar_df$group <- factor(bar_df$group, levels = c("Gram-Positive", "Gram-Negative"))
+bar_df$label <- sprintf("%d/%d (%.2f%%)", bar_df$zero, bar_df$total, bar_df$percentage)
 
+star_label <- ifelse(fisher_result$p.value < 0.001, "***",
+                     ifelse(fisher_result$p.value < 0.01, "**",
+                            ifelse(fisher_result$p.value < 0.05, "*", "ns")))
+p_label <- paste0("p = ", format(fisher_result$p.value, scientific = TRUE, digits = 2))
+
+y_bracket <- max(23, max(bar_df$percentage) + 3)
+y_stars <- y_bracket + 0.45
+y_limit <- max(25, y_bracket + 1.0)
+
+p_enrichment <- ggplot(bar_df, aes(x = group, y = percentage, fill = group)) +
+  geom_col(width = 0.7, color = "gray25", linewidth = 0.35) +
+  annotate("segment", x = 1, xend = 1, y = y_bracket - 1, yend = y_bracket) +
+  annotate("segment", x = 1, xend = 2, y = y_bracket, yend = y_bracket) +
+  annotate("segment", x = 2, xend = 2, y = y_bracket - 1, yend = y_bracket) +
+  annotate("text", x = 1.5, y = y_stars, label = star_label, size = 4.2, fontface = "bold") +
+  scale_fill_manual(values = c("Gram-Positive" = "#808080", "Gram-Negative" = "#808080")) +
+  scale_y_continuous(limits = c(0, y_limit), breaks = seq(0, 25, 5), expand = c(0, 0)) +
+  labs(
+    x = NULL,
+    y = "Genomes without motifs (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    panel.grid.major.x = element_blank()
+  )
+
+ggsave(paste0(fig_dir, "gram_enrichment_zero_motif_barplot.pdf"),
+       p_enrichment, width = 2, height = 4, dpi = 300)
+ggsave(paste0(fig_dir, "gram_enrichment_zero_motif_barplot.png"),
+       p_enrichment, width = 2, height = 4, dpi = 300)
+
+# Plot bar chart of proportion with zero motifs
 # Filter for phyla with proportion > 0
 plot_df <- proportion_df[proportion_df$proportion > 0, ]
 
