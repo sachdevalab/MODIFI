@@ -3,6 +3,24 @@ library(ggplot2)
 library(patchwork)
 df_all_data <- read.csv(paste0(fig_dir, "motif_num_all_samples.csv"))
 
+# Load phylum classification from annotation file
+annotation_file <- "phylum_gram_archaea_annotation.csv"
+if (!file.exists(annotation_file)) {
+  annotation_file <- paste0(fig_dir, "phylum_gram_archaea_annotation.csv")
+}
+if (!file.exists(annotation_file)) {
+  stop("Cannot find phylum_gram_archaea_annotation.csv in current directory or fig_dir.")
+}
+annotation_df <- read.csv(annotation_file, stringsAsFactors = FALSE)
+phylum_class_map <- setNames(annotation_df$classification, annotation_df$phylum)
+
+classify_phylum_type <- function(phylum_values, class_map) {
+  phylum_clean <- gsub("^p__", "", phylum_values)
+  phylum_type <- unname(class_map[phylum_clean])
+  phylum_type[is.na(phylum_type)] <- "Gram-Negative"
+  phylum_type
+}
+
 # Count genomes with 0 motifs per phylum
 zero_motif_genomes <- df_all_data[df_all_data$motif_num == 0, ]
 zero_counts <- table(zero_motif_genomes$phylum)
@@ -63,31 +81,22 @@ cat("Genomes with RM_num > 0:", sum(zero_motif_genomes$RM_num > 0), "\n")
 # Fisher's exact test for Gram-positive vs Gram-negative enrichment
 cat("\n\n" , paste(rep("=", 80), collapse = ""), "\n")
 cat("FISHER'S EXACT TEST: Gram-Positive vs Gram-Negative Enrichment\n")
-cat("(Only considering phyla with at least one genome without motifs)\n")
+cat("(Considering all phyla)\n")
 cat(paste(rep("=", 80), collapse = ""), "\n\n")
 
-# Get phyla that have at least one genome with 0 motifs
-phyla_with_zero <- names(zero_counts[zero_counts > 0])
+# Use all phyla for Fisher tests and enrichment plotting
+df_filtered <- df_all_data
 
-# Filter to only include genomes from these phyla
-df_filtered <- df_all_data[df_all_data$phylum %in% phyla_with_zero, ]
-
-cat(sprintf("Total genomes in analysis: %d (from %d phyla with no-motif genomes)\n", 
-            nrow(df_filtered), length(phyla_with_zero)))
-cat(sprintf("Total genomes excluded: %d (from phyla with no no-motif genomes)\n\n", 
-            nrow(df_all_data) - nrow(df_filtered)))
+cat(sprintf("Total genomes in analysis: %d (from %d phyla)\n\n",
+            nrow(df_filtered), length(unique(df_filtered$phylum))))
 
 # Clean phylum names and classify by domain/Gram stain
 df_filtered$phylum_clean <- gsub("^p__", "", df_filtered$phylum)
-gram_positive_phyla <- c("Bacillota", "Bacillota_A", "Bacillota_C", "Bacillota_I", "Actinomycetota")
-archaea_phyla <- c("Aenigmatarchaeota", "Methanobacteriota", "Thermoproteota", 
-                   "Halobacteriota", "Nanoarchaeota", "Thermoplasmatota")
+
 
 # Percentage of domain/type among unmodified genomes (motif_num == 0)
 zero_motif_genomes$phylum_clean <- gsub("^p__", "", zero_motif_genomes$phylum)
-zero_motif_genomes$domain_type <- ifelse(zero_motif_genomes$phylum_clean %in% archaea_phyla, "Archaea",
-                                         ifelse(zero_motif_genomes$phylum_clean %in% gram_positive_phyla,
-                                                "Gram-Positive", "Gram-Negative"))
+zero_motif_genomes$domain_type <- classify_phylum_type(zero_motif_genomes$phylum, phylum_class_map)
 
 zero_total <- nrow(zero_motif_genomes)
 zero_gp <- sum(zero_motif_genomes$domain_type == "Gram-Positive")
@@ -99,9 +108,7 @@ cat(sprintf("  Gram-Positive: %d / %d (%.2f%%)\n", zero_gp, zero_total, zero_gp 
 cat(sprintf("  Gram-Negative: %d / %d (%.2f%%)\n", zero_gn, zero_total, zero_gn / zero_total * 100))
 cat(sprintf("  Archaea: %d / %d (%.2f%%)\n\n", zero_archaea, zero_total, zero_archaea / zero_total * 100))
 
-df_filtered$domain_type <- ifelse(df_filtered$phylum_clean %in% archaea_phyla, "Archaea",
-                                   ifelse(df_filtered$phylum_clean %in% gram_positive_phyla, 
-                                          "Gram-Positive", "Gram-Negative"))
+df_filtered$domain_type <- classify_phylum_type(df_filtered$phylum, phylum_class_map)
 
 # Separate Fisher test: Bacteria only (Gram-Positive vs Gram-Negative)
 df_bacteria <- df_filtered[df_filtered$domain_type != "Archaea", ]
@@ -139,12 +146,18 @@ cat("\n")
 # Calculate proportions for interpretation
 gram_pos_prop <- gram_pos_zero / (gram_pos_zero + gram_pos_with) * 100
 gram_neg_prop <- gram_neg_zero / (gram_neg_zero + gram_neg_with) * 100
+archaea_zero <- sum(df_filtered$domain_type == "Archaea" & df_filtered$motif_num == 0)
+archaea_with <- sum(df_filtered$domain_type == "Archaea" & df_filtered$motif_num > 0)
+archaea_total <- archaea_zero + archaea_with
+archaea_prop <- ifelse(archaea_total > 0, archaea_zero / archaea_total * 100, NA)
 
 cat("Summary:\n")
 cat(sprintf("  Gram-Positive genomes without motifs: %d / %d (%.2f%%)\n", 
             gram_pos_zero, gram_pos_zero + gram_pos_with, gram_pos_prop))
 cat(sprintf("  Gram-Negative genomes without motifs: %d / %d (%.2f%%)\n", 
             gram_neg_zero, gram_neg_zero + gram_neg_with, gram_neg_prop))
+cat(sprintf("  Archaea genomes without motifs: %d / %d (%.2f%%)\n",
+            archaea_zero, archaea_total, archaea_prop))
 cat("\n")
 
 if (fisher_result$p.value < 0.05) {
@@ -158,33 +171,60 @@ if (fisher_result$p.value < 0.05) {
 }
 cat(paste(rep("=", 80), collapse = ""), "\n\n")
 
-# Publication-style enrichment bar plot (Gram-Positive vs Gram-Negative)
-bar_df <- data.frame(
-  group = c("Gram-Positive", "Gram-Negative"),
-  zero = c(gram_pos_zero, gram_neg_zero),
-  total = c(gram_pos_zero + gram_pos_with, gram_neg_zero + gram_neg_with),
-  percentage = c(gram_pos_prop, gram_neg_prop),
-  stringsAsFactors = FALSE
-)
-bar_df$group <- factor(bar_df$group, levels = c("Gram-Positive", "Gram-Negative"))
-bar_df$label <- sprintf("%d/%d (%.2f%%)", bar_df$zero, bar_df$total, bar_df$percentage)
+# Publication-style enrichment bar plot with pairwise Fisher tests
+group_order <- c("Gram-Positive", "Gram-Negative", "Archaea")
+bar_df <- data.frame(group = group_order, stringsAsFactors = FALSE)
+bar_df$zero <- sapply(bar_df$group, function(g) sum(df_filtered$domain_type == g & df_filtered$motif_num == 0))
+bar_df$with <- sapply(bar_df$group, function(g) sum(df_filtered$domain_type == g & df_filtered$motif_num > 0))
+bar_df$total <- bar_df$zero + bar_df$with
+bar_df <- bar_df[bar_df$total > 0, ]
+bar_df$percentage <- bar_df$zero / bar_df$total * 100
+bar_df$group <- factor(bar_df$group, levels = group_order[group_order %in% bar_df$group])
+bar_df$group_label <- paste0(as.character(bar_df$group), "\n(n=", bar_df$total, ")")
 
-star_label <- ifelse(fisher_result$p.value < 0.001, "***",
-                     ifelse(fisher_result$p.value < 0.01, "**",
-                            ifelse(fisher_result$p.value < 0.05, "*", "ns")))
-p_label <- paste0("p = ", format(fisher_result$p.value, scientific = TRUE, digits = 2))
+star_from_p <- function(p) {
+  if (is.na(p)) return("ns")
+  if (p < 0.001) return("***")
+  if (p < 0.01) return("**")
+  if (p < 0.05) return("*")
+  return("ns")
+}
 
-y_bracket <- max(23, max(bar_df$percentage) + 3)
-y_stars <- y_bracket + 0.45
-y_limit <- max(25, y_bracket + 1.0)
+# Pairwise Fisher tests across all present groups
+pair_tests <- data.frame(x1 = numeric(0), x2 = numeric(0), y = numeric(0), stars = character(0), stringsAsFactors = FALSE)
+group_levels <- as.character(bar_df$group)
+if (length(group_levels) >= 2) {
+  pair_list <- combn(group_levels, 2, simplify = FALSE)
+  base_y <- max(23, max(bar_df$percentage) + 1.5)
+  step_y <- 1.6
+  for (i in seq_along(pair_list)) {
+    g1 <- pair_list[[i]][1]
+    g2 <- pair_list[[i]][2]
+    zero1 <- bar_df$zero[bar_df$group == g1]
+    with1 <- bar_df$with[bar_df$group == g1]
+    zero2 <- bar_df$zero[bar_df$group == g2]
+    with2 <- bar_df$with[bar_df$group == g2]
+    test_tbl <- matrix(c(zero1, with1, zero2, with2), nrow = 2, byrow = TRUE)
+    p_val <- fisher.test(test_tbl)$p.value
+    cat(sprintf("Pairwise Fisher test (%s vs %s): p = %.4e\n", g1, g2, p_val))
+    if (p_val < 0.05) {
+      pair_tests <- rbind(pair_tests, data.frame(
+        x1 = match(g1, group_levels),
+        x2 = match(g2, group_levels),
+        y = base_y + (i - 1) * step_y,
+        stars = star_from_p(p_val),
+        stringsAsFactors = FALSE
+      ))
+    }
+  }
+}
+
+y_limit <- max(25, ifelse(nrow(pair_tests) > 0, max(pair_tests$y) + 1.2, max(bar_df$percentage) + 2))
 
 p_enrichment <- ggplot(bar_df, aes(x = group, y = percentage, fill = group)) +
-  geom_col(width = 0.7, color = "gray25", linewidth = 0.35) +
-  annotate("segment", x = 1, xend = 1, y = y_bracket - 1, yend = y_bracket) +
-  annotate("segment", x = 1, xend = 2, y = y_bracket, yend = y_bracket) +
-  annotate("segment", x = 2, xend = 2, y = y_bracket - 1, yend = y_bracket) +
-  annotate("text", x = 1.5, y = y_stars, label = star_label, size = 4.2, fontface = "bold") +
-  scale_fill_manual(values = c("Gram-Positive" = "#808080", "Gram-Negative" = "#808080")) +
+  geom_col(width = 0.6, color = "gray25", linewidth = 0.35) +
+  scale_fill_manual(values = c("Gram-Positive" = "#808080", "Gram-Negative" = "#808080", "Archaea" = "#808080")) +
+  scale_x_discrete(labels = setNames(bar_df$group_label, as.character(bar_df$group))) +
   scale_y_continuous(limits = c(0, y_limit), breaks = seq(0, 25, 5), expand = c(0, 0)) +
   labs(
     x = NULL,
@@ -199,10 +239,21 @@ p_enrichment <- ggplot(bar_df, aes(x = group, y = percentage, fill = group)) +
     panel.grid.major.x = element_blank()
   )
 
+if (nrow(pair_tests) > 0) {
+  for (i in 1:nrow(pair_tests)) {
+    p_enrichment <- p_enrichment +
+      annotate("segment", x = pair_tests$x1[i], xend = pair_tests$x1[i], y = pair_tests$y[i] - 0.7, yend = pair_tests$y[i]) +
+      annotate("segment", x = pair_tests$x1[i], xend = pair_tests$x2[i], y = pair_tests$y[i], yend = pair_tests$y[i]) +
+      annotate("segment", x = pair_tests$x2[i], xend = pair_tests$x2[i], y = pair_tests$y[i] - 0.7, yend = pair_tests$y[i]) +
+      annotate("text", x = (pair_tests$x1[i] + pair_tests$x2[i]) / 2, y = pair_tests$y[i] + 0.25,
+               label = pair_tests$stars[i], size = 4.2, fontface = "bold")
+  }
+}
+
 ggsave(paste0(fig_dir, "gram_enrichment_zero_motif_barplot.pdf"),
-       p_enrichment, width = 2, height = 4, dpi = 300)
+       p_enrichment, width = 2.25, height = 4, dpi = 300)
 ggsave(paste0(fig_dir, "gram_enrichment_zero_motif_barplot.png"),
-       p_enrichment, width = 2, height = 4, dpi = 300)
+       p_enrichment, width = 2.25, height = 4, dpi = 300)
 
 # Plot bar chart of proportion with zero motifs
 # Filter for phyla with proportion > 0
@@ -211,13 +262,8 @@ plot_df <- proportion_df[proportion_df$proportion > 0, ]
 # Remove p__ prefix from phylum names
 plot_df$phylum <- gsub("^p__", "", plot_df$phylum)
 
-# Classify by domain and Gram stain
-gram_positive <- c("Bacillota", "Bacillota_A", "Bacillota_C", "Bacillota_I", "Actinomycetota")
-archaea <- c("Aenigmatarchaeota", "Methanobacteriota", "Thermoproteota", 
-             "Halobacteriota", "Nanoarchaeota", "Thermoplasmatota")
-plot_df$domain_type <- ifelse(plot_df$phylum %in% archaea, "Archaea",
-                               ifelse(plot_df$phylum %in% gram_positive, 
-                                      "Gram-Positive", "Gram-Negative"))
+# Classify by domain and Gram stain based on annotation file
+plot_df$domain_type <- classify_phylum_type(plot_df$phylum, phylum_class_map)
 
 # Sort by number of zero-motif genomes (descending) and set factor levels
 plot_df <- plot_df[order(-plot_df$zero_motif_genomes), ]
