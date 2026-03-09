@@ -1164,6 +1164,7 @@ class My_cluster(object):
     def pairwise_edit_distance(self, seq_dir, edit_dir):
         dnadiff_list = []
         dnadiff_mat = np.zeros((len(self.members), len(self.members)))
+        norm_dnadiff_mat = np.zeros((len(self.members), len(self.members)))
         for i in range(len(self.members)):
             for j in range(i+1, len(self.members)):
                 # compute edit distance between self.members[i] and self.members[j]
@@ -1181,14 +1182,28 @@ class My_cluster(object):
                     print ("## dnadiff report not found, adding command to list:", cmd)
             # else:
                 total_snps, total_indels, edit_distance = read_dnadiff_report(dnadiff_report)
+                genome_1_length = get_genome_len_func(genome_1_fasta)
+                genome_2_length = get_genome_len_func(genome_2_fasta)
+                norm_edit_distance = edit_distance / min(genome_1_length, genome_2_length)
                 dnadiff_mat[i][j] = edit_distance
                 dnadiff_mat[j][i] = edit_distance
+                norm_dnadiff_mat[i][j] = norm_edit_distance
+                norm_dnadiff_mat[j][i] = norm_edit_distance
                 # print (f"Total SNPs: {total_snps}, Total Indels: {total_indels}, Edit Distance: {edit_distance}")
                 # ## remove tmp files except the report
                 # for file in os.listdir(edit_dir):
                 #     if file.startswith(f"{self.members[i]}_{self.members[j]}") and not file.endswith(".report"):
                 #         os.remove(os.path.join(edit_dir, file))
-        return dnadiff_list, dnadiff_mat
+        return dnadiff_list, dnadiff_mat, norm_dnadiff_mat
+
+def get_genome_len_func(genome_fasta):
+    ## count from fai file
+    ## use biopython to count the length of the genome
+    from Bio import SeqIO
+    genome_length = 0
+    for record in SeqIO.parse(genome_fasta, "fasta"):
+        genome_length += len(record)
+    return genome_length
 
 def read_dnadiff_report(dnadiff_report):
     ## read total TotalSNPs and TotalIndels from dnadiff report

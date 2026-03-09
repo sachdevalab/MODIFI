@@ -681,7 +681,7 @@ def main_meta():
         os.makedirs(tmp_res, exist_ok=True)
         os.makedirs(paper_fig_dir, exist_ok=True)
 
-        """
+        # """
         # depth_dict = depth_filter(all_dir, min_depth = 10)
         drep_clu_dict = read_drep_cluster(drep_clu_file, {})
         represent_ctg_set = collect_represent_ctgs(dereplicated_genomes_dir)
@@ -702,6 +702,7 @@ def main_meta():
         cluster_id = 0
         dnadiff_list_all = []
         dna_motif_corr = []
+        norm_dna_motif_corr = []
         for cluster, members in drep_clu_dict.items():
             # if cluster != "161_4":
             #     continue
@@ -712,7 +713,7 @@ def main_meta():
                 #                                 fig_dir, tmp_res, min_frac=0.5, min_sites=500)
                 
                 cluster_obj = My_cluster(cluster, members) 
-                dnadiff_list, dnadiff_mat = cluster_obj.pairwise_edit_distance(seq_dir, edit_dir)
+                dnadiff_list, dnadiff_mat, norm_dnadiff_mat = cluster_obj.pairwise_edit_distance(seq_dir, edit_dir)
                 
                 print ("#####cluster_id", cluster, cluster_id, len(drep_clu_dict))
                 cluster_id += 1
@@ -735,7 +736,7 @@ def main_meta():
                 similarity_data_cluster, motif_clade_num, jaccard_matrix = cluster_obj.pairwise_compare(bin_freq=0.6)
                 clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_name, motif_variation_flag]]
                 dna_motif_corr = update_corr(dnadiff_mat, jaccard_matrix, dna_motif_corr, cluster_obj)
-                
+                norm_dna_motif_corr = update_corr(norm_dnadiff_mat, jaccard_matrix, norm_dna_motif_corr, cluster_obj)
                 # variation_data.append([cluster, len(members), motif_variation_flag])
                 # similarity_data += similarity_data_cluster
                 
@@ -747,7 +748,7 @@ def main_meta():
                 #     break
         # clade_df = pd.DataFrame(clade_data, columns=["clade_num", "cluster", "member_num", "phylum", "species", "motif_variation_flag"])
         # clade_df.to_csv(os.path.join(paper_fig_dir, "clade_data.csv"), index=False)
-        """
+        # """
         clade_df = pd.read_csv(os.path.join(paper_fig_dir, "clade_data.csv"))
         plot_stacked_bar(clade_df, paper_fig_dir)
         
@@ -757,7 +758,8 @@ def main_meta():
         # print ("all done")
         # dna_motif_corr_df = pd.DataFrame(dna_motif_corr, columns=["cluster", "contig1", "contig2", "dnadiff", "jaccard"])
         # dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"), index=False)
-        
+        norm_dna_motif_corr_df = pd.DataFrame(norm_dna_motif_corr, columns=["cluster", "contig1", "contig2", "norm_dnadiff", "jaccard"])
+        norm_dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "norm_dna_motif_corr.csv"), index=False)
         # dna_motif_corr_df = pd.read_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"))
         # plot_dna_motif_corr(dna_motif_corr_df, paper_fig_dir)
     # batch_dnadiff(dnadiff_list_all)
@@ -781,7 +783,7 @@ def main_isolation():
         os.makedirs(tmp_res, exist_ok=True)
         os.makedirs(paper_fig_dir, exist_ok=True)
 
-        """
+        # """
         # depth_dict = depth_filter(all_dir, min_depth = 10)
         drep_clu_dict = read_drep_cluster(drep_clu_file, {})
         represent_ctg_set = collect_represent_ctgs(dereplicated_genomes_dir)
@@ -802,6 +804,7 @@ def main_isolation():
         cluster_id = 0
         dnadiff_list_all = []
         dna_motif_corr = []
+        norm_dna_motif_corr = []
         for cluster, members in drep_clu_dict.items():
             if len(members) > cutoff:
                 # print ("cluster", cluster, len(members), len(variation_data))
@@ -810,7 +813,7 @@ def main_isolation():
                 #                                 fig_dir, tmp_res, "isolation", min_frac=0.5, min_sites=500)
                 
                 cluster_obj = My_cluster(cluster, members) 
-                dnadiff_list, dnadiff_mat = cluster_obj.pairwise_edit_distance(seq_dir, edit_dir)
+                dnadiff_list, dnadiff_mat, norm_dnadiff_mat = cluster_obj.pairwise_edit_distance(seq_dir, edit_dir)
                 print ("#####cluster_id", cluster, cluster_id, len(drep_clu_dict))
                 cluster_id += 1
                 # break
@@ -832,6 +835,7 @@ def main_isolation():
                 motif_variation_flag = cluster_obj.check_diff_motifs()
                 similarity_data_cluster, motif_clade_num, jaccard_matrix = cluster_obj.pairwise_compare(bin_freq=0.6)
                 dna_motif_corr = update_corr(dnadiff_mat, jaccard_matrix, dna_motif_corr, cluster_obj)
+                norm_dna_motif_corr = update_corr(norm_dnadiff_mat, jaccard_matrix, norm_dna_motif_corr, cluster_obj)
                 # variation_data.append([cluster, len(members), motif_variation_flag])
                 # similarity_data += similarity_data_cluster
                 clade_data += [[motif_clade_num, cluster, len(members), cluster_phylum, cluster_species, motif_variation_flag]]
@@ -841,17 +845,18 @@ def main_isolation():
                 #     cluster_obj.plot_profile(cluster, plot_name, cluster_species)
                 # if len(variation_data) > 10:
                 #     break
-        """
+        # """
         # plot_variation_fraction(variation_data, paper_fig_dir)
         # plot_similarity_dist(similarity_data, paper_fig_dir)
         # clade_df = pd.DataFrame(clade_data, columns=["clade_num", "cluster", "member_num", "phylum", "species", "motif_variation_flag"])
         # clade_df.to_csv(os.path.join(paper_fig_dir, "clade_data.csv"), index=False)
-        clade_df = pd.read_csv(os.path.join(paper_fig_dir, "clade_data.csv"))
-        plot_stacked_bar(clade_df, paper_fig_dir)
+        # clade_df = pd.read_csv(os.path.join(paper_fig_dir, "clade_data.csv"))
+        # plot_stacked_bar(clade_df, paper_fig_dir)
         # ## dna_motif_corr to df 
-        # dna_motif_corr_df = pd.DataFrame(dna_motif_corr, columns=["cluster", "contig1", "contig2", "dnadiff", "jaccard"])
-        # dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"), index=False)
-        
+        dna_motif_corr_df = pd.DataFrame(dna_motif_corr, columns=["cluster", "contig1", "contig2", "dnadiff", "jaccard"])
+        dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"), index=False)
+        norm_dna_motif_corr_df = pd.DataFrame(norm_dna_motif_corr, columns=["cluster", "contig1", "contig2", "norm_dnadiff", "jaccard"])
+        norm_dna_motif_corr_df.to_csv(os.path.join(paper_fig_dir, "norm_dna_motif_corr.csv"), index=False)
         # dna_motif_corr_df = pd.read_csv(os.path.join(paper_fig_dir, "dna_motif_corr.csv"))
         # plot_dna_motif_corr(dna_motif_corr_df, paper_fig_dir)
         
