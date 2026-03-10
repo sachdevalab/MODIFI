@@ -2,7 +2,7 @@ library(readr)
 library(ggplot2)
 library(patchwork)
 
-df <- read_csv("/home/shuaiw/mGlu/tmp/figures/multi_env_linkage/genome_data_all_samples.csv")
+df <- read_csv("/home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/genome_data_all_samples.csv")
 
 # Define color map for environments
 env_colors <- c(
@@ -25,7 +25,7 @@ p1 <- ggplot(df, aes(x = environment, y = N50, fill = environment)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "none") +
   labs(title = "",
-       x = "Environment",
+       x = "Habitat",
        y = "N50 (bp)") +
   scale_y_log10() +
   scale_fill_manual(values = env_colors)
@@ -38,7 +38,7 @@ p2 <- ggplot(df, aes(x = environment, y = genome_size, fill = environment)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "none") +
   labs(title = "",
-       x = "Environment",
+       x = "Habitat",
        y = "Genome Size (bp)") +
   scale_y_log10() +
   scale_fill_manual(values = env_colors)
@@ -50,7 +50,7 @@ combined_plot <- p1 + p2
 print(combined_plot)
 
 # Save the plot
-ggsave("/home/shuaiw/mGlu/tmp/figures/multi_env_linkage/assembly_statistics_by_environment.pdf", 
+ggsave("/home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/assembly_statistics_by_environment.pdf", 
        combined_plot, 
        width = 8, 
        height = 4)

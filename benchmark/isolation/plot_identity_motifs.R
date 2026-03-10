@@ -243,12 +243,12 @@ analyze_jaccard <- function(fig_dir) {
   p3_no_legend <- p3 + theme(legend.position = "none")
   p4_no_legend <- p4 + theme(legend.position = "none")
   
-  # Combine p3 and p4 with shared legend
+  # Combine p3 and p4 with shared legend at bottom
   combined_plot_34 <- arrangeGrob(
-    shared_legend,
     arrangeGrob(p3_no_legend, p4_no_legend, ncol = 2),
+    shared_legend,
     nrow = 2,
-    heights = c(0.5, 10)
+    heights = c(10, 0.5)
   )
   
   ggsave(paste0(fig_dir, "/proportion_perfect_jaccard_by_phylum_mge.pdf"), 
@@ -372,10 +372,10 @@ analyze_jaccard <- function(fig_dir) {
   p6_no_legend <- p6 + theme(legend.position = "none")
   
   combined_plot_56 <- arrangeGrob(
-    shared_legend_box,
     arrangeGrob(p5_no_legend, p6_no_legend, ncol = 2),
+    shared_legend_box,
     nrow = 2,
-    heights = c(0.5, 10)
+    heights = c(10, 0.5)
   )
   
   ggsave(paste0(fig_dir, "/jaccard_boxplot_by_phylum_mge.pdf"), 

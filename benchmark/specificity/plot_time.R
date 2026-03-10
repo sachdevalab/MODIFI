@@ -2,7 +2,7 @@ library(readr)
 library(ggplot2)
 library(patchwork)
 
-df <- read_csv("/home/shuaiw/mGlu/tmp/figures/multi_env_linkage/genome_data_all_samples.csv")
+df <- read_csv("/home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/genome_data_all_samples.csv")
 
 # Define color map for environments
 env_colors <- c(
@@ -57,7 +57,7 @@ p1 <- ggplot(df, aes(x = environment, y = cpu_time_hours, fill = environment)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "none") +
   labs(title = "",
-       x = "Environment",
+       x = "Habitat",
        y = "CPU Time (hours, log scale)") +
   scale_y_log10() +
   scale_fill_manual(values = env_colors) +
@@ -77,7 +77,7 @@ p2 <- ggplot(df, aes(x = environment, y = wallclock_time_hours, fill = environme
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "none") +
   labs(title = "",
-       x = "Environment",
+       x = "Habitat",
        y = "Wall-clock Time (hours, log scale)") +
   scale_y_log10() +
   scale_fill_manual(values = env_colors) +
@@ -97,7 +97,7 @@ p3 <- ggplot(df, aes(x = environment, y = peak_memory_gb, fill = environment)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "none") +
   labs(title = "",
-       x = "Environment",
+       x = "Habitat",
        y = "Peak Memory (GB, log scale)") +
   scale_y_log10() +
   scale_fill_manual(values = env_colors) +
@@ -110,7 +110,7 @@ combined_plot <- p1 + p2 + p3
 print(combined_plot)
 
 # Save the plot
-ggsave("/home/shuaiw/mGlu/tmp/figures/multi_env_linkage/time_usage_by_environment.pdf", 
+ggsave("/home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/time_usage_by_environment.pdf", 
        combined_plot, 
        width = 12, 
        height = 4)

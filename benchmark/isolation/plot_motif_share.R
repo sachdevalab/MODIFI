@@ -165,7 +165,7 @@ plot_cross_taxa <- function(fig_dir) {
       panel.grid.minor = element_blank(),
       panel.background = element_rect(fill = "white", colour = NA),
       plot.background = element_rect(fill = "white", colour = NA),
-      legend.position = "top"
+      legend.position = "none"
     )
   
   # Save separate plot with MGE type breakdown
