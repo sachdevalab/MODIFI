@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 import networkx as nx
 import re
@@ -31,6 +32,108 @@ def export_mge_degrees(G, out_csv):
     else:
         print('No virus or plasmid nodes found in the graph.')
 
+
+def export_network_to_excel(G, out_path):
+    """
+    Export network to an Excel file with two sheets: Nodes and Edges.
+    Nodes: Node_ID, Label, Type
+    Edges: Source, Target, Weight, Type
+    """
+    nodes_rows = []
+    for node, data in G.nodes(data=True):
+        nodes_rows.append({
+            'Node_ID': str(node),
+            'Label': data.get('label', node),
+            'Type': data.get('type', ''),
+        })
+    nodes_df = pd.DataFrame(nodes_rows)
+
+    edges_rows = []
+    for u, v, data in G.edges(data=True):
+        edges_rows.append({
+            'Source': str(u),
+            'Target': str(v),
+            'Weight': data.get('weight', None),
+            'Type': data.get('type', ''),
+        })
+    edges_df = pd.DataFrame(edges_rows)
+
+    with pd.ExcelWriter(out_path, engine='openpyxl') as writer:
+        nodes_df.to_excel(writer, sheet_name='Nodes', index=False)
+        edges_df.to_excel(writer, sheet_name='Edges', index=False)
+    print(f"Network exported to {out_path} (Nodes: {len(nodes_df)}, Edges: {len(edges_df)})")
+
+
+def export_network_to_json(G, out_path):
+    """
+    Export network to JSON in the format:
+    {"nodes": [{"id": ..., "attributes": {"Name": label, "Type": type}}, ...],
+     "edges": [{"id": idx, "source": ..., "target": ..., "attributes": {"Weight": ..., "Type": ...}}, ...]}
+    """
+    nodes_list = []
+    for node, data in G.nodes(data=True):
+        label = data.get('label', node)
+        node_type = data.get('type', '')
+        nodes_list.append({
+            "id": str(node),
+            "attributes": {
+                "Name": str(label),
+                "Type": str(node_type),
+            }
+        })
+
+    edges_list = []
+    for idx, (u, v, data) in enumerate(G.edges(data=True)):
+        attrs = {}
+        if data.get('weight') is not None:
+            attrs["Weight"] = float(data['weight'])
+        if data.get('type') is not None:
+            attrs["Type"] = str(data['type'])
+        edges_list.append({
+            "id": idx,
+            "source": str(u),
+            "target": str(v),
+            "attributes": attrs,
+        })
+
+    out = {"nodes": nodes_list, "edges": edges_list}
+    with open(out_path, 'w') as f:
+        json.dump(out, f, indent=2)
+    print(f"Network exported to {out_path} (Nodes: {len(nodes_list)}, Edges: {len(edges_list)})")
+
+
+def write_filtered_gml_abundant_phylum(G, out_path, min_host_per_phylum=5):
+    """
+    Write a filtered GML that keeps only host nodes in abundant phyla (> min_host_per_phylum nodes).
+    MGE nodes are kept only if they have at least one edge to a kept host.
+    """
+    mge_types = {'virus', 'plasmid', 'novel'}
+    # Host nodes: type = phylum (not MGE type)
+    host_phylum_counts = defaultdict(int)
+    for n, d in G.nodes(data=True):
+        t = d.get('type')
+        if t and t not in mge_types:
+            host_phylum_counts[t] += 1
+    abundant_phyla = {p for p, c in host_phylum_counts.items() if c > min_host_per_phylum}
+    # Host nodes to keep: phylum in abundant_phyla
+    host_nodes_keep = {n for n, d in G.nodes(data=True)
+                       if d.get('type') not in mge_types and d.get('type') in abundant_phyla}
+    # MGE nodes to keep: have at least one edge to a kept host (for DiGraph: successor in host_nodes_keep)
+    mge_nodes_keep = set()
+    for n, d in G.nodes(data=True):
+        if d.get('type') not in mge_types:
+            continue
+        for succ in G.successors(n):
+            if succ in host_nodes_keep:
+                mge_nodes_keep.add(n)
+                break
+    nodes_to_keep = host_nodes_keep | mge_nodes_keep
+    filtered_G = G.subgraph(nodes_to_keep).copy()
+    nx.write_gml(filtered_G, out_path)
+    print(f"Filtered GML (hosts only in phyla with >{min_host_per_phylum} nodes): "
+          f"{filtered_G.number_of_nodes()} nodes, {filtered_G.number_of_edges()} edges -> {out_path}")
+
+
 def collect_host_ctgs(prefix, sample_obj, ctg_taxa_dict,host_ctg_set):
     """
     Get the edge data from the host summary file.
@@ -60,13 +163,14 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
              host_clu_dict, mge_clu_dict, sample_obj, ctg_taxa_dict):
     """
     Get the edge data from the host summary file.
+    Builds a directed graph with edges MGE -> host.
     """
     sample_obj.specificity_cutoff = 0.001
     sample_obj.final_score_cutoff = 0.8
     our_linkages, our_ctg_linkages, linkage_info_list = sample_obj.read_linkage_dict()
 
     host_clu_lineage_dict = {}
-    G = nx.Graph()
+    G = nx.DiGraph()
     for linkage_obj in linkage_info_list:
 
         host_lineage = ctg_taxa_dict[linkage_obj.host] if linkage_obj.host in ctg_taxa_dict else "NA"
@@ -97,11 +201,12 @@ def get_edge(cluster_anno_dict, MGE_type_dict, gc_data, environment, prefix,
         ctg_phylum = classify_taxa(represent_ctg_lineage, "phylum")
         G.add_node(host_clu, label=linkage_obj.host, type=ctg_phylum)
         cluster_anno_dict[host_clu] = ctg_phylum
+        # Directed edge: MGE -> host
         G.add_edge(mge_clu_dict[linkage_obj.mge], host_clu, weight=linkage_obj.final_score, type='share')
 
     return G, gc_data, cluster_anno_dict, host_clu_lineage_dict
     
-def plot_network2(G,paper_fig_dir ,fig_name="network_test_plot2"):
+def plot_network2(G, paper_fig_dir, fig_name="network_test_plot2"):
 
     
     # plt.figure(1, figsize=(12, 14))
@@ -399,12 +504,13 @@ def profile_network(whole_G, ctg_taxa_dict, clu_mge_dict=None):
             ctg_taxa = get_detail_taxa_name(represent_ctg_lineage)
             print(f"{node} {node_label}: {degree} (Host annotation: {ctg_species}, {ctg_taxa})")
     
-    # see which host has linked the most virus
+    # see which host has linked the most virus (directed: MGE->host, so use predecessors for hosts)
     host_virus_link_count = defaultdict(int)
     for node, degree in whole_G.degree:
         if whole_G.nodes[node]['type'] not in ['virus', 'plasmid', 'novel']:
-            neighbors = list(whole_G.neighbors(node))
-            for neighbor in neighbors:
+            # For directed graph: edges are MGE->host, so linked MGEs are predecessors of host
+            linked_mges = list(whole_G.predecessors(node))
+            for neighbor in linked_mges:
                 if whole_G.nodes[neighbor]['type'] == 'virus':
                     host_virus_link_count[node] += 1
     # get the top 10 hosts that linked the most virus
@@ -735,12 +841,12 @@ def save_host_list(host_ctg_set, host_list_file):
 
 if __name__ == "__main__":  
     ANI = 99
-    meta_file = "/home/shuaiw/mGlu/assembly_pipe/prefix_table.tab"
+    meta_file = "/home/shuaiw/MODIFI/assembly_pipe/prefix_table.tab"
     host_list_file =  "../../tmp/figures/multi_env_linkage/linked_host_list.txt"
     mge_clu_file = "/home/shuaiw/borg/paper/MGE/cluster/megablast.cluster.95ani.tsv"
     paper_fig_dir = f"../../tmp/figures/multi_env_linkage/network_{ANI}/"
     # drep_clu_file = f"/home/shuaiw/borg/paper/specificity/dRep_{ANI}_out/data_tables/Cdb.csv"
-    drep_clu_file = "/home/shuaiw/mGlu/tmp/figures/multi_env_linkage/network_99/dRep_99_out/data_tables/Cdb.csv"
+    drep_clu_file = "/home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/network_99/dRep_99_out/data_tables/Cdb.csv"
     all_dir = "/home/shuaiw/borg/paper/run2/"
     host_ctg_set = set()
     ## mkdir paper_fig_dir if not exists
@@ -756,7 +862,7 @@ if __name__ == "__main__":
     ctg_taxa_dict = get_ctg_taxa(all_dir)
     # """
 
-    whole_G = nx.Graph()
+    whole_G = nx.DiGraph()
     gc_data = []
     cluster_anno_dict = {}
     
@@ -782,6 +888,12 @@ if __name__ == "__main__":
     plot_network2(whole_G, paper_fig_dir)
     ## save whole_G to file by gml
     nx.write_gml(whole_G, f"{paper_fig_dir}/whole_network2.gml")
+    ## filtered GML: only host nodes in abundant phyla (>5 nodes)
+    write_filtered_gml_abundant_phylum(whole_G, f"{paper_fig_dir}/whole_network2_abundant_phylum.gml", min_host_per_phylum=5)
+    ## save network to Excel (Nodes + Edges sheets)
+    export_network_to_excel(whole_G, f"{paper_fig_dir}/network.xlsx")
+    ## save network to JSON (nodes + edges with attributes)
+    export_network_to_json(whole_G, f"{paper_fig_dir}/network.json")
 
     profile_network(whole_G, ctg_taxa_dict, clu_mge_dict)
 
@@ -816,8 +928,8 @@ if __name__ == "__main__":
     export_mge_degrees(whole_G, f"{paper_fig_dir}/virus_plasmid_degrees.csv")
     count_cross_phylum(whole_G, ctg_taxa_dict, clu_mge_dict, rank='phylum')
 
-    ## output the top 5 connected components, and count the number of nodes in it
-    connected_components = sorted(nx.connected_components(whole_G), key=len, reverse=True)
+    ## output the top 5 weakly connected components (directed graph)
+    connected_components = sorted(nx.weakly_connected_components(whole_G), key=len, reverse=True)
     for i, component in enumerate(connected_components[:5]):
         print(f"Connected component {i+1} has {len(component)} nodes")
     ## plot the largest connected component
