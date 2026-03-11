@@ -314,12 +314,122 @@ def run_gg_run2_genomad_motif_plot(
     print(f"Saved GenoMad modification fraction plot -> {out_fig}")
 
 
+def run_linkable_mge_modification_fraction(
+    linkage_csv=None,
+    all_dir="/home/shuaiw/borg/paper/run2/",
+    out_dir=None,
+):
+    """
+    For MGEs in mge_host_gc_cov.csv (linkable MGEs), only consider soil samples,
+    read motif files from all_dir (run2), compute modification fraction per (sample, MGE),
+    write CSV and 2-panel histogram (plasmid / virus).
+    Outputs are written to out_dir (default: MODIFI tmp/figures/borg_fig).
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    if linkage_csv is None:
+        linkage_csv = os.path.join(
+            os.path.dirname(__file__),
+            "../../tmp/figures/multi_env_linkage/network_99/mge_host_gc_cov.csv",
+        )
+    if out_dir is None:
+        out_dir = "/home/shuaiw/MODIFI/tmp/figures/borg_fig"
+    if not os.path.exists(linkage_csv):
+        print(f"Linkage CSV not found: {linkage_csv}; skipping.")
+        return
+    ldf = pd.read_csv(linkage_csv)
+    if "sample" not in ldf.columns or "MGE" not in ldf.columns or "MGE_type" not in ldf.columns:
+        print("Linkage CSV must have columns sample, MGE, MGE_type; skipping.")
+        return
+    # Only consider soil samples
+    if "environment" in ldf.columns:
+        ldf = ldf[ldf["environment"] == "soil"]
+    else:
+        # Fallback: sample name starts with "soil"
+        ldf = ldf[ldf["sample"].astype(str).str.lower().str.startswith("soil")]
+    if len(ldf) == 0:
+        print("No soil samples in linkage CSV; skipping.")
+        return
+    linkable = ldf[["sample", "MGE", "MGE_type"]].drop_duplicates()
+
+    rows = []
+    for _, row in linkable.iterrows():
+        sample, mge, mge_type = row["sample"], row["MGE"], row["MGE_type"]
+        path = motif_file_path(sample, mge, all_dir, use_methylation4=True)
+        if not os.path.exists(path):
+            path = motif_file_path(sample, mge, all_dir, use_methylation4=False)
+        if not os.path.exists(path):
+            continue
+        mdf = pd.read_csv(path)
+        frac_col = mdf.get("fraction", mdf.get("modification_fraction", None))
+        if frac_col is None or len(frac_col) == 0:
+            continue
+        for _, m in mdf.iterrows():
+            motif_str = str(m.get("motifString", ""))
+            center_pos = m.get("centerPos", "")
+            motif_string = f"{motif_str}_{center_pos}" if motif_str else ""
+            frac_val = m.get("fraction", m.get("modification_fraction", None))
+            frac_num = pd.to_numeric(frac_val, errors="coerce")
+            if pd.isna(frac_num):
+                continue
+            n_motifs = m.get("nGenome", m.get("num_motif_sites", m.get("nTotal", None)))
+            n_motifs = pd.to_numeric(n_motifs, errors="coerce")
+            num_modified = m.get("nDetected", m.get("num_modified_motifs", None))
+            num_modified = pd.to_numeric(num_modified, errors="coerce")
+            rows.append({
+                "sample": sample,
+                "MGE": mge,
+                "MGE_type": mge_type,
+                "motif_string": motif_string,
+                "n_motifs": n_motifs if pd.notna(n_motifs) else None,
+                "num_modified_motifs": num_modified if pd.notna(num_modified) else None,
+                "modification_fraction": float(frac_num),
+            })
+
+    if not rows:
+        print("No modification fraction rows for linkable MGEs; skipping CSV/plot.")
+        return
+    df = pd.DataFrame(rows)
+    # Keep only motif_string rows with n_motifs >= 20
+    df = df[df["n_motifs"].notna() & (df["n_motifs"] >= 20)]
+    if len(df) == 0:
+        print("No rows after filtering n_motifs >= 20; skipping CSV/plot.")
+        return
+    os.makedirs(out_dir, exist_ok=True)
+    out_csv = os.path.join(out_dir, "linkable_mge_modification_fraction.csv")
+    df.to_csv(out_csv, index=False)
+    print(f"Wrote {len(df)} linkable MGE modification fractions -> {out_csv}")
+
+    types = ["plasmid", "virus"]
+    present = [t for t in types if (df["MGE_type"] == t).any()]
+    if len(present) < 1:
+        print("No plasmid/virus in linkable data; skipping plot.")
+        return
+    fig, axes = plt.subplots(1, 2, figsize=(5 * 2, 4))
+    for i, mge_type in enumerate(types):
+        ax = axes[i]
+        sub = df[df["MGE_type"] == mge_type]
+        if len(sub) == 0:
+            ax.set_visible(False)
+            continue
+        sns.histplot(sub["modification_fraction"], bins=30, kde=True, ax=ax)
+        ax.set_xlim(0, 1)
+        ax.set_xlabel("Modification fraction")
+        ax.set_ylabel("Count")
+        ax.set_title(mge_type)
+    plt.tight_layout()
+    out_pdf = os.path.join(out_dir, "linkable_mge_modification_fraction_distribution.pdf")
+    plt.savefig(out_pdf, bbox_inches="tight")
+    plt.close()
+    print(f"Saved modification fraction distributions -> {out_pdf}")
+
+
 if __name__ == "__main__":
     # main()
     # plot_profile_motif_distributions()
-    run_gg_run2_genomad_motif_plot()
-
-
-
-# Uncomment to run GenoMad plasmid/virus motif plot for gg_run2:
-# run_gg_run2_genomad_motif_plot()
+    # run_gg_run2_genomad_motif_plot()
+    # Linkable MGE modification fraction (for count_linkages.R 3-panel figure):
+    run_linkable_mge_modification_fraction()
