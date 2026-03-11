@@ -88,6 +88,23 @@ domain_sample_counts <- gc_df %>%
   group_by(domain_type, sample, MGE_type, .drop = FALSE) %>%
   summarise(count = n(), .groups = "drop")
 
+# Optional: normalize by MGE count per sample (from count_mge_per_sample.py; same logic as profile_good_ctgs.py)
+paper_fig_dir <- "../../tmp/figures/multi_env_linkage/network_99"
+mge_counts_file <- file.path(paper_fig_dir, "mge_counts_per_sample.csv")
+domain_sample_counts_norm <- NULL
+if (file.exists(mge_counts_file)) {
+  mge_counts <- read_csv(mge_counts_file, show_col_types = FALSE)
+  domain_sample_counts_norm <- domain_sample_counts %>%
+    left_join(mge_counts %>% select(sample, n_plasmid, n_virus), by = "sample") %>%
+    mutate(
+      n_mge = if_else(MGE_type == "plasmid", n_plasmid, n_virus),
+      n_mge = replace(n_mge, !is.na(n_mge) & n_mge == 0, 1),
+      count_norm = count / n_mge
+    ) %>%
+    filter(!is.na(count_norm))
+} else {
+  cat("Note: mge_counts_per_sample.csv not found. Run: python count_mge_per_sample.py\n")
+}
 
 # Load ggpubr for significance annotation
 if (!requireNamespace("ggpubr", quietly = TRUE)) {
@@ -196,6 +213,72 @@ p3 <- ggplot(domain_sample_counts, aes(x = domain_type, y = count, fill = MGE_ty
 ggsave("../../tmp/figures/multi_env_linkage/network_99/linkage_counts_domain_boxplot.pdf", 
        plot = p3, width = 4, height = 5)
 
+# Boxplot 3 (normalized): Linkages per sample per MGE by domain type (requires mge_counts_per_sample.csv)
+if (!is.null(domain_sample_counts_norm)) {
+  domain_pvals_norm <- domain_sample_counts_norm %>%
+    group_by(domain_type) %>%
+    filter(length(unique(MGE_type)) == 2) %>%
+    summarise(p = tryCatch(t.test(count_norm ~ MGE_type)$p.value, error = function(e) NA_real_)) %>%
+    mutate(star = symnum(p, corr = FALSE, na = FALSE, cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), symbols = c("***", "**", "*", ".", "")))
+  domain_ypos_norm <- domain_sample_counts_norm %>% group_by(domain_type) %>% summarise(y = max(count_norm, na.rm = TRUE) * 1.1)
+  domain_pvals_norm <- left_join(domain_pvals_norm, domain_ypos_norm, by = "domain_type")
+
+  p3_norm <- ggplot(domain_sample_counts_norm, aes(x = domain_type, y = count_norm, fill = MGE_type)) +
+    geom_boxplot(aes(fill = MGE_type), outlier.shape = NA, position = position_dodge(width = 0.8), alpha = 1, color = "black", size = 0.5) +
+    geom_jitter(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8), color = "black", size = 1.2, alpha = 1, show.legend = FALSE) +
+    scale_fill_discrete(name = "MGE Type") +
+    scale_color_discrete(guide = "none") +
+    labs(x = "Host classification", y = "Linkages per Sample per MGE", title = "") +
+    theme_bw() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 14),
+      axis.title = element_text(size = 12),
+      axis.text = element_text(size = 10),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "top"
+    ) +
+    geom_text(data = domain_pvals_norm, aes(x = domain_type, y = y, label = star), inherit.aes = FALSE, vjust = 0, size = 6)
+
+  ggsave(file.path(paper_fig_dir, "linkage_counts_domain_boxplot_norm.pdf"),
+         plot = p3_norm, width = 4, height = 5)
+  cat("Saved normalized domain boxplot to linkage_counts_domain_boxplot_norm.pdf\n")
+}
+
+# Boxplot 4: x = MGE type (plasmid, virus), hue = host type (Gram-Positive vs Gram-Negative; Archaea discarded), normalized, with significance
+domain_sample_bacteria <- domain_sample_counts %>%
+  filter(domain_type %in% c("Gram-Positive", "Gram-Negative"))
+# Use normalized data when available
+domain_sample_bacteria_plot <- if (!is.null(domain_sample_counts_norm)) {
+  domain_sample_counts_norm %>%
+    filter(domain_type %in% c("Gram-Positive", "Gram-Negative"))
+} else {
+  domain_sample_bacteria %>% mutate(count_norm = count)
+}
+mge_host_pvals <- domain_sample_bacteria_plot %>%
+  group_by(MGE_type) %>%
+  filter(n_distinct(domain_type) == 2) %>%
+  summarise(p = tryCatch(t.test(count_norm ~ domain_type)$p.value, error = function(e) NA_real_)) %>%
+  mutate(star = symnum(p, corr = FALSE, na = FALSE, cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), symbols = c("***", "**", "*", ".", "")))
+mge_host_ypos <- domain_sample_bacteria_plot %>% group_by(MGE_type) %>% summarise(y = max(count_norm, na.rm = TRUE) * 1.1)
+mge_host_pvals <- left_join(mge_host_pvals, mge_host_ypos, by = "MGE_type")
+
+p4 <- ggplot(domain_sample_bacteria_plot, aes(x = MGE_type, y = count_norm, fill = domain_type)) +
+  geom_boxplot(outlier.shape = NA, position = position_dodge(width = 0.8), alpha = 1, color = "black", size = 0.5) +
+  geom_jitter(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8), color = "black", size = 1.2, alpha = 1, show.legend = FALSE) +
+  scale_fill_discrete(name = "Host type") +
+  labs(x = "MGE Type", y = "Linkages per Sample per MGE", title = "") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.position = "top"
+  ) +
+  geom_text(data = mge_host_pvals, aes(x = MGE_type, y = y, label = star), inherit.aes = FALSE, vjust = 0, size = 6)
+
+ggsave(file.path(paper_fig_dir, "linkage_counts_mge_by_host_type_boxplot.pdf"),
+       plot = p4, width = 4, height = 5)
+
 # T-tests for environment
 cat("\n=== T-tests: Plasmid vs Virus by Environment (≥5 samples) ===\n")
 for (env in unique(env_sample_counts$environment)) {
@@ -232,6 +315,18 @@ for (dom in levels(domain_sample_counts$domain_type)) {
   }
 }
 
+# T-tests for MGE type panel: Gram-Positive vs Gram-Negative within plasmid and virus (Archaea discarded; normalized when available)
+cat("\n=== T-tests: Gram-Positive vs Gram-Negative by MGE type (Archaea discarded) ===\n")
+for (mge in c("plasmid", "virus")) {
+  dat <- domain_sample_bacteria_plot %>% filter(MGE_type == mge)
+  if (n_distinct(dat$domain_type) == 2) {
+    t_res <- try(t.test(count_norm ~ domain_type, data = dat), silent = TRUE)
+    if (!inherits(t_res, "try-error")) {
+      cat(sprintf("%s: p = %.4g\n", mge, t_res$p.value))
+    }
+  }
+}
+
 # Print summary statistics
 cat("\n=== Linkage Count Summary (Per Sample, Filtered) ===\n\n")
 cat("By Environment (per sample, ≥5 samples):\n")
@@ -242,8 +337,14 @@ print(phylum_sample_counts %>% pivot_wider(names_from = MGE_type, values_from = 
 
 cat("\nBy Domain (Gram-Positive / Gram-Negative / Archaea, per sample):\n")
 print(domain_sample_counts %>% pivot_wider(names_from = MGE_type, values_from = count, values_fill = 0))
+if (!is.null(domain_sample_counts_norm)) {
+  cat("\nBy Domain (normalized: linkages per sample per MGE):\n")
+  print(domain_sample_counts_norm %>% pivot_wider(names_from = MGE_type, values_from = count_norm, values_fill = NA))
+}
 
-cat("\nBoxplots saved to linkage_counts_env_boxplot.pdf, linkage_counts_phylum_boxplot.pdf, and linkage_counts_domain_boxplot.pdf\n")
+cat("\nBoxplots saved to linkage_counts_env_boxplot.pdf, linkage_counts_phylum_boxplot.pdf, linkage_counts_domain_boxplot.pdf")
+if (!is.null(domain_sample_counts_norm)) cat(", linkage_counts_domain_boxplot_norm.pdf")
+cat(", linkage_counts_mge_by_host_type_boxplot.pdf\n")
 
 degree_df <- read_csv("/home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/network_99/virus_plasmid_degrees.csv", show_col_types = FALSE)
 
