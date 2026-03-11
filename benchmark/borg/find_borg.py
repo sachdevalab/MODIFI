@@ -264,7 +264,7 @@ def main():
 def find_assembly():
     ## for soil
     fasta_dict = {}
-    meta = "/home/shuaiw/mGlu/assembly_pipe/prefix_table_soil.tab" 
+    meta = "/home/shuaiw/MODIFI/assembly_pipe/prefix_table_soil.tab" 
     for line in open(meta) :
         field = line.strip().split()
         fasta = field[0]

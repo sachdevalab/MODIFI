@@ -540,8 +540,15 @@ if __name__ == "__main__":
     # # print (borg_anno_dict)
     # count_mod_freq(all_dir, borg_anno_dict)
 
+    ## output a table about contig, borg_ref, borg_type, borg_indicator, sample_name
+    contig_rows = []
+    for member in members:
+        contig_rows.append({'contig': member[0], 'borg_ref': borg_anno_dict[member[0]][1], 'borg_type': borg_anno_dict[member[0]][0], 'borg_indicator': borg_indicator[member[0]], 'sample_name': member[1]})
+    contig_table = pd.DataFrame(contig_rows)
+    contig_table.to_csv(f"{seq_dir}/{cluster}_contig_table.csv", index=False)
+    print (f"Saved contig table to: {seq_dir}/{cluster}_contig_table.csv")
 
-
+    """
     manual_members = [("SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META_16008_L", "soil_2")]
     for member in manual_members:
         if member not in members:
@@ -570,13 +577,15 @@ if __name__ == "__main__":
     for m in members:
         print (m, borg_anno_dict[m[0]], borg_indicator[m[0]])
 
-    cluster_obj, contig_derived_motif_dict = given_species_drep_fast(all_dir, members, seq_dir, cluster,
-                                    seq_dir, seq_dir, min_frac=0.3, 
-                                    min_sites=100, score_cutoff = 30, max_len=100000)
+    # cluster_obj, contig_derived_motif_dict = given_species_drep_fast(all_dir, members, seq_dir, cluster,
+    #                                 seq_dir, seq_dir, min_frac=0.3, 
+    #                                 min_sites=100, score_cutoff = 30, max_len=100000)
+
+
 
     # cluster_obj = My_cluster(cluster, members) 
     # cluster_obj.load_df(seq_dir)
-
+    
 
     ## add a column to indicate borg_ref
     cluster_obj.profile_df['BORG_Ref'] = cluster_obj.profile_df['contig'].apply(lambda x: borg_anno_dict[x][1] if x in borg_anno_dict else 'NA')
@@ -614,12 +623,13 @@ if __name__ == "__main__":
 
     profile_df.to_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv", index=False)
 
-    # """
+
     ## store the profile_df in a CSV file
     
     profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv")
     profile_df['sample'] = profile_df['contig'].apply(extract_sample_name)
     umap_plot(profile_df, plot_name, contig_derived_motif_dict)
+    """
     # personal_plot(profile_df)
     # 
     # ## get a df for each sample
