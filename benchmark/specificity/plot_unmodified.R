@@ -3,13 +3,18 @@ library(ggplot2)
 library(patchwork)
 df_all_data <- read.csv(paste0(fig_dir, "motif_num_all_samples.csv"))
 
-# Load phylum classification from annotation file
-annotation_file <- "phylum_gram_archaea_annotation.csv"
-if (!file.exists(annotation_file)) {
-  annotation_file <- paste0(fig_dir, "phylum_gram_archaea_annotation.csv")
+# Load phylum classification from canonical annotation file (benchmark/specificity/phylum_gram_archaea_annotation.csv)
+annotation_file <- NULL
+for (path in c("benchmark/specificity/phylum_gram_archaea_annotation.csv",
+               "phylum_gram_archaea_annotation.csv",
+               paste0(fig_dir, "phylum_gram_archaea_annotation.csv"))) {
+  if (file.exists(path)) {
+    annotation_file <- path
+    break
+  }
 }
-if (!file.exists(annotation_file)) {
-  stop("Cannot find phylum_gram_archaea_annotation.csv in current directory or fig_dir.")
+if (is.null(annotation_file)) {
+  stop("Cannot find phylum_gram_archaea_annotation.csv. Expected: benchmark/specificity/phylum_gram_archaea_annotation.csv")
 }
 annotation_df <- read.csv(annotation_file, stringsAsFactors = FALSE)
 phylum_class_map <- setNames(annotation_df$classification, annotation_df$phylum)
