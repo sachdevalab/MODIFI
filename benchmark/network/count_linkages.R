@@ -8,8 +8,28 @@ library(tidyr)
 # Read data
 gc_df <- read_csv("../../tmp/figures/multi_env_linkage/network_99/mge_host_gc_cov.csv", show_col_types = FALSE)
 
+# Load phylum -> Gram-Positive / Gram-Negative / Archaea (canonical: benchmark/specificity/phylum_gram_archaea_annotation.csv)
+annotation_file <- NULL
+for (path in c("../specificity/phylum_gram_archaea_annotation.csv",
+               "benchmark/specificity/phylum_gram_archaea_annotation.csv",
+               "phylum_gram_archaea_annotation.csv",
+               "../../benchmark/specificity/phylum_gram_archaea_annotation.csv")) {
+  if (file.exists(path)) {
+    annotation_file <- path
+    break
+  }
+}
+if (is.null(annotation_file)) stop("Cannot find phylum_gram_archaea_annotation.csv")
+phylum_anno <- read_csv(annotation_file, show_col_types = FALSE)
+phylum_class_map <- setNames(phylum_anno$classification, phylum_anno$phylum)
+
 gc_df <- gc_df %>%
-  mutate(MGE_type = factor(MGE_type, levels = c("plasmid", "virus")))
+  mutate(MGE_type = factor(MGE_type, levels = c("plasmid", "virus"))) %>%
+  mutate(host_phylum_clean = gsub("^p__", "", host_phylum)) %>%
+  mutate(domain_type = ifelse(host_phylum_clean %in% names(phylum_class_map),
+                              phylum_class_map[host_phylum_clean],
+                              "Gram-Negative")) %>%
+  mutate(domain_type = factor(domain_type, levels = c("Gram-Positive", "Gram-Negative", "Archaea")))
 
 ## count the mean cos_sim  and std for all linkages, and for plasmid and virus separately
 gc_summary <- gc_df %>%
@@ -32,10 +52,10 @@ env_sample_counts <- gc_df %>%
   group_by(environment, sample, MGE_type, .drop = FALSE) %>%
   summarise(count = n(), .groups = "drop")
 
-# Only retain environments with >=5 samples (for both MGE types combined)
+# Only retain environments with >=2 samples (for boxplot; cow_bioreactor etc. included)
 env_sample_counts <- env_sample_counts %>%
   group_by(environment) %>%
-  filter(n_distinct(sample) >= 5) %>%
+  filter(n_distinct(sample) >= 4) %>%
   ungroup()
 
 # Order environments by total count (for consistent x-axis order)
@@ -62,6 +82,11 @@ phylum_sample_counts <- phyla_with_enough_samples %>%
   group_by(host_phylum, sample, MGE_type, .drop = FALSE) %>%
   summarise(count = n(), .groups = "drop")
 phylum_sample_counts$host_phylum <- factor(phylum_sample_counts$host_phylum, levels = gsub("^p__", "", top_phyla))
+
+# Count linkages per sample by domain type (Gram-Positive / Gram-Negative / Archaea) and MGE type
+domain_sample_counts <- gc_df %>%
+  group_by(domain_type, sample, MGE_type, .drop = FALSE) %>%
+  summarise(count = n(), .groups = "drop")
 
 
 # Load ggpubr for significance annotation
@@ -91,7 +116,7 @@ p1 <- ggplot(env_sample_counts, aes(x = environment, y = count, fill = MGE_type)
   scale_fill_discrete(name = "MGE Type") +
   scale_color_discrete(guide = "none") +
   labs(
-    x = "Environment",
+    x = "Habitat",
     y = "Linkages per Sample",
     title = ""
   ) +
@@ -143,6 +168,33 @@ p2 <- ggplot(phylum_sample_counts, aes(x = host_phylum, y = count, fill = MGE_ty
 ggsave("../../tmp/figures/multi_env_linkage/network_99/linkage_counts_phylum_boxplot.pdf", 
        plot = p2, width = 7, height = 5)
 
+# Boxplot 3: Linkages per sample by domain type (Gram-Positive / Gram-Negative / Archaea), hue = MGE type
+domain_pvals <- domain_sample_counts %>%
+  group_by(domain_type) %>%
+  filter(length(unique(MGE_type)) == 2) %>%
+  summarise(p = tryCatch(t.test(count ~ MGE_type)$p.value, error = function(e) NA_real_)) %>%
+  mutate(star = symnum(p, corr = FALSE, na = FALSE, cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1), symbols = c("***", "**", "*", ".", "")))
+domain_ypos <- domain_sample_counts %>% group_by(domain_type) %>% summarise(y = max(count, na.rm = TRUE) * 1.1)
+domain_pvals <- left_join(domain_pvals, domain_ypos, by = "domain_type")
+
+p3 <- ggplot(domain_sample_counts, aes(x = domain_type, y = count, fill = MGE_type)) +
+  geom_boxplot(aes(fill = MGE_type), outlier.shape = NA, position = position_dodge(width = 0.8), alpha = 1, color = "black", size = 0.5) +
+  geom_jitter(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8), color = "black", size = 1.2, alpha = 1, show.legend = FALSE) +
+  scale_fill_discrete(name = "MGE Type") +
+  scale_color_discrete(guide = "none") +
+  labs(x = "Host classification", y = "Linkages per Sample", title = "") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "top"
+  ) +
+  geom_text(data = domain_pvals, aes(x = domain_type, y = y, label = star), inherit.aes = FALSE, vjust = 0, size = 6)
+
+ggsave("../../tmp/figures/multi_env_linkage/network_99/linkage_counts_domain_boxplot.pdf", 
+       plot = p3, width = 4, height = 5)
 
 # T-tests for environment
 cat("\n=== T-tests: Plasmid vs Virus by Environment (≥5 samples) ===\n")
@@ -168,6 +220,18 @@ for (phy in unique(phylum_sample_counts$host_phylum)) {
   }
 }
 
+# T-tests for domain type
+cat("\n=== T-tests: Plasmid vs Virus by Domain (Gram-Positive / Gram-Negative / Archaea) ===\n")
+for (dom in levels(domain_sample_counts$domain_type)) {
+  dat <- domain_sample_counts %>% filter(domain_type == dom)
+  if (length(unique(dat$MGE_type)) == 2) {
+    t_res <- try(t.test(count ~ MGE_type, data = dat), silent = TRUE)
+    if (!inherits(t_res, "try-error")) {
+      cat(sprintf("%s: p = %.4g\n", as.character(dom), t_res$p.value))
+    }
+  }
+}
+
 # Print summary statistics
 cat("\n=== Linkage Count Summary (Per Sample, Filtered) ===\n\n")
 cat("By Environment (per sample, ≥5 samples):\n")
@@ -176,9 +240,12 @@ print(env_sample_counts %>% pivot_wider(names_from = MGE_type, values_from = cou
 cat("\nBy Phylum (Top 10, per sample, ≥5 samples):\n")
 print(phylum_sample_counts %>% pivot_wider(names_from = MGE_type, values_from = count, values_fill = 0))
 
-cat("\nBoxplots saved to linkage_counts_env_boxplot.pdf and linkage_counts_phylum_boxplot.pdf\n")
+cat("\nBy Domain (Gram-Positive / Gram-Negative / Archaea, per sample):\n")
+print(domain_sample_counts %>% pivot_wider(names_from = MGE_type, values_from = count, values_fill = 0))
 
-degree_df <- read_csv("/home/shuaiw/mGlu/tmp/figures/multi_env_linkage/network_99/virus_plasmid_degrees.csv", show_col_types = FALSE)
+cat("\nBoxplots saved to linkage_counts_env_boxplot.pdf, linkage_counts_phylum_boxplot.pdf, and linkage_counts_domain_boxplot.pdf\n")
+
+degree_df <- read_csv("/home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/network_99/virus_plasmid_degrees.csv", show_col_types = FALSE)
 
 # Prepare degree data (only plasmid and virus)
 degree_df <- degree_df %>%
@@ -221,3 +288,6 @@ if (!inherits(tt, "try-error")) {
 } else {
   cat("\nT-test (degree) failed or insufficient data.\n")
 }
+
+
+
