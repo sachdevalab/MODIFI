@@ -1,7 +1,7 @@
 ## remove output directory if exists
 rm -rf output/
 
-python ../main.py --whole_bam ERR10042285_2_L.bam \
+modifi --whole_bam ERR10042285_2_L.bam \
 --work_dir output/ \
 --whole_ref ERR10042285_2_L.fa \
 --read_type hifi \
