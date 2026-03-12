@@ -104,7 +104,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description="""DNA modification detection and MGE-host linkage inference.
 
-Example: python main.py \\
+Example: modifi \\
         --work_dir /path-to/output \\
         --unaligned_bam raw.hifi_reads.bam \\
         --whole_ref metagenomic_assembly.fasta \\

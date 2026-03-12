@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "modifi"
+version = "0.0.0"
+description = "DNA modification detection and MGE-host linkage inference"
+requires-python = ">=3.8"
+authors = [
+  { name = "MODIFI authors" },
+]
+readme = "README.md"
+
+dependencies = []
+
+[project.scripts]
+modifi = "modifi_launcher.cli:main"
+MODIFI = "modifi_launcher.cli:main"
+

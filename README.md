@@ -20,13 +20,18 @@ conda env create -n modifi -f env.yml
 conda activate modifi
 ```
 
-### 2️⃣ Compile C++ components
+### 2️⃣ Install MODIFI via pip (recommended)
+
+This will:
+- Compile the C++ helper binary `get_control_IPD` (using `src/install.sh` under the hood)
+- Install the full pipeline under the environment prefix
+- Expose `modifi` / `MODIFI` commands on your `$PATH`
 
 ```bash
-cd src/
-bash install.sh
-cd ../
+pip install .
 ```
+
+> **Note:** When installed this way, you **do not** need to run `src/install.sh` manually.
 
 ### 3️⃣ Configure SMRT Link tools ⚠️ **OPTIONAL - Can be skipped**
 
@@ -52,7 +57,13 @@ smrtlink_bin: /path/to/smrtlink/private/bin/
 
 ### 4️⃣ Verify installation
 
-Test that MODIFI is installed correctly:
+Test that the command-line entry point is available:
+
+```bash
+modifi --help
+```
+
+Or run the built-in test dataset:
 
 ```bash
 cd test/
@@ -94,7 +105,7 @@ MODIFI supports both `HiFi` and `subreads`. Your PacBio BAM file **must contain 
 Run MODIFI with unaligned BAM containing kinetics:
 
 ```bash
-python main.py \
+modifi \
     --work_dir /path/to/output \
     --unaligned_bam raw.hifi_reads.bam \
     --whole_ref assembly.fasta \
@@ -103,7 +114,7 @@ python main.py \
 
 For all options:
 ```bash
-python main.py --help
+modifi --help
 ```
 
 ---
@@ -117,7 +128,7 @@ python main.py --help
 MODIFI will automatically align reads using pbmm2:
 
 ```bash
-python main.py \
+modifi \
     --work_dir /path/to/output \
     --unaligned_bam raw.hifi_reads.bam \
     --whole_ref assembly.fasta \
@@ -129,7 +140,7 @@ python main.py \
 If already aligned with pbmm2 (with kinetics preserved):
 
 ```bash
-python main.py \
+modifi \
     --work_dir /path/to/output \
     --whole_bam aligned.sorted.bam \
     --whole_ref assembly.fasta \
@@ -141,7 +152,7 @@ python main.py \
 For subread data (requires `MODIFI_subreads` environment):
 
 ```bash
-python main.py \
+modifi \
     --work_dir /path/to/output \
     --unaligned_bam raw.subreads.bam \
     --whole_ref assembly.fasta \
@@ -153,7 +164,7 @@ python main.py \
 Provide an MGE table to automatically infer MGE-host linkages:
 
 ```bash
-python main.py \
+modifi \
     --work_dir /path/to/output \
     --unaligned_bam raw.hifi_reads.bam \
     --whole_ref assembly.fasta \
@@ -174,7 +185,7 @@ ERR6535514_2_L	6291	DTR	8	11	0.9997	0.0003
 Assign MGEs to host bins using binning results:
 
 ```bash
-python main.py \
+modifi \
     --work_dir /path/to/output \
     --unaligned_bam raw.hifi_reads.bam \
     --whole_ref assembly.fasta \
@@ -199,7 +210,7 @@ For isolate genomes or low-complexity metagenomes, use a control database for be
 #### Pre-built database:
 
 ```bash
-python main.py \
+modifi \
     --work_dir /path/to/output \
     --unaligned_bam raw.hifi_reads.bam \
     --whole_ref assembly.fasta \
@@ -256,7 +267,7 @@ cat output/genomad/assembly_summary/assembly_virus_summary.tsv \
 ### Step 3: Run MODIFI
 
 ```bash
-python main.py \
+modifi \
     --work_dir output/MODIFI \
     --unaligned_bam raw.hifi_reads.bam \
     --whole_ref assembly.fasta \
