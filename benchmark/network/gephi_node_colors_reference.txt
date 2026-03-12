@@ -1,0 +1,43 @@
+# Gephi manual color reference
+# In Gephi: Appearance -> Nodes -> Partition -> choose column "type"
+# Then click each category's color square and paste the hex below.
+
+# ---- MGE types ----
+virus          #00BFC4
+plasmid        #F8766D
+novel          #FFA500
+
+# ---- Bacterial phyla (BAC_PHYLUM_COLORS) ----
+Pseudomonadota     #d8b365
+Bacillota          #f46d43
+Bacillota_A        #8da0cb
+Desulfobacterota   #fc8d62
+Actinomycetota     #66c2a5
+Bacteroidota       #e78ac3
+Campylobacterota   #a6d854
+Acidobacteriota    #1b9e77
+Verrucomicrobiota  #7570b3
+Chloroflexota      #e7298a
+Bacillota_C        #b15928
+Nitrospirota       #fdbf6f
+Bacillota_I        #ff7f00
+Desulfobacterota_B #cab2d6
+Patescibacteria    #6a3d9a
+Gemmatimonadota    #fb9a99
+Others             #e6e6e6
+
+# ---- Archaeal phyla (ARC_PHYLUM_COLORS) ----
+Thermoproteota     #b15928
+Thermoplasmatota   #fdbf6f
+Halobacteriota     #ff7f00
+Aenigmatarchaeota  #cab2d6
+Nanoarchaeota      #6a3d9a
+Hadarchaeota      #fb9a99
+Asgardarchaeota    #e31a1c
+Micrarchaeota      #a6cee3
+Nanobdellota       #66c2a5
+Methanobacteriota  #e78ac3
+B1Sed10-29         #a6d854
+
+# Note: In your GML, host node "type" may be stored with "p__" prefix (e.g. p__Bacillota).
+# If Gephi shows "p__Bacillota", use the same hex as "Bacillota" (#f46d43).

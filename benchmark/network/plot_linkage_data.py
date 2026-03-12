@@ -4,6 +4,7 @@ import networkx as nx
 import re
 import os
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from networkx.algorithms import bipartite
 import plotly.graph_objects as go
 from collections import defaultdict
@@ -15,6 +16,8 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'isolation'))
 from sample_object import get_detail_taxa_name,get_unique_motifs, My_sample, Isolation_sample, My_contig, My_cluster, classify_taxa, get_ctg_taxa,get_detail_taxa_name
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'specificity'))
+from profile_good_ctgs import BAC_PHYLUM_COLORS, ARC_PHYLUM_COLORS
 
 def export_mge_degrees(G, out_csv):
     """
@@ -100,6 +103,74 @@ def export_network_to_json(G, out_path):
     with open(out_path, 'w') as f:
         json.dump(out, f, indent=2)
     print(f"Network exported to {out_path} (Nodes: {len(nodes_list)}, Edges: {len(edges_list)})")
+
+
+def _matplotlib_color_to_hex(color):
+    """Convert matplotlib color (name or (r,g,b[,a]) 0-1) to hex string for GML/Gephi."""
+    if isinstance(color, str) and color.startswith('#'):
+        return color
+    try:
+        rgb = mcolors.to_rgb(color)
+        return '#{:02X}{:02X}{:02X}'.format(int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255))
+    except Exception:
+        return '#808080'
+
+
+# MGE type colors for GML/Gephi (match legend: plasmid = salmon, virus = teal)
+MGE_TYPE_COLORS = {
+    'plasmid': "#F8766D",   # salmon pink / light coral
+    'virus': "#00BFC4",     # teal / light sea green
+}
+
+
+def assign_node_colors_for_gml(G):
+    """
+    Set node color attributes on G so that GML export (and Gephi) can display them.
+    Host nodes: phylum colors from profile_good_ctgs BAC_PHYLUM_COLORS and ARC_PHYLUM_COLORS.
+    MGE nodes: plasmid/virus/novel colors (plasmid=salmon, virus=teal per legend).
+    Sets 'graphics_fill' (hex) and 'color' (hex) on each node for Gephi compatibility.
+    """
+    virus_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'virus']
+    plasmid_nodes = [n for n, d in G.nodes(data=True) if d.get('type') == 'plasmid']
+    host_nodes = [n for n, d in G.nodes(data=True) if d.get('type') not in ['virus', 'plasmid', 'novel']]
+
+    others_hex = BAC_PHYLUM_COLORS.get('Others', '#e6e6e6')
+    host_phyla = set(G.nodes[n].get('type') for n in host_nodes)
+    host_phylum_to_color = {}
+    for p in host_phyla:
+        p_norm = p.replace("p__", "") if p else p
+        host_phylum_to_color[p] = (
+            BAC_PHYLUM_COLORS.get(p_norm) or ARC_PHYLUM_COLORS.get(p_norm) or others_hex
+        )
+
+    for n in G.nodes:
+        node_type = G.nodes[n].get('type')
+        if n in virus_nodes:
+            hexcolor = MGE_TYPE_COLORS['virus']
+        elif n in plasmid_nodes:
+            hexcolor = MGE_TYPE_COLORS['plasmid']
+
+        elif node_type and node_type in host_phylum_to_color:
+            hexcolor = host_phylum_to_color[node_type]
+        else:
+            hexcolor = others_hex
+        G.nodes[n]['graphics_fill'] = hexcolor
+        G.nodes[n]['color'] = hexcolor
+
+    # Print only node categories present in this network (for manual Gephi Partition)
+    type_to_color = {}
+    for n in G.nodes:
+        t = G.nodes[n].get('type')
+        c = G.nodes[n].get('color')
+        if t:
+            type_to_color[t] = c
+    mge_order = ['virus', 'plasmid', 'novel']
+    keys_sorted = sorted(type_to_color.keys(),
+                         key=lambda x: (0 if x in mge_order else 1, mge_order.index(x) if x in mge_order else 999, x))
+    print("\n--- Node categories in network (Gephi Partition -> type; paste hex into color square) ---")
+    for t in keys_sorted:
+        print(f"  {t}\t{type_to_color[t]}")
+    print("---\n")
 
 
 def write_filtered_gml_abundant_phylum(G, out_path, min_host_per_phylum=5):
@@ -886,6 +957,8 @@ if __name__ == "__main__":
 
     
     plot_network2(whole_G, paper_fig_dir)
+    ## assign node colors for GML so Gephi can display them
+    assign_node_colors_for_gml(whole_G)
     ## save whole_G to file by gml
     nx.write_gml(whole_G, f"{paper_fig_dir}/whole_network2.gml")
     ## filtered GML: only host nodes in abundant phyla (>5 nodes)

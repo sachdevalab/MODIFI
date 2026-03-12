@@ -37,58 +37,53 @@ phy_df <- df %>% filter(grepl('^p__', type), !is.na(Color)) %>%
 phy_names <- phy_df$type
 phy_colors <- phy_df$Color
 
-# Build ordered categories: plasmid, virus, then phyla (if they exist)
-categories <- character(0)
-if (length(plasmid_color) > 0) categories <- c(categories, "plasmid")
-if (length(virus_color) > 0) categories <- c(categories, "virus")
-if (length(phy_names) > 0) categories <- c(categories, phy_names)
+# MGE categories (plasmid, virus) and phylum categories separately
+mge_categories <- character(0)
+if (length(plasmid_color) > 0) mge_categories <- c(mge_categories, "plasmid")
+if (length(virus_color) > 0) mge_categories <- c(mge_categories, "virus")
+phy_categories <- phy_names
 
-if (length(categories) == 0) stop("No categories found in color file")
+if (length(mge_categories) == 0 && length(phy_categories) == 0) stop("No categories found in color file")
 
-# Shapes: swap plasmid vs hosts: plasmid = circle (16), phyla (hosts) = square (15)
-shape_map <- rep(15, length(categories))
-names(shape_map) <- categories
-# default: phyla/hosts get square (15)
-if ("plasmid" %in% categories) shape_map["plasmid"] <- 16
-# use triangle for virus
-if ("virus" %in% categories) shape_map["virus"] <- 17
+# MGE: shapes and colors
+mge_shape_map <- setNames(c(16, 17)[seq_along(mge_categories)], mge_categories)  # circle, triangle
+mge_cols <- setNames(character(length(mge_categories)), mge_categories)
+if ("plasmid" %in% mge_categories) mge_cols["plasmid"] <- plasmid_color
+if ("virus" %in% mge_categories) mge_cols["virus"] <- virus_color
 
-# Colors: prefer colors from file; fallback to default palette for any missing
-cols <- setNames(rep(NA_character_, length(categories)), categories)
-if ("plasmid" %in% categories) cols["plasmid"] <- ifelse(length(plasmid_color)>0, plasmid_color, NA)
-if ("virus" %in% categories) cols["virus"] <- ifelse(length(virus_color)>0, virus_color, NA)
-for (i in seq_along(phy_names)) {
-  cols[phy_names[i]] <- phy_colors[i]
-}
+# Phyla: colors (all squares in second legend)
+phy_cols <- setNames(phy_colors, phy_categories)
 
 library(scales)
-missing_cols <- is.na(cols)
-if (any(missing_cols)) {
-  cols[missing_cols] <- hue_pal()(sum(missing_cols))
-}
-
-# overlay custom colors if provided
+if (any(is.na(mge_cols))) mge_cols[is.na(mge_cols)] <- hue_pal()(sum(is.na(mge_cols)))
 if (!is.null(custom_colors)) {
-  for (nm in names(custom_colors)) if (nm %in% names(cols)) cols[nm] <- custom_colors[[nm]]
+  for (nm in names(custom_colors)) if (nm %in% names(mge_cols)) mge_cols[nm] <- custom_colors[[nm]]
+  for (nm in names(custom_colors)) if (nm %in% names(phy_cols)) phy_cols[nm] <- custom_colors[[nm]]
 }
 
-# Create plotting dataframe
-plot_df <- data.frame(category = factor(names(cols), levels = names(cols)), x = 1, y = seq_along(cols))
+# Data for legend only: one row per MGE, then one row per phylum (invisible points)
+mge_df <- data.frame(category = factor(mge_categories, levels = mge_categories), x = 1, y = seq_along(mge_categories))
+phy_df <- data.frame(category = factor(phy_categories, levels = phy_categories), x = 1, y = seq_along(phy_categories))
 
-# Prepare display labels: strip 'p__' from phylum names for clarity
-display_labels <- names(cols)
-display_labels <- sub('^p__', '', display_labels)
+mge_labels <- sub('^p__', '', mge_categories)
+phy_labels <- sub('^p__', '', phy_categories)
 
-# Build ggplot with both color and shape mapped to the same category name so legends merge
-# Make plotted points invisible (alpha=0) so only the legend appears on the right
-p <- ggplot(plot_df, aes(x = x, y = y, color = category, shape = category)) +
-  geom_point(size = 5, alpha = 0) +
-  scale_color_manual(name = "Genome", values = cols, labels = display_labels) +
-  scale_shape_manual(name = "Genome", values = shape_map, labels = display_labels) +
-  guides(
-    color = guide_legend(ncol = 2, byrow = TRUE, override.aes = list(alpha = 1, size = 5)),
-    shape = guide_legend(ncol = 2, byrow = TRUE, override.aes = list(alpha = 1, size = 5))
-  ) +
+# Two legends: MGE (color + shape), Host phylum (fill)
+p <- ggplot() +
+  geom_point(data = mge_df, aes(x = x, y = y, color = category, shape = category), size = 5, alpha = 0) +
+  scale_color_manual(name = "MGE", values = mge_cols, labels = mge_labels,
+                     guide = guide_legend(ncol = 2, override.aes = list(alpha = 1, size = 5))) +
+  scale_shape_manual(name = "MGE", values = mge_shape_map, labels = mge_labels,
+                     guide = guide_legend(ncol = 2, override.aes = list(alpha = 1, size = 5)))
+
+if (length(phy_categories) > 0) {
+  p <- p +
+    geom_point(data = phy_df, aes(x = x, y = y, fill = category), shape = 22, size = 5, alpha = 0) +
+    scale_fill_manual(name = "Host phylum", values = phy_cols, labels = phy_labels,
+                      guide = guide_legend(ncol = 2, byrow = TRUE, override.aes = list(alpha = 1, size = 5, shape = 22)))
+}
+
+p <- p +
   theme_void() +
   theme(legend.position = "right",
         legend.title = element_text(size = 12),
@@ -98,11 +93,15 @@ p <- ggplot(plot_df, aes(x = x, y = y, color = category, shape = category)) +
 dir.create(dirname(out_pdf), recursive = TRUE, showWarnings = FALSE)
 
 # Save legend as PDF
-ggsave(out_pdf, plot = p, width = 6, height = length(categories) * 0.25 + 1)
+ggsave(out_pdf, plot = p, width = 6, height = (length(mge_categories) + length(phy_categories)) * 0.25 + 1)
 cat("Saved legend to", out_pdf, "\n")
 
 # Also write color mapping to TSV for reproducibility
 colors_out <- "../../tmp/figures/multi_env_linkage/network_99/network_legend_colors.tsv"
-cols_df <- data.frame(category = names(cols), color = as.character(cols), shape = as.integer(shape_map[names(cols)]))
+mge_df_out <- if (length(mge_categories) > 0)
+  data.frame(legend = "MGE", category = names(mge_cols), color = as.character(mge_cols), shape = as.integer(mge_shape_map[names(mge_cols)])) else data.frame(legend = character(), category = character(), color = character(), shape = integer())
+phy_df_out <- if (length(phy_categories) > 0)
+  data.frame(legend = "Host phylum", category = names(phy_cols), color = as.character(phy_cols), shape = 22L) else data.frame(legend = character(), category = character(), color = character(), shape = integer())
+cols_df <- rbind(mge_df_out, phy_df_out)
 write.table(cols_df, file = colors_out, sep = "\t", row.names = FALSE, quote = FALSE)
 cat("Saved color mapping to", colors_out, "\n")
