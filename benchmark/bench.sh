@@ -2215,3 +2215,8 @@ python /home/shuaiw/MODIFI/main.py \
             --run_steps host \
           --threads 64 
 
+modifi-linkage --work_dir /home/shuaiw/borg/paper/gg_run3/soil_2/soil_2_methylation4 \
+          --whole_ref /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+            --min_sites 100 \
+            --mge_file /home/shuaiw/methylation/data/borg/paper/gg_run3/soil_2/cpr.list \
+          --threads 64  

@@ -17,4 +17,5 @@ dependencies = []
 [project.scripts]
 modifi = "modifi_launcher.cli:main"
 MODIFI = "modifi_launcher.cli:main"
+modifi-linkage = "modifi_launcher.cli:linkage_main"
 

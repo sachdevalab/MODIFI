@@ -84,6 +84,7 @@ setup(
         "console_scripts": [
             "modifi=modifi_launcher.cli:main",
             "MODIFI=modifi_launcher.cli:main",
+            "modifi-linkage=modifi_launcher.cli:linkage_main",
         ]
     },
     python_requires=">=3.8",

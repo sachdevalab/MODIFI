@@ -121,6 +121,8 @@ modifi --help
 
 ### Input BAM Options
 
+> 💡 **Tip:** Once motif detection has finished (i.e. `profiles/` exists in `--work_dir`), you can re-run **linkage only** using the `modifi-linkage` helper instead of the full pipeline (see [Linkage-only mode](#linkage-only-mode)).
+
 #### Option 1: Unaligned BAM (recommended)
 
 MODIFI will automatically align reads using pbmm2:
@@ -275,6 +277,26 @@ modifi \
 ```
 
 > **Note:** Proviruses are automatically excluded from analysis.
+
+---
+
+### Linkage-only mode
+
+If you have already run MODIFI and generated motif profiles in a given `--work_dir`, you can re-run just the **MGE-host linkage** step (for example, with a different MGE table or binning file) without re-running modification detection:
+
+```bash
+modifi-linkage \
+    --work_dir /path/to/output \
+    --whole_ref assembly.fasta \
+    --mge_file all_MGEs.tsv \
+    --bin_file binning.tab \
+    --threads 32
+```
+
+This command:
+- Reads existing motif profiles from `<work_dir>/profiles/`
+- Writes host linkage results into `<work_dir>/hosts/`
+- Uses the same linkage logic as the `host` step in the full pipeline.
 
 ---
 
