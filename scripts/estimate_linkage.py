@@ -571,9 +571,11 @@ def summary_host(host_dir, bin_ctg_dict, threads, all_final_score_list, MGE_dict
         data['pvalue'] = data['pvalue'].round(4)
         # print (data["MGE_gc"])
         ## resort the columns
-        data = data[['MGE', 'MGE_len', 'host', 'final_score', 'specificity', 'pvalue', 'self_pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
-                    'MGE_cov', 'host_cov', 'host_motif_num', 'confidence', 
-                    'motif_confidence',  'total_sites', 'motif_info']]
+        # data = data[['MGE', 'MGE_len', 'host', 'final_score', 'specificity', 'pvalue', 'self_pvalue', 'MGE_gc', 'host_gc', 'cos_sim', 
+        #             'MGE_cov', 'host_cov', 'host_motif_num', 'confidence', 
+        #             'motif_confidence',  'total_sites', 'motif_info']]
+        data = data[['MGE', 'MGE_len', 'host', 'final_score', 'specificity', 'MGE_gc', 'host_gc', 'cos_sim', 
+                    'MGE_cov', 'host_cov', 'host_motif_num', 'total_sites', 'motif_info']]
     ## output the data to a csv file
     host_summary = os.path.join(host_dir, "../", "host_summary.csv")
     data.to_csv(host_summary, index = False)

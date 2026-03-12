@@ -31,8 +31,6 @@ This will:
 pip install .
 ```
 
-> **Note:** When installed this way, you **do not** need to run `src/install.sh` manually.
-
 ### 3️⃣ Configure SMRT Link tools ⚠️ **OPTIONAL - Can be skipped**
 
 > 💡 **You can skip this step!** MODIFI will automatically use tools from conda or fallback to built-in alternatives.
@@ -406,16 +404,12 @@ options:
 | `host` | Predicted host contig/bin |
 | `final_score` | Linkage confidence (0–1, higher is better) |
 | `specificity` | Association specificity |
-| `pvalue` | Statistical significance |
-| `self_pvalue` | Self-comparison control p-value |
 | `MGE_gc` | MGE GC content (%) |
 | `host_gc` | Host GC content (%) |
 | `cos_sim` | 4-mer frequency cosine similarity |
 | `MGE_cov` | MGE sequencing depth |
 | `host_cov` | Host sequencing depth |
 | `host_motif_num` | Number of motifs in host |
-| `confidence` | Overall prediction confidence |
-| `motif_confidence` | Motif-based confidence |
 | `total_sites` | Total modified sites analyzed |
 | `motif_info` | Detailed motif data (format: motif:length:sites:cov:score:pos) |
 
@@ -484,9 +478,6 @@ For better results, generate a control database from your own **high-complexity 
 - Control database accumulates more accurate statistics with larger/more diverse datasets
 - Recommended for: isolates, enriched cultures, low-diversity communities
 
-
-
-
 ---
 
 ## ⚠️ Important Notes
@@ -496,21 +487,9 @@ For better results, generate a control database from your own **high-complexity 
 - For large metagenomes, use `--threads` to parallelize processing
 - `--segment` flag increases recall for low-depth contigs but requires more time
 
-### Troubleshooting
-
-**OverflowError with pbcore:**
-```text
-OverflowError: Python integer 3367457666 out of bounds for int32
-```
-
-**Solution:** Reinstall pbcore
-```bash
-pip install --force-reinstall git+https://github.com/PacificBiosciences/pbcore.git
-```
 
 ### Best Practices
 - Use **HiFi reads** instead of subreads when possible (better accuracy, faster)
-- Provide binning results (`--bin_file`) for more accurate MGE-host assignments
 - Use control database for isolate genomes and low-complexity samples
 - Filter MGE-host linkages: `final_score > 0.5` and `specificity < 0.01`
 
