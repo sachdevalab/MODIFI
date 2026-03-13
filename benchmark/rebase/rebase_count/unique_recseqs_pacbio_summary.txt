@@ -1,0 +1,13 @@
+Source URL: https://rebase.neb.com/rebase/pbstatlist.html
+Genome total in table: 4509
+Rule: genomes with '-' are excluded from all counts below.
+Unique recseqs PacBio genomes counted: 2572
+Unique recseqs PacBio total: 7204
+Unique recseqs PacBio min: 1
+Unique recseqs PacBio max: 36
+Unique recseqs PacBio average: 2.800933
+Unique recseqs REBASE genomes counted: 1265
+Unique recseqs REBASE total: 2149
+Unique recseqs REBASE min: 1
+Unique recseqs REBASE max: 9
+Unique recseqs REBASE average: 1.698814
