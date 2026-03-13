@@ -745,6 +745,15 @@ class Isolation_sample(My_sample):
             return "pure"
         else:
             return "mixed"
+    
+    def get_completeness(self):
+        if not os.path.exists(self.checkm):
+            print (f"[⚠️] CheckM file not found: {self.checkm}")
+            return 0, 0
+        df = pd.read_csv(self.checkm, sep="\t")
+        completeness = df["Completeness"].values[0]
+        contamination = df["Contamination"].values[0]
+        return completeness, contamination
 
     def get_mge_specific_motif(self, MGE_ctg, host_ctg, min_frac=0.8, min_sites=20):
         MGE_motif_file = os.path.join(self.work_dir, "motifs/" + MGE_ctg + ".motifs.csv")

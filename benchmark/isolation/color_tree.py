@@ -235,15 +235,15 @@ def single_run(resultdir, genome_dir):
             print (f"GTDB file not found for {prefix}, skipping...")
             continue
         pure_anno = sample_obj.check_pure2()
-
+        completeness, contamination = sample_obj.get_completeness()
         sample_obj.get_phylum()
         motif_num, unique_motifs = sample_obj.get_unique_motifs(min_frac=0.3, min_sites = 100)
         mge_bool = sample_obj.get_MGE_bool()
         average_dp = sample_obj.get_average_depth()
 
-        data.append([prefix, sample_obj.lineage, motif_num, mge_bool, pure_anno, average_dp, sample_obj.reference_fasta])
+        data.append([prefix, sample_obj.lineage, motif_num, mge_bool, pure_anno, average_dp, sample_obj.reference_fasta, completeness, contamination])
 
-    df = pd.DataFrame(data, columns=["Sample", "Lineage", "Motif_Num", "MGE_bool", "Pure_anno", "Average_DP", "genome"])
+    df = pd.DataFrame(data, columns=["Sample", "Lineage", "Motif_Num", "MGE_bool", "Pure_anno", "Average_DP", "genome", "completeness", "contamination"])
     df.to_csv(f"{tree_results}/isolation_sample_summary.tsv", sep="\t", index=False)
     df = filter_df(df, min_dp = 10)
     run_taxa_dict = {}
@@ -303,6 +303,19 @@ def filter_df(df, min_dp = 10):
     ## count average motif number
     average_motif_num = df_dp['Motif_Num'].mean()
     print (f"Average motif number in filtered samples: {average_motif_num:.2f} with median {df_dp['Motif_Num'].median():.2f} in {df_dp.shape[0]} samples")
+    ## count avergae motif number in samples with completeness >= 90
+    ## how many samples with completeness >= 90
+    samples_completeness_90 = df_dp[df_dp['completeness'] > 90]
+    samples_completeness_90_count = samples_completeness_90.shape[0]
+    print (f"Samples with completeness > 90: {samples_completeness_90_count} ({samples_completeness_90_count/df_dp.shape[0]:.2%})")
+    if samples_completeness_90_count > 0:
+        average_motif_num_90 = samples_completeness_90['Motif_Num'].mean()
+        median_motif_num_90 = samples_completeness_90['Motif_Num'].median()
+    else:
+        average_motif_num_90 = 0
+        median_motif_num_90 = 0
+    print (f"Average motif number in samples with completeness > 90: {average_motif_num_90:.2f} with median {median_motif_num_90:.2f} in {samples_completeness_90_count} samples")
+
     ## count the proportion of samples in each phylum with motif_num > 0
     print ("\nProportion of samples with Motif_Num > 0 in each phylum:")
     phylum_groups = df_dp.groupby(df_dp['Lineage'].apply(lambda x: x.split(";")[1][3:] if ";" in x else "Unclassified"))
