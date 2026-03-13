@@ -6,7 +6,7 @@ library(readr)
 library(tidyr)
 
 # Read data
-data_file <- "/home/shuaiw/mGlu/tmp/figures/motif_sharing/jaccard_similarity_96plex.csv"
+data_file <- "/home/shuaiw/MODIFI/tmp/figures/motif_sharing/jaccard_similarity_96plex.csv"
 df <- read_csv(data_file, show_col_types = FALSE)
 
 # Reshape data to long format for grouped bars
