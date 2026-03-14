@@ -3,40 +3,28 @@
 library(dplyr)
 library(ggplot2)
 library(readr)
-library(tidyr)
-
 # Read data
 data_file <- "/home/shuaiw/MODIFI/tmp/figures/motif_sharing/jaccard_similarity_96plex.csv"
 df <- read_csv(data_file, show_col_types = FALSE)
 
-# Reshape data to long format for grouped bars
-df_long <- df %>%
-  select(MGE, host, jaccard_similarity, jaccard_similarity_filtered, 
-         total_motif_num, total_motif_num_filtered) %>%
-  pivot_longer(cols = c(jaccard_similarity, jaccard_similarity_filtered),
-               names_to = "similarity_type",
-               values_to = "similarity_value") %>%
-  mutate(
-    motif_count = ifelse(similarity_type == "jaccard_similarity", 
-                         total_motif_num, total_motif_num_filtered),
-    type_label = factor(ifelse(similarity_type == "jaccard_similarity",
-                       "Original", "Filtered"),
-                       levels = c("Original", "Filtered"))
+# Keep only filtered Jaccard similarity values
+df_plot <- df %>%
+  select(MGE, host, jaccard_similarity_filtered, total_motif_num_filtered) %>%
+  rename(
+    similarity_value = jaccard_similarity_filtered,
+    motif_count = total_motif_num_filtered
   )
 
 # Reorder MGE to put S_enterica_LT2_2 first
-mge_order <- unique(df_long$MGE)
+mge_order <- unique(df_plot$MGE)
 mge_order <- c("S_enterica_LT2_2", setdiff(mge_order, "S_enterica_LT2_2"))
-df_long$MGE <- factor(df_long$MGE, levels = mge_order)
+df_plot$MGE <- factor(df_plot$MGE, levels = mge_order)
 
 # Create the plot
-p <- ggplot(df_long, aes(x = MGE, y = similarity_value, fill = type_label)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
-  geom_text(aes(label = motif_count), 
-            position = position_dodge(width = 0.8),
+p <- ggplot(df_plot, aes(x = MGE, y = similarity_value)) +
+  geom_bar(stat = "identity", fill = "#5F9EA0", width = 0.7) +
+  geom_text(aes(label = motif_count),
             vjust = 1.5, size = 3, color = "white") +
-  scale_fill_manual(values = c("Original" = "#8B0000", "Filtered" = "#5F9EA0"),
-                    name = "Motif filtering") +
   labs(x = "",
        y = "Jaccard Similarity",
        title = "") +
@@ -44,15 +32,13 @@ p <- ggplot(df_long, aes(x = MGE, y = similarity_value, fill = type_label)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
         axis.title = element_text(size = 12, ),
         plot.title = element_text(size = 14, hjust = 0.5),
-        legend.position = "top",
-        legend.title = element_text(size = 11),
-        legend.text = element_text(size = 10)) +
+        legend.position = "none") +
   ylim(0, 1)
 
 # Save plot
 fig_dir <- "../../tmp/figures/motif_sharing"
-output_file <- file.path(fig_dir, "96plex_jaccard_comparison.pdf")
-ggsave(output_file, plot = p, width = 8, height = 4)
+output_file <- file.path(fig_dir, "96plex_jaccard_similarity_filtered.pdf")
+ggsave(output_file, plot = p, width = 6, height = 4)
 
 cat("Plot saved to:", output_file, "\n")
 cat("Number of MGE-host pairs:", nrow(df), "\n")
