@@ -21,7 +21,7 @@ fi
 # samtools index $align_bam
 # /home/shuaiw//smrtlink/pbindex $align_bam
 
-/usr/bin/time -v -o $prefix.pbmm2.align.time ~/smrtlink/pbmm2 align --preset CCS -j $SLURM_CPUS_ON_NODE $ref $subreads_bam $prefix.raw.bam 
+/usr/bin/time -v -o $prefix.pbmm2.align.time ~/smrtlink/pbmm2 align --preset SUBREAD -j $SLURM_CPUS_ON_NODE $ref $subreads_bam $prefix.raw.bam 
 samtools sort -T $prefix -@ $SLURM_CPUS_ON_NODE -o $align_bam $prefix.raw.bam
 rm $prefix.raw.bam
 samtools index $align_bam
