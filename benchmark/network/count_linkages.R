@@ -279,6 +279,164 @@ p4 <- ggplot(domain_sample_bacteria_plot, aes(x = MGE_type, y = count_norm, fill
 ggsave(file.path(paper_fig_dir, "linkage_counts_mge_by_host_type_boxplot.pdf"),
        plot = p4, width = 4, height = 5)
 
+# Plot: Per-sample count of plasmids (conjugative or not) linked to Gram-Positive / Gram-Negative / Archaea (from ConjScan parsed)
+# ConjScan parsed files are under /home/shuaiw/borg/paper/gram/{gram_positive,gram_negative,archaea}/...
+conjscan_base <- "/home/shuaiw/borg/paper/gram"
+conjscan_fill <- c("Conjugative" = "#2ca02c", "Mobilizable" = "#1f77b4", "dCONJ" = "#ff7f0e", "None" = "#d3d3d3")
+domain_conj_plot <- list(
+  list(domain_type = "Gram-Positive",  title = "Plasmids linked to Gram-positive bacteria",  suffix = "gram_positive"),
+  list(domain_type = "Gram-Negative",  title = "Plasmids linked to Gram-negative bacteria",  suffix = "gram_negative"),
+  list(domain_type = "Archaea",        title = "Plasmids linked to Archaea",                suffix = "archaea")
+)
+# Empty tibble for domains without a ConjScan parsed file (all plasmids will be "None")
+conjscan_empty <- tibble::tibble(contig = character(), conjugative = integer(), mobilizable = integer(), dCONJ = integer())
+conj_by_domain_list <- list()  # accumulate for combined Conjugative vs non-conjugative and Gram+ vs Gram- plots
+for (dom in domain_conj_plot) {
+  conjscan_parsed_path_dom <- file.path(conjscan_base, dom$suffix,
+    paste0(dom$suffix, "_linked_plasmids_anno/conjscan/", dom$suffix, "_linked_plasmids_MGE_contigs.conjscan_parsed.tsv"))
+  conjscan_parsed <- if (file.exists(conjscan_parsed_path_dom)) {
+    read_tsv(conjscan_parsed_path_dom, show_col_types = FALSE)
+  } else {
+    cat("  [Warning] ConjScan parsed file not found at:\n    ", conjscan_parsed_path_dom, "\n    All plasmids for ", dom$domain_type, " will be classified as None.\n", sep = "")
+    conjscan_empty
+  }
+  # Normalize contig ID: ConjScan may report per-gene replicon (e.g. plasmid_1, plasmid_2); take plasmid id by stripping trailing _<digits>, then one row per plasmid
+  if (nrow(conjscan_parsed) > 0L) {
+    conjscan_parsed <- conjscan_parsed %>%
+      mutate(contig_plasmid = sub("_[0-9]+$", "", contig)) %>%
+      group_by(contig_plasmid) %>%
+      summarise(conjugative = max(conjugative, na.rm = TRUE), mobilizable = max(mobilizable, na.rm = TRUE), dCONJ = max(dCONJ, na.rm = TRUE), .groups = "drop") %>%
+      rename(contig = contig_plasmid)
+  }
+  dom_plasmids <- gc_df %>%
+    filter(MGE_type == "plasmid", domain_type == dom$domain_type) %>%
+    distinct(sample, MGE) %>%
+    left_join(conjscan_parsed %>% select(contig, conjugative, mobilizable, dCONJ),
+              by = c("MGE" = "contig"))
+  if (nrow(dom_plasmids) == 0L) {
+    cat("\nNo plasmids linked to ", dom$domain_type, ", skipping ", dom$suffix, "_plasmid_conjugative_counts.pdf\n", sep = "")
+    next
+  }
+  dom_plasmids <- dom_plasmids %>%
+    mutate(conjugative_status = case_when(
+      conjugative == 1L ~ "Conjugative",
+      mobilizable == 1L ~ "Mobilizable",
+      dCONJ == 1L ~ "dCONJ",
+      TRUE ~ "None"
+    )) %>%
+    mutate(conjugative_status = factor(conjugative_status, levels = c("Conjugative", "Mobilizable", "dCONJ", "None")))
+  dom_conj_per_sample <- dom_plasmids %>%
+    count(sample, conjugative_status, .drop = FALSE) %>%
+    tidyr::complete(sample = unique(dom_plasmids$sample), conjugative_status = c("Conjugative", "Mobilizable", "dCONJ", "None"), fill = list(n = 0L))
+  p_dom_conj <- ggplot(dom_conj_per_sample, aes(x = conjugative_status, y = n, fill = conjugative_status)) +
+    geom_boxplot(outlier.shape = NA, position = position_dodge(width = 0.8), alpha = 1, color = "black", size = 0.5) +
+    geom_jitter(position = position_jitter(width = 0.2, height = 0), color = "black", size = 1.2, alpha = 1, show.legend = FALSE) +
+    scale_fill_manual(values = conjscan_fill, name = "") +
+    labs(x = "Conjugative status", y = "Count per sample", title = dom$title) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 14),
+      axis.title = element_text(size = 12),
+      axis.text = element_text(size = 10),
+      axis.text.x = element_text(angle = 25, hjust = 1),
+      legend.position = "none"
+    )
+  out_file <- paste0(dom$suffix, "_plasmid_conjugative_counts.pdf")
+  ggsave(file.path(paper_fig_dir, out_file), plot = p_dom_conj, width = 4.5, height = 5)
+  dom_summary <- dom_conj_per_sample %>% group_by(conjugative_status) %>% summarise(mean_n = mean(n), sd_n = sd(n), samples = n(), .groups = "drop")
+  cat("\n", dom$domain_type, " plasmid conjugative-status plot (per-sample counts) saved to ", out_file, "\n", sep = "")
+  cat("  Per-sample summary: ", paste(sprintf("%s: mean = %.2f (sd = %.2f, n = %d samples)", dom_summary$conjugative_status, dom_summary$mean_n, dom_summary$sd_n, dom_summary$samples), collapse = "; "), "\n", sep = "")
+
+  # Test: conjugative vs non-conjugative (Mobilizable + dCONJ + None) per sample, for Gram-Positive and Gram-Negative only
+  if (dom$suffix %in% c("gram_positive", "gram_negative")) {
+    conj_by_domain_list[[dom$suffix]] <- dom_conj_per_sample %>% mutate(host_type = dom$domain_type)
+    dom_wide <- dom_conj_per_sample %>%
+      tidyr::pivot_wider(names_from = conjugative_status, values_from = n, values_fill = 0L) %>%
+      mutate(n_non_conjugative = Mobilizable + dCONJ + None)
+    n_samp <- nrow(dom_wide)
+    if (n_samp >= 2L && (sd(dom_wide$Conjugative) > 0 || sd(dom_wide$n_non_conjugative) > 0)) {
+      tt <- try(t.test(dom_wide$Conjugative, dom_wide$n_non_conjugative, paired = TRUE), silent = TRUE)
+      wt <- try(wilcox.test(dom_wide$Conjugative, dom_wide$n_non_conjugative, paired = TRUE, exact = FALSE), silent = TRUE)
+      if (!inherits(tt, "try-error")) {
+        cat("  Conjugative vs non-conjugative (paired t-test): mean_diff = ", round(mean(dom_wide$Conjugative - dom_wide$n_non_conjugative), 3),
+            ", p = ", format.pval(tt$p.value, digits = 3, eps = 1e-4), "\n", sep = "")
+      }
+      if (!inherits(wt, "try-error")) {
+        cat("  Conjugative vs non-conjugative (Wilcoxon signed-rank): p = ", format.pval(wt$p.value, digits = 3, eps = 1e-4), "\n", sep = "")
+      }
+    }
+  }
+}
+
+# Combined box plots: (1) Conjugative vs non-conjugative by host type; (2) Gram-positive vs Gram-negative for Conjugative and for non-conjugative
+if (length(conj_by_domain_list) >= 2L) {
+  conj_combined <- bind_rows(conj_by_domain_list)
+  conj_wide <- conj_combined %>%
+    tidyr::pivot_wider(names_from = conjugative_status, values_from = n, values_fill = 0L) %>%
+    mutate(n_non_conjugative = Mobilizable + dCONJ + None)
+  # Long format for Conjugative vs non-conjugative plot
+  conj_plot1_long <- conj_wide %>%
+    tidyr::pivot_longer(cols = c(Conjugative, n_non_conjugative), names_to = "type", values_to = "count") %>%
+    mutate(type = if_else(type == "n_non_conjugative", "Non-conjugative", "Conjugative"))
+  # P-values for Conjugative vs non-conjugative within each host type (for annotation)
+  conj_pvals_dom <- conj_wide %>%
+    group_by(host_type) %>%
+    summarise(
+      p = tryCatch(t.test(Conjugative, n_non_conjugative, paired = TRUE)$p.value, error = function(e) NA_real_),
+      y = max(c(Conjugative, n_non_conjugative), na.rm = TRUE) * 1.15,
+      .groups = "drop"
+    ) %>%
+    mutate(p_lab = paste0("p = ", format.pval(p, digits = 2, eps = 1e-3)))
+  p_conj_vs_non <- ggplot(conj_plot1_long, aes(x = type, y = count, fill = type)) +
+    geom_boxplot(outlier.shape = NA, alpha = 1, color = "black", size = 0.5) +
+    geom_jitter(position = position_jitter(width = 0.2, height = 0), color = "black", size = 1, alpha = 1, show.legend = FALSE) +
+    facet_wrap(~ host_type, ncol = 2) +
+    scale_fill_manual(values = c("Conjugative" = "#2ca02c", "Non-conjugative" = "#7f7f7f"), name = "") +
+    labs(x = "", y = "Count per sample", title = "Conjugative vs non-conjugative plasmids by host type") +
+    theme_bw() +
+    theme(plot.title = element_text(hjust = 0.5, size = 14), axis.title = element_text(size = 12), axis.text = element_text(size = 10),
+          legend.position = "top", strip.text = element_text(size = 11)) +
+    geom_text(data = conj_pvals_dom, aes(x = 1.5, y = y, label = p_lab), inherit.aes = FALSE, size = 4)
+  ggsave(file.path(paper_fig_dir, "conjugative_vs_nonconjugative_by_host.pdf"), plot = p_conj_vs_non, width = 6, height = 5)
+  cat("\nSaved conjugative_vs_nonconjugative_by_host.pdf\n")
+
+  # Plot 2: Gram-positive vs Gram-negative for Conjugative and for non-conjugative (two panels, t-test p on each)
+  tt_conj <- try(t.test(Conjugative ~ host_type, data = conj_wide), silent = TRUE)
+  tt_non <- try(t.test(n_non_conjugative ~ host_type, data = conj_wide), silent = TRUE)
+  conj_plot2_long <- conj_wide %>%
+    tidyr::pivot_longer(cols = c(Conjugative, n_non_conjugative), names_to = "category", values_to = "count") %>%
+    mutate(category = if_else(category == "n_non_conjugative", "Non-conjugative", "Conjugative"))
+  pvals_gram <- tibble(
+    category = c("Conjugative", "Non-conjugative"),
+    p = c(if (inherits(tt_conj, "try-error")) NA_real_ else tt_conj$p.value, if (inherits(tt_non, "try-error")) NA_real_ else tt_non$p.value),
+    y = c(max(conj_wide$Conjugative, na.rm = TRUE) * 1.12, max(conj_wide$n_non_conjugative, na.rm = TRUE) * 1.12)
+  ) %>%
+    mutate(p_lab = paste0("p = ", format.pval(p, digits = 2, eps = 1e-3)))
+  p_gram_conj <- ggplot(conj_plot2_long, aes(x = host_type, y = count, fill = host_type)) +
+    geom_boxplot(outlier.shape = NA, alpha = 1, color = "black", size = 0.5) +
+    geom_jitter(position = position_jitter(width = 0.2, height = 0), color = "black", size = 1, alpha = 1, show.legend = FALSE) +
+    facet_wrap(~ category, ncol = 2, scales = "free_y") +
+    scale_fill_manual(values = c("Gram-Positive" = "#4daf4a", "Gram-Negative" = "#377eb8"), name = "Host type") +
+    labs(x = "", y = "Count per sample", title = "Linkage count by host type: Conjugative vs non-conjugative") +
+    theme_bw() +
+    theme(plot.title = element_text(hjust = 0.5, size = 14), axis.title = element_text(size = 12), axis.text = element_text(size = 10),
+          axis.text.x = element_text(angle = 25, hjust = 1), legend.position = "top", strip.text = element_text(size = 11)) +
+    geom_text(data = pvals_gram, aes(x = 1.5, y = y, label = p_lab), inherit.aes = FALSE, size = 4)
+  ggsave(file.path(paper_fig_dir, "gram_positive_vs_negative_conjugative_nonconjugative.pdf"), plot = p_gram_conj, width = 6, height = 5)
+  cat("Saved gram_positive_vs_negative_conjugative_nonconjugative.pdf\n")
+}
+
+# Conjugative vs non-conjugative: biological interpretation (printed once)
+cat("\n=== Conjugative vs non-conjugative plasmids linked to Gram-positive / Gram-negative hosts ===\n")
+cat("Interpretation: Conjugative plasmids encode a full T4SS and can transfer by conjugation; non-conjugative\n")
+cat("(mobilizable, dCONJ, or no CONJScan hit) rely on helper T4SS or lack conjugation machinery. If conjugative\n")
+cat("and non-conjugative counts differ significantly by host type, possible reasons include: (1) cell-envelope\n")
+cat("structure (Gram-positive single membrane vs Gram-negative double membrane) favouring different transfer\n")
+cat("systems; (2) niche-specific selection (e.g. antibiotic pressure, HGT hotspots); (3) host range and\n")
+cat("plasmid ecology (conjugative plasmids may be more prevalent in certain host clades). The paired tests\n")
+cat("above compare per-sample counts within each host type; a significant p suggests one category dominates\n")
+cat("within samples for that host type.\n")
+
 # T-tests for environment
 cat("\n=== T-tests: Plasmid vs Virus by Environment (≥5 samples) ===\n")
 for (env in unique(env_sample_counts$environment)) {

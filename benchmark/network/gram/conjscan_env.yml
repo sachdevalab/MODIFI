@@ -1,0 +1,13 @@
+# Conda environment for MacSyFinder + CONJScan (conjugation system detection).
+# Build: conda env create -f conjscan_env.yml
+# Then install CONJScan models: conda activate conjscan && msf_data install CONJScan
+
+name: conjscan
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python >=3.10
+  - hmmer >=3.1
+  - macsyfinder
