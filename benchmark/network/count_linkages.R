@@ -327,12 +327,15 @@ for (dom in domain_conj_plot) {
     mutate(conjugative_status = factor(conjugative_status, levels = c("Conjugative", "Mobilizable", "dCONJ", "None")))
   dom_conj_per_sample <- dom_plasmids %>%
     count(sample, conjugative_status, .drop = FALSE) %>%
-    tidyr::complete(sample = unique(dom_plasmids$sample), conjugative_status = c("Conjugative", "Mobilizable", "dCONJ", "None"), fill = list(n = 0L))
-  p_dom_conj <- ggplot(dom_conj_per_sample, aes(x = conjugative_status, y = n, fill = conjugative_status)) +
+    tidyr::complete(sample = unique(dom_plasmids$sample), conjugative_status = c("Conjugative", "Mobilizable", "dCONJ", "None"), fill = list(n = 0L)) %>%
+    group_by(sample) %>%
+    mutate(n_plasmids = sum(n), prop = if_else(n_plasmids > 0L, n / n_plasmids, 0)) %>%
+    ungroup()
+  p_dom_conj <- ggplot(dom_conj_per_sample, aes(x = conjugative_status, y = prop, fill = conjugative_status)) +
     geom_boxplot(outlier.shape = NA, position = position_dodge(width = 0.8), alpha = 1, color = "black", size = 0.5) +
     geom_jitter(position = position_jitter(width = 0.2, height = 0), color = "black", size = 1.2, alpha = 1, show.legend = FALSE) +
     scale_fill_manual(values = conjscan_fill, name = "") +
-    labs(x = "Conjugative status", y = "Count per sample", title = dom$title) +
+    labs(x = "Conjugative status", y = "Proportion of plasmids per sample", title = dom$title) +
     theme_bw() +
     theme(
       plot.title = element_text(hjust = 0.5, size = 14),
@@ -343,26 +346,26 @@ for (dom in domain_conj_plot) {
     )
   out_file <- paste0(dom$suffix, "_plasmid_conjugative_counts.pdf")
   ggsave(file.path(paper_fig_dir, out_file), plot = p_dom_conj, width = 4.5, height = 5)
-  dom_summary <- dom_conj_per_sample %>% group_by(conjugative_status) %>% summarise(mean_n = mean(n), sd_n = sd(n), samples = n(), .groups = "drop")
-  cat("\n", dom$domain_type, " plasmid conjugative-status plot (per-sample counts) saved to ", out_file, "\n", sep = "")
-  cat("  Per-sample summary: ", paste(sprintf("%s: mean = %.2f (sd = %.2f, n = %d samples)", dom_summary$conjugative_status, dom_summary$mean_n, dom_summary$sd_n, dom_summary$samples), collapse = "; "), "\n", sep = "")
+  dom_summary <- dom_conj_per_sample %>% group_by(conjugative_status) %>% summarise(mean_prop = mean(prop), sd_prop = sd(prop), samples = n(), .groups = "drop")
+  cat("\n", dom$domain_type, " plasmid conjugative-status plot (per-sample proportions) saved to ", out_file, "\n", sep = "")
+  cat("  Per-sample summary (proportion): ", paste(sprintf("%s: mean = %.3f (sd = %.3f, n = %d samples)", dom_summary$conjugative_status, dom_summary$mean_prop, dom_summary$sd_prop, dom_summary$samples), collapse = "; "), "\n", sep = "")
 
-  # Test: conjugative vs non-conjugative (Mobilizable + dCONJ + None) per sample, for Gram-Positive and Gram-Negative only
+  # Test: conjugative vs non-conjugative (Mobilizable + dCONJ + None) per sample (using proportions), for Gram-Positive and Gram-Negative only
   if (dom$suffix %in% c("gram_positive", "gram_negative")) {
     conj_by_domain_list[[dom$suffix]] <- dom_conj_per_sample %>% mutate(host_type = dom$domain_type)
     dom_wide <- dom_conj_per_sample %>%
-      tidyr::pivot_wider(names_from = conjugative_status, values_from = n, values_fill = 0L) %>%
+      tidyr::pivot_wider(names_from = conjugative_status, values_from = prop, values_fill = 0) %>%
       mutate(n_non_conjugative = Mobilizable + dCONJ + None)
     n_samp <- nrow(dom_wide)
-    if (n_samp >= 2L && (sd(dom_wide$Conjugative) > 0 || sd(dom_wide$n_non_conjugative) > 0)) {
+    if (n_samp >= 2L && (sd(dom_wide$Conjugative, na.rm = TRUE) > 0 || sd(dom_wide$n_non_conjugative, na.rm = TRUE) > 0)) {
       tt <- try(t.test(dom_wide$Conjugative, dom_wide$n_non_conjugative, paired = TRUE), silent = TRUE)
       wt <- try(wilcox.test(dom_wide$Conjugative, dom_wide$n_non_conjugative, paired = TRUE, exact = FALSE), silent = TRUE)
       if (!inherits(tt, "try-error")) {
-        cat("  Conjugative vs non-conjugative (paired t-test): mean_diff = ", round(mean(dom_wide$Conjugative - dom_wide$n_non_conjugative), 3),
+        cat("  Conjugative vs non-conjugative (paired t-test on proportions): mean_diff = ", round(mean(dom_wide$Conjugative - dom_wide$n_non_conjugative, na.rm = TRUE), 4),
             ", p = ", format.pval(tt$p.value, digits = 3, eps = 1e-4), "\n", sep = "")
       }
       if (!inherits(wt, "try-error")) {
-        cat("  Conjugative vs non-conjugative (Wilcoxon signed-rank): p = ", format.pval(wt$p.value, digits = 3, eps = 1e-4), "\n", sep = "")
+        cat("  Conjugative vs non-conjugative (Wilcoxon signed-rank on proportions): p = ", format.pval(wt$p.value, digits = 3, eps = 1e-4), "\n", sep = "")
       }
     }
   }
@@ -372,9 +375,9 @@ for (dom in domain_conj_plot) {
 if (length(conj_by_domain_list) >= 2L) {
   conj_combined <- bind_rows(conj_by_domain_list)
   conj_wide <- conj_combined %>%
-    tidyr::pivot_wider(names_from = conjugative_status, values_from = n, values_fill = 0L) %>%
+    tidyr::pivot_wider(names_from = conjugative_status, values_from = prop, values_fill = 0) %>%
     mutate(n_non_conjugative = Mobilizable + dCONJ + None)
-  # Long format for Conjugative vs non-conjugative plot
+  # Long format for Conjugative vs non-conjugative plot (proportions)
   conj_plot1_long <- conj_wide %>%
     tidyr::pivot_longer(cols = c(Conjugative, n_non_conjugative), names_to = "type", values_to = "count") %>%
     mutate(type = if_else(type == "n_non_conjugative", "Non-conjugative", "Conjugative"))
@@ -392,7 +395,7 @@ if (length(conj_by_domain_list) >= 2L) {
     geom_jitter(position = position_jitter(width = 0.2, height = 0), color = "black", size = 1, alpha = 1, show.legend = FALSE) +
     facet_wrap(~ host_type, ncol = 2) +
     scale_fill_manual(values = c("Conjugative" = "#2ca02c", "Non-conjugative" = "#7f7f7f"), name = "") +
-    labs(x = "", y = "Count per sample", title = "Conjugative vs non-conjugative plasmids by host type") +
+    labs(x = "", y = "Proportion of plasmids per sample", title = "Conjugative vs non-conjugative plasmids by host type") +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5, size = 14), axis.title = element_text(size = 12), axis.text = element_text(size = 10),
           legend.position = "top", strip.text = element_text(size = 11)) +
@@ -417,7 +420,7 @@ if (length(conj_by_domain_list) >= 2L) {
     geom_jitter(position = position_jitter(width = 0.2, height = 0), color = "black", size = 1, alpha = 1, show.legend = FALSE) +
     facet_wrap(~ category, ncol = 2, scales = "free_y") +
     scale_fill_manual(values = c("Gram-Positive" = "#4daf4a", "Gram-Negative" = "#377eb8"), name = "Host type") +
-    labs(x = "", y = "Count per sample", title = "Linkage count by host type: Conjugative vs non-conjugative") +
+    labs(x = "", y = "Proportion of plasmids per sample", title = "Linkage count by host type: Conjugative vs non-conjugative") +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5, size = 14), axis.title = element_text(size = 12), axis.text = element_text(size = 10),
           axis.text.x = element_text(angle = 25, hjust = 1), legend.position = "top", strip.text = element_text(size = 11)) +
