@@ -8,7 +8,7 @@ library(ComplexHeatmap)
 suppressPackageStartupMessages(library(circlize))
 library(RColorBrewer)
 
-personal_plot <- function(profile_df, cluster_species, plot_name) {
+personal_plot <- function(profile_df, cluster_species, plot_name, sample_name_file = NULL) {
   
   # Create pivot table for heatmap
   pivot_df <- profile_df %>%
@@ -47,7 +47,31 @@ personal_plot <- function(profile_df, cluster_species, plot_name) {
     }
   }
   
-  sample_names <- sapply(contig_names, extract_sample_name)
+  # Prefer sample names from external mapping file if provided.
+  # Expected columns: contig,sample
+  sample_name_map <- NULL
+  if (!is.null(sample_name_file) && file.exists(sample_name_file)) {
+    sample_name_df <- read.csv(sample_name_file, stringsAsFactors = FALSE)
+    if (all(c("contig", "sample") %in% colnames(sample_name_df))) {
+      sample_name_map <- sample_name_df %>%
+        distinct(contig, sample) %>%
+        tibble::deframe()
+    } else {
+      warning(paste0("Sample name file missing required columns contig,sample: ", sample_name_file))
+    }
+  }
+  
+  if (!is.null(sample_name_map)) {
+    sample_names <- sapply(contig_names, function(contig) {
+      sample_val <- sample_name_map[contig]
+      if (is.na(sample_val) || length(sample_val) == 0) {
+        return(extract_sample_name(contig))
+      }
+      sample_val
+    })
+  } else {
+    sample_names <- sapply(contig_names, extract_sample_name)
+  }
   unique_samples <- unique(sample_names)
   
   # Assign colors to each unique sample
@@ -125,7 +149,8 @@ personal_plot <- function(profile_df, cluster_species, plot_name) {
   col_fun <- colorRamp2(seq(0, 1, length.out = 100), 
                         colorRampPalette(c("#FFFFD4", "#C7E9B4", "#41B6C4", "#225EA8", "#081D58"))(100))
   
-  # Create heatmap with colored row labels
+  # Create heatmap with colored row labels.
+  # No fixed width — heatmap body auto-fills remaining space after dendrogram + labels.
   ht <- Heatmap(pivot_matrix,
                 name = "Fraction",
                 col = col_fun,
@@ -136,13 +161,13 @@ personal_plot <- function(profile_df, cluster_species, plot_name) {
                 show_heatmap_legend = FALSE,
                 row_labels = y_labels_all,
                 row_names_gp = gpar(fontsize = 6, col = label_colors),
+                row_names_max_width = unit(20, "cm"),
                 column_names_gp = gpar(fontsize = 6),
                 row_dend_width = unit(1.5, "cm"),
-                column_dend_height = unit(1, "cm"),
-                width = unit(8, "cm"))
+                column_dend_height = unit(1, "cm"))
   
   pdf(plot_name, width = 15, height = 8)
-  draw(ht, padding = unit(c(2, 25, 2, 0), "mm"))
+  draw(ht, padding = unit(c(2, 2, 2, 2), "mm"))
   dev.off()
   cat(paste0("Saved combined plot to: ", plot_name, "\n"))
   
@@ -150,7 +175,14 @@ personal_plot <- function(profile_df, cluster_species, plot_name) {
 }
 
 # Example usage (uncomment and modify as needed):
-profile_df <- read.csv("/home/shuaiw/borg/paper/borg_data/profile4//profile_profile_df_filtered.csv")
+seq_dir <- "/home/shuaiw/borg/paper/borg_data/profile4"
+cluster <- "profile"
+profile_df <- read.csv(file.path(seq_dir, paste0(cluster, "_profile_df_filtered.csv")))
 ## remove Genome Non-Mp
 profile_df <- profile_df %>% filter(Genome != "Non-Mp")
-personal_plot(profile_df, cluster_species = "borg", plot_name = "/home/shuaiw/borg/paper/borg_data/profile4/borg_profile_heatmap.pdf")
+personal_plot(
+  profile_df,
+  cluster_species = "borg",
+  plot_name = file.path(seq_dir, "borg_profile_heatmap.pdf"),
+  sample_name_file = file.path(seq_dir, paste0(cluster, "_profile_df_filtered.sample.name.csv"))
+)

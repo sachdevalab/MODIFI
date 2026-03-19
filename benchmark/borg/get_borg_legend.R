@@ -6,7 +6,7 @@ library(ggplot2)
 # This script builds a legend showing MGE types (plasmid, virus) with shapes
 # and host phyla as colored circle entries. It saves a PDF legend file.
 
-color_path <- "borg_node_color.csv"
+color_path <- "network_colors.csv"
 out_pdf <- "../../tmp/figures/borg_fig/borg_legend.pdf"
 
 # Optional: define explicit colors here. Keys should match category names (plasmid, virus, or phylum strings).

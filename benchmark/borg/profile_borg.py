@@ -23,6 +23,40 @@ from sample_object import get_unique_motifs, My_sample, get_ctg_taxa, Isolation_
 from check_motif_change import given_species_drep, given_species_drep_fast
 from find_borg import find_assembly
 
+mini_c_members = [("FINAL_Ghosilch_Klingon_101kb_SR-VP_07_25_2022_A1_100cm_39_0_complete", "soil_100"),\
+                    ("FINAL_79kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_38_7_complete","soil_100"),\
+                    ("FINAL_340kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_39_43_complete","soil_100"),\
+                    ("FINAL_272kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_39_43_complete", "soil_100"),\
+                    ("FINAL_157kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_40_9_complete", "soil_110"),\
+                    ("FINAL_269kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_42_21_complete", "soil_110"),\
+                    ("FINAL_4-11MB_Methanoperedens_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_42_23_complete", "soil_110"),\
+                    ("FINAL_87kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_39_4_complete", "soil_110"),\
+                    ("FINAL_65kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_40_4_complete", "soil_110"),\
+                ("FINAL_53kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_39_7_complete", "soil_110"),\
+                ("FINAL_2-77MB_Methanoperedens_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_43_10_complete", "soil_80"),\
+                ("FINAL_77kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_39_7_complete", "soil_80"),\
+                ("FINAL_233kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_41_10_complete", "soil_80"),\
+                ("FINAL_283kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_39_10_complete", "soil_80"),\
+                ("FINAL_2-49MB_Methanoperedens_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_44_12_complete", "soil_80"),\
+                ("FINAL_2-50MB_Methanoperedens_SR-VP_07_25_2022_A1_90cm_PACBIO-HIFI_44_8_complete", "soil_90"),\
+                ("FINAL_2-50MB_Methanoperedens_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_44_16_complete", "soil_80"),\
+                    ("FINAL_2-76MB_Methanoperedens_SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_43_20_complete", "soil_2"),\
+                    ("FINAL_2-81MB_Methanoperedens_SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_43_28_complete", "soil_2"),\
+                    ("FINAL_2-74MB_Methanoperedens_SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_43_43_complete", "soil_1"),\
+                    ("FINAL_2-58MB_Methanoperedens_SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_43_25_complete", "soil_1"),\
+                    ("FINAL_62kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_40_11_complete", "soil_110")]
+
+sample_name_convert = {
+    "soil_1": "SR-VP_9_9_2021_81_5A_0_75m",
+    "soil_2": "SR-VP_9_9_2021_34_2B_1_4m",
+    "soil_100": "SR-VP_07_25_2022_A1_100cm",
+    "soil_110": "SR-VP_07_25_2022_A1_110cm",
+    "soil_80": "SR-VP_07_25_2022_A1_80cm",
+    "soil_90": "SR-VP_07_25_2022_A1_90cm",
+    "soil_115": "SR-VP_07_25_2022_A1_115cm",
+    "soil_60": "SR-VP_07_25_2022_A1_60cm",
+}
+
 class Borg_Entry:
     def __init__(self, line):
         """Parse a single line from the BORG file"""
@@ -275,13 +309,16 @@ def get_unique_motif(motifs_to_keep):
     return list(unique_motif_ids)
 
 def extract_sample_name(contig_name):
-    parts = str(contig_name).split('_')
-    if len(parts) >= 8:
-        return '_'.join(parts[:8])
+    ## make a dict for mini_c_members, key is the contig name, value is the sample name
+    mini_c_members_dict = {member[0]: sample_name_convert[member[1]] for member in mini_c_members}
+    if contig_name not in mini_c_members_dict:
+        sample_name = str(contig_name).split('_PACBIO')[0]
     else:
-        return contig_name
+        # find the sample name from the mini_c_members_dict
+        sample_name = mini_c_members_dict[contig_name]
+    return sample_name
 
-def umap_plot(profile_df, plot_name, contig_derived_motif_dict):
+def umap_plot(profile_df, plot_name, contig_derived_motif_dict=None):
 
     ## Randomly retain 5 Non-Mp contigs
     non_mp_df = profile_df[profile_df['Genome'] == 'Non-Mp']
@@ -308,40 +345,34 @@ def umap_plot(profile_df, plot_name, contig_derived_motif_dict):
     print("\n=== Creating network graph based on Pearson correlation ===")
 
     # Calculate Pearson correlation matrix
-    similarity_matrix = pivot_df.T.corr(method='spearman').values
+    similarity_matrix = pivot_df.T.corr(method='pearson').values
     pivot_binary = (pivot_df >= 0.4).astype(int)
-    ## remove the contigs without motifs (all zeros in binary matrix)
-    contigs_with_motifs = pivot_binary.index[pivot_binary.sum(axis=1) > 0]
-    pivot_binary = pivot_binary.loc[contigs_with_motifs]
-    pivot_df = pivot_df.loc[contigs_with_motifs]
 
     ## add jaccrad similarity matrix
-    # jaccard_similarity = 1 - pairwise_distances(pivot_binary.values, metric='jaccard')
-    ## manually calculate jaccard similarity matrix, when compute the jaccard similarity between two contigs, only consider the motifs derived from the contigs
     jaccard_similarity = np.zeros((len(pivot_binary), len(pivot_binary)))
     ## dict to record shared motifs between contig pairs
     shared_motifs_dict = {}
+    use_contig_derived_motifs = bool(contig_derived_motif_dict)
     for i, contig1 in enumerate(pivot_binary.index):
         for j, contig2 in enumerate(pivot_binary.index):
             if i < j:
-                motifs1 = contig_derived_motif_dict.get(contig1, set())
-                motifs2 = contig_derived_motif_dict.get(contig2, set())
-                all_motifs = motifs1.union(motifs2)
-                ## use pivot_df to calculate jaccard similarity, while only retaining motifs in all_motifs
-                idx = [pivot_df.columns.get_loc(m) for m in all_motifs if m in pivot_df.columns]
+                if use_contig_derived_motifs:
+                    motifs1 = contig_derived_motif_dict.get(contig1, set())
+                    motifs2 = contig_derived_motif_dict.get(contig2, set())
+                    all_motifs = motifs1.union(motifs2)
+                    idx = [pivot_df.columns.get_loc(m) for m in all_motifs if m in pivot_df.columns]
+                else:
+                    idx = list(range(pivot_df.shape[1]))
                 if idx:
                     vec1 = pivot_binary.iloc[i, idx].values
                     vec2 = pivot_binary.iloc[j, idx].values
-                    # Check if both vectors are all zeros (no motifs present)
                     if vec1.sum() == 0 and vec2.sum() == 0:
                         jaccard_similarity[i, j] = 0.0
                     else:
-                        # Calculate Jaccard similarity
                         intersection = np.sum((vec1 == 1) & (vec2 == 1))
                         union = np.sum((vec1 == 1) | (vec2 == 1))
                         jaccard_similarity[i, j] = intersection / union if union > 0 else 0.0
                     jaccard_similarity[j, i] = jaccard_similarity[i, j]
-                    # Get shared motifs from the subset we're considering
                     shared_motifs = [pivot_binary.columns[idx[k]] for k in range(len(vec1)) if vec1[k] == 1 and vec2[k] == 1]
                     shared_motifs_dict[(contig1, contig2)] = shared_motifs
                     shared_motifs_dict[(contig2, contig1)] = shared_motifs
@@ -359,27 +390,21 @@ def umap_plot(profile_df, plot_name, contig_derived_motif_dict):
     G = nx.Graph()
     edge_data = []
     for i, contig1 in enumerate(pivot_df.index):
-        # Add node with genome type attribute
         G.add_node(contig1, Genome=contig_genome_map.get(contig1, 'NA'), Sample = profile_df[profile_df['contig'] == contig1]['sample'].iloc[0])
         for j, contig2 in enumerate(pivot_df.index):
             if i < j:
-                # similarity = similarity_matrix[i, j]
-                similarity = jaccard_similarity[i, j]
+                # similarity = jaccard_similarity[i, j]
+                similarity = similarity_matrix[i, j]
                 shared_motifs = shared_motifs_dict.get((contig1, contig2), [])
-                if len(shared_motifs) > 0:
+                if len(shared_motifs) > 0 and similarity > 0.7:
                     edge_data.append((contig1, contig_genome_map.get(contig1, 'NA'), contig2, contig_genome_map.get(contig2, 'NA'), similarity, len(shared_motifs)))
-                    G.add_edge(contig1, contig2, weight=len(shared_motifs))
-                if similarity > 0.4:
-                    
-                    
-                    ## if the edge is between none-Mp contig and others, print it out
+                    G.add_edge(contig1, contig2, weight=similarity)
+                if similarity > 0.7:
                     if (contig_genome_map.get(contig1, 'NA') == 'Non-Mp' or 
                         contig_genome_map.get(contig2, 'NA') == 'Non-Mp'):
                         if not (contig_genome_map.get(contig1, 'NA') == 'Non-Mp' and 
                                 contig_genome_map.get(contig2, 'NA') == 'Non-Mp'):
                             print(f"Edge between Non-Mp contig {contig1} and {contig2} with similarity {similarity:.2f}")
-                            ## print their shared motifs
-                            
                             print(f"Shared motifs: {shared_motifs}")
     
     print(f"Network has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges")
@@ -466,7 +491,7 @@ def get_mini_chr_list():
 if __name__ == "__main__":
     
     all_dir = "/home/shuaiw/borg/paper/gg_run3/"
-    seq_dir = "/home/shuaiw/borg/paper/borg_data/profile5/"
+    seq_dir = "/home/shuaiw/borg/paper/borg_data/profile4/"
     cluster = "profile"
 
     cluster_species = "borg"
@@ -474,7 +499,7 @@ if __name__ == "__main__":
     os.system(f"cat {all_dir}/*/borg/{cluster_species}_contigs_summary.tsv > {borg_file}")
     plot_name = os.path.join(seq_dir, f"{cluster_species}_motif_profile_all.pdf")
     
-    # """
+    """
     # Load BORG data
     borg_data = My_Borg(borg_file)
     high_dp_borgs = borg_data.get_high_depth_borgs(min_depth=5.0)
@@ -501,28 +526,7 @@ if __name__ == "__main__":
     # members = ["soil_1_1336_L", "soil_s4_1_109_C"]
 
 
-    mini_c_members = [("FINAL_Ghosilch_Klingon_101kb_SR-VP_07_25_2022_A1_100cm_39_0_complete", "soil_100"),\
-                      ("FINAL_79kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_38_7_complete","soil_100"),\
-                      ("FINAL_340kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_39_43_complete","soil_100"),\
-                      ("FINAL_272kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_39_43_complete", "soil_100"),\
-                      ("FINAL_157kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_40_9_complete", "soil_110"),\
-                      ("FINAL_269kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_42_21_complete", "soil_110"),\
-                        ("FINAL_4-11MB_Methanoperedens_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_42_23_complete", "soil_110"),\
-                        ("FINAL_87kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_39_4_complete", "soil_110"),\
-                        ("FINAL_65kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_40_4_complete", "soil_110"),\
-                    ("FINAL_53kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_39_7_complete", "soil_110"),\
-                    ("FINAL_2-77MB_Methanoperedens_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_43_10_complete", "soil_80"),\
-                    ("FINAL_77kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_39_7_complete", "soil_80"),\
-                    ("FINAL_233kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_41_10_complete", "soil_80"),\
-                    ("FINAL_283kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_39_10_complete", "soil_80"),\
-                    ("FINAL_2-49MB_Methanoperedens_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_44_12_complete", "soil_80"),\
-                    ("FINAL_2-50MB_Methanoperedens_SR-VP_07_25_2022_A1_90cm_PACBIO-HIFI_44_8_complete", "soil_90"),\
-                    ("FINAL_2-50MB_Methanoperedens_SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI_44_16_complete", "soil_80"),\
-                        ("FINAL_2-76MB_Methanoperedens_SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_43_20_complete", "soil_2"),\
-                        ("FINAL_2-81MB_Methanoperedens_SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_43_28_complete", "soil_2"),\
-                        ("FINAL_2-74MB_Methanoperedens_SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_43_43_complete", "soil_1"),\
-                        ("FINAL_2-58MB_Methanoperedens_SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_43_25_complete", "soil_1"),\
-                      ("FINAL_62kb_HMp-Plasmid-like_SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI_40_11_complete", "soil_110")]
+
     for member in mini_c_members:
         if member not in members:
             members.append(member)
@@ -548,7 +552,7 @@ if __name__ == "__main__":
     contig_table.to_csv(f"{seq_dir}/{cluster}_contig_table.csv", index=False)
     print (f"Saved contig table to: {seq_dir}/{cluster}_contig_table.csv")
 
-    """
+    
     manual_members = [("SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META_16008_L", "soil_2")]
     for member in manual_members:
         if member not in members:
@@ -625,11 +629,14 @@ if __name__ == "__main__":
 
 
     ## store the profile_df in a CSV file
-    
+    """
     profile_df = pd.read_csv(f"{seq_dir}/{cluster}_profile_df_filtered.csv")
     profile_df['sample'] = profile_df['contig'].apply(extract_sample_name)
-    umap_plot(profile_df, plot_name, contig_derived_motif_dict)
-    """
+    sample_name_df = profile_df[['contig', 'sample']].drop_duplicates().sort_values('contig')
+    sample_name_df.to_csv(f"{seq_dir}/{cluster}_profile_df_filtered.sample.name.csv", index=False)
+    print(f"Saved sample names to: {seq_dir}/{cluster}_profile_df_filtered.sample.name.csv")
+    umap_plot(profile_df, plot_name)
+    
     # personal_plot(profile_df)
     # 
     # ## get a df for each sample
