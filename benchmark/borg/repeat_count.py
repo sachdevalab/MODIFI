@@ -866,6 +866,7 @@ def four_way_analysis(REF, record_motif_sites, record_mod_motif_sites, orf_regio
             'mod_motif_density': mod_motif_density,
             'pct_modified_motifs': pct_modified_motifs
         }
+
         
         # print(f"\n{cat_name.replace('_', ' ').upper()}:")
         # print(f"  Total bases: {bases:,} ({bases/total_bases*100:.2f}%)")
@@ -883,7 +884,27 @@ def four_way_analysis(REF, record_motif_sites, record_mod_motif_sites, orf_regio
         cat_display = cat_name.replace('_', ' ')
         print(f"{cat_display:<25} {res['bases']:>11,} {res['gc_content']:>7.2f} {res['motif_density']:>9.2f} {res['mod_motif_density']:>11.2f} {res['pct_modified_motifs']:>9.2f}")
     print(f"{'='*60}\n")
-    
+    ## use fisher's exact test to test if "Intergenic with TR" has a higher Mod fraction(%) compared to each of the other three categories
+    other_categories = ['Intergenic_without_TR', 'ORF_with_TR', 'ORF_without_TR']
+    itr = results['Intergenic_with_TR']
+    for other_cat in other_categories:
+        other = results[other_cat]
+        contingency_table = [[itr['mod_motifs'], itr['motifs'] - itr['mod_motifs']],
+                             [other['mod_motifs'], other['motifs'] - other['mod_motifs']]]
+        odds_ratio, p_value = fisher_exact(contingency_table)
+        print(f"Fisher's exact test (Intergenic_with_TR vs {other_cat}):")
+        print(f"  Odds ratio: {odds_ratio:.4f}")
+        print(f"  P-value: {p_value:.4e}")
+
+    combined_mod = sum(results[c]['mod_motifs'] for c in other_categories)
+    combined_total = sum(results[c]['motifs'] for c in other_categories)
+    contingency_table = [[itr['mod_motifs'], itr['motifs'] - itr['mod_motifs']],
+                         [combined_mod, combined_total - combined_mod]]
+    odds_ratio, p_value = fisher_exact(contingency_table)
+    print(f"Fisher's exact test (Intergenic_with_TR vs all others combined):")
+    print(f"  Odds ratio: {odds_ratio:.4f}")
+    print(f"  P-value: {p_value:.4e}")
+
     return results
 
 def counting(mod_gff, borg_ref, motif_new, exact_pos, repeat_bed, ORF_anno):
@@ -982,12 +1003,12 @@ if __name__ == "__main__":
     # borg_ref = f"/home/shuaiw/borg/paper/gg_run3/soil_115/soil_115_methylation4/contigs/{ctg_name}.fa"
     # repeat_bed = f"{folder}/{ctg_name}.repeat.bed"
 
-    # folder = "/home/shuaiw/borg/paper/borg_data/batch_export2/green_borgs"
-    # ctg_name = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L"
-    # ORF_anno = f"{folder}/{ctg_name}.prodigal.gff"
-    # mod_gff = f"/home/shuaiw/borg/paper/gg_run3/soil_1/soil_1_methylation4/gffs/{ctg_name}.gff"
-    # borg_ref = f"/home/shuaiw/borg/paper/gg_run3/soil_1/soil_1_methylation4/contigs/{ctg_name}.fa"
-    # repeat_bed = f"{folder}/{ctg_name}.repeat.bed"
+    folder = "/home/shuaiw/borg/paper/borg_data/batch_export2/green_borgs"
+    ctg_name = "SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META_1354_L"
+    ORF_anno = f"{folder}/{ctg_name}.prodigal.gff"
+    mod_gff = f"/home/shuaiw/borg/paper/gg_run3/soil_1/soil_1_methylation4/gffs/{ctg_name}.gff"
+    borg_ref = f"/home/shuaiw/borg/paper/gg_run3/soil_1/soil_1_methylation4/contigs/{ctg_name}.fa"
+    repeat_bed = f"{folder}/{ctg_name}.repeat.bed"
 
     # folder = "/home/shuaiw/borg/paper/borg_data/batch_export2/green_borgs"
     # ctg_name = "SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_METAMDBG_723659_L"
@@ -1003,12 +1024,12 @@ if __name__ == "__main__":
     # borg_ref = f"{folder}/{ctg_name}.contigs.fa"
     # repeat_bed = f"{folder}/{ctg_name}.repeat.bed"
 
-    folder = "/home/shuaiw/borg/paper/borg_data/batch_export2/Other_borgs"
-    ctg_name = "SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_Orange_Borg_32_01"
-    ORF_anno = f"{folder}/{ctg_name}.prodigal.gff"
-    mod_gff = f"/home/shuaiw/borg/paper/borg_data/batch_export2/new_run2/soil_100_orange_2/gffs/{ctg_name}.all.gff"
-    borg_ref = f"{folder}/{ctg_name}.contigs.fa"
-    repeat_bed = f"{folder}/{ctg_name}.repeat.bed"
+    # folder = "/home/shuaiw/borg/paper/borg_data/batch_export2/Other_borgs"
+    # ctg_name = "SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_Orange_Borg_32_01"
+    # ORF_anno = f"{folder}/{ctg_name}.prodigal.gff"
+    # mod_gff = f"/home/shuaiw/borg/paper/borg_data/batch_export2/new_run2/soil_100_orange_2/gffs/{ctg_name}.all.gff"
+    # borg_ref = f"{folder}/{ctg_name}.contigs.fa"
+    # repeat_bed = f"{folder}/{ctg_name}.repeat.bed"
 
     # folder = "/home/shuaiw/borg/paper/borg_data/batch_export2/Other_borgs"
     # ctg_name = "SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI_HIFIASM-META_Iris_Borg_31-64_00"
