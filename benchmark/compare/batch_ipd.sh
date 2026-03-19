@@ -5,7 +5,7 @@
 set -euo pipefail
 
 ref_dir=/home/shuaiw/borg/contigs/
-ref_set=(test_100.fa test_200.fa test_300.fa test_500.fa)
+ref_set=(test_200.fa test_300.fa test_500.fa)
 outdir=/home/shuaiw/borg/paper/ipdsummary/soil_1/
 ipd_output=/home/shuaiw/borg/paper/ipdsummary/soil_1/ipd.out/
 threads="${SLURM_CPUS_ON_NODE:-64}"
@@ -30,5 +30,5 @@ for ref in "${ref_set[@]}"; do
         --methylFraction \
         --outfile "$ipd_prefix.out"
 
-    break
+    # break
 done

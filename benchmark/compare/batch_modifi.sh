@@ -14,8 +14,12 @@ mkdir -p "$modifi_out_root"
 for ref in "${ref_set[@]}"; do
     base="$(basename "$ref" .fa)"
     ref_path="$ref_dir/$ref"
+    align_bam="/home/shuaiw/borg/paper/ipdsummary/soil_1/$prefix.align.subreads.bam"
+
+
     work_dir="$modifi_out_root/$base"
-    align_bam="$work_dir/$base.align.subreads.bam"
+    prefix="$outdir/$(basename "$ref" .fa)"
+    
 
     mkdir -p "$work_dir"
 
@@ -27,5 +31,5 @@ for ref in "${ref_set[@]}"; do
         --read_type subreads \
         --run_steps split load control compare \
         --threads $threads
-    break
+    # break
 done
