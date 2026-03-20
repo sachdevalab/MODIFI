@@ -51,8 +51,7 @@ plot_heatmap <- function(data_file, heat_map) {
   })
   sample_labels <- df_sorted$sample
   
-  # Define better colors for Type
-  type_colors <- c('plasmid' = '#4575b4', 'host' = '#d73027', 'unknown' = '#bbbbbb')
+  type_colors <- c('plasmid' = '#66c2a5', 'host' = '#fc8d62', 'unknown' = '#bbbbbb')
   
   # Create better sample colors using viridis-like palette
   unique_samples <- unique(sample_labels)
@@ -78,15 +77,18 @@ plot_heatmap <- function(data_file, heat_map) {
     annotation_name_side = "top",
     annotation_legend_param = list(
       Type = list(
-        title = "Genome",
+        title = "",
         ncol = 2,
-        title_gp = gpar(fontsize = 9),
-        labels_gp = gpar(fontsize = 9)
+        title_gp = gpar(fontsize = 0),
+        labels_gp = gpar(fontsize = 7),
+        grid_height = unit(3, "mm"),
+        grid_width = unit(3, "mm")
       )
     )
   )
   
-  # Create heatmap
+  # Create heatmap with square cells
+  cell_size <- unit(5, "mm")
   heatmap_args <- list(
     matrix = heatmap_data,
     name = "Modification Fraction",
@@ -100,17 +102,23 @@ plot_heatmap <- function(data_file, heat_map) {
     clustering_distance_columns = "euclidean",
     show_row_names = TRUE,
     show_column_names = TRUE,
-    row_names_gp = gpar(fontsize = 9),
-    column_names_gp = gpar(fontsize = 9),
+    row_names_gp = gpar(fontsize = 7),
+    column_names_gp = gpar(fontsize = 6),
     column_names_rot = 45,
     column_names_side = "bottom",
     left_annotation = row_ha,
+    width = ncol(heatmap_data) * cell_size,
+    height = nrow(heatmap_data) * cell_size,
+    column_dend_height = unit(4, "mm"),
+    column_names_max_height = unit(3, "cm"),
+    row_names_max_width = unit(5, "cm"),
     heatmap_legend_param = list(
       title = "Modification Fraction",
       direction = "horizontal",
-      legend_width = unit(4, "cm"),
-      title_gp = gpar(fontsize = 9),
-      labels_gp = gpar(fontsize = 9)
+      legend_width = unit(2, "cm"),
+      grid_height = unit(3, "mm"),
+      title_gp = gpar(fontsize = 6),
+      labels_gp = gpar(fontsize = 6)
     ),
     rect_gp = gpar(col = "gray90", lwd = 0.5)
   )
@@ -118,7 +126,7 @@ plot_heatmap <- function(data_file, heat_map) {
   ht <- do.call(Heatmap, heatmap_args)
   
   # Save to file
-  pdf(heat_map, width = 4, height = 5)
+  pdf(heat_map, width = 6, height = 5)
   draw(ht, heatmap_legend_side = "top", annotation_legend_side = "top")
   dev.off()
   
