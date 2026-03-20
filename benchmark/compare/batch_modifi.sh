@@ -14,11 +14,9 @@ mkdir -p "$modifi_out_root"
 for ref in "${ref_set[@]}"; do
     base="$(basename "$ref" .fa)"
     ref_path="$ref_dir/$ref"
-    align_bam="/home/shuaiw/borg/paper/ipdsummary/soil_1/$prefix.align.subreads.bam"
-
-
     work_dir="$modifi_out_root/$base"
-    prefix="$outdir/$(basename "$ref" .fa)"
+
+    align_bam="/home/shuaiw/borg/paper/ipdsummary/soil_1/$base.align.subreads.bam"
     
 
     mkdir -p "$work_dir"

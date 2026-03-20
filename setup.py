@@ -13,7 +13,7 @@ from setuptools.command.install import install
 class InstallWithBinary(install):
     """
     Custom install command that:
-    1) Compiles src/get_control_IPD using htslib + pbbam (via pkg-config)
+    1) Compiles src/get_control_IPD (standard C++ with pthreads)
     2) Installs the original Python pipeline layout into <prefix>/share/modifi
        so that main.py and scripts/ remain unchanged.
     """
@@ -40,7 +40,7 @@ class InstallWithBinary(install):
         except Exception as e:  # pragma: no cover - build-time only
             print(
                 "WARNING: failed to build get_control_IPD via src/install.sh; "
-                "ensure htslib, pbbam, pkg-config and a conda env are available.",
+                "ensure g++ is available.",
                 flush=True,
             )
             print(f"Details: {e}", flush=True)

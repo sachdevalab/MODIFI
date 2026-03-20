@@ -2002,19 +2002,7 @@ sbatch --job-name=drep \
 
 
 
-sbatch --job-name=inf14 \
---partition standard \
---wrap "python /home/shuaiw/MODIFI/main.py \
-        --work_dir /home/shuaiw/borg/paper/motif_change/methyl/infant_14 \
-        --unaligned_bam /home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_5G1_pacbio.bam  \
-        --whole_ref /home/shuaiw/borg/paper/run2/infant_2/infant_2.hifiasm.p_ctg.rename.fa \
-        --read_type hifi \
-        --min_len 1000 \
-        --min_cov 3 \
-        --min_frac 0.3 \
-        --min_score 30 \
-        --min_sites 100 \
-        --threads 64"
+
 
    sbatch --job-name=inf2 \
   --partition standard \
@@ -2220,3 +2208,37 @@ modifi-linkage --work_dir /home/shuaiw/borg/paper/gg_run3/soil_2/soil_2_methylat
             --min_sites 100 \
             --mge_file /home/shuaiw/methylation/data/borg/paper/gg_run3/soil_2/cpr.list \
           --threads 64  
+
+
+sbatch --job-name=inf14 \
+--partition standard \
+--wrap "python /home/shuaiw/MODIFI/main.py \
+        --work_dir /home/shuaiw/borg/paper/motif_change/methyl/plasmid_1/infant_14 \
+        --unaligned_bam /home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_5G1_pacbio.bam  \
+        --whole_ref /home/shuaiw/borg/paper/E_faecalis/plasmid_1/infant_2_267_C.fa \
+        --read_type hifi \
+        --min_len 1000 \
+        --min_cov 3 \
+        --min_frac 0.3 \
+        --min_score 30 \
+        --min_sites 100 \
+        --run_steps control compare motif \
+      --kmer_mean_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.mean.dat \
+      --kmer_num_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.num.dat \
+        --threads 64"
+
+sbatch --job-name=inf14 \
+--partition standard \
+--wrap "python /home/shuaiw/MODIFI/main.py \
+        --work_dir /home/shuaiw/borg/paper/motif_change/methyl/plasmid_2/infant_14 \
+        --unaligned_bam /home/shuaiw/borg/paper/aws/infant/NANO_3_INF1240040_5G1_pacbio.bam  \
+        --whole_ref /home/shuaiw/borg/paper/E_faecalis/plasmid_2/infant_2_60_C.fa \
+        --read_type hifi \
+        --min_len 1000 \
+        --min_cov 3 \
+        --min_frac 0.3 \
+        --min_score 30 \
+        --min_sites 100 \
+      --kmer_mean_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.mean.dat \
+      --kmer_num_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.num.dat \
+        --threads 64"

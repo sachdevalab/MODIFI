@@ -4,12 +4,9 @@
 
 set -e
 
-# Compile C++ binary (requires htslib and pbbam from conda host env)
-export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
-export LD_LIBRARY_PATH="$PREFIX/lib:$LD_LIBRARY_PATH"
-
+# Compile C++ binary (only needs standard C++ and pthreads)
 cd "$SRC_DIR/src"
-g++ -o get_control_IPD get_control_IPD.cpp $(pkg-config --cflags --libs htslib pbbam)
+g++ -O2 -o get_control_IPD get_control_IPD.cpp -pthread
 cd "$SRC_DIR"
 
 # Install under $PREFIX/share/modifi so that sys.path[0] = share/modifi and
