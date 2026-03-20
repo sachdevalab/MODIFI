@@ -28,8 +28,8 @@ for (i in 1:nrow(df)) {
   p <- ggplot(sample_data, aes(x = "", y = count, fill = type)) +
     geom_bar(stat = "identity", width = 1, color = "white", size = 1) +
     coord_polar("y", start = 0) +
-    scale_fill_manual(values = c("G1" = "#FF1493", "G2" = "#00BCD4")) +
-    labs(fill = "Genotype", title = df$sample[i]) +
+    scale_fill_manual(values = c("G1" = "#4ade80", "G2" = "#f87171")) +
+    labs(fill = NULL, title = gsub("DOL(\\d)", "DOL \\1", df$sample[i])) +
     theme_void() +
     theme(legend.position = "none",
           plot.title = element_text(hjust = 0.5, face = "bold", size = 12, vjust = 2)) +
