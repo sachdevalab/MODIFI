@@ -2222,7 +2222,7 @@ sbatch --job-name=inf14 \
         --min_frac 0.3 \
         --min_score 30 \
         --min_sites 100 \
-        --run_steps control compare motif \
+        --run_steps profile\
       --kmer_mean_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.mean.dat \
       --kmer_num_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.num.dat \
         --threads 64"

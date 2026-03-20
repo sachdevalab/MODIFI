@@ -533,8 +533,21 @@ def manual_main():
     # out_dir = os.path.join(out_dir, sample)
     # motif_list = [["GAA", 3],['YCTB',2],['GATC',2]]
 
+    # out_dir = "/home/shuaiw/borg/paper/circos/linear/"
+    # sample = "infant_14"
+    # contig = "infant_2_3_C"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["ATGCAT", 5], ["CAANNNNNNRTGA", 3], ["CAYNNNNNNTAYG", 2]]
+
+    # out_dir = "/home/shuaiw/borg/paper/circos/linear/plasmid_1/"
+    # sample = "infant_2"
+    # contig = "infant_2_267_C"
+    # out_dir = os.path.join(out_dir, sample)
+    # motif_list = [["ATGCAT", 5], ["CAANNNNNNRTGA", 3], ["CAYNNNNNNTAYG", 2]]
+
+    out_dir = "/home/shuaiw/borg/paper/circos/linear/plasmid_2/"
     sample = "infant_14"
-    contig = "infant_2_3_C"
+    contig = "infant_2_60_C"
     out_dir = os.path.join(out_dir, sample)
     motif_list = [["ATGCAT", 5], ["CAANNNNNNRTGA", 3], ["CAYNNNNNNTAYG", 2]]
 
@@ -562,11 +575,13 @@ def manual_main():
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     print (out_dir)
-    work_dir = f"/home/shuaiw/methylation/data/borg/paper/motif_change/methyl/infant_14/"
-    # work_dir = f"/home/shuaiw/borg/paper/run3/{sample}/{sample}_methylation3/"
+    # work_dir = f"/home/shuaiw/methylation/data/borg/paper/motif_change/methyl/infant_14/"
+    work_dir = f"/home/shuaiw/methylation/data/borg/paper/motif_change/methyl/plasmid_2/infant_14/"
+    # work_dir = f"/home/shuaiw/borg/paper/run2/{sample}/{sample}_methylation3/"
     
     my_ref = f"{work_dir}/contigs/{contig}.fa"
-    gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
+    gff2 = f"{work_dir}/gffs/{contig}.gff"
+    # gff2 = f"{work_dir}/gffs/{contig}.reprocess.gff"
     ipd_ratio_file = f"{work_dir}/ipd_ratio/{contig}.ipd3.csv"
     # split_gff(gff2, contig, my_ref, out_dir)
     get_all_loci(gff2, contig, my_ref, out_dir,motif_list)
