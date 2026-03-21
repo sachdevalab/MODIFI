@@ -7,6 +7,37 @@
 
 **MODIFI** is a software package for detecting DNA base modifications and inferring host–mobile genetic element (MGE) linkages from **PacBio metagenomic sequencing** data. It enables precise modification calling, motif discovery, and host–MGE association in complex microbial communities, supporting both `subreads` and `HiFi` read types.
 
+### Table of contents
+
+- [How it works](#how-it-works)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Detailed Usage](#-detailed-usage)
+- [Complete Metagenomics Workflow](#-complete-metagenomics-workflow)
+- [Linkage-only mode](#linkage-only-mode)
+- [Command-line options](#-command-line-options)
+- [Output Files](#-output-files)
+- [Control Database](#-control-database)
+- [Important Notes](#-important-notes)
+- [Citation](#-citation)
+- [Getting Help](#-getting-help)
+
+---
+
+## How it works
+
+MODIFI expects a **PacBio BAM with IPD kinetics** and a **reference FASTA** (metagenome assembly or isolate). If you pass an unaligned BAM, reads are aligned with pbmm2 while preserving kinetic tags. The pipeline splits work by contig, optionally accumulates **control k-mer IPD** statistics (from the same run or external databases), and **normalizes** sample IPDs against those controls. It then **calls modifications**, **discovers motifs**, and builds **per-contig methylation profiles**. With an MGE table (e.g. from geNomad) and optionally a **binning** file, it **merges** motif evidence and scores **host–MGE linkages**. Typical outputs are motif calls, strand-specific profiles, base-level GFF annotations, and `host_summary.csv` when linkage is enabled.
+
+```mermaid
+flowchart LR
+  A[BAM + reference] --> B[Align / split]
+  B --> C[Control stats]
+  C --> D[Compare + call]
+  D --> E[Motif + profile]
+  E --> F[Merge]
+  F --> G[Host linkage]
+```
+
 ---
 
 ## 🧩 Installation
@@ -30,6 +61,8 @@ This will:
 ```bash
 pip install .
 ```
+
+**Python:** MODIFI supports **Python ≥3.9** (declared in `pyproject.toml`). The recommended conda stack in `env.yml` pins **Python 3.11**; the optional subreads workflow uses a **Python 3.9** environment (see [Optional] Setup for subreads).
 
 ### 3️⃣ Configure SMRT Link tools ⚠️ **OPTIONAL - Can be skipped**
 
@@ -228,9 +261,6 @@ control/control_db.up7.down3.mean.dat
 control/control_db.up7.down3.num.dat
 ```
 
-
----
-
 ---
 
 ## 🔬 Complete Metagenomics Workflow
@@ -300,70 +330,43 @@ This command:
 
 ---
 
-## ⚙️ Command-line Options
+## ⚙️ Command-line options
+
+For the full, up-to-date list of arguments and defaults:
 
 ```bash
-usage: main.py [-h] [-v] [--whole_bam WHOLE_BAM] [--unaligned_bam UNALIGNED_BAM] --whole_ref WHOLE_REF --work_dir WORK_DIR
-               [--read_type {subreads,hifi}] [--min_iden MIN_IDEN] [--min_len MIN_LEN] [--min_cov MIN_COV] [--min_ctg_cov MIN_CTG_COV]
-               [--kmer_mean_db KMER_MEAN_DB] [--kmer_num_db KMER_NUM_DB] [--clean] [--segment] [--min_frac MIN_FRAC]
-               [--min_sites MIN_SITES] [--min_score MIN_SCORE] [--mge_file MGE_FILE] [--bin_file BIN_FILE] [--threads THREADS] [--up UP]
-               [--down DOWN] [--detect_misassembly] [--visu_ipd] [--binning] [--annotate_rm] [--rm_gene_file RM_GENE_FILE]
-               [--run_steps {split,load,control,compare,motif,profile,merge,host,anno} [{split,load,control,compare,motif,profile,merge,host,anno} ...]]
-
-Run methylation-based MGE-host linkage discovery pipeline.
-
-options:
-  -h, --help            show this help message and exit
-  -v, --version         show program's version number and exit
-  --whole_bam WHOLE_BAM
-                        Input aligned BAM file with kinetic data (HiFi or subreads). Use this for pre-aligned BAM files. Must be aligned
-                        by pbmm2 to ensure kinetic tags are present. (default: None)
-  --unaligned_bam UNALIGNED_BAM
-                        Input unaligned BAM file with kinetic data (HiFi or subreads). Will be aligned using pbmm2. (default: None)
-  --whole_ref WHOLE_REF
-                        Reference FASTA file for contigs. (default: None)
-  --work_dir WORK_DIR   Working directory for all output files. (default: None)
-  --read_type {subreads,hifi}
-                        Type of reads in BAM file. (default: hifi)
-  --min_iden MIN_IDEN   Minimum identity allowed for read alignment (default: 0.97 for hifi, 0.85 for subreads). (default: None)
-  --min_len MIN_LEN     Minimum contig length to process. (default: 1000)
-  --min_cov MIN_COV     Minimum read coverage required to retain a base. (default: 1)
-  --min_ctg_cov MIN_CTG_COV
-                        Minimum read coverage required to retain a contig. (default: 5)
-  --kmer_mean_db KMER_MEAN_DB
-                        Path to optional k-mer mean IPD database. (default: None)
-  --kmer_num_db KMER_NUM_DB
-                        Path to optional k-mer count database. (default: None)
-  --clean               Enable cleaning step (default: False)
-  --segment             Enable segmentation of the contigs by depth to increase recall for low-depth contigs (costs more time).
-                        (default: False)
-  --min_frac MIN_FRAC   Minimum methylation fraction to retain a motif. (default: 0.4)
-  --min_sites MIN_SITES
-                        Minimum number of methylated sites per motif. (default: 30)
-  --min_score MIN_SCORE
-                        Minimum score for modification calling. (default: 30)
-  --mge_file MGE_FILE   MGE table file (sep by tab), can be output of geNomad, with at least one column with header: seq_name. (default:
-                        NA)
-  --bin_file BIN_FILE   Path to the binning file containing contig-to-bin mappings. (default: None)
-  --threads THREADS     Number of threads to use for processing. (default: 64)
-  --up UP               Number of upstream bases to consider for k-mer analysis. (default: 7)
-  --down DOWN           Number of downstream bases to consider for k-mer analysis. (default: 3)
-  --detect_misassembly  Enable detection of misassembly in the pipeline. (default: False)
-  --visu_ipd            Enable visualization of IPD distribution. (default: False)
-  --binning             Enable binning based on methylation (in testing). (default: False)
-  --annotate_rm         Enable RM system annotation, MicrobeMod should be installed. (default: False)
-  --rm_gene_file RM_GENE_FILE
-                        RM gene annotation file by MicrobeMod, with suffix .rm.genes.tsv (only for testing) (default: None)
-  --run_steps {split,load,control,compare,motif,profile,merge,host,anno} [{split,load,control,compare,motif,profile,merge,host,anno} ...]
-                        Steps to run in the pipeline (default: all), sep by space. Only for easy testing. (default: ['split', 'load',
-                        'control', 'compare', 'motif', 'profile', 'merge', 'host'])
+modifi --help
+modifi-linkage --help
 ```
 
+Commonly tuned options (`modifi`):
 
+| Option | Role |
+|--------|------|
+| `--work_dir` | Output directory for all pipeline artifacts |
+| `--unaligned_bam` / `--whole_bam` | Unaligned (aligned with pbmm2 in-pipeline) or pre-aligned BAM with kinetics |
+| `--whole_ref` | Reference FASTA (contigs) |
+| `--read_type` | `hifi` (default) or `subreads` |
+| `--threads` | Parallelism (default 64) |
+| `--min_iden` | Minimum alignment identity (default 0.97 for HiFi, 0.85 for subreads if unset) |
+| `--mge_file` / `--bin_file` | MGE table (e.g. geNomad) and optional contig→bin map for linkage |
+| `--kmer_mean_db` / `--kmer_num_db` | Optional control k-mer IPD databases; window must match `--up` / `--down` |
+| `--up` / `--down` | Upstream / downstream k-mer flank length around the modified base (defaults 7 / 3) |
+| `--min_len`, `--min_cov`, `--min_ctg_cov` | Contig and site coverage filters |
+| `--min_frac`, `--min_sites`, `--min_score` | Motif retention and modification calling thresholds |
+| `--segment` | Depth-based contig segmentation (more recall, more runtime) |
+| `--run_steps` | Restrict to a subset of steps: `split`, `load`, `control`, `compare`, `motif`, `profile`, `merge`, `host`, `anno` |
+| `--clean` | Enable cleaning step |
+| `--visu_ipd` | Write IPD distribution figures under `figs/` |
+| `--detect_misassembly` | Misassembly-related IPD ratio outputs |
+| `--annotate_rm` / `--rm_gene_file` | RM-system annotation (MicrobeMod; testing) |
+| `--binning` | Methylation-based binning (testing) |
+
+`modifi-linkage` accepts `--work_dir`, `--whole_ref`, `--mge_file`, optional `--bin_file`, plus `--min_frac`, `--min_sites`, `--min_ctg_cov`, and `--threads` for linkage-only reruns (see `--help` for defaults).
 
 ---
 
-## � Output Files
+## 📁 Output Files
 
 ### Main Output Files
 
@@ -504,11 +507,22 @@ For better results, generate a control database from your own **high-complexity 
 
 ## ⚠️ Important Notes
 
+### Resource requirements (rough scales)
+
+These are **order-of-magnitude** expectations; actual use depends on assembly size, depth, and flags.
+
+- **Memory:** Working set grows with the reference, contig count, and `--threads`. Large metagenomes on many cores can require **tens of GB of RAM**; reduce threads if the machine starts swapping.
+- **Disk:** The `--work_dir` can grow to **several times** the input BAM size once alignments, profiles, and optional figures are written—leave ample free space.
+- **Runtime:** Dominated by alignment (for unaligned BAM), IPD/k-mer work, and motif detection. Increasing `--threads` usually reduces wall time until I/O or contention limits gains.
+
 ### Performance
 - Coverage **>500×** is automatically subsampled for computational efficiency
 - For large metagenomes, use `--threads` to parallelize processing
 - `--segment` flag increases recall for low-depth contigs but requires more time
 
+### Benchmarks and reproducibility
+
+Driver scripts and plotting code used for timing and method comparisons in development live under [`benchmark/`](benchmark/).
 
 ### Best Practices
 - Use **HiFi reads** instead of subreads when possible (better accuracy, faster)
@@ -522,6 +536,8 @@ For better results, generate a control database from your own **high-complexity 
 If you use MODIFI in your research, please cite:
 
 > *Manuscript in preparation.*
+
+When a **Zenodo** DOI and/or **bioRxiv** link is available, it will be added here. Until then, please record the **software version** you used (for example `pip show modifi` or the Git tag/commit) next to the citation for reproducibility.
 
 ---
 
