@@ -974,14 +974,14 @@ if __name__ == "__main__":
                                            "cos_sim", "MGE_cov", "host_cov", 
                                            "environment", "sample", "mge_len", "host_taxa", "host_phylum"])
     ## sort gc_df by mge_len descending
-    gc_df = gc_df.sort_values(by='mge_len', ascending=False)
+    gc_df = gc_df.sort_values(by='MGE_cov', ascending=False)
     ## save gc_df to a csv file
     gc_df.to_csv(f"{paper_fig_dir}/mge_host_gc_cov.csv", index=False)
     plot_gc(gc_df, paper_fig_dir)
     analyze_MGEs(gc_df, mge_clu_dict)
 
     # secondary_chr(all_dir)
-    # """
+    """
 
     whole_G = nx.read_gml(f"{paper_fig_dir}/whole_network2.gml")
     print (f"Loaded graph with {whole_G.number_of_nodes()} nodes and {whole_G.number_of_edges()} edges")
@@ -1009,5 +1009,5 @@ if __name__ == "__main__":
 
 
     component_analysis(connected_components, all_host_clu_lineage_dict, ctg_taxa_dict, paper_fig_dir, clu_host_dict)
-  
+    """
     # # plot_network2(subgraph, paper_fig_dir, fig_name = "largest_connected_component")
