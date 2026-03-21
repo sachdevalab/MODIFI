@@ -24,7 +24,7 @@ def load_binaries():
     pbindex_bin = None
     
     # 1️⃣ Try config.yaml first
-    config_file = Path(sys.path[0]) / "config.yaml"
+    config_file = Path(sys.path[0]) / "smrt.config.yaml"
     if config_file.exists():
         with open(config_file, "r") as cf:
             config = yaml.safe_load(cf)

@@ -72,13 +72,13 @@ MODIFI requires three PacBio SMRT Link tools: `pbmotifmaker`, `pbmm2`, and `pbin
 
 **Configuration priority (in order):**
 
-1. **Config file first** – If `config.yaml` exists, MODIFI will use the path specified there
+1. **Config file first** – If `smrt.config.yaml` exists, MODIFI will use the path specified there
 2. **System PATH fallback** – If config.yaml is not found or incomplete, MODIFI checks system PATH
 3. **MultiMotifMaker.jar/Conda** – Used as fallback for motif calling if `SMRT Link tools` is unavailable
 
 **To configure via config.yaml (only if needed):**
 
-Create or edit `config.yaml` in the MODIFI directory:
+Create or edit `smrt.config.yaml` in the MODIFI directory:
 
 ```yaml
 smrtlink_bin: /path/to/smrtlink/private/bin/
