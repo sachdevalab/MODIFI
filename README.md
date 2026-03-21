@@ -97,8 +97,8 @@ modifi --help
 Or run the built-in test dataset:
 
 ```bash
-cd test/
-bash test.sh
+cd test/hifi/
+bash test_hifi.sh
 ```
 
 ### 5️⃣ [Optional] Setup for subreads
