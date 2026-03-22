@@ -60,6 +60,10 @@ class InstallWithBinary(install):
         shutil.copy2(root / "main.py", share_root / "main.py")
         shutil.copy2(root / "load_cfg.py", share_root / "load_cfg.py")
 
+        smrt_cfg = root / "smrt.config.yaml"
+        if smrt_cfg.is_file():
+            shutil.copy2(smrt_cfg, share_root / "smrt.config.yaml")
+
         # MultiMotifMaker.jar fallback for motif calling (load_cfg resolves via __file__)
         dep_src = root / "dependency"
         if dep_src.is_dir():

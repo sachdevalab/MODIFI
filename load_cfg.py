@@ -30,6 +30,7 @@ def load_binaries():
     
     # 1️⃣ Try config.yaml first (alongside main.py / this module)
     config_file = _MODIFI_ROOT / "smrt.config.yaml"
+    print (f"Config file: {config_file}")
     if config_file.exists():
         with open(config_file, "r") as cf:
             config = yaml.safe_load(cf)
