@@ -111,6 +111,7 @@ If you need to process subreads, create a separate environment with `pbcore` (re
 conda env create -n MODIFI_subreads -f subreads.env.yml
 conda activate MODIFI_subreads
 pip install git+https://github.com/PacificBiosciences/pbcore.git
+pip install .
 ```
 
 ---
