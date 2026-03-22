@@ -17,6 +17,9 @@ mkdir -p "$SHARE/src"
 
 # Python entry point and config loader
 cp main.py load_cfg.py "$SHARE/"
+if [ -d "$SRC_DIR/dependency" ]; then
+  cp -r "$SRC_DIR/dependency" "$SHARE/"
+fi
 cp -r scripts/*.py "$SHARE/scripts/"
 cp src/get_control_IPD "$SHARE/src/"
 chmod +x "$SHARE/src/get_control_IPD"

@@ -60,6 +60,15 @@ class InstallWithBinary(install):
         shutil.copy2(root / "main.py", share_root / "main.py")
         shutil.copy2(root / "load_cfg.py", share_root / "load_cfg.py")
 
+        # MultiMotifMaker.jar fallback for motif calling (load_cfg resolves via __file__)
+        dep_src = root / "dependency"
+        if dep_src.is_dir():
+            dep_dst = share_root / "dependency"
+            dep_dst.mkdir(parents=True, exist_ok=True)
+            for item in dep_src.iterdir():
+                if item.is_file():
+                    shutil.copy2(item, dep_dst / item.name)
+
         # Copy all helper scripts
         scripts_src = root / "scripts"
         if scripts_src.is_dir():

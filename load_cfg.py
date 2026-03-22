@@ -4,6 +4,11 @@ import yaml
 import shutil
 from pathlib import Path
 
+# Directory containing this module (repo root or pip/share/modifi layout). Do not use
+# sys.path[0] for bundled assets — it is not guaranteed to match after imports.
+_MODIFI_ROOT = Path(__file__).resolve().parent
+
+
 def find_tool(name, alt_names=None):
     """Try to find a tool in PATH, or from alternative names."""
     alt_names = alt_names or []
@@ -23,8 +28,8 @@ def load_binaries():
     pbmm2_bin = None
     pbindex_bin = None
     
-    # 1️⃣ Try config.yaml first
-    config_file = Path(sys.path[0]) / "smrt.config.yaml"
+    # 1️⃣ Try config.yaml first (alongside main.py / this module)
+    config_file = _MODIFI_ROOT / "smrt.config.yaml"
     if config_file.exists():
         with open(config_file, "r") as cf:
             config = yaml.safe_load(cf)
@@ -67,7 +72,7 @@ def load_binaries():
     # 3️⃣ If still not all found, use MultiMotifMaker as fallback for motif maker
     if not motif_maker_bin:
         print("⚠️  pbmotifmaker not found, using MultiMotifMaker.jar instead")
-        motif_maker_bin = os.path.join(sys.path[0], "dependency", "MultiMotifMaker.jar")
+        motif_maker_bin = str(_MODIFI_ROOT / "dependency" / "MultiMotifMaker.jar")
 
     if all([motif_maker_bin, pbmm2_bin, pbindex_bin]):
         print("✅ Using binaries found in system PATH.")
