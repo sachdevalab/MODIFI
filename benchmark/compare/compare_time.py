@@ -17,8 +17,8 @@ from pathlib import Path
 
 # batch_modifi.sh / batch_ipd.sh
 REF_DIR = Path("/home/shuaiw/borg/contigs")
-IPD_OUT = Path("/home/shuaiw/borg/paper/ipdsummary/soil_1/ipd.out2")
-MODIFI_ROOT = Path("/home/shuaiw/borg/paper/ipdsummary/soil_1/modifi.out2")
+IPD_OUT = Path("/home/shuaiw/borg/paper/ipdsummary/soil_1/ipd.out")
+MODIFI_ROOT = Path("/home/shuaiw/borg/paper/ipdsummary/soil_1/modifi.out")
 OUT_DIR = Path("/home/shuaiw/MODIFI/tmp/figures/base_benchmark")
 REFS = ["test_100.fa", "test_200.fa", "test_300.fa", "test_500.fa"]
 
