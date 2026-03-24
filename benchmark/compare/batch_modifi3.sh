@@ -5,7 +5,7 @@
 set -euo pipefail
 
 ref_dir=/home/shuaiw/borg/paper/ipdsummary/subset_ref/
-ref_set=(test_50.fa test_100.fa test_200.fa test_300.fa test_400.fa test_500.fa)
+ref_set=(test_50.fa test_100.fa test_300.fa test_400.fa test_500.fa)
 modifi_out_root=/home/shuaiw/borg/paper/ipdsummary/soil_1/modifi.out3/
 
 mkdir -p "$modifi_out_root"
