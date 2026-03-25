@@ -61,8 +61,8 @@ def main(csv_path):
     # Named cutoffs (score only)
     named_cutoffs = [
         (0.68, "score > 0.68\n(0 FP)"),   # above FP1 → no FPs, recall=44%
-        (0.40, "score > 0.40\n(1 FP)"),   # between FP1 and FP2 → 1 FP, recall=92%
-        (0.0,  "score > 0\n(all)"),        # all predictions → 2 FPs, recall=100%
+        (0.38, "score > 0.38\n(1 FP)"),   # between FP1 and FP2 → 1 FP, recall=92%
+        (0.3,  "score > 0.3\n"),        # all predictions → 2 FPs, recall=100%
     ]
 
     print(f"{'Cutoff':<28} {'TP':>4} {'FP':>4} {'Recall':>8} {'Precision':>10}")
@@ -102,7 +102,29 @@ def main(csv_path):
     cutoff_csv.to_csv(cutoff_csv_path, index=False)
     print(f"Cutoff data saved to {cutoff_csv_path}")
 
+def print_mge_type_counts(csv_path):
+    # Derive mge_list path: .../mix_16/modifi/mix_16/host_summary.csv
+    #                    -> .../mix_16/mix_16.mge_list.csv
+    mix_dir = os.path.dirname(os.path.dirname(os.path.dirname(csv_path)))
+    mix_name = os.path.basename(mix_dir)
+    mge_list_path = os.path.join(mix_dir, f"{mix_name}.mge_list.csv")
+
+    df = pd.read_csv(csv_path)
+    mge_list = pd.read_csv(mge_list_path, sep="\t")
+
+    merged = df.merge(mge_list[["seq_name", "mge_type"]],
+                      left_on="MGE", right_on="seq_name", how="left")
+
+    counts = merged["mge_type"].value_counts()
+    total  = len(merged)
+    print("MGE type breakdown:")
+    for mtype, n in counts.items():
+        print(f"  {mtype:<10} {n:>4}  ({100*n/total:.1f}%)")
+    print(f"  {'total':<10} {total:>4}")
+
 if __name__ == "__main__":
     path = sys.argv[1] if len(sys.argv) > 1 else \
         "/home/shuaiw/borg/paper/linkage/mixed_isolates_strain/mix_16/modifi/mix_16/host_summary.csv"
+    print_mge_type_counts(path)
+    print()
     main(path)
