@@ -19,7 +19,7 @@ def evaluate_at_cutoff(df, min_score, total_tp):
 def build_step_curve(df, total_tp):
     """Sort by final_score desc, accumulate TP/FP to get a monotone step function."""
     subset = df.sort_values("final_score", ascending=False)
-    fps, recalls, precisions, scores = [], [], [], []
+    fps, recalls, precisions, fprs, scores = [], [], [], [], []
     tp = fp = 0
     for _, row in subset.iterrows():
         if row["is_correct"]:
@@ -29,12 +29,14 @@ def build_step_curve(df, total_tp):
         fps.append(fp)
         recalls.append(tp / total_tp)
         precisions.append(tp / (tp + fp))
+        fprs.append(fp / (tp + fp))   # FP / total called = false discovery rate
         scores.append(row["final_score"])
     # prepend origin
     return (
         [0] + fps,
         [0.0] + recalls,
         [1.0] + precisions,
+        [0.0] + fprs,
         [None] + scores,
     )
 
@@ -75,10 +77,11 @@ def main(csv_path):
     out_dir = "/home/shuaiw/MODIFI/tmp/figures/link_accuracy"
     os.makedirs(out_dir, exist_ok=True)
 
-    fps, recalls, precs, scores = build_step_curve(df, total_tp)
+    fps, recalls, precs, fprs, scores = build_step_curve(df, total_tp)
     curve_csv = pd.DataFrame({
         "score_threshold": scores,
         "fp": fps,
+        "fpr": fprs,
         "recall": recalls,
         "precision": precs,
     })
@@ -122,9 +125,77 @@ def print_mge_type_counts(csv_path):
         print(f"  {mtype:<10} {n:>4}  ({100*n/total:.1f}%)")
     print(f"  {'total':<10} {total:>4}")
 
+def load_one(csv_path):
+    """Load host_summary.csv, annotate correctness, return labelled DataFrame."""
+    df = pd.read_csv(csv_path)
+    df["mge_sra"]    = df["MGE"].apply(get_sra_id)
+    df["host_sra"]   = df["host"].apply(get_sra_id)
+    df["is_correct"] = df["mge_sra"] == df["host_sra"]
+    return df
+
+def build_all_curves(base_dirs, out_dir):
+    """Loop over all mix communities, build step curves and ECE type counts, save CSVs."""
+    all_rows = []
+    type_rows = []
+    for base_dir in base_dirs:
+        for mix_name in sorted(os.listdir(base_dir)):
+            csv_path = os.path.join(base_dir, mix_name, "modifi", mix_name, "host_summary.csv")
+            if not os.path.exists(csv_path):
+                continue
+            df = load_one(csv_path)
+            total_tp = int(df["is_correct"].sum())
+            total_fp_all = int((~df["is_correct"]).sum())
+
+            n_species = mix_name.split("_")[1]
+            sample_label = f"{n_species} species"
+
+            # Step curves
+            fps, recalls, precs, fprs, scores = build_step_curve(df, total_tp)
+            for fp, recall, prec, fpr, score in zip(fps, recalls, precs, fprs, scores):
+                all_rows.append({
+                    "sample":          sample_label,
+                    "n_species":       int(n_species),
+                    "score_threshold": score,
+                    "fp":              fp,
+                    "fpr":             fpr,
+                    "recall":          recall,
+                    "precision":       prec,
+                })
+
+            # ECE type counts from mge_list
+            mix_dir = os.path.join(base_dir, mix_name)
+            mge_list_path = os.path.join(mix_dir, f"{mix_name}.mge_list.csv")
+            if os.path.exists(mge_list_path):
+                mge_list = pd.read_csv(mge_list_path, sep="\t")
+                for mtype, count in mge_list["mge_type"].value_counts().items():
+                    type_rows.append({
+                        "n_species": int(n_species),
+                        "sample":    sample_label,
+                        "mge_type":  mtype,
+                        "count":     int(count),
+                    })
+
+            print(f"  {sample_label:<20}  total={len(df):>3}  TP={total_tp:>3}  FP={total_fp_all}")
+
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, "linkage_curves_all.csv")
+    pd.DataFrame(all_rows).to_csv(out_path, index=False)
+    print(f"Curves saved to {out_path}")
+
+    type_path = os.path.join(out_dir, "ece_type_counts.csv")
+    pd.DataFrame(type_rows).to_csv(type_path, index=False)
+    print(f"ECE type counts saved to {type_path}")
+
 if __name__ == "__main__":
-    path = sys.argv[1] if len(sys.argv) > 1 else \
-        "/home/shuaiw/borg/paper/linkage/mixed_isolates_strain/mix_16/modifi/mix_16/host_summary.csv"
-    print_mge_type_counts(path)
-    print()
-    main(path)
+    # path = sys.argv[1] if len(sys.argv) > 1 else \
+    #     "/home/shuaiw/borg/paper/linkage/mixed_isolates_strain/mix_16/modifi/mix_16/host_summary.csv"
+    # print_mge_type_counts(path)
+    # print()
+    # main(path)
+
+    print("\n── Multi-community curves ──────────────────────────────")
+    base_dirs = [
+        "/home/shuaiw/borg/paper/linkage/mixed_isolates",
+    ]
+    out_dir = "/home/shuaiw/MODIFI/tmp/figures/link_accuracy"
+    build_all_curves(base_dirs, out_dir)
