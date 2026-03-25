@@ -5,13 +5,16 @@ import textwrap
 import pandas as pd
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-runs_dir = os.path.join(SCRIPT_DIR, "runs_2")
+runs_dir = os.path.join(SCRIPT_DIR, "runs_strain")
 os.makedirs(runs_dir, exist_ok=True)
 
 isolation_sample_summary = "/home/shuaiw/borg/paper/isolation//GTDB_tree/anno//isolation_sample_summary.tsv"
 bam_dir = "/home/shuaiw/borg/paper/isolation//batch2_ccs_bam/"
-out_root = "/home/shuaiw/borg/paper/linkage/mixed_isolates2/"
+out_root = "/home/shuaiw/borg/paper/linkage/mixed_isolates_strain/"
 MGE_csv = "/home/shuaiw/MODIFI/tmp/figures/motif_sharing/jaccard_same_sample.csv"
+strain_info_csv = "/home/shuaiw/borg/paper/specificity/iso_99_out/data_tables/Cdb.csv"
+
+
 
 df = pd.read_csv(isolation_sample_summary, sep="\t")
 print (df)
@@ -37,23 +40,42 @@ def has_ccs_bam(sample):
 
 filtered = filtered[filtered["Sample"].apply(has_ccs_bam)]
 
-# One representative per species
-representatives = filtered.groupby("Species").first().reset_index()
+# Load strain info and join to get secondary_cluster (strain name)
+# Cdb.csv genome names encode sample ID as prefix: e.g. "ERR9843365_1_C.fa" -> "ERR9843365"
+strain_df = pd.read_csv(strain_info_csv)
+strain_df["Sample"] = strain_df["genome"].str.extract(r"^(ERR\d+)")
+filtered = filtered.merge(strain_df[["Sample", "secondary_cluster"]], on="Sample", how="inner")
+# For each species, pick 2 different strains (different secondary_cluster),
+# one representative sample per strain
+def pick_two_strains(group):
+    strains = group.groupby("secondary_cluster").first().reset_index()
+    if len(strains) < 2:
+        return None
+    return strains.sample(n=2, random_state=42)
+
+strain_pairs = (
+    filtered.groupby("Species")
+    .apply(pick_two_strains)
+    .dropna()
+    .reset_index(drop=True)
+)
+
+# Species that have at least 2 strains
+eligible_species = strain_pairs["Species"].unique()
+
+strain_counts = filtered.groupby("Species")["secondary_cluster"].nunique().sort_values(ascending=False)
+print("Strains per species:")
+print(strain_counts.to_string())
 
 print(f"Total samples in dataset: {len(df)}")
-print(f"Samples after filtering (pure + MGE + ccs.bam): {len(filtered)}")
-print(f"Total eligible species: {len(representatives)}")
-assert len(representatives) >= 50, "Not enough species for 50-species community"
+print(f"Samples after filtering (pure + MGE + ccs.bam + strain info): {len(filtered)}")
+print(f"Total eligible species (>=2 strains): {len(eligible_species)}")
 
-# Build nested subsets: 10 ⊆ 20 ⊆ 30 ⊆ 40 ⊆ 50
-sizes = [10, 20, 30, 40, 50]
-base = representatives.sample(n=50, random_state=42).reset_index(drop=True)
-communities = {size: base.iloc[:size].copy() for size in sizes}
-
-# Verify nesting
-for i in range(len(sizes) - 1):
-    s1, s2 = sizes[i], sizes[i + 1]
-    assert set(communities[s1]["Species"]).issubset(set(communities[s2]["Species"]))
+# One community using all eligible species (>=2 strains), 2 strains each
+n_species = len(eligible_species)
+size = n_species * 2
+print(f"Building one community: {n_species} species x 2 strains = {size} genomes")
+communities = {size: strain_pairs.copy()}
 
 # Generate merged reference and BAM for each community
 for size, community in communities.items():
@@ -62,6 +84,11 @@ for size, community in communities.items():
 
     merged_ref = os.path.join(out_dir, f"mix_{size}.ref.fa")
     merged_bam = os.path.join(out_dir, f"mix_{size}.bam")
+
+    # Write selected strains to CSV
+    strain_out = os.path.join(out_dir, f"mix_{size}.strains.csv")
+    community[["Species", "secondary_cluster", "genome", "Sample"]].to_csv(strain_out, index=False)
+    print(f"Strain list ({len(community)} entries) -> {strain_out}")
 
     ref_files = []
     bam_files = []
