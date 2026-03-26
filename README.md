@@ -28,16 +28,6 @@
 
 MODIFI expects a **PacBio BAM with IPD kinetics** and a **reference FASTA** (metagenome assembly or isolate). If you pass an unaligned BAM, reads are aligned with pbmm2 while preserving kinetic tags. The pipeline splits work by contig, optionally accumulates **control k-mer IPD** statistics (from the same run or external databases), and **normalizes** sample IPDs against those controls. It then **calls modifications**, **discovers motifs**, and builds **per-contig methylation profiles**. With an MGE table (e.g. from geNomad) and optionally a **binning** file, it **merges** motif evidence and scores **host–MGE linkages**. Typical outputs are motif calls, strand-specific profiles, base-level GFF annotations, and `host_summary.csv` when linkage is enabled.
 
-```mermaid
-flowchart LR
-  A[BAM + reference] --> B[Align / split]
-  B --> C[Control stats]
-  C --> D[Compare + call]
-  D --> E[Motif + profile]
-  E --> F[Merge]
-  F --> G[Host linkage]
-```
-
 ---
 
 ## 🧩 Installation
@@ -51,7 +41,7 @@ conda env create -n modifi -f env.yml
 conda activate modifi
 ```
 
-### 2️⃣ Install MODIFI via pip (recommended)
+### 2️⃣ Install MODIFI via pip 
 
 This will:
 - Compile the C++ helper binary `get_control_IPD` (using `src/install.sh` under the hood)
@@ -62,9 +52,7 @@ This will:
 pip install .
 ```
 
-**Python:** MODIFI supports **Python ≥3.9** (declared in `pyproject.toml`). The recommended conda stack in `env.yml` pins **Python 3.11**; the optional subreads workflow uses a **Python 3.9** environment (see [Optional] Setup for subreads).
-
-### 3️⃣ Configure SMRT Link tools ⚠️ **OPTIONAL - Can be skipped**
+### 3️⃣ Configure SMRT Link tools **OPTIONAL - Can be skipped**
 
 > 💡 **You can skip this step!** MODIFI will automatically use tools from conda or fallback to built-in alternatives.
 
@@ -74,7 +62,7 @@ MODIFI requires three PacBio SMRT Link tools: `pbmotifmaker`, `pbmm2`, and `pbin
 
 1. **Config file first** – If `smrt.config.yaml` exists, MODIFI will use the path specified there
 2. **System PATH fallback** – If config.yaml is not found or incomplete, MODIFI checks system PATH
-3. **MultiMotifMaker.jar/Conda** – Used as fallback for motif calling if `SMRT Link tools` is unavailable
+3. **MultiMotifMaker.jar/Conda** – Used as fallback if `SMRT Link tools` is unavailable
 
 **To configure via config.yaml (only if needed):**
 
@@ -94,7 +82,7 @@ Test that the command-line entry point is available:
 modifi --help
 ```
 
-Or run the built-in test dataset:
+And run the built-in test dataset:
 
 ```bash
 cd test/hifi/
@@ -102,8 +90,6 @@ bash test_hifi.sh
 ```
 
 ### 5️⃣ [Optional] Setup for subreads
-
-> ⚠️ **Note:** We recommend using HiFi reads instead of subreads when possible.
 
 If you need to process subreads, create a separate environment with `pbcore` (requires Python 3.9 and numpy 1.22.4):
 
@@ -120,7 +106,7 @@ pip install .
 
 ### Input Requirements
 
-MODIFI supports both `HiFi` and `subreads`. Your PacBio BAM file **must contain kinetics (IPD) tags**:
+MODIFI supports both `HiFi reads` and `subreads`. Your PacBio BAM file **must contain kinetics (IPD) tags**:
 
 | Read Type | Required IPD Tags | Description | 
 |-----------|-------------------|-------------| 
@@ -132,7 +118,7 @@ MODIFI supports both `HiFi` and `subreads`. Your PacBio BAM file **must contain 
 > - The BAM file stores kinetic information; it does not need to be pre-aligned
 > - See [PacBio BAM format specifications](https://pacbiofileformats.readthedocs.io/en/11.0/BAM.html) for details
 
-### Basic Usage
+### Example
 
 Run MODIFI with unaligned BAM containing kinetics:
 
@@ -144,20 +130,13 @@ modifi \
     --read_type hifi
 ```
 
-For all options:
-```bash
-modifi --help
-```
-
 ---
 
 ## 📖 Detailed Usage
 
 ### Input BAM Options
 
-> 💡 **Tip:** Once motif detection has finished (i.e. `profiles/` exists in `--work_dir`), you can re-run **linkage only** using the `modifi-linkage` helper instead of the full pipeline (see [Linkage-only mode](#linkage-only-mode)).
-
-#### Option 1: Unaligned BAM (recommended)
+#### Option 1: Unaligned BAM 
 
 MODIFI will automatically align reads using pbmm2:
 
@@ -213,6 +192,7 @@ seq_name	length	topology	n_genes	genetic_code	plasmid_score	fdr
 ERR6535514_2_L	6291	DTR	8	11	0.9997	0.0003
 ...
 ```
+> 💡 **Tip:** Once motif detection has finished, you can re-run **linkage only** using the `modifi-linkage` helper instead of the full pipeline (see [Linkage-only mode](#linkage-only-mode)).
 
 ### Incorporating Binning Results
 
@@ -324,11 +304,6 @@ modifi-linkage \
     --threads 32
 ```
 
-This command:
-- Reads existing motif profiles from `<work_dir>/profiles/`
-- Writes host linkage results into `<work_dir>/hosts/`
-- Uses the same linkage logic as the `host` step in the full pipeline.
-
 ---
 
 ## ⚙️ Command-line options
@@ -363,7 +338,6 @@ Commonly tuned options (`modifi`):
 | `--annotate_rm` / `--rm_gene_file` | RM-system annotation (MicrobeMod; testing) |
 | `--binning` | Methylation-based binning (testing) |
 
-`modifi-linkage` accepts `--work_dir`, `--whole_ref`, `--mge_file`, optional `--bin_file`, plus `--min_frac`, `--min_sites`, `--min_ctg_cov`, and `--threads` for linkage-only reruns (see `--help` for defaults).
 
 ---
 
@@ -508,13 +482,8 @@ For better results, generate a control database from your own **high-complexity 
 
 ## ⚠️ Important Notes
 
-### Resource requirements (rough scales)
-
-These are **order-of-magnitude** expectations; actual use depends on assembly size, depth, and flags.
-
-- **Memory:** Working set grows with the reference, contig count, and `--threads`. Large metagenomes on many cores can require **tens of GB of RAM**; reduce threads if the machine starts swapping.
-- **Disk:** The `--work_dir` can grow to **several times** the input BAM size once alignments, profiles, and optional figures are written—leave ample free space.
-- **Runtime:** Dominated by alignment (for unaligned BAM), IPD/k-mer work, and motif detection. Increasing `--threads` usually reduces wall time until I/O or contention limits gains.
+### Resource requirements (examples for reference)
+In 59 metagenomics from nine habitats, the mean wall-clock time was 4.5 hours (range: 0.2–19 hours, std: 3.9), while the mean CPU time was 120 hours (range: 1–1,161 hours, std: 215), with a mean peak memory usage of 18 GB (range: 0.6–62 GB, std: 14). 
 
 ### Performance
 - Coverage **>500×** is automatically subsampled for computational efficiency
@@ -523,7 +492,7 @@ These are **order-of-magnitude** expectations; actual use depends on assembly si
 
 ### Benchmarks and reproducibility
 
-Driver scripts and plotting code used for timing and method comparisons in development live under [`benchmark/`](benchmark/).
+Driver scripts and plotting code used for analyses in development live under [`benchmark/`](benchmark/).
 
 ### Best Practices
 - Use **HiFi reads** instead of subreads when possible (better accuracy, faster)
@@ -538,14 +507,12 @@ If you use MODIFI in your research, please cite:
 
 > *Manuscript in preparation.*
 
-When a **Zenodo** DOI and/or **bioRxiv** link is available, it will be added here. Until then, please record the **software version** you used (for example `pip show modifi` or the Git tag/commit) next to the citation for reproducibility.
-
 ---
 
 ## 💬 Getting Help
 
 For questions or bug reports:
-- 📧 **Email:** [wshuai294@gmail.com](mailto:wshuai294@gmail.com)  
+- 📧 **Email:** [wshuai@berkeley.edu](mailto:wshuai@berkeley.edu)  
 - 🐛 **GitHub Issues:** open an issue in this repository
 
 We’ll respond as soon as possible.
