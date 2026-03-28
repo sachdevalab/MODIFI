@@ -35,7 +35,7 @@ MODIFI expects a **PacBio BAM with IPD kinetics** and a **reference FASTA** (met
 ### 1️⃣ Clone repository and create environment
 
 ```bash
-git clone https://github.com/wshuai294/MODIFI.git
+git clone https://github.com/sachdevalab/MODIFI.git
 cd MODIFI/
 conda env create -n modifi -f env.yml
 conda activate modifi
