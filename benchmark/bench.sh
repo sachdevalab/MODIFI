@@ -2242,3 +2242,21 @@ sbatch --job-name=inf14 \
       --kmer_mean_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.mean.dat \
       --kmer_num_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.num.dat \
         --threads 64"
+
+
+## aligned bam : --whole_bam /home/shuaiw/borg/paper/run2/96plex/96plex.align.bam
+## for test
+sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+  --work_dir /home/shuaiw/borg/paper/software_test/test_0327/96plex_test \
+  --unaligned_bam /home/shuaiw/methylation/data/ZymoTrumatrix/2021-11-Microbial-96plex/m64004_210929_143746.hifi_reads.bam \
+  --whole_ref /home/shuaiw/borg/paper/run2/96plex/96plex.hifiasm.p_ctg.rename.fa \
+  --read_type hifi \
+  --min_len 1000 \
+  --min_cov 5 \
+  --min_iden 0.97 \
+  --min_frac 0.3 \
+  --min_score 30 \
+  --min_sites 30 \
+  --threads 64 \
+  --mge_file /home/shuaiw/borg/paper/run2/96plex/all_mge.tsv " \
+  --job-name=96plex_test
