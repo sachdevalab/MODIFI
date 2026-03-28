@@ -2242,3 +2242,4 @@ sbatch --job-name=inf14 \
       --kmer_mean_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.mean.dat \
       --kmer_num_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.num.dat \
         --threads 64"
+

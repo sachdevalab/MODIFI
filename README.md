@@ -124,9 +124,9 @@ Run MODIFI with unaligned BAM containing kinetics:
 
 ```bash
 modifi \
-    --work_dir /path/to/output \
-    --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref assembly.fasta \
+    -o /path/to/output \
+    -b raw.hifi_reads.bam \
+    -r assembly.fasta \
     --read_type hifi
 ```
 
@@ -142,9 +142,9 @@ MODIFI will automatically align reads using pbmm2:
 
 ```bash
 modifi \
-    --work_dir /path/to/output \
-    --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref assembly.fasta \
+    -o /path/to/output \
+    -b raw.hifi_reads.bam \
+    -r assembly.fasta \
     --read_type hifi
 ```
 
@@ -154,9 +154,9 @@ If already aligned with pbmm2 (with kinetics preserved):
 
 ```bash
 modifi \
-    --work_dir /path/to/output \
-    --whole_bam aligned.sorted.bam \
-    --whole_ref assembly.fasta \
+    -o /path/to/output \
+    --aligned_bam aligned.sorted.bam \
+    -r assembly.fasta \
     --read_type hifi
 ```
 
@@ -166,9 +166,9 @@ For subread data (requires `MODIFI_subreads` environment):
 
 ```bash
 modifi \
-    --work_dir /path/to/output \
-    --unaligned_bam raw.subreads.bam \
-    --whole_ref assembly.fasta \
+    -o /path/to/output \
+    -b raw.subreads.bam \
+    -r assembly.fasta \
     --read_type subreads
 ```
 
@@ -178,9 +178,9 @@ Provide an MGE table to automatically infer MGE-host linkages:
 
 ```bash
 modifi \
-    --work_dir /path/to/output \
-    --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref assembly.fasta \
+    -o /path/to/output \
+    -b raw.hifi_reads.bam \
+    -r assembly.fasta \
     --read_type hifi \
     --mge_file MGE_list.tab
 ```
@@ -200,9 +200,9 @@ Assign MGEs to host bins using binning results:
 
 ```bash
 modifi \
-    --work_dir /path/to/output \
-    --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref assembly.fasta \
+    -o /path/to/output \
+    -b raw.hifi_reads.bam \
+    -r assembly.fasta \
     --read_type hifi \
     --mge_file MGE_list.tab \
     --bin_file binning.tab
@@ -225,9 +225,9 @@ For isolate genomes or low-complexity metagenomes, use a control database for be
 
 ```bash
 modifi \
-    --work_dir /path/to/output \
-    --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref assembly.fasta \
+    -o /path/to/output \
+    -b raw.hifi_reads.bam \
+    -r assembly.fasta \
     --read_type hifi \
     --kmer_mean_db control/control_db.up7.down3.mean.dat \
     --kmer_num_db control/control_db.up7.down3.num.dat
@@ -235,7 +235,7 @@ modifi \
 
 #### Custom database:
 
-Use control database from your own high-complexity metagenome runs (automatically generated in `<work_dir>/control/`):
+Use control database from your own high-complexity metagenome runs (automatically generated in `<output>/control/`):
 
 ```
 control/control_db.up7.down3.mean.dat
@@ -279,9 +279,9 @@ cat output/genomad/assembly_summary/assembly_virus_summary.tsv \
 
 ```bash
 modifi \
-    --work_dir output/MODIFI \
-    --unaligned_bam raw.hifi_reads.bam \
-    --whole_ref assembly.fasta \
+    -o output/MODIFI \
+    -b raw.hifi_reads.bam \
+    -r assembly.fasta \
     --read_type hifi \
     --mge_file all_MGEs.tsv \
     --threads 32
@@ -293,12 +293,12 @@ modifi \
 
 ### Linkage-only mode
 
-If you have already run MODIFI and generated motif profiles in a given `--work_dir`, you can re-run just the **MGE-host linkage** step (for example, with a different MGE table or binning file) without re-running modification detection:
+If you have already run MODIFI and generated motif profiles in a given `-o`, you can re-run just the **MGE-host linkage** step (for example, with a different MGE table or binning file) without re-running modification detection:
 
 ```bash
 modifi-linkage \
-    --work_dir /path/to/output \
-    --whole_ref assembly.fasta \
+    -o /path/to/output \
+    -r assembly.fasta \
     --mge_file all_MGEs.tsv \
     --bin_file binning.tab \
     --threads 32
@@ -319,9 +319,9 @@ Commonly tuned options (`modifi`):
 
 | Option | Role |
 |--------|------|
-| `--work_dir` | Output directory for all pipeline artifacts |
-| `--unaligned_bam` / `--whole_bam` | Unaligned (aligned with pbmm2 in-pipeline) or pre-aligned BAM with kinetics |
-| `--whole_ref` | Reference FASTA (contigs) |
+| `-o` | Output directory for all pipeline artifacts |
+| `-b` / `--aligned_bam` | Unaligned BAM (`-b/--bam`) or pre-aligned BAM (`--aligned_bam`) with kinetics |
+| `-r` | Reference FASTA (contigs) |
 | `--read_type` | `hifi` (default) or `subreads` |
 | `--threads` | Parallelism (default 64) |
 | `--min_iden` | Minimum alignment identity (default 0.97 for HiFi, 0.85 for subreads if unset) |
@@ -469,7 +469,7 @@ Use with `--kmer_mean_db` and `--kmer_num_db` flags (see [Using Control Database
 For better results, generate a control database from your own **high-complexity metagenomes**:
 
 1. Run MODIFI on high-complexity metagenomic samples
-2. Control files are automatically generated in `<work_dir>/control/`
+2. Control files are automatically generated in `<output>/control/`
 3. Reuse these files for isolate/low-complexity samples
 
 ### Important Notes

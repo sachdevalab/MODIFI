@@ -56,7 +56,7 @@ def calculate_x_from_pvalue(p_value, mu, sigma, tail="right"):
         x = mu + z * sigma
         return x
 
-def get_ipd_ratio(csv, output, gff, figure_file, ref, min_cov=5, visu_flag: bool = True):
+def get_ipd_ratio(csv, output, gff, figure_file, ref, min_cov=5, visu_flag: bool = True, modifi_version="", cmdline=""):
     seq_dict = get_ref(ref)
     print ("loaded fasta")
     df = pd.read_csv(csv, sep = ",")
@@ -125,7 +125,7 @@ def get_ipd_ratio(csv, output, gff, figure_file, ref, min_cov=5, visu_flag: bool
     if visu_flag:
         visu(df, figure_file)
     ## ImportError: Matplotlib requires numpy>=1.23; you have 1.22.4
-    get_gff(df, gff, seq_dict)
+    get_gff(df, gff, seq_dict, modifi_version=modifi_version, cmdline=cmdline)
     return 0
 
 def visu(df, figure_path):
@@ -190,7 +190,7 @@ def get_ref(ref):
         # seq = raw_seq.replace('A', '0').replace('C', '1').replace('G', '2').replace('T', '3').replace('N', '4')
     return seq_dict
 
-def get_gff(df, gff_path, seq_dict, p_cutoff=P_CUTOFF):
+def get_gff(df, gff_path, seq_dict, p_cutoff=P_CUTOFF, modifi_version="", cmdline=""):
     print("Start get_gff...")
 
     df = df[df['pvalue'] <= p_cutoff]
@@ -201,8 +201,8 @@ def get_gff(df, gff_path, seq_dict, p_cutoff=P_CUTOFF):
     # Write header lines
     with open(gff_path, "w") as f:
         print("##gff-version 3", file=f)
-        print("##source-version our_method", file=f)
-        print("##source-commandline xxx", file=f)
+        print(f"##source-version MODIFI {modifi_version}", file=f)
+        print(f"##source-commandline {cmdline}", file=f)
         for seq, seq_str in seq_dict.items():
             print(f"##sequence-region\t{seq}\t1\t{len(seq_str)}", file=f)
 
