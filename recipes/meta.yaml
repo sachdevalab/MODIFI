@@ -1,29 +1,24 @@
 {% set name = "modifi" %}
-{% set version = "0.0.0" %}
+{% set version = "0.0.1" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://github.com/wshuai294/MODIFI/archive/refs/heads/main.tar.gz
-  # sha256: set when pinning a release tarball for reproducibility
+  url: https://github.com/sachdevalab/MODIFI/archive/refs/tags/v{{ version }}.tar.gz
+  # Run: curl -sL <url> | sha256sum   to get this value after creating the release tag
+  sha256: PLACEHOLDER_FILL_AFTER_CREATING_RELEASE_TAG
 
 build:
   number: 0
-  noarch: false
-  script:
-    - bash build.sh
+  script: bash build.sh
 
 requirements:
   build:
     - {{ compiler('cxx') }}
-    - pkg-config
-    - htslib
-    - pbbam
   host:
-    - htslib
-    - pbbam
+    - python
   run:
     - python >=3.9
     - numpy
@@ -37,34 +32,32 @@ requirements:
     - scikit-learn
     - pyyaml
     - pysam
-    - htslib
-    - pbbam
+    - openjdk    # required for bundled MultiMotifMaker.jar (motif-finding fallback)
     - tqdm
     - joblib
     - psutil
     - regex
-    # Optional SMRT Link tools (user can install separately)
-    - pbmm2
-    - pbtk
     - samtools
+    # Recommended: install these from bioconda for alignment and native motif-finding
+    # - pbmm2
+    # - pbtk
 
 test:
   commands:
     - modifi --help
 
 about:
-  home: https://github.com/wshuai294/MODIFI
+  home: https://github.com/sachdevalab/MODIFI
   license: MIT
   license_file: LICENSE
   summary: DNA modification detection from PacBio SMRT metagenomic data
   description: |
-    MODIFI detects DNA base modifications and infers host–mobile genetic
+    MODIFI detects DNA base modifications and infers host-mobile genetic
     element (MGE) linkages from PacBio metagenomic sequencing data. It supports
-    modification calling, motif discovery, and host–MGE association for both
-    subreads and HiFi read types.
+    modification calling, motif discovery, and host-MGE association for both
+    subreads and HiFi read types. Native motif finding uses pbmotifmaker (from
+    pbtk) if available, falling back to the bundled MultiMotifMaker.jar.
 
 extra:
-  identifiers:
-    - biotools:modifi
   maintainers:
     - wshuai294
