@@ -155,7 +155,7 @@ Example: modifi \\
                         help="Number of upstream bases to consider for k-mer analysis.")
     parser.add_argument("--down", type=int, default=3,
                         help="Number of downstream bases to consider for k-mer analysis.")
-    parser.add_argument("--clean", action="store_true", dest="clean", help="Enable cleaning step")
+    parser.add_argument("--no-clean", action="store_true", dest="keep_intermediate", help="Keep intermediate files (disable cleaning step)")
     parser.add_argument("--bin_file", type=str, required=False, default=None,
                         help="Path to the binning file containing contig-to-bin mappings. Sep by tab, with two columns: contig_name and bin_name, no headers. ")
     parser.add_argument("--segment", action="store_true", dest="segment", 
@@ -869,11 +869,15 @@ if __name__ == "__main__":
             bin_file=args.bin_file
         )
     
-    if args.clean:
+    if not args.keep_intermediate:
         logger.info("Cleaning up intermediate files...")
         for folder in [paras["bam_dir"], paras["ctg_dir"], paras["ipd_dir"], paras["control"], paras["ipd_ratio"], paras["segs"]]:
             if os.path.exists(folder):
                 shutil.rmtree(folder)
+        for tmp_file in [paras["all_motifs"], paras["ctg_list_file"],
+                         os.path.join(args.work_dir, "all.motifs_drep.csv")]:
+            if os.path.exists(tmp_file):
+                os.remove(tmp_file)
 
 
     logger.info("\n[Placeholder] Pipeline execution ends here...\n")
