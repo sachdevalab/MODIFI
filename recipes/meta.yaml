@@ -8,7 +8,7 @@ package:
 source:
   url: https://github.com/sachdevalab/MODIFI/archive/refs/tags/v{{ version }}.tar.gz
   # Run: curl -sL <url> | sha256sum   to get this value after creating the release tag
-  sha256: PLACEHOLDER_FILL_AFTER_CREATING_RELEASE_TAG
+  sha256: 6428df241a83b3976d88c07f1092e6682473f8f13bd0e4386497be79257a96f5
 
 build:
   number: 0
@@ -39,8 +39,8 @@ requirements:
     - regex
     - samtools
     # Recommended: install these from bioconda for alignment and native motif-finding
-    # - pbmm2
-    # - pbtk
+    - pbmm2
+    - pbtk
 
 test:
   commands:
