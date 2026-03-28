@@ -221,53 +221,55 @@ def align_bam_with_pbmm2(input_bam, reference_fasta, output_bam, read_type, thre
     else:
         raise ValueError(f"Unknown read type: {read_type}. Must be 'hifi' or 'subreads'")
     
-    # Create temporary raw BAM file
     temp_raw_bam = output_bam.replace(".bam", ".raw.bam")
-    
+
     try:
-        # Run pbmm2 alignment
+        # Step 1: pbmm2 alignment
         cmd = [
-            pbmm2_bin,
-            "align",
+            pbmm2_bin, "align",
             "--preset", preset,
             "-j", str(threads),
             reference_fasta,
             input_bam,
             temp_raw_bam
         ]
-        
         logger.info(f"Running pbmm2 command: {' '.join(cmd)}")
         subprocess.run(cmd, check=True)
-        
-        # Sort the aligned BAM file
-        logger.info(f"Sorting aligned BAM file...")
+
+        # Step 2: filter MAPQ < 20 and sort via pipe
+        logger.info("Filtering reads (MAPQ < 20) and sorting...")
+        view_cmd = ["samtools", "view", "-q", "20", "-b", temp_raw_bam]
         sort_cmd = [
             "samtools", "sort",
             "-T", output_bam.replace(".bam", ""),
             "-@", str(threads),
             "-o", output_bam,
-            temp_raw_bam
+            "-"
         ]
-        
-        subprocess.run(sort_cmd, check=True)
-        
-        # Index the sorted BAM file
-        logger.info(f"Indexing aligned BAM file...")
+        view_proc = subprocess.Popen(view_cmd, stdout=subprocess.PIPE)
+        sort_proc = subprocess.Popen(sort_cmd, stdin=view_proc.stdout)
+        view_proc.stdout.close()
+        sort_proc.wait()
+        view_proc.wait()
+        if view_proc.returncode != 0 or sort_proc.returncode != 0:
+            raise subprocess.CalledProcessError(
+                view_proc.returncode or sort_proc.returncode, view_cmd)
+
+        # Step 3: index
+        logger.info("Indexing aligned BAM file...")
         subprocess.run(["samtools", "index", output_bam], check=True)
         subprocess.run([pbindex_bin, output_bam], check=True)
-        
-        # Clean up temporary file
+
+        # Step 4: cleanup
         if os.path.exists(temp_raw_bam):
             os.remove(temp_raw_bam)
-            
+
         logger.info(f"Successfully aligned and sorted BAM file: {output_bam}")
-        
+
     except subprocess.CalledProcessError as e:
         logger.error(f"Error during alignment: {e}")
-        # Clean up temporary files on error
-        for temp_file in [temp_raw_bam]:
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
+        if os.path.exists(temp_raw_bam):
+            os.remove(temp_raw_bam)
         raise
     except Exception as e:
         logger.error(f"Unexpected error during alignment: {e}")
