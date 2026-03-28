@@ -1,5 +1,5 @@
-# paper_fig_dir = "../../tmp/figures/strain_diff/drep_99/"
-paper_fig_dir = "../../tmp/figures/strain_diff/iso_drep_99/"
+paper_fig_dir = "../../tmp/figures/strain_diff/drep_99/"
+# paper_fig_dir = "../../tmp/figures/strain_diff/iso_drep_99/"
 stack_df <- read.csv(paste0(paper_fig_dir, "motif_variation_counts_by_phylum.csv"))
 # Sort phylum so that 'others' is at the bottom, and the rest by total count (descending)
 phylum_counts <- aggregate(count ~ phylum, data = stack_df, sum)
@@ -37,6 +37,7 @@ ggplot(stack_df, aes(x=as.factor(cutoff), y=count, fill=phylum)) +
   xlab("Cluster member cutoff") +
   ylab("No. of clusters") +
   labs(fill = "Phylum") +
+  guides(pattern = "none") +  ## control whether to show pattern legend
   theme_minimal() +
     theme(axis.text.x = element_text(size = 10),
       axis.text.y = element_text(size = 10),
