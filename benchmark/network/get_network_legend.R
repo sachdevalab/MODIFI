@@ -86,14 +86,14 @@ if (length(phy_categories) > 0) {
 p <- p +
   theme_void() +
   theme(legend.position = "right",
-        legend.title = element_text(size = 12),
-        legend.text = element_text(size = 10))
+        legend.title = element_text(size = 12, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"))
 
 # Ensure output directory exists
 dir.create(dirname(out_pdf), recursive = TRUE, showWarnings = FALSE)
 
 # Save legend as PDF
-ggsave(out_pdf, plot = p, width = 6, height = (length(mge_categories) + length(phy_categories)) * 0.25 + 1)
+ggsave(out_pdf, plot = p, width = 6, height = (length(mge_categories) + length(phy_categories)) * 0.25 + 1, device = cairo_pdf)
 cat("Saved legend to", out_pdf, "\n")
 
 # Also write color mapping to TSV for reproducibility
