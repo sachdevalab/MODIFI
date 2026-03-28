@@ -1,4 +1,4 @@
-# 🧬 MODIFI: DNA Modification Detection from PacBio SMRT Metagenomic Data
+# 🧬 MODIFI: DNA Modification Detection and ECE-host linkage inference from PacBio Metagenomic Data
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/Python-≥3.9-blue.svg)](#)
