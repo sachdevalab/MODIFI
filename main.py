@@ -79,21 +79,8 @@ def record_resource_usage(step_name, func, *args, **kwargs):
         The return value of the function.
     """
     logger.info(f"🔄 Starting step: {step_name}")
-    start_time = time.time()  # Start wall-clock time
-    process = psutil.Process()
-
-    # Run the function
     result = func(*args, **kwargs)
-
-    # Record resource usage
-    end_time = time.time()  # End wall-clock time
-    elapsed_time = (end_time - start_time) / 3600  # Convert to hours
-    peak_memory = process.memory_info().rss / (1024 * 1024)  # Convert to MB
-
     logger.info(f"✅ Step '{step_name}' completed.")
-    logger.info(f"   ⏱️ Wall-Clock Time: {elapsed_time:.2f} hours")
-    logger.info(f"   📈 Peak Memory: {peak_memory:.2f} MB\n")
-
     return result
 
 def parse_arguments():
@@ -714,17 +701,23 @@ if __name__ == "__main__":
     # format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]', level = logging.INFO,filemode='w')
 
     # Create formatter
-    formatter = logging.Formatter('[%(asctime)s - %(filename)s - %(levelname)s: %(message)s]')
+    formatter = logging.Formatter(
+        '[%(asctime)s - %(filename)s - %(levelname)s: %(message)s]',
+        datefmt='%Y-%m-%d %H:%M')
 
     # === File handler ===
     file_handler = logging.FileHandler(paras["log"], mode='w')
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.INFO)
 
-    # === Console handler ===
-    console_handler = logging.StreamHandler()
+    # === Console handler (logger.* messages only) ===
+    _orig_stdout = sys.stdout
+    console_handler = logging.StreamHandler(_orig_stdout)
     console_handler.setFormatter(formatter)
     console_handler.setLevel(logging.INFO)
+
+    # === Redirect print() output to log file only ===
+    sys.stdout = file_handler.stream
 
     # === Clear previous handlers to prevent duplicates ===
     if logger.hasHandlers():
