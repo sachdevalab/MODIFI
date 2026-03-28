@@ -63,12 +63,12 @@ def linkage_main() -> None:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "--work_dir",
+        "--output",
         required=True,
         help="Working directory used for the original MODIFI run (contains profiles/ and hosts/).",
     )
     parser.add_argument(
-        "--whole_ref",
+        "--ref",
         required=True,
         help="Reference FASTA file used in the original MODIFI run (must have a .fai index).",
     )
@@ -109,7 +109,7 @@ def linkage_main() -> None:
 
     args = parser.parse_args()
 
-    work_dir = Path(args.work_dir)
+    work_dir = Path(args.output)
     profile_dir = work_dir / "profiles"
     host_dir = work_dir / "hosts"
     host_dir.mkdir(parents=True, exist_ok=True)
@@ -118,7 +118,7 @@ def linkage_main() -> None:
         plasmid_file=args.mge_file,
         profile_dir=str(profile_dir),
         host_dir=str(host_dir),
-        whole_ref=args.whole_ref,
+        whole_ref=args.ref,
         bin_file=args.bin_file,
         min_frac=args.min_frac,
         threads=args.threads,

@@ -34,7 +34,7 @@ from load_cfg import load_binaries
 # -------------------------------
 # Version
 # -------------------------------
-__version__ = "0.0.0"
+__version__ = "0.0.1"
 
 # -------------------------------
 # Parameters
@@ -92,24 +92,24 @@ def parse_arguments():
         description="""DNA modification detection and MGE-host linkage inference.
 
 Example: modifi \\
-        --work_dir /path-to/output \\
-        --unaligned_bam raw.hifi_reads.bam \\
-        --whole_ref metagenomic_assembly.fasta \\
+        -o /path-to/output \\
+        -b raw.hifi_reads.bam \\
+        -r metagenomic_assembly.fasta \\
         --read_type hifi
 """,
         formatter_class=CustomFormatter
     )
 
     parser.add_argument("-v", "--version", action="version", version=f"MODIFI v{__version__}")
-    parser.add_argument("--whole_bam", type=str, required=False,
+    parser.add_argument("--aligned_bam", type=str, required=False,
                         help="Input aligned BAM file with kinetic data (HiFi or subreads). Use this for pre-aligned BAM files.\
                               Must be aligned by pbmm2 to ensure kinetic tags are present.")
-    parser.add_argument("--unaligned_bam", type=str, required=False,
+    parser.add_argument("-b", "--bam", type=str, required=False,
                         help="Input unaligned BAM file with kinetic data (HiFi or subreads). Will be aligned using pbmm2.")
-    parser.add_argument("--whole_ref", type=str, required=True,
+    parser.add_argument("-r", "--ref", type=str, required=True,
                         help="Reference FASTA file for contigs.")
-    parser.add_argument("--work_dir", type=str, required=True,
-                        help="Working directory for all output files.")
+    parser.add_argument("-o", "--output", type=str, required=True,
+                        help="Output directory for all pipeline files.")
     # parser.add_argument("--maxAlignments", type=int, default=100000,
     #                     help="Maximum number of alignments to process.")
     parser.add_argument("--read_type", choices=["subreads", "hifi"], default="hifi",
@@ -179,11 +179,11 @@ Example: modifi \\
         else:
             raise ValueError(f"Unknown read type: {args.read_type}. Must be 'hifi' or 'subreads'")
     
-    # Validate that either whole_bam or unaligned_bam is provided, but not both
-    if args.whole_bam and args.unaligned_bam:
-        parser.error("Cannot specify both --whole_bam and --unaligned_bam. Use one or the other.")
-    if not args.whole_bam and not args.unaligned_bam:
-        parser.error("Must specify either --whole_bam (for aligned BAM) or --unaligned_bam (for unaligned BAM).")
+    # Validate that either --aligned_bam or --bam is provided, but not both
+    if args.aligned_bam and args.bam:
+        parser.error("Cannot specify both --aligned_bam and --bam. Use one or the other.")
+    if not args.aligned_bam and not args.bam:
+        parser.error("Must specify either --aligned_bam (for aligned BAM) or -b/--bam (for unaligned BAM).")
     
     return args
 
@@ -591,12 +591,12 @@ def profile_parallel(args, paras):
 
 def run_merge_profile(args, paras):
         merge_profile_worker(
-            work_dir = args.work_dir, 
+            work_dir = args.output, 
             heat_map = paras["heatmap"],
             profile_list = paras["profiles"], 
             total_profile = paras["total_profile"], 
             min_frac = args.min_frac, 
-            whole_ref = args.whole_ref, 
+            whole_ref = args.ref, 
             bin_file = args.bin_file,
             threads = args.threads,
             bin_flag = args.binning,
@@ -633,7 +633,7 @@ def depth_analysis(paras, ctg_depth_dict):
 def predict_host_worker(args, paras):
     os.makedirs(paras["hosts"], exist_ok = True)
     if args.mge_file != 'NA' and os.path.exists(args.mge_file):
-        batch_MGE_invade(args.mge_file, paras["profiles"], paras["hosts"], args.whole_ref, bin_file=args.bin_file, min_frac=args.min_frac, threads=args.threads, min_ctg_cov = args.min_ctg_cov, min_detect = args.min_sites)
+        batch_MGE_invade(args.mge_file, paras["profiles"], paras["hosts"], args.ref, bin_file=args.bin_file, min_frac=args.min_frac, threads=args.threads, min_ctg_cov = args.min_ctg_cov, min_detect = args.min_sites)
 
 def get_paras(args):
     """
@@ -641,33 +641,33 @@ def get_paras(args):
     """
 
     paras = {}
-    paras["bam_dir"] = os.path.join(args.work_dir, "bams")
-    paras["ctg_dir"] = os.path.join(args.work_dir, "contigs")
-    paras["ipd_dir"] = os.path.join(args.work_dir, "ipd")
-    paras["control"] = os.path.join(args.work_dir, "control")
-    paras["ipd_ratio"] = os.path.join(args.work_dir, "ipd_ratio")
-    paras["gffs"] = os.path.join(args.work_dir, "gffs")
-    paras["figs"] = os.path.join(args.work_dir, "figs")
-    paras["motifs"] = os.path.join(args.work_dir, "motifs")
-    paras["segs"] = os.path.join(args.work_dir, "segs")
-    paras["bins"] = os.path.join(args.work_dir, "bins")
-    paras["profiles"] = os.path.join(args.work_dir, "profiles")
-    paras["hosts"] = os.path.join(args.work_dir, "hosts")
-    paras["RM"] = os.path.join(args.work_dir, "RM_systems")
+    paras["bam_dir"] = os.path.join(args.output, "bams")
+    paras["ctg_dir"] = os.path.join(args.output, "contigs")
+    paras["ipd_dir"] = os.path.join(args.output, "ipd")
+    paras["control"] = os.path.join(args.output, "control")
+    paras["ipd_ratio"] = os.path.join(args.output, "ipd_ratio")
+    paras["gffs"] = os.path.join(args.output, "gffs")
+    paras["figs"] = os.path.join(args.output, "figs")
+    paras["motifs"] = os.path.join(args.output, "motifs")
+    paras["segs"] = os.path.join(args.output, "segs")
+    paras["bins"] = os.path.join(args.output, "bins")
+    paras["profiles"] = os.path.join(args.output, "profiles")
+    paras["hosts"] = os.path.join(args.output, "hosts")
+    paras["RM"] = os.path.join(args.output, "RM_systems")
     paras["RM_prefix"] = os.path.join(paras["RM"], "all_ctgs_RM")
     paras["RM_genes"] = paras["RM_prefix"] + ".rm.genes.tsv"
 
     paras["kmer_bin"] = os.path.join(sys.path[0], "src", "get_control_IPD")
-    paras["ctg_list_file"] = os.path.join(args.work_dir, "contigs_list.txt")
-    paras["all_motifs"] = os.path.join(args.work_dir, "all.motifs.csv")
-    paras["total_profile"] = os.path.join(args.work_dir, "motif_profile.csv")
-    paras["heatmap"] = os.path.join(args.work_dir, "motif_heatmap.pdf")
-    paras["depth_file"] = os.path.join(args.work_dir, "mean_depth.csv")
-    paras["depth_plot"] = os.path.join(args.work_dir, "depth_distribution.pdf")
-    paras["log"] = os.path.join(args.work_dir, "log.txt")
+    paras["ctg_list_file"] = os.path.join(args.output, "contigs_list.txt")
+    paras["all_motifs"] = os.path.join(args.output, "all.motifs.csv")
+    paras["total_profile"] = os.path.join(args.output, "motif_profile.csv")
+    paras["heatmap"] = os.path.join(args.output, "motif_heatmap.pdf")
+    paras["depth_file"] = os.path.join(args.output, "mean_depth.csv")
+    paras["depth_plot"] = os.path.join(args.output, "depth_distribution.pdf")
+    paras["log"] = os.path.join(args.output, "log.txt")
 
     ## build the directory if not exist
-    os.makedirs(args.work_dir, exist_ok=True)
+    os.makedirs(args.output, exist_ok=True)
     os.makedirs(paras["bam_dir"], exist_ok=True)
     os.makedirs(paras["ctg_dir"], exist_ok=True)
     os.makedirs(paras["ipd_dir"], exist_ok=True)
@@ -740,25 +740,25 @@ if __name__ == "__main__":
     logger.info("\n🔬 Pipeline execution starts here...\n")
 
     # === Handle unaligned BAM alignment if needed ===
-    if args.unaligned_bam:
+    if args.bam:
         logger.info("Unaligned BAM provided. Running alignment with pbmm2...")
         
         # Create align_bam subfolder
-        align_bam_dir = os.path.join(args.work_dir, "align_bam")
+        align_bam_dir = os.path.join(args.output, "align_bam")
         os.makedirs(align_bam_dir, exist_ok=True)
         aligned_bam_path = os.path.join(align_bam_dir, "aligned.bam")
         if not os.path.exists(aligned_bam_path):
             record_resource_usage(
                 "Aligning BAM with pbmm2",
                 align_bam_with_pbmm2,
-                args.unaligned_bam, args.whole_ref, aligned_bam_path, args.read_type, args.threads
+                args.bam, args.ref, aligned_bam_path, args.read_type, args.threads
             )
         else:
             logger.info(f"Aligned BAM already exists at {aligned_bam_path}, skipping alignment.")
         
         # Set the aligned BAM as the whole_bam for the rest of the pipeline
-        args.whole_bam = aligned_bam_path
-        logger.info(f"Using aligned BAM file for pipeline: {args.whole_bam}")
+        args.aligned_bam = aligned_bam_path
+        logger.info(f"Using aligned BAM file for pipeline: {args.aligned_bam}")
     else:
         logger.info("Using provided aligned BAM file for pipeline.")
 
@@ -766,7 +766,7 @@ if __name__ == "__main__":
         ctg_depth_dict = record_resource_usage(
             "Splitting BAM files",
             split_bam,
-            args.whole_bam, args.work_dir, args.whole_ref, pbindex_bin, args.threads, args.min_len, 100000000, args.min_ctg_cov, args.min_iden
+            args.aligned_bam, args.output, args.ref, pbindex_bin, args.threads, args.min_len, 100000000, args.min_ctg_cov, args.min_iden
         )
         record_resource_usage(
             "Depth analysis",
@@ -846,7 +846,7 @@ if __name__ == "__main__":
         os.makedirs(paras["RM"], exist_ok=True)
         cmd = [
             "MicrobeMod", "annotate_rm",
-            "-f", args.whole_ref,  # or your desired fasta file
+            "-f", args.ref,  # or your desired fasta file
             "-o", paras["RM_prefix"],
             "-t", str(args.threads)
         ]
@@ -871,7 +871,7 @@ if __name__ == "__main__":
         if f.endswith(".reprocess.gff")
     ])
     if reprocess_gffs:
-        merged_gff = os.path.join(args.work_dir, "all.reprocess.gff")
+        merged_gff = os.path.join(args.output, "all.reprocess.gff")
         logger.info(f"Merging {len(reprocess_gffs)} reprocess GFF files -> {merged_gff}")
         seq_regions = []
         data_lines = []
@@ -898,7 +898,7 @@ if __name__ == "__main__":
         if f.endswith(".motifs.csv")
     ])
     if motif_files:
-        merged_motifs = os.path.join(args.work_dir, "all.motifs.merged.csv")
+        merged_motifs = os.path.join(args.output, "all.motifs.merged.csv")
         logger.info(f"Merging {len(motif_files)} motif files -> {merged_motifs}")
         dfs = []
         for mf in motif_files:
@@ -914,7 +914,7 @@ if __name__ == "__main__":
             if os.path.exists(folder):
                 shutil.rmtree(folder)
         for tmp_file in [paras["all_motifs"], paras["ctg_list_file"],
-                         os.path.join(args.work_dir, "all.motifs_drep.csv")]:
+                         os.path.join(args.output, "all.motifs_drep.csv")]:
             if os.path.exists(tmp_file):
                 os.remove(tmp_file)
 
