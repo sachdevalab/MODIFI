@@ -1,33 +1,34 @@
 import argparse
-from pathlib import Path
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from tqdm import tqdm
+import logging
 import os
+import shutil
 import subprocess
 import sys
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import psutil
-import logging
-import shutil
+import seaborn as sns
 import yaml
+from tqdm import tqdm
 
 ## add the path to scripts
 sys.path.append(os.path.join(sys.path[0], "scripts"))
 
+from analyze_RM import RM_main
+from collect_motifs import collect_motifs
+from comp_ipd_ratio import get_ipd_ratio
+from estimate_linkage import batch_MGE_invade
+from generate_contig_list import get_contig_list
+from merge_profile import merge_profile_worker
+from motif_profile import motif_profile_worker
+from segment_genome import process_depth_and_gff
 from split_bam import split_bam
 from standard_load7 import IPD_load_worker
-from generate_contig_list import get_contig_list
-from comp_ipd_ratio import get_ipd_ratio
-from segment_genome import process_depth_and_gff
-from collect_motifs import collect_motifs
-from motif_profile import motif_profile_worker
-from merge_profile import merge_profile_worker
-from estimate_linkage import batch_MGE_invade
-from analyze_RM import RM_main
 
 from load_cfg import load_binaries
 
@@ -136,7 +137,7 @@ Example: modifi \\
                         help="Minimum modification score for motif calling.")
     parser.add_argument("--mge_file", type=str, default="NA",
                         help="MGE table file (sep by tab), can be output of geNomad, with at least one column with header: seq_name.")
-    parser.add_argument("--threads", type=int, default=64,
+    parser.add_argument("--threads", type=int, default=4,
                         help="Number of threads to use for processing.")
     parser.add_argument("--up", type=int, default=7,
                         help="Number of upstream bases to consider for k-mer analysis.")
@@ -923,4 +924,5 @@ if __name__ == "__main__":
     logger.info("🔬 Pipeline execution completed.")
 
 # if __name__ == "__main__":
+#     main()
 #     main()

@@ -1,8 +1,8 @@
 import argparse
 import runpy
 import sys
-from pathlib import Path
 import sysconfig
+from pathlib import Path
 
 
 def _get_share_root() -> Path:
@@ -103,7 +103,7 @@ def linkage_main() -> None:
     parser.add_argument(
         "--threads",
         type=int,
-        default=64,
+        default=4,
         help="Number of threads for linkage computations.",
     )
 

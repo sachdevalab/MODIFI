@@ -68,5 +68,7 @@
         "__nullptr": "cpp",
         "__hash_table": "cpp"
     },
-    "git.enabled": true
+    "git.enabled": true,
+    "python-envs.defaultEnvManager": "ms-python.python:pyenv",
+    "python-envs.pythonProjects": []
 }
