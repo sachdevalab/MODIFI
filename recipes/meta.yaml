@@ -12,7 +12,8 @@ source:
 
 build:
   number: 0
-  script: bash build.sh
+  run_exports:
+    - {{ pin_subpackage('modifi', max_pin="x") }}
 
 requirements:
   build:
@@ -20,11 +21,13 @@ requirements:
   host:
     - python
   run:
+    - bash
     - python >=3.9
     - numpy
     - scipy
     - pandas
-    - matplotlib
+    - matplotlib-base
+    - adjusttext
     - seaborn
     - statsmodels
     - biopython
@@ -38,9 +41,9 @@ requirements:
     - psutil
     - regex
     - samtools
-    # Recommended: install these from bioconda for alignment and native motif-finding
-    - pbmm2
-    - pbtk
+    # Linux only: bioconda pbmm2/pbtk are repackaged binaries and skip osx (see those recipes).
+    - pbmm2  # [linux]
+    - pbtk  # [linux]
 
 test:
   commands:
@@ -49,6 +52,7 @@ test:
 about:
   home: https://github.com/sachdevalab/MODIFI
   license: MIT
+  license_family: MIT
   license_file: LICENSE
   summary: DNA modification detection from PacBio SMRT metagenomic data
   description: |
@@ -56,8 +60,9 @@ about:
     element (MGE) linkages from PacBio metagenomic sequencing data. It supports
     modification calling, motif discovery, and host-MGE association for both
     subreads and HiFi read types. Native motif finding uses pbmotifmaker (from
-    pbtk) if available, falling back to the bundled MultiMotifMaker.jar.
+    pbtk) on Linux if installed; otherwise use the bundled MultiMotifMaker.jar
+    (OpenJDK). On macOS, install PacBio tools separately or rely on the JAR fallback.
 
 extra:
-  maintainers:
+  recipe-maintainers:
     - wshuai294
