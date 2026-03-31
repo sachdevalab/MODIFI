@@ -42,7 +42,7 @@ If SMRT tools are installed in your system PATH, MODIFI will detect and use them
 
 ### Option B: Install from Source
 
-#### 1️⃣ Clone repository and create environment
+#### 1️⃣ Clone repository and install
 
 ```bash
 git clone https://github.com/sachdevalab/MODIFI.git
