@@ -412,8 +412,8 @@ Commonly tuned options (`modifi`):
 | `motif_info` | Detailed motif data (format: motif:length:sites:cov:score:pos) |
 
 > **Filtering recommendations:** 
-> - High confidence: `final_score > 0.5` AND `specificity < 0.01`
-> - Medium confidence: `final_score > 0.3` AND `specificity < 0.05`
+> - General: `final_score > 0.5` AND `specificity < 0.01`
+> - Very high confidence: `final_score > 0.8` AND `specificity < 0.001`
 
 ### Output Format: GFF Annotation
 
@@ -478,7 +478,7 @@ For better results, generate a control database from your own **high-complexity 
 
 ---
 
-## ⚠️ Important Notes
+## Notes
 
 ### Resource requirements (examples for reference)
 In 59 metagenomics from nine habitats, the mean wall-clock time was 4.5 hours (range: 0.2–19 hours, std: 3.9), while the mean CPU time was 120 hours (range: 1–1,161 hours, std: 215), with a mean peak memory usage of 18 GB (range: 0.6–62 GB, std: 14). 
