@@ -502,11 +502,11 @@ Driver scripts and plotting code used for analyses in development live under [`b
 ## 📚 Citation
 
 If you use MODIFI in your research, please cite:
-```
+
 Metagenomic strain-resolved DNA modification patterns link extrachromosomal genetic elements to host strains
 Shuai Wang, Allison K. Guitor, Luis E. Valentin-Alvarado, Rebecca Garner, Pengfan Zhang, Ming Yan, Ling-Dong Shi, Marie C. Schoelmerich, Holly M. Steininger, Daniel M. Portik, Siyuan Zhang, Jeremy E. Wilkinson, Susan Lynch, Michael J. Morowitz, Matthias Hess, Spencer Diamond, Jillian F. Banfield, Rohan Sachdeva
 bioRxiv 2026.03.27.714056; doi: https://doi.org/10.64898/2026.03.27.714056
-```
+
 
 ---
 
