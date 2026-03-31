@@ -32,7 +32,16 @@ MODIFI expects a **PacBio BAM with IPD kinetics** and a **reference FASTA** (met
 
 ## 🧩 Installation
 
-### 1️⃣ Clone repository and create environment
+### Option A: Install via Bioconda 
+
+```bash
+conda create -n modifi -c bioconda modifi
+conda activate modifi
+```
+
+### Option B: Install from Source
+
+#### 1️⃣ Clone repository and create environment
 
 ```bash
 git clone https://github.com/sachdevalab/MODIFI.git
@@ -41,7 +50,7 @@ conda env create -n modifi -f env.yml
 conda activate modifi
 ```
 
-### 2️⃣ Install MODIFI via pip 
+#### 2️⃣ Install MODIFI via pip 
 
 This will:
 - Compile the C++ helper binary `get_control_IPD` (using `src/install.sh` under the hood)
@@ -52,7 +61,7 @@ This will:
 pip install .
 ```
 
-### 3️⃣ Configure SMRT Link tools **OPTIONAL - Can be skipped**
+#### 3️⃣ Configure SMRT Link tools **OPTIONAL - Can be skipped**
 
 > 💡 **You can skip this step!** MODIFI will automatically use tools from conda or fallback to built-in alternatives.
 
@@ -74,7 +83,7 @@ smrtlink_bin: /path/to/smrtlink/private/bin/
 
 > **Note:** If you have SMRT Link tools in your PATH (e.g., via conda), no configuration is needed. MODIFI will detect and use them automatically.
 
-### 4️⃣ Verify installation
+#### 4️⃣ Verify installation
 
 Test that the command-line entry point is available:
 
@@ -89,7 +98,7 @@ cd test/hifi/
 bash test_hifi.sh
 ```
 
-### 5️⃣ [Optional] Setup for subreads
+#### 5️⃣ [Optional] Setup for subreads
 
 If you need to process subreads, create a separate environment with `pbcore` (requires Python 3.9 and numpy 1.22.4):
 
