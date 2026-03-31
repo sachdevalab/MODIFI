@@ -1,7 +1,7 @@
 # 🧬 MODIFI: DNA Modification Detection and ECE-host linkage inference from PacBio Metagenomic Data
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
-[![Python](https://img.shields.io/badge/Python-≥3.9-blue.svg)](#)
+[![Python](https://img.shields.io/badge/Python-3-blue.svg)](#)
 [![Platform](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)](#)
 [![PacBio](https://img.shields.io/badge/PacBio-SMRT-yellow.svg)](#)
 
