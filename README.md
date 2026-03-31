@@ -52,27 +52,23 @@ conda activate modifi
 pip install .
 ```
 
-#### 2️⃣ Configure SMRT Link tools **OPTIONAL - Can be skipped**
+#### 2️⃣ Configure SMRT Link tools **OPTIONAL**
 
-> 💡 **You can skip this step!** MODIFI will automatically use tools from conda or fallback to built-in alternatives.
-
-MODIFI requires three PacBio SMRT Link tools: `pbmotifmaker`, `pbmm2`, and `pbindex`.
+You can set your SMRT Link tools path here. You can also skip this step.
 
 **Configuration priority (in order):**
 
-1. **Config file first** – If `smrt.config.yaml` exists, MODIFI will use the path specified there
-2. **System PATH fallback** – If config.yaml is not found or incomplete, MODIFI checks system PATH
-3. **MultiMotifMaker.jar/Conda** – Used as fallback if `SMRT Link tools` is unavailable
+1. **Config file first** – MODIFI will use the path specified in `smrt.config.yaml`
+2. **System PATH** – If `smrt.config.yaml` is not found or incomplete, MODIFI checks system PATH
+3. **Built-in alternative** – Use built-in `MultiMotifMaker` and `pbmm2` as fallback 
 
-**To configure via config.yaml (only if needed):**
+**To configure via `smrt.config.yaml` (only if needed):**
 
-Create or edit `smrt.config.yaml` in the MODIFI directory:
+Edit `smrt.config.yaml` in the MODIFI directory:
 
 ```yaml
 smrtlink_bin: /path/to/smrtlink/private/bin/
 ```
-
-> **Note:** If you have SMRT Link tools in your PATH (e.g., via conda), no configuration is needed. MODIFI will detect and use them automatically.
 
 ### Verify installation
 
