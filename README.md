@@ -347,6 +347,8 @@ Commonly tuned options (`modifi`):
 
 | File | Description |
 |------|-------------|
+|`all.motifs.merged.csv`|Motifs detected from all the contigs|
+|`all.reprocess.gff`|Modified sites detected from all the contigs|
 | `motif_profile.csv` | Methylation fraction matrix: motifs × contigs |
 | `host_summary.csv` | Best predicted host for each MGE |
 | `mean_depth.csv` | Sequencing depth and length per contig |
