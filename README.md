@@ -113,12 +113,14 @@ MODIFI supports both `HiFi reads` and `subreads`. Your PacBio BAM file **must co
 > - FASTQ files do not contain kinetics information and **cannot be used**
 > - The BAM file stores kinetic information; it does not need to be pre-aligned
 > - See [PacBio BAM format specifications](https://pacbiofileformats.readthedocs.io/en/11.0/BAM.html) for details
+> - Reference should be indexed using `samtools faidx` before running.
 
 ### Example
 
 Run MODIFI with unaligned BAM containing kinetics:
 
 ```bash
+samtools faidx assembly.fasta 
 modifi \
     -o /path/to/output \
     -b raw.hifi_reads.bam \
