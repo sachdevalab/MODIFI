@@ -3,6 +3,7 @@
 
 import pysam
 import os
+import subprocess
 from multiprocessing import Pool
 import sys
 import argparse
@@ -32,7 +33,7 @@ def split_bam(bam, split_bam_dir, whole_ref, pbindex_bin, threads=10, min_len=50
         contig_bam = os.path.join(bam_dir, contig + ".bam")
         print (f"Processing {contig} {contig_bam}")
         ref = os.path.join(contig_dir, contig + ".fa")
-        args.append((contig, contig_len, ref, contig_bam, bam, whole_ref, pbindex_bin, max_NM, MAP_Q, MAX_DEPTH, min_dp, min_iden))
+        args.append((contig, contig_len, ref, contig_bam, bam, whole_ref, pbindex_bin, max_NM, MAP_Q, MAX_DEPTH, min_dp, min_iden, record))
         i += 1
     # samfile.close()
     ctg_depth_dict = {}
@@ -154,7 +155,7 @@ def test_read(read, contig_len, max_NM, q, min_iden):
     #     return False
     return True
 
-def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, pbindex_bin, max_NM, q=20, max_depth=500, min_dp=0, min_iden=0.97):
+def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, pbindex_bin, max_NM, q=20, max_depth=500, min_dp=0, min_iden=0.97, contig_record=None):
     print (f"Processing {contig} {ref}")
 
     #  Create a new header that only includes the specific contig
@@ -210,8 +211,11 @@ def handle_each_contig(contig,contig_len,ref,contig_bam,bam,whole_ref, pbindex_b
     ## index the bam file
     os.system(f"samtools index {contig_bam}")
     os.system(f"{pbindex_bin} {contig_bam}")
-    os.system(f"samtools faidx {whole_ref} {contig} > {ref}")
-    os.system(f"samtools faidx {ref}")
+    with open(ref, "w") as fh:
+        SeqIO.write(contig_record, fh, "fasta")
+    result = subprocess.run(["samtools", "faidx", ref], capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"Failed to index {ref}: {result.stderr}")
     return contig, mean_depth, contig_len
 
 def main():

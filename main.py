@@ -108,7 +108,7 @@ Example: modifi \\
     parser.add_argument("-b", "--bam", type=str, required=False,
                         help="Input unaligned BAM file with kinetic data (HiFi or subreads). Will be aligned using pbmm2.")
     parser.add_argument("-r", "--ref", type=str, required=True,
-                        help="Reference FASTA file for contigs.")
+                        help="Reference FASTA file for contigs. Must be indexed with 'samtools faidx' before running.")
     parser.add_argument("-o", "--output", type=str, required=True,
                         help="Output directory for all pipeline files.")
     # parser.add_argument("--maxAlignments", type=int, default=100000,
