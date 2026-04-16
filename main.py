@@ -741,7 +741,7 @@ if __name__ == "__main__":
     logger.info("\n🔬 Pipeline execution starts here...\n")
 
     # === Handle unaligned BAM alignment if needed ===
-    if args.bam:
+    if args.bam and any(step in args.run_steps for step in ("split", "load")):
         logger.info("Unaligned BAM provided. Running alignment with pbmm2...")
         
         # Create align_bam subfolder
@@ -865,51 +865,53 @@ if __name__ == "__main__":
             bin_file=args.bin_file
         )
     
-    # Merge reprocess GFF files
-    reprocess_gffs = sorted([
-        os.path.join(paras["gffs"], f)
-        for f in os.listdir(paras["gffs"])
-        if f.endswith(".reprocess.gff")
-    ])
-    if reprocess_gffs:
-        merged_gff = os.path.join(args.output, "all.reprocess.gff")
-        logger.info(f"Merging {len(reprocess_gffs)} reprocess GFF files -> {merged_gff}")
-        seq_regions = []
-        data_lines = []
-        for gff_path in reprocess_gffs:
-            with open(gff_path) as f:
-                for line in f:
-                    if line.startswith("##sequence-region"):
-                        seq_regions.append(line)
-                    elif not line.startswith("#"):
-                        data_lines.append(line)
-        with open(merged_gff, "w") as out:
-            out.write("##gff-version 3\n")
-            out.write(f"##source-version MODIFI {__version__}\n")
-            out.write(f"##source-commandline {' '.join(sys.argv)}\n")
-            for sr in seq_regions:
-                out.write(sr)
-            for dl in data_lines:
-                out.write(dl)
+    if "merge" in args.run_steps:
+        # Merge reprocess GFF files
+        reprocess_gffs = sorted([
+            os.path.join(paras["gffs"], f)
+            for f in os.listdir(paras["gffs"])
+            if f.endswith(".reprocess.gff")
+        ])
+        if reprocess_gffs:
+            merged_gff = os.path.join(args.output, "all.reprocess.gff")
+            logger.info(f"Merging {len(reprocess_gffs)} reprocess GFF files -> {merged_gff}")
+            seq_regions = []
+            data_lines = []
+            for gff_path in reprocess_gffs:
+                with open(gff_path) as f:
+                    for line in f:
+                        if line.startswith("##sequence-region"):
+                            seq_regions.append(line)
+                        elif not line.startswith("#"):
+                            data_lines.append(line)
+            with open(merged_gff, "w") as out:
+                out.write("##gff-version 3\n")
+                out.write(f"##source-version MODIFI {__version__}\n")
+                out.write(f"##source-commandline {' '.join(sys.argv)}\n")
+                for sr in seq_regions:
+                    out.write(sr)
+                for dl in data_lines:
+                    out.write(dl)
+    if "merge" in args.run_steps:
+        # Merge per-contig motif CSV files with contig column
+        motif_files = sorted([
+            os.path.join(paras["motifs"], f)
+            for f in os.listdir(paras["motifs"])
+            if f.endswith(".motifs.csv")
+        ])
+        if motif_files:
+            merged_motifs = os.path.join(args.output, "all.motifs.merged.csv")
+            logger.info(f"Merging {len(motif_files)} motif files -> {merged_motifs}")
+            dfs = []
+            for mf in motif_files:
+                ctg = os.path.basename(mf).replace(".motifs.csv", "")
+                df = pd.read_csv(mf)
+                df.insert(0, "contig", ctg)
+                dfs.append(df)
+            pd.concat(dfs, ignore_index=True).to_csv(merged_motifs, index=False)
 
-    # Merge per-contig motif CSV files with contig column
-    motif_files = sorted([
-        os.path.join(paras["motifs"], f)
-        for f in os.listdir(paras["motifs"])
-        if f.endswith(".motifs.csv")
-    ])
-    if motif_files:
-        merged_motifs = os.path.join(args.output, "all.motifs.merged.csv")
-        logger.info(f"Merging {len(motif_files)} motif files -> {merged_motifs}")
-        dfs = []
-        for mf in motif_files:
-            ctg = os.path.basename(mf).replace(".motifs.csv", "")
-            df = pd.read_csv(mf)
-            df.insert(0, "contig", ctg)
-            dfs.append(df)
-        pd.concat(dfs, ignore_index=True).to_csv(merged_motifs, index=False)
-
-    if not args.keep_intermediate:
+    _full_steps = {"split", "load", "control", "compare", "motif", "profile", "merge"}
+    if not args.keep_intermediate and _full_steps.issubset(set(args.run_steps)):
         logger.info("Cleaning up intermediate files...")
         for folder in [paras["bam_dir"], paras["ctg_dir"], paras["ipd_dir"], paras["control"], paras["ipd_ratio"], paras["segs"]]:
             if os.path.exists(folder):
