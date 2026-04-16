@@ -285,21 +285,37 @@ def batch_soil():
             #     work_dir={work_dir} \\
             #     ref={ref} -j 64"  --job-name={prefix}
             # """
+            # cmd = f"""
+            #     sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+            #             --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/{prefix} \
+            #             --unaligned_bam {hifi_bam} \
+            #             --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa \
+            #             --read_type hifi \
+            #                 --min_len 1000 \
+            #                 --min_cov 3 \
+            #                 --min_frac 0.3 \
+            #                 --min_score 30 \
+            #                 --min_sites 100  \
+            #                 --mge_file borgs_mp_nanopore.borgs.tsv \
+            #                 --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
+            #                 --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
+            #             --threads 64" \\
+            #             --job-name={prefix}
+
+            # """
             cmd = f"""
-                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
-                        --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/{prefix} \
-                        --unaligned_bam {hifi_bam} \
-                        --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa \
-                        --read_type hifi \
-                            --min_len 1000 \
-                            --min_cov 3 \
-                            --min_frac 0.3 \
-                            --min_score 30 \
-                            --min_sites 100  \
-                            --mge_file borgs_mp_nanopore.borgs.tsv \
-                            --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
-                            --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
-                        --threads 64" \\
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \\
+                        -o /home/shuaiw/borg/paper/gg_run3/{prefix}/{prefix}_methylation4 \\
+                        --aligned_bam xxx \\
+                        -r {ref} \\
+                        --read_type hifi \\
+                        --min_len 1000 \\
+                        --min_cov 3 \\
+                        --min_frac 0.3 \\
+                        --min_score 30 \\
+                        --min_sites 100  \\
+                        --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list \\
+                        --threads 64 --run_steps host --no-clean" \\
                         --job-name={prefix}
 
             """

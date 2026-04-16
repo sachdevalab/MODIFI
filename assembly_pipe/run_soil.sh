@@ -1,40 +1,128 @@
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py                         --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/soil_60                         --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2021.bam                         --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa                         --read_type hifi                             --min_len 1000                             --min_cov 3                             --min_frac 0.3                             --min_score 30                             --min_sites 100                              --mge_file borgs_mp_nanopore.borgs.tsv                             --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat                             --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat                         --threads 64" \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+                        -o /home/shuaiw/borg/paper/gg_run3/soil_60/soil_60_methylation4 \
+                        --aligned_bam xxx \
+                        -r /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_07_25_2022_A1_60cm_PACBIO-HIFI.contigs.fa \
+                        --read_type hifi \
+                        --min_len 1000 \
+                        --min_cov 3 \
+                        --min_frac 0.3 \
+                        --min_score 30 \
+                        --min_sites 100  \
+                        --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list \
+                        --threads 64 --run_steps host --no-clean" \
                         --job-name=soil_60
 
             
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py                         --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/soil_90                         --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2023.bam                         --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa                         --read_type hifi                             --min_len 1000                             --min_cov 3                             --min_frac 0.3                             --min_score 30                             --min_sites 100                              --mge_file borgs_mp_nanopore.borgs.tsv                             --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat                             --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat                         --threads 64" \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+                        -o /home/shuaiw/borg/paper/gg_run3/soil_90/soil_90_methylation4 \
+                        --aligned_bam xxx \
+                        -r /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_07_25_2022_A1_90cm_PACBIO-HIFI.contigs.fa \
+                        --read_type hifi \
+                        --min_len 1000 \
+                        --min_cov 3 \
+                        --min_frac 0.3 \
+                        --min_score 30 \
+                        --min_sites 100  \
+                        --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list \
+                        --threads 64 --run_steps host --no-clean" \
                         --job-name=soil_90
 
             
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py                         --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/soil_80                         --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2022.bam                         --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa                         --read_type hifi                             --min_len 1000                             --min_cov 3                             --min_frac 0.3                             --min_score 30                             --min_sites 100                              --mge_file borgs_mp_nanopore.borgs.tsv                             --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat                             --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat                         --threads 64" \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+                        -o /home/shuaiw/borg/paper/gg_run3/soil_80/soil_80_methylation4 \
+                        --aligned_bam xxx \
+                        -r /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_07_25_2022_A1_80cm_PACBIO-HIFI.contigs.fa \
+                        --read_type hifi \
+                        --min_len 1000 \
+                        --min_cov 3 \
+                        --min_frac 0.3 \
+                        --min_score 30 \
+                        --min_sites 100  \
+                        --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list \
+                        --threads 64 --run_steps host --no-clean" \
                         --job-name=soil_80
 
             
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py                         --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/soil_100                         --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_214113_s4.hifi_reads.bc2024.bam                         --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa                         --read_type hifi                             --min_len 1000                             --min_cov 3                             --min_frac 0.3                             --min_score 30                             --min_sites 100                              --mge_file borgs_mp_nanopore.borgs.tsv                             --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat                             --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat                         --threads 64" \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+                        -o /home/shuaiw/borg/paper/gg_run3/soil_100/soil_100_methylation4 \
+                        --aligned_bam xxx \
+                        -r /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_07_25_2022_A1_100cm_PACBIO-HIFI.contigs.fa \
+                        --read_type hifi \
+                        --min_len 1000 \
+                        --min_cov 3 \
+                        --min_frac 0.3 \
+                        --min_score 30 \
+                        --min_sites 100  \
+                        --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list \
+                        --threads 64 --run_steps host --no-clean" \
                         --job-name=soil_100
 
             
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py                         --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/soil_110                         --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2025.bam                         --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa                         --read_type hifi                             --min_len 1000                             --min_cov 3                             --min_frac 0.3                             --min_score 30                             --min_sites 100                              --mge_file borgs_mp_nanopore.borgs.tsv                             --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat                             --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat                         --threads 64" \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+                        -o /home/shuaiw/borg/paper/gg_run3/soil_110/soil_110_methylation4 \
+                        --aligned_bam xxx \
+                        -r /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_07_25_2022_A1_110cm_PACBIO-HIFI.contigs.fa \
+                        --read_type hifi \
+                        --min_len 1000 \
+                        --min_cov 3 \
+                        --min_frac 0.3 \
+                        --min_score 30 \
+                        --min_sites 100  \
+                        --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list \
+                        --threads 64 --run_steps host --no-clean" \
                         --job-name=soil_110
 
             
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py                         --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/soil_115                         --unaligned_bam /home/shuaiw/borg/paper/aws/soil/m84039_230626_221130_s1.hifi_reads.bc2026.bam                         --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa                         --read_type hifi                             --min_len 1000                             --min_cov 3                             --min_frac 0.3                             --min_score 30                             --min_sites 100                              --mge_file borgs_mp_nanopore.borgs.tsv                             --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat                             --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat                         --threads 64" \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+                        -o /home/shuaiw/borg/paper/gg_run3/soil_115/soil_115_methylation4 \
+                        --aligned_bam xxx \
+                        -r /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_07_25_2022_A1_115cm_PACBIO-HIFI.contigs.fa \
+                        --read_type hifi \
+                        --min_len 1000 \
+                        --min_cov 3 \
+                        --min_frac 0.3 \
+                        --min_score 30 \
+                        --min_sites 100  \
+                        --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list \
+                        --threads 64 --run_steps host --no-clean" \
                         --job-name=soil_115
 
             
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py                         --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/soil_1                         --unaligned_bam /home/shuaiw/borg/paper/aws/soil/XRSBK_20221007_S64018_PL100268287-1_C01.ccs.bam                         --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa                         --read_type hifi                             --min_len 1000                             --min_cov 3                             --min_frac 0.3                             --min_score 30                             --min_sites 100                              --mge_file borgs_mp_nanopore.borgs.tsv                             --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat                             --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat                         --threads 64" \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+                        -o /home/shuaiw/borg/paper/gg_run3/soil_1/soil_1_methylation4 \
+                        --aligned_bam xxx \
+                        -r /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_9_9_2021_81_5A_0_75m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+                        --read_type hifi \
+                        --min_len 1000 \
+                        --min_cov 3 \
+                        --min_frac 0.3 \
+                        --min_score 30 \
+                        --min_sites 100  \
+                        --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list \
+                        --threads 64 --run_steps host --no-clean" \
                         --job-name=soil_1
 
             
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py                         --work_dir /home/shuaiw/borg/paper/borg_data/only_borg/soil_2                         --unaligned_bam /home/shuaiw/borg/XRSBK_20221007_S64018_PL100268288-1_D01.ccs.bam                         --whole_ref /home/shuaiw/borg/paper/borg_data/borgs_mp_nanopore.contigs.fa                         --read_type hifi                             --min_len 1000                             --min_cov 3                             --min_frac 0.3                             --min_score 30                             --min_sites 100                              --mge_file borgs_mp_nanopore.borgs.tsv                             --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat                             --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat                         --threads 64" \
+                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
+                        -o /home/shuaiw/borg/paper/gg_run3/soil_2/soil_2_methylation4 \
+                        --aligned_bam xxx \
+                        -r /home/shuaiw/borg/paper/curated_genome/unique/SR-VP_9_9_2021_34_2B_1_4m_PACBIO-HIFI_HIFIASM-META.contigs.fa \
+                        --read_type hifi \
+                        --min_len 1000 \
+                        --min_cov 3 \
+                        --min_frac 0.3 \
+                        --min_score 30 \
+                        --min_sites 100  \
+                        --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list \
+                        --threads 64 --run_steps host --no-clean" \
                         --job-name=soil_2
 
             

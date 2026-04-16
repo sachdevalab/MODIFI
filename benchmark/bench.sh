@@ -2243,3 +2243,13 @@ sbatch --job-name=inf14 \
       --kmer_num_db /home/shuaiw/borg/paper/motif_change/methyl/infant_14/control/control_db.up7.down3.num.dat \
         --threads 64"
 
+python /home/shuaiw/MODIFI/main.py \
+ -o /home/shuaiw/borg/paper/natasha/soil_115 \
+ -b xx \
+  -r /home/shuaiw/borg/paper/natasha/two_Klingon.fasta \
+   --read_type hifi \
+   --min_ctg_cov 4  \
+   --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation4/control/control_db.up7.down3.mean.dat  \
+   --kmer_num_db /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation4/control/control_db.up7.down3.num.dat \
+    --threads 64 --run_steps host --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list
+
