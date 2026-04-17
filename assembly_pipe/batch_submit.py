@@ -305,8 +305,8 @@ def batch_soil():
             # """
             cmd = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \\
-                        -o /home/shuaiw/borg/paper/gg_run3/{prefix}/{prefix}_methylation4 \\
-                        --aligned_bam xxx \\
+                        -o /home/shuaiw/borg/paper/gg_run4/{prefix}/{prefix}_methylation4 \\
+                        -b {hifi_bam} \\
                         -r {ref} \\
                         --read_type hifi \\
                         --min_len 1000 \\
@@ -314,11 +314,12 @@ def batch_soil():
                         --min_frac 0.3 \\
                         --min_score 30 \\
                         --min_sites 100  \\
-                        --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list \\
-                        --threads 64 --run_steps host --no-clean" \\
+                        --min_ctg_cov 2 \\
+                        --mge_file /home/shuaiw/MODIFI/benchmark/borg/klingon/klingon_contigs.txt \\
+                        --threads 64 --no-clean" \\ 
                         --job-name={prefix}
 
-            """
+            """# --run_steps host 
             # cmd = f"""
             # snakemake -s soil_ggkbase_opt2.smk --config \\
             #     hifi_bam={hifi_bam} \\
