@@ -2253,3 +2253,37 @@ python /home/shuaiw/MODIFI/main.py \
    --kmer_num_db /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation4/control/control_db.up7.down3.num.dat \
     --threads 64 --run_steps host --mge_file /home/shuaiw/borg/paper/natasha/klingon.genome.list
 
+sbatch --job-name=LD \
+--partition standard \
+--wrap "python /home/shuaiw/MODIFI/main.py \
+        -o /home/shuaiw/borg/paper/borg_data/LD_borg/RES_21_09_03_R3_M2_MG \
+        -b /groups/banfield/sequences/2024/RES_21_09_03_R3_M2_MG_PACBIO/RES_21_09_03_R3_M2_MG_PACBIO.bam  \
+        -r /groups/banfield/projects/environmental/RES/pilot/pacbio_MG/assembly/RES_21_09_03_R3_M2_MG_PACBIO_scaffold_min1000.fa \
+        --read_type hifi \
+        --min_cov 5 \
+        --threads 64"
+
+
+sbatch --job-name=LD \
+--partition standard \
+--wrap "python /home/shuaiw/MODIFI/main.py \
+        -o /home/shuaiw/borg/paper/borg_data/LD_borg/RES_21_09_03_R3_M2_MG_g1 \
+        -b /groups/banfield/sequences/2024/RES_21_09_03_R3_M2_MG_PACBIO/RES_21_09_03_R3_M2_MG_PACBIO.bam  \
+        -r /home/shuaiw/borg/paper/borg_data/LD_borg/mini_borg/genome_set_1.fasta \
+        --read_type hifi \
+        --min_cov 5 \
+       --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation4/control/control_db.up7.down3.mean.dat  \
+       --kmer_num_db /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation4/control/control_db.up7.down3.num.dat \
+        --threads 64"
+
+sbatch --job-name=LD \
+--partition standard \
+--wrap "python /home/shuaiw/MODIFI/main.py \
+        -o /home/shuaiw/borg/paper/borg_data/LD_borg/RES_21_09_03_R3_M2_MG_g2 \
+        -b /groups/banfield/sequences/2024/RES_21_09_03_R3_M2_MG_PACBIO/RES_21_09_03_R3_M2_MG_PACBIO.bam  \
+        -r /home/shuaiw/borg/paper/borg_data/LD_borg/mini_borg/genome_set_2.fasta \
+        --read_type hifi \
+        --min_cov 5 \
+       --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation4/control/control_db.up7.down3.mean.dat  \
+       --kmer_num_db /home/shuaiw/borg/paper/run2/soil_s1_1/soil_s1_1_methylation4/control/control_db.up7.down3.num.dat \
+        --threads 64"

@@ -302,12 +302,30 @@ def batch_soil():
             #             --threads 64" \\
             #             --job-name={prefix}
 
+            # # """
+            # cmd = f"""
+            #     sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \\
+            #             -o /home/shuaiw/borg/paper/gg_run4/{prefix}/{prefix}_methylation4 \\
+            #             -b {hifi_bam} \\
+            #             -r {ref} \\
+            #             --read_type hifi \\
+            #             --min_len 1000 \\
+            #             --min_cov 3 \\
+            #             --min_frac 0.3 \\
+            #             --min_score 30 \\
+            #             --min_sites 100  \\
+            #             --min_ctg_cov 2 \\
+            #             --mge_file /home/shuaiw/MODIFI/benchmark/borg/klingon/klingon_contigs.txt \\
+            #             --threads 64 --no-clean" \\ 
+            #             --job-name={prefix}
+
+            # """# --run_steps host 
             # """
             cmd = f"""
                 sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \\
-                        -o /home/shuaiw/borg/paper/gg_run4/{prefix}/{prefix}_methylation4 \\
+                        -o /home/shuaiw/borg/paper/borg_data/LD_borg/{prefix}/{prefix}_methylation4 \\
                         -b {hifi_bam} \\
-                        -r {ref} \\
+                        -r /home/shuaiw/borg/paper/borg_data/LD_borg/Black_and_2_mini.fasta \\
                         --read_type hifi \\
                         --min_len 1000 \\
                         --min_cov 3 \\
@@ -315,9 +333,10 @@ def batch_soil():
                         --min_score 30 \\
                         --min_sites 100  \\
                         --min_ctg_cov 2 \\
-                        --mge_file /home/shuaiw/MODIFI/benchmark/borg/klingon/klingon_contigs.txt \\
-                        --threads 64 --no-clean" \\ 
-                        --job-name={prefix}
+                        --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \\
+                        --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \\
+                        --threads 64" 
+                        
 
             """# --run_steps host 
             # cmd = f"""
