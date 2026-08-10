@@ -10,28 +10,12 @@
                         --min_score 30 \
                         --min_sites 100  \
                         --min_ctg_cov 2 \
-                        --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
-                        --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
                         --threads 64" 
                         
 
             
 
-                sbatch  --partition standard --wrap "python /home/shuaiw/MODIFI/main.py \
-                        -o /home/shuaiw/borg/paper/borg_data/LD_borg/soil_90/soil_90_methylation4 \
-                        -b /home/shuaiw/borg/paper/aws/soil/m84039_230624_013044_s3.hifi_reads.bc2023.bam \
-                        -r /home/shuaiw/borg/paper/borg_data/LD_borg/Black_and_2_mini.fasta \
-                        --read_type hifi \
-                        --min_len 1000 \
-                        --min_cov 3 \
-                        --min_frac 0.3 \
-                        --min_score 30 \
-                        --min_sites 100  \
-                        --min_ctg_cov 2 \
-                        --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
-                        --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
-                        --threads 64" 
-                        
+
 
             
 
@@ -46,8 +30,6 @@
                         --min_score 30 \
                         --min_sites 100  \
                         --min_ctg_cov 2 \
-                        --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
-                        --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
                         --threads 64" 
                         
 
@@ -64,8 +46,6 @@
                         --min_score 30 \
                         --min_sites 100  \
                         --min_ctg_cov 2 \
-                        --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
-                        --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
                         --threads 64" 
                         
 
@@ -82,8 +62,6 @@
                         --min_score 30 \
                         --min_sites 100  \
                         --min_ctg_cov 2 \
-                        --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
-                        --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
                         --threads 64" 
                         
 
@@ -100,8 +78,6 @@
                         --min_score 30 \
                         --min_sites 100  \
                         --min_ctg_cov 2 \
-                        --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
-                        --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
                         --threads 64" 
                         
 
@@ -118,8 +94,6 @@
                         --min_score 30 \
                         --min_sites 100  \
                         --min_ctg_cov 2 \
-                        --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
-                        --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
                         --threads 64" 
                         
 
@@ -136,8 +110,6 @@
                         --min_score 30 \
                         --min_sites 100  \
                         --min_ctg_cov 2 \
-                        --kmer_mean_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.mean.dat \
-                        --kmer_num_db /home/shuaiw/borg/paper/run2/soil_1/soil_1_methylation4/control/control_db.up7.down3.num.dat \
                         --threads 64" 
                         
 
