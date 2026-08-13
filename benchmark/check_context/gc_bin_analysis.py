@@ -101,6 +101,14 @@ def main():
     print("\nwrote", OUTDIR, flush=True)
 
 
+def italic_label(name):
+    """Italicize only the binomial (first two tokens), leave the strain plain."""
+    p = name.split()
+    sp = "$\\it{" + " ".join(p[:2]).replace(" ", "\\ ") + "}$"
+    rest = " ".join(p[2:])
+    return (sp + " " + rest).strip()
+
+
 def plot_eta_vs_window(etas):
     """Fraction of within-10-mer IPD variation explained by flanking GC vs flanking
     window size. Peaks ~3.7% at +-100 bp then declines -> GC is negligible at every
@@ -108,7 +116,7 @@ def plot_eta_vs_window(etas):
     fig, ax = plt.subplots(figsize=(9, 6))
     for name, _, _ in STRAINS:
         v = [etas[name][w] * 100 for w in WINDOWS]
-        ax.plot(WINDOWS, v, "-o", color=COLORS[name], lw=2, ms=6, label=name)
+        ax.plot(WINDOWS, v, "-o", color=COLORS[name], lw=2, ms=6, label=italic_label(name))
     ax.set_xscale("log")
     ax.set_xticks(WINDOWS)
     ax.set_xticklabels([f"±{w}" for w in WINDOWS])
