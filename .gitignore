@@ -13,6 +13,9 @@ __pycache__/
 slurm-*
 tmp/
 tmp*
+
+# generated per-community SLURM run scripts (benchmark replicates)
+benchmark/simu_meta/cmds/
 *.time
 *pdf
 nohup.out
