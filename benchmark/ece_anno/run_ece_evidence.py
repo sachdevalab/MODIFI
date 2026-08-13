@@ -33,6 +33,17 @@ FIG_DIR = "/home/shuaiw/MODIFI/tmp/rev_figs/ece_anno"
 DB_DIR = os.path.join(DATA_DIR, "db")
 
 SUPPORT_COLS = ["support_circular", "support_genomad", "support_marker", "support_coverage"]
+DROP_LEGACY = ["confidence", "confidence_reason"]
+
+
+def reclassify(d):
+    """(Re)derive very_high_confidence from the stored support/flag columns and drop
+    any legacy High/Medium/Low tiering. Works on both old- and new-schema tables."""
+    for c in SUPPORT_COLS + ["flag_chromosomal", "flag_artifact"]:
+        d[c] = d[c].astype(bool)
+    d["very_high_confidence"] = (d[SUPPORT_COLS].all(axis=1)
+                                 & ~d["flag_chromosomal"] & ~d["flag_artifact"])
+    return d.drop(columns=[c for c in DROP_LEGACY if c in d.columns])
 
 
 def run_one(sample, ece_csv, threads, resume):
@@ -53,7 +64,7 @@ def run_one(sample, ece_csv, threads, resume):
         return sample, f"FAILED: {e.stderr.decode()[-300:]}", None
 
 
-def aggregate(per_sample_dir):
+def aggregate(per_sample_dir, rewrite=True):
     frames = []
     for tsv in sorted(glob.glob(os.path.join(per_sample_dir, "*", "ece_evidence.tsv"))):
         sample = os.path.basename(os.path.dirname(tsv))
@@ -63,6 +74,9 @@ def aggregate(per_sample_dir):
             continue
         if d.empty:
             continue
+        d = reclassify(d)
+        if rewrite:  # normalize the per-sample table to the new schema on disk
+            d.to_csv(tsv, sep="\t", index=False)
         d.insert(0, "sample", sample)
         frames.append(d)
     if not frames:
@@ -73,32 +87,33 @@ def aggregate(per_sample_dir):
 def summarize(all_df, out_summary):
     lines = []
     n = len(all_df)
+    vh = all_df["very_high_confidence"].astype(bool)
     lines.append(f"total_ECEs\t{n}")
     lines.append(f"samples\t{all_df['sample'].nunique()}")
     lines.append("")
-    lines.append("# confidence x type")
-    ct = all_df.groupby(["type", "confidence"]).size().unstack(fill_value=0)
+    lines.append("# very_high_confidence (all 4 lines pass, no negative flag)")
+    lines.append(f"very_high_confidence\t{int(vh.sum())}\t{vh.mean():.3f}")
+    lines.append("")
+    lines.append("# very_high_confidence by type")
+    ct = all_df.assign(very_high_confidence=vh).groupby(
+        ["type", "very_high_confidence"]).size().unstack(fill_value=0)
     lines.append(ct.to_csv(sep="\t").rstrip())
     lines.append("")
-    lines.append("# ECEs supported by each evidence line")
+    lines.append("# ECEs supported by each evidence line (fraction)")
     for c in SUPPORT_COLS:
-        if c in all_df.columns:
-            k = int(all_df[c].astype(bool).sum())
-            lines.append(f"{c}\t{k}\t{k/n:.3f}")
+        k = int(all_df[c].astype(bool).sum())
+        lines.append(f"{c}\t{k}\t{k/n:.3f}")
     lines.append("")
     lines.append("# negative flags")
     for c in ["flag_chromosomal", "flag_artifact"]:
         k = int(all_df[c].astype(bool).sum())
         lines.append(f"{c}\t{k}\t{k/n:.3f}")
     lines.append("")
-    ge2 = int((all_df["n_positive_lines"] >= 2).sum())
-    ge1 = int((all_df["n_positive_lines"] >= 1).sum())
-    lines.append(f"# HEADLINE: ECEs with >=1 independent support\t{ge1}\t{ge1/n:.3f}")
-    lines.append(f"# HEADLINE: ECEs with >=2 independent supports\t{ge2}\t{ge2/n:.3f}")
+    lines.append("# distribution of n_positive_lines (0-4)")
+    lines.append(all_df["n_positive_lines"].value_counts().sort_index().to_csv(sep="\t").rstrip())
     lines.append("")
     lines.append("# median cov_ratio by type")
-    med = all_df.groupby("type")["cov_ratio"].median()
-    lines.append(med.to_csv(sep="\t").rstrip())
+    lines.append(all_df.groupby("type")["cov_ratio"].median().to_csv(sep="\t").rstrip())
     with open(out_summary, "w") as f:
         f.write("\n".join(lines) + "\n")
     print("\n".join(lines))
@@ -109,24 +124,21 @@ def make_figure(all_df, out_pdf):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    conf_order = ["High", "Medium", "Low"]
-    conf_colors = {"High": "#2c7fb8", "Medium": "#7fcdbb", "Low": "#edf8b1"}
+    all_df = all_df.copy()
+    all_df["very_high_confidence"] = all_df["very_high_confidence"].astype(bool)
     types = sorted(all_df["type"].unique())
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
 
-    # (a) stacked confidence per type
+    # (a) very-high-confidence vs rest, per type
     ax = axes[0]
-    bottom = [0] * len(types)
-    for conf in conf_order:
-        vals = [int(((all_df["type"] == t) & (all_df["confidence"] == conf)).sum())
-                for t in types]
-        ax.bar(types, vals, bottom=bottom, label=conf, color=conf_colors[conf],
-               edgecolor="white")
-        bottom = [b + v for b, v in zip(bottom, vals)]
-    ax.set_title("ECE confidence by type")
+    vh = [int(((all_df["type"] == t) & all_df["very_high_confidence"]).sum()) for t in types]
+    rest = [int(((all_df["type"] == t) & ~all_df["very_high_confidence"]).sum()) for t in types]
+    ax.bar(types, vh, label="very-high (all 4 lines)", color="#2c7fb8", edgecolor="white")
+    ax.bar(types, rest, bottom=vh, label="not very-high", color="#d9d9d9", edgecolor="white")
+    ax.set_title("Very-high-confidence ECEs by type")
     ax.set_ylabel("number of ECEs")
-    ax.legend(title="confidence", frameon=False)
+    ax.legend(frameon=False)
 
     # (b) fraction of ECEs supported by each evidence line (+ negative flags)
     ax = axes[1]

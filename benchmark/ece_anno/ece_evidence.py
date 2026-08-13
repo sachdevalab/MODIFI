@@ -347,21 +347,14 @@ def decide(row):
     flag_art = ((pd.notna(cov_mean) and cov_mean < COV_MIN)
                 or (pd.notna(cv) and cv > CV_ARTIFACT)) and n_pos == 0
 
-    if flag_chr:
-        conf, reason = "Low", "likely_chromosomal_fragment"
-    elif flag_art:
-        conf, reason = "Low", "likely_artifact"
-    elif n_pos >= 2:
-        conf, reason = "High", "well_supported"
-    elif n_pos == 1:
-        conf, reason = "Medium", "single_line_support"
-    else:
-        conf, reason = "Low", "weak_support"
+    # very-high-confidence ECE = ALL four independent lines pass and no negative flag.
+    # This is a deliberately stringent, high-precision set for validating the
+    # ECE-host linkage method (recall is not the objective here).
+    very_high = p1 and p2 and p3 and p4 and (not flag_chr) and (not flag_art)
     return pd.Series({"support_circular": p1, "support_genomad": p2,
                       "support_marker": p3, "support_coverage": p4,
                       "n_positive_lines": n_pos, "flag_chromosomal": flag_chr,
-                      "flag_artifact": flag_art, "confidence": conf,
-                      "confidence_reason": reason})
+                      "flag_artifact": flag_art, "very_high_confidence": very_high})
 
 
 # ----------------------------------------------------------------------------
@@ -459,13 +452,12 @@ def main():
             "cov_mean", "cov_cv", "host_depth", "cov_ratio",
             "genomad_score", "genomad_fdr", "genomad_n_hallmarks", "survives_default_threshold",
             "support_circular", "support_genomad", "support_marker", "support_coverage",
-            "n_positive_lines", "flag_chromosomal", "flag_artifact", "confidence",
-            "confidence_reason"]
+            "n_positive_lines", "flag_chromosomal", "flag_artifact", "very_high_confidence"]
     df = df[[c for c in cols if c in df.columns]]
     out_tsv = os.path.join(args.out_dir, "ece_evidence.tsv")
     df.to_csv(out_tsv, sep="\t", index=False)
-    print(f"[{args.sample}] wrote {out_tsv}")
-    print(df["confidence"].value_counts().to_string())
+    print(f"[{args.sample}] wrote {out_tsv}  "
+          f"(very_high_confidence: {int(df['very_high_confidence'].sum())}/{len(df)})")
 
 
 if __name__ == "__main__":
