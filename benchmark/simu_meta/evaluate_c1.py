@@ -17,7 +17,7 @@ Outputs CSVs under simu_meta_dir/C1/eval/ for the plotting scripts.
 
 Usage:
   python evaluate_c1.py                          # all ladder_* communities found
-  python evaluate_c1.py --labels ladder_10,ladder_25
+  python evaluate_c1.py --labels ladder_25,ladder_40
   python evaluate_c1.py --orphans orphans.txt    # file of orphan ECE contig names
 """
 import os
@@ -169,10 +169,11 @@ def roc_pr(df):
             fp += 1
         rows.append((s, tp / P, fp / N, tp / (tp + fp)))  # score, tpr(=recall), fpr, precision
     arr = pd.DataFrame(rows, columns=["score", "tpr", "fpr", "precision"])
-    auroc = float(np.trapz(arr["tpr"], arr["fpr"]))
+    trapz = getattr(np, "trapezoid", None) or np.trapz  # np.trapz removed in numpy 2.0
+    auroc = float(trapz(arr["tpr"], arr["fpr"]))
     # AUPRC via recall-sorted precision
     ap = arr.sort_values("tpr")
-    auprc = float(np.trapz(ap["precision"], ap["tpr"]))
+    auprc = float(trapz(ap["precision"], ap["tpr"]))
     return arr, auroc, auprc
 
 

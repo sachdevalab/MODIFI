@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 ROOT = "/home/shuaiw/borg/paper/simu_meta_dir/C1"
-COMMUNITIES = ["ladder_10", "ladder_25", "ladder_40", "ladder_58", "bg_80", "bg_150"]
+COMMUNITIES = ["ladder_25", "ladder_40", "ladder_58", "bg_80", "bg_150"]
 
 
 def sra(name):

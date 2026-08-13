@@ -19,8 +19,9 @@ Everything a mock community carries is REAL isolate reads (real IPD kinetics); g
 truth = SRA-accession prefix on each contig (e.g. ERR10042285_1_L -> ERR10042285).
 
 Usage examples:
-  # C1 donor-only nested ladder {10,25,40,66}, one representative strain per species
-  python build_community.py ladder --sizes 10,25,40,66
+  # C1 donor-only nested ladder {25,40,58}, one representative strain per species
+  # (ladder_10 dropped: 10 genomes are too few for a reliable unmodified IPD baseline)
+  python build_community.py ladder --sizes 25,40,58
 
   # A single deep + background community (~80 genomes)
   python build_community.py community --n-species 40 --strains-per-species 1 \
@@ -146,10 +147,73 @@ def prep_isolate_bam(sample, native_dp, target_dp, out_bam, seed, threads):
     return out_bam, True
 
 
+def prep_orphan_bam(sample, genome, ece_contigs, native_dp, target_dp,
+                    out_prefix, seed, threads):
+    """Build an ORPHAN: the ECE present with real methylation, host genome ABSENT.
+
+    Returns (ece_ref_fa, ece_reads_bam, downsampled). We keep ONLY the ECE contig(s)
+    and ONLY the reads that map to them, so the community sees the ECE but not its host:
+      1. pbmm2-align the isolate CCS BAM to ITS OWN assembly (kinetics preserved).
+      2. collect read NAMES that align over the ECE contig(s).
+      3. subset the ORIGINAL unaligned CCS BAM by those names (`samtools view -N`) — this
+         keeps the @RG DS:READTYPE=CCS + fi/fp/ri/rp tags intact (NOT addreplacerg/reset,
+         which strip them); downsample to target_dp with the same frac as a planted donor.
+      4. extract ONLY the ECE contig(s) from the assembly as the orphan reference.
+    """
+    src = ccs_bam_path(sample)
+    aln = f"{out_prefix}.selfaln.bam"
+    names = f"{out_prefix}.ece_reads.txt"
+    ece_bam0 = f"{out_prefix}.ece_reads.bam"
+    ece_fa = f"{out_prefix}.ece.fa"
+    pbmm2 = os.path.join(MODIFI_ENV_BIN, "pbmm2")
+
+    # 1. align to own assembly
+    subprocess.run([pbmm2, "align", "--preset", "CCS", "-j", str(threads),
+                    genome, src, aln, "--sort"], check=True)
+    subprocess.run(["samtools", "index", "-@", str(threads), aln], check=True)
+    # 2. read names over the ECE contig(s)
+    with open(names, "w") as fh:
+        view = subprocess.run(["samtools", "view", "-@", str(threads), aln] + list(ece_contigs),
+                              check=True, capture_output=True, text=True)
+        seen = set()
+        for line in view.stdout.splitlines():
+            rn = line.split("\t", 1)[0]
+            if rn not in seen:
+                seen.add(rn)
+                fh.write(rn + "\n")
+    # 3. subset original unaligned CCS BAM by those names (tags preserved)
+    subprocess.run(["samtools", "view", "-@", str(threads), "-N", names,
+                    "-b", "-o", ece_bam0, src], check=True)
+    # downsample the ECE reads with the same frac a planted donor would use
+    frac = 1.0 if (not native_dp or native_dp <= 0) else float(target_dp) / float(native_dp)
+    if frac < 1.0:
+        ece_bam = f"{out_prefix}.ece_reads.ds.bam"
+        s_arg = f"{seed}.{int(round(frac * 1000)):03d}"
+        subprocess.run(["samtools", "view", "-@", str(threads), "-b", "-s", s_arg,
+                        "-o", ece_bam, ece_bam0], check=True)
+        downsampled = True
+        os.remove(ece_bam0)
+    else:
+        ece_bam = ece_bam0
+        downsampled = False
+    # 4. ECE-only reference (chromosome omitted)
+    with open(ece_fa, "w") as fout:
+        subprocess.run(["samtools", "faidx", genome] + list(ece_contigs),
+                       check=True, stdout=fout)
+    for tmp in (aln, aln + ".bai", names):
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+    return ece_fa, ece_bam, downsampled
+
+
 # ----------------------------------------------------------------- build one community
 def build_one(label, donor_rows, background_rows, mge_df, seed, threads,
-              keep_prepped=False):
-    """donor_rows / background_rows: DataFrames with Sample, genome, Average_DP, Species."""
+              keep_prepped=False, orphan_rows=None):
+    """donor_rows / background_rows / orphan_rows: DataFrames with Sample, genome,
+    Average_DP, Species. orphan_rows contribute ONLY their ECE (host removed) — the
+    false-positive negative class (Part B)."""
     out_dir = os.path.join(OUT_ROOT, label)
     prep_dir = os.path.join(out_dir, "prepped_bams")
     os.makedirs(prep_dir, exist_ok=True)
@@ -157,9 +221,14 @@ def build_one(label, donor_rows, background_rows, mge_df, seed, threads,
     merged_ref = os.path.join(out_dir, f"{label}.ref.fa")
     merged_bam = os.path.join(out_dir, f"{label}.bam")
 
-    # collect isolate specs (ordered: donors then background), then subsample in parallel
+    # collect isolate specs (ordered: donors, background, then orphans), subsample in parallel.
+    # orphans (host removed, ECE only) are optional and default empty.
+    if orphan_rows is None:
+        orphan_rows = donor_rows.iloc[0:0]
+    ece_by_sample = mge_df.groupby("prefix")["mge_contig"].apply(list)
     specs = ([(row, "donor", DEPTH_DONOR) for _, row in donor_rows.iterrows()] +
-             [(row, "background", DEPTH_BG) for _, row in background_rows.iterrows()])
+             [(row, "background", DEPTH_BG) for _, row in background_rows.iterrows()] +
+             [(row, "orphan", DEPTH_DONOR) for _, row in orphan_rows.iterrows()])
     for row, _, _ in specs:
         genome = row["genome"]
         if not (isinstance(genome, str) and os.path.exists(genome)):
@@ -168,13 +237,21 @@ def build_one(label, donor_rows, background_rows, mge_df, seed, threads,
     def prep_one(spec):
         row, role, target_dp = spec
         sample = row["Sample"]
-        out_bam = os.path.join(prep_dir, f"{sample}.{role}.bam")
-        merge_bam, downsampled = prep_isolate_bam(
-            sample, row.get("Average_DP"), target_dp, out_bam, seed, threads=2)
+        if role == "orphan":
+            eces = ece_by_sample.get(sample, [])
+            ece_fa, merge_bam, downsampled = prep_orphan_bam(
+                sample, row["genome"], eces, row.get("Average_DP"), target_dp,
+                os.path.join(prep_dir, f"{sample}.orphan"), seed, threads=2)
+            genome = ece_fa                       # ECE-only reference (host omitted)
+        else:
+            out_bam = os.path.join(prep_dir, f"{sample}.{role}.bam")
+            merge_bam, downsampled = prep_isolate_bam(
+                sample, row.get("Average_DP"), target_dp, out_bam, seed, threads=2)
+            genome = row["genome"]
         return {
             "sample": sample, "role": role, "species": row.get("Species"),
             "strain": row.get("Strain", sample), "native_dp": row.get("Average_DP"),
-            "target_dp": target_dp, "downsampled": downsampled, "genome": row["genome"],
+            "target_dp": target_dp, "downsampled": downsampled, "genome": genome,
             "merge_bam": merge_bam,
         }
 
@@ -195,16 +272,28 @@ def build_one(label, donor_rows, background_rows, mge_df, seed, threads,
                 fout.write(fin.read())
     subprocess.run(["samtools", "faidx", merged_ref], check=True)
 
-    # ---- MGE list: donors only, deduped on seq_name
+    # ---- MGE list: planted donors + orphans (MODIFI must score orphan ECEs too), deduped
     donor_samples = set(donor_rows["Sample"])
+    orphan_samples = set(orphan_rows["Sample"])
+    scored_samples = donor_samples | orphan_samples
     mge_subset = (
-        mge_df[mge_df["prefix"].isin(donor_samples)][["mge_contig", "mge_type", "mge_length"]]
+        mge_df[mge_df["prefix"].isin(scored_samples)][["mge_contig", "mge_type", "mge_length"]]
         .drop_duplicates("mge_contig")
         .rename(columns={"mge_contig": "seq_name", "mge_length": "length"})
     )
     mge_out = os.path.join(out_dir, f"{label}.mge_list.tsv")
     mge_subset.to_csv(mge_out, index=False, sep="\t")
-    print(f"[{label}] MGE list: {len(mge_subset)} ECEs -> {mge_out}")
+    # ---- orphan ECE list (true host absent) -> evaluator's --orphans negative class
+    orphan_eces = sorted(set(
+        mge_df[mge_df["prefix"].isin(orphan_samples)]["mge_contig"])) if orphan_samples else []
+    if orphan_eces:
+        orphan_out = os.path.join(out_dir, f"{label}.orphans.txt")
+        with open(orphan_out, "w") as fh:
+            fh.write("\n".join(orphan_eces) + "\n")
+        print(f"[{label}] MGE list: {len(mge_subset)} ECEs "
+              f"({len(mge_subset)-len(orphan_eces)} planted + {len(orphan_eces)} orphan) -> {mge_out}")
+    else:
+        print(f"[{label}] MGE list: {len(mge_subset)} ECEs -> {mge_out}")
 
     # ---- merge BAMs (unaligned CCS; MODIFI aligns internally with pbmm2)
     print(f"[{label}] merging {len(bam_files)} BAMs -> {merged_bam}")
@@ -275,7 +364,13 @@ def emit_run_script(label, merged_bam, merged_ref, mge_out, out_dir,
 def build_ladder(sizes, seed, threads, keep_prepped, only=None, tag=""):
     suffix = f"_{tag}" if tag else ""
     donors, _, mge_df = load_pool()
-    reps = donors.groupby("Species").first().reset_index()  # 1 representative / species
+    # 1 representative isolate / species, drawn per-seed (not deterministic .first()):
+    # across replicates the strain chosen for each species varies, so ladder_58 (all
+    # species present) gets genuine compositional variance rather than a fixed set.
+    # Reads are additionally re-subsampled per seed inside prep_isolate_bam.
+    reps = (donors.sample(frac=1, random_state=seed)         # shuffle rows per-seed
+                  .groupby("Species", as_index=False).first()  # 1 random isolate / species
+                  .reset_index(drop=True))
     max_size = max(sizes)
     assert len(reps) >= max_size, (
         f"Only {len(reps)} ECE-donor species available; requested max size {max_size}. "
@@ -299,7 +394,7 @@ def build_ladder(sizes, seed, threads, keep_prepped, only=None, tag=""):
 
 # --------------------------------------------------------------- single community mode
 def build_community(n_species, strains_per_species, n_background, label, seed,
-                    threads, keep_prepped, tag=""):
+                    threads, keep_prepped, tag="", orphan_frac=0.0):
     if tag:
         label = f"{label}_{tag}"
     donors, background, mge_df = load_pool()
@@ -318,28 +413,63 @@ def build_community(n_species, strains_per_species, n_background, label, seed,
         picked.append(strains.sample(n=k, random_state=seed))
     donor_rows = pd.concat(picked, ignore_index=True)
 
-    # background: restrict to isolates with NO detected ECE (MGE_bool==0) so no unscored
-    # ECE contig can be spuriously predicted as a host; prefer species not among the
-    # donors to maximise community richness, then fill from the rest.
+    # ---- orphan split (Part B): remove the host of a seed-varying orphan_frac of donor
+    # SPECIES -> those ECEs become host-absent orphans (false-positive negatives).
+    orphan_rows = donor_rows.iloc[0:0]
+    orphan_species = set()
+    if orphan_frac > 0:
+        sp_shuf = pd.Series(sorted(donor_rows["Species"].unique())).sample(
+            frac=1, random_state=seed).tolist()
+        n_orphan = int(round(len(sp_shuf) * orphan_frac))
+        orphan_species = set(sp_shuf[:n_orphan])
+        orphan_rows = donor_rows[donor_rows["Species"].isin(orphan_species)].copy()
+        donor_rows = donor_rows[~donor_rows["Species"].isin(orphan_species)].copy()
+
+    # background: restrict to ECE-free isolates (MGE_bool==0) so no unscored ECE contig
+    # can be spuriously predicted as a host. Select ROUND-ROBIN across species (one strain
+    # per species per round, new/non-donor species ordered first) to MAXIMISE species
+    # diversity and avoid a few strain-rich species (e.g. H. influenzae, B. pertussis)
+    # dominating the background.
     if n_background > 0:
         bg_pool = background[background["MGE_bool"] == 0].copy()
+        # orphan species must stay ABSENT -> never let a con-specific host slip in via bg
+        if orphan_species:
+            bg_pool = bg_pool[~bg_pool["Species"].isin(orphan_species)]
         donor_species = set(donor_rows["Species"].dropna())
-        new_sp = bg_pool[~bg_pool["Species"].isin(donor_species)]
-        rest = bg_pool[bg_pool["Species"].isin(donor_species)]
-        # one isolate per new species first (richness), then extras if needed
-        new_first = new_sp.groupby("Species", group_keys=False).apply(
-            lambda g: g.sample(1, random_state=seed))
-        ordered = pd.concat([new_first.sample(frac=1, random_state=seed),
-                             new_sp.drop(new_first.index), rest], ignore_index=False)
-        bg_rows = ordered.drop_duplicates("Sample").head(n_background)
+        # per-species strain order shuffled by seed (so replicates draw different strains);
+        # species ordered new/non-donor first, shuffled within each block by seed.
+        groups = {sp: g.sample(frac=1, random_state=seed) for sp, g in bg_pool.groupby("Species")}
+        new_sp = pd.Series([s for s in groups if s not in donor_species]).sample(
+            frac=1, random_state=seed).tolist()
+        ovl_sp = pd.Series([s for s in groups if s in donor_species]).sample(
+            frac=1, random_state=seed).tolist()
+        sp_order = new_sp + ovl_sp
+        selected = []
+        r = 0
+        while len(selected) < n_background:
+            added = 0
+            for sp in sp_order:
+                if len(selected) >= n_background:
+                    break
+                g = groups[sp]
+                if r < len(g):
+                    selected.append(g.iloc[r])
+                    added += 1
+            if added == 0:
+                break  # pool exhausted
+            r += 1
+        bg_rows = pd.DataFrame(selected)
     else:
         bg_rows = background.iloc[0:0]
 
-    print(f"[{label}] donors={len(donor_rows)} "
-          f"({donor_rows['Species'].nunique()} species) background={len(bg_rows)} "
+    print(f"[{label}] planted-donors={len(donor_rows)} "
+          f"({donor_rows['Species'].nunique()} species) "
+          f"orphans={len(orphan_rows)} ({len(orphan_species)} species) "
+          f"background={len(bg_rows)} "
           f"({bg_rows['Species'].nunique() if len(bg_rows) else 0} bg species) "
-          f"=> {len(donor_rows) + len(bg_rows)} genomes")
-    build_one(label, donor_rows, bg_rows, mge_df, seed, threads, keep_prepped)
+          f"=> {len(donor_rows) + len(bg_rows)} host genomes + {len(orphan_rows)} orphan ECEs")
+    build_one(label, donor_rows, bg_rows, mge_df, seed, threads, keep_prepped,
+              orphan_rows=orphan_rows)
 
 
 # ---------------------------------------------------------------------------- CLI
@@ -349,8 +479,10 @@ def main():
     sub = ap.add_subparsers(dest="mode", required=True)
 
     pl = sub.add_parser("ladder", help="donor-only nested species ladder")
-    pl.add_argument("--sizes", default="10,25,40,58",
-                    help="comma-separated nested sizes (default 10,25,40,58; "
+    pl.add_argument("--sizes", default="25,40,58",
+                    help="comma-separated nested sizes (default 25,40,58; ladder_10 "
+                         "dropped — 10 genomes give too few contigs for a reliable "
+                         "unmodified IPD baseline; "
                          "donor-species ceiling ~58)")
     pl.add_argument("--only", default=None,
                     help="build only these sizes (subset of --sizes) while keeping the "
@@ -361,11 +493,14 @@ def main():
     pc.add_argument("--strains-per-species", type=int, default=1)
     pc.add_argument("--n-background", type=int, default=0)
     pc.add_argument("--label", required=True)
+    pc.add_argument("--orphan-frac", type=float, default=0.0,
+                    help="fraction of donor SPECIES whose host is removed to create "
+                         "host-absent orphan ECEs (Part B false-positive test); e.g. 0.5")
 
     for p in (pl, pc):
         p.add_argument("--seed", type=int, default=SEED)
         p.add_argument("--threads", type=int, default=20)
-        p.add_argument("--tag", default="", help="replicate/label suffix, e.g. rep2 -> ladder_10_rep2")
+        p.add_argument("--tag", default="", help="replicate/label suffix, e.g. rep2 -> ladder_25_rep2")
         p.add_argument("--keep-prepped", action="store_true",
                        help="keep per-isolate downsampled BAMs (default: delete after merge)")
 
@@ -378,7 +513,8 @@ def main():
         build_ladder(sizes, args.seed, args.threads, args.keep_prepped, only=only, tag=args.tag)
     else:
         build_community(args.n_species, args.strains_per_species, args.n_background,
-                        args.label, args.seed, args.threads, args.keep_prepped, tag=args.tag)
+                        args.label, args.seed, args.threads, args.keep_prepped, tag=args.tag,
+                        orphan_frac=args.orphan_frac)
 
 
 if __name__ == "__main__":

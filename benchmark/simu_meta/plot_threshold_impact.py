@@ -5,7 +5,7 @@ plot_threshold_impact.py — how each threshold's VALUE changes accuracy (Part G
 Directly interpretable companion to the ROC figure: x-axis = the parameter value,
 y-axis = recall / precision / F1 of the ECE-host assignment, pooled over ALL completed
 ladder + background communities. One parameter is swept while the others are held at
-default (score>0.5, specificity<0.01); the cited threshold is marked. Replicates
+default (score>0.5, specificity<0.01). Replicates
 (seeds 42-46) give a mean +/- SD shaded band. Denominator for recall = every planted
 ECE (unassigned counts as a miss).
 
@@ -26,7 +26,7 @@ os.makedirs(OUT, exist_ok=True)
 plt.rcParams.update({"font.size": 10, "axes.grid": True, "grid.alpha": 0.3})
 BLUE, ORANGE, GREEN, GREY = "#0072B2", "#D55E00", "#009E73", "#888888"
 
-SETTINGS = ["ladder_10", "ladder_25", "ladder_40", "ladder_58", "bg_80", "bg_150", "bg_300"]
+SETTINGS = ["ladder_25", "ladder_40", "ladder_58", "bg_80", "bg_150", "bg_300"]
 S0, P0 = 0.5, 0.01                       # default holds while sweeping another parameter
 
 
@@ -121,8 +121,6 @@ def main():
         band(a, grid, R, BLUE, "recall")
         band(a, grid, P, ORANGE, "precision")
         band(a, grid, F, GREEN, "F1")
-        a.axvline(cited, color=GREY, ls="--", lw=1.5)
-        a.text(cited, 1.04, f"cited\n{cited}", color=GREY, ha="center", va="bottom", fontsize=8)
         if xscale == "log":
             a.set_xscale("log")
         a.set(xlabel=f"{name} threshold", ylabel="metric", ylim=(0, 1.10),

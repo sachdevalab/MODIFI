@@ -14,7 +14,7 @@ slurm-*
 tmp/
 tmp*
 
-# generated per-community SLURM run scripts (benchmark replicates)
+# all SLURM submit/command scripts (generated + drivers) — not pushed to github
 benchmark/simu_meta/cmds/
 *.time
 *pdf

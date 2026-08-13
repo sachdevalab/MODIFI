@@ -3,7 +3,7 @@
 plot_thresholds.py — ROC calibration of MODIFI's linkage thresholds (Part G / C5)
 across ALL completed ladder + background communities.
 
-One ROC line per community setting (ladder_10 ... bg_300), coloured by community size;
+One ROC line per community setting (ladder_25 ... bg_300), coloured by community size;
 the 5 replicates (seeds 42-46) of each setting are averaged onto a common FPR grid and
 shown as mean +/- 1 SD shaded band. Ground truth: an ECE-host pair is correct iff same
 SRA prefix. Two panels: `final_score` and `specificity` as the discriminating parameter.
@@ -28,7 +28,7 @@ os.makedirs(OUT, exist_ok=True)
 plt.rcParams.update({"font.size": 10, "axes.grid": True, "grid.alpha": 0.3})
 
 # settings to include, in size order (label -> approx genome count for colouring)
-SIZE = {"ladder_10": 10, "ladder_25": 25, "ladder_40": 40, "ladder_58": 58,
+SIZE = {"ladder_25": 25, "ladder_40": 40, "ladder_58": 58,
         "bg_80": 80, "bg_150": 153, "bg_300": 304}
 MEAN_FPR = np.linspace(0, 1, 300)
 
