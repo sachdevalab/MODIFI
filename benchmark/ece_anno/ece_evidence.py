@@ -64,19 +64,24 @@ def genomad_prefix(work_dir, sample):
     return cand
 
 
-def load_eces(ece_csv, sample):
-    """ECE rows for this sample from the linkage CSV, deduped by contig."""
+def load_eces(ece_csv, sample, cols):
+    """ECE rows for this sample from the linkage CSV, deduped by contig.
+
+    `cols` maps logical fields -> CSV column names (see --col_* args), so the same
+    engine handles the isolate CSV (mge_contig/prefix/...) and the metagenome CSV
+    (MGE/sample/MGE_cov/...).
+    """
     df = pd.read_csv(ece_csv)
-    df = df[df["prefix"].astype(str) == str(sample)].copy()
-    df = df[~df["mge_contig"].astype(str).str.contains(r"\|provirus", regex=True)]
-    df = df.drop_duplicates("mge_contig")
+    df = df[df[cols["sample"]].astype(str) == str(sample)].copy()
+    df = df[~df[cols["seqname"]].astype(str).str.contains(r"\|provirus", regex=True)]
+    df = df.drop_duplicates(cols["seqname"])
     out = pd.DataFrame({
-        "seq_name": df["mge_contig"].astype(str),
-        "type": df["mge_type"].astype(str),
-        "length": df["mge_length"],
-        "mge_depth": df["mge_depth"],
-        "host_depth": df["host_depth"],
-        "host_lineage": df.get("host_lineage", ""),
+        "seq_name": df[cols["seqname"]].astype(str),
+        "type": df[cols["type"]].astype(str),
+        "length": df[cols["length"]],
+        "mge_depth": df[cols["mgedepth"]],
+        "host_depth": df[cols["hostdepth"]],
+        "host_lineage": df.get(cols["lineage"], ""),
     })
     return out.reset_index(drop=True)
 
@@ -107,11 +112,18 @@ def read_genomad_summaries(work_dir, gp):
 
 
 def load_genes_tsv(work_dir, gp):
-    """geNomad per-gene annotation table (annotate stage). None if cleaned away."""
-    path = os.path.join(work_dir, "Genomad", f"{gp}_annotate", f"{gp}_genes.tsv")
-    if not os.path.exists(path):
+    """geNomad per-gene annotations, read from the ECE-only summary genes tables
+    ({gp}_plasmid_genes.tsv / {gp}_virus_genes.tsv) so we never parse the whole
+    metagenome's annotate/genes.tsv. None if absent."""
+    sdir = os.path.join(work_dir, "Genomad", f"{gp}_summary")
+    frames = []
+    for kind in ("plasmid", "virus"):
+        p = os.path.join(sdir, f"{gp}_{kind}_genes.tsv")
+        if os.path.exists(p):
+            frames.append(pd.read_csv(p, sep="\t"))
+    if not frames:
         return None
-    g = pd.read_csv(path, sep="\t")
+    g = pd.concat(frames, ignore_index=True).drop_duplicates("gene")
     g["contig"] = g["gene"].astype(str).map(au.gene_to_contig)
     return g
 
@@ -134,26 +146,69 @@ def _iter_fasta(path):
         yield name, "".join(seq)
 
 
-def subset_proteins(work_dir, gp, ece_set, ref_fa, out_faa, threads):
-    """Write ECE-only proteins. Reuse geNomad proteins.faa if present, else pyrodigal."""
-    faa = os.path.join(work_dir, "Genomad", f"{gp}_annotate", f"{gp}_proteins.faa")
-    if os.path.exists(faa):
-        n = 0
-        with open(out_faa, "w") as o:
-            for pid, seq in _iter_fasta(faa):
-                if au.gene_to_contig(pid) in ece_set:
+def _extract_ece_contigs(work_dir, sample, gp, contigs, ref_fa, out_fna):
+    """Collect nucleotide sequence for the given ECE contigs only, preferring the
+    existing per-contig FASTAs (<sample>_methylation4/contigs/<contig>.fa) and
+    falling back to a name-indexed seqkit grep from the assembly. Never scans the
+    whole metagenome sequence linearly."""
+    contig_dir = os.path.join(work_dir, f"{sample}_methylation4", "contigs")
+    still = []
+    n = 0
+    with open(out_fna, "w") as o:
+        for c in contigs:
+            pcf = os.path.join(contig_dir, f"{c}.fa")
+            if os.path.exists(pcf):
+                for name, seq in _iter_fasta(pcf):
+                    o.write(f">{c}\n{seq}\n")
+                n += 1
+            else:
+                still.append(c)
+    if still and os.path.exists(ref_fa):  # random-access fetch by name via .fai
+        lst = out_fna + ".names"
+        with open(lst, "w") as lf:
+            lf.write("\n".join(still) + "\n")
+        with open(out_fna, "a") as o:
+            subprocess.run(["seqkit", "grep", "-f", lst, ref_fa],
+                           check=True, stdout=o, stderr=subprocess.DEVNULL)
+        n += len(still)
+    return n
+
+
+def subset_proteins(work_dir, sample, gp, ece_set, ref_fa, out_faa, threads):
+    """Write proteins for the ECE contigs ONLY (never the whole metagenome).
+
+    Reuses geNomad's ECE-only summary protein files
+    ({gp}_summary/{gp}_{plasmid,virus}_proteins.faa); for any ECE contig not covered
+    there (e.g. novel elements geNomad did not classify), predicts ORFs with
+    pyrodigal-gv on that contig's own sequence only.
+    """
+    sdir = os.path.join(work_dir, "Genomad", f"{gp}_summary")
+    src_files = [os.path.join(sdir, f"{gp}_plasmid_proteins.faa"),
+                 os.path.join(sdir, f"{gp}_virus_proteins.faa")]
+    covered, n = set(), 0
+    with open(out_faa, "w") as o:
+        for sf in src_files:
+            if not os.path.exists(sf):
+                continue
+            for pid, seq in _iter_fasta(sf):
+                c = au.gene_to_contig(pid)
+                if c in ece_set:
                     o.write(f">{pid}\n{seq}\n")
                     n += 1
-        return "reused geNomad proteins", n
-    # fallback: extract ECE contigs, run pyrodigal-gv
-    sub_fna = out_faa + ".contigs.fna"
-    with open(out_faa + ".ece.list", "w") as lf:
-        lf.write("\n".join(sorted(ece_set)) + "\n")
-    subprocess.run(["seqkit", "grep", "-f", out_faa + ".ece.list", "-o", sub_fna, ref_fa],
-                   check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    au.run_pyrodigal(sub_fna, out_faa, threads=threads)
-    n = sum(1 for _ in _iter_fasta(out_faa))
-    return "ran pyrodigal (geNomad proteins absent)", n
+                    covered.add(c)
+    src = f"reused geNomad ECE proteins ({len(covered)} contigs)"
+    missing = ece_set - covered
+    if missing:
+        sub_fna = out_faa + ".missing.fna"
+        tmp_faa = out_faa + ".missing.faa"
+        if _extract_ece_contigs(work_dir, sample, gp, missing, ref_fa, sub_fna):
+            au.run_pyrodigal(sub_fna, tmp_faa, threads=threads)
+            with open(out_faa, "a") as o, open(tmp_faa) as fin:
+                for line in fin:
+                    o.write(line)
+            n += sum(1 for _ in _iter_fasta(tmp_faa))
+            src += f" + pyrodigal for {len(missing)} uncovered contig(s)"
+    return src, n
 
 
 # ----------------------------------------------------------------------------
@@ -302,25 +357,42 @@ def ev_genes_crosscheck(genes, ece_set):
     return pd.DataFrame(rows)
 
 
-def ev_coverage_cv(bam, contigs):
-    """Per-contig coverage CV from the BAM (mean/variance via pysam pileup)."""
-    out = {}
-    if not os.path.exists(bam):
-        return out
+def _cv_from_pileup(bam_file, contig, region=None):
     import pysam
-    b = pysam.AlignmentFile(bam, "rb")
-    refset = set(b.references)
-    for c in contigs:
-        if c not in refset:
-            continue
-        L = b.get_reference_length(c)
-        cov = np.zeros(L, dtype=np.int32)
-        for col in b.pileup(c, truncate=True):
+    b = pysam.AlignmentFile(bam_file, "rb")
+    try:
+        L = b.get_reference_length(contig)
+    except (KeyError, ValueError):
+        L = max(b.lengths) if b.lengths else 0
+    if not L:
+        b.close()
+        return float("nan")
+    cov = np.zeros(L, dtype=np.int32)
+    it = b.pileup(contig, truncate=True) if region else b.pileup(truncate=True)
+    for col in it:
+        if 0 <= col.reference_pos < L:
             cov[col.reference_pos] = col.nsegments
-        m = float(cov.mean()) if L else 0.0
-        cv = float(np.sqrt(cov.var()) / m) if m > 0 else float("nan")
-        out[c] = cv
     b.close()
+    m = float(cov.mean())
+    return float(np.sqrt(cov.var()) / m) if m > 0 else float("nan")
+
+
+def ev_coverage_cv(work_dir, sample, contigs, fallback_bam):
+    """Per-contig coverage CV (sqrt(var)/mean of per-base depth).
+
+    Prefers the small per-contig BAMs under <work_dir>/<sample>_methylation4/bams/,
+    falling back to the whole-sample alignment only if a per-contig BAM is absent.
+    """
+    bam_dir = os.path.join(work_dir, f"{sample}_methylation4", "bams")
+    out = {}
+    for c in contigs:
+        pcb = os.path.join(bam_dir, f"{c}.bam")
+        if os.path.exists(pcb):
+            out[c] = _cv_from_pileup(pcb, c, region=False)
+        elif os.path.exists(fallback_bam):
+            out[c] = _cv_from_pileup(fallback_bam, c, region=True)
+        else:
+            out[c] = float("nan")
     return out
 
 
@@ -368,14 +440,25 @@ def main():
     ap.add_argument("--threads", type=int, default=8)
     ap.add_argument("--vogdb", dest="vogdb", action="store_true", default=True)
     ap.add_argument("--no-vogdb", dest="vogdb", action="store_false")
+    # CSV column mapping (defaults = isolate jaccard_same_sample.csv schema)
+    ap.add_argument("--col_sample", default="prefix")
+    ap.add_argument("--col_seqname", default="mge_contig")
+    ap.add_argument("--col_type", default="mge_type")
+    ap.add_argument("--col_length", default="mge_length")
+    ap.add_argument("--col_mgedepth", default="mge_depth")
+    ap.add_argument("--col_hostdepth", default="host_depth")
+    ap.add_argument("--col_lineage", default="host_lineage")
     args = ap.parse_args()
+    cols = {"sample": args.col_sample, "seqname": args.col_seqname, "type": args.col_type,
+            "length": args.col_length, "mgedepth": args.col_mgedepth,
+            "hostdepth": args.col_hostdepth, "lineage": args.col_lineage}
 
     os.makedirs(args.out_dir, exist_ok=True)
     gp = genomad_prefix(args.work_dir, args.sample)
     ref_fa = os.path.join(args.work_dir, f"{args.sample}.hifiasm.p_ctg.rename.fa")
     bam = os.path.join(args.work_dir, f"{args.sample}.align.bam")
 
-    eces = load_eces(args.ece_csv, args.sample)
+    eces = load_eces(args.ece_csv, args.sample, cols)
     if eces.empty:
         print(f"[{args.sample}] no ECEs in CSV; nothing to do.")
         return
@@ -387,7 +470,8 @@ def main():
     genes = load_genes_tsv(args.work_dir, gp)
 
     ece_faa = os.path.join(args.out_dir, "ece_proteins.faa")
-    src, n_prot = subset_proteins(args.work_dir, gp, ece_set, ref_fa, ece_faa, args.threads)
+    src, n_prot = subset_proteins(args.work_dir, args.sample, gp, ece_set, ref_fa,
+                                  ece_faa, args.threads)
     print(f"[{args.sample}] proteins: {src} ({n_prot} ORFs)")
 
     # evidence frames
@@ -420,7 +504,7 @@ def main():
     df["cov_mean"] = pd.to_numeric(df["mge_depth"], errors="coerce")
     df["host_depth"] = pd.to_numeric(df["host_depth"], errors="coerce")
     df["cov_ratio"] = df["cov_mean"] / df["host_depth"]
-    cv_map = ev_coverage_cv(bam, list(ece_set))
+    cv_map = ev_coverage_cv(args.work_dir, args.sample, list(ece_set), bam)
     df["cov_cv"] = df["seq_name"].map(cv_map)
 
     # fill / types

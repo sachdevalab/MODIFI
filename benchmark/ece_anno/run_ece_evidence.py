@@ -26,11 +26,27 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ENGINE = os.path.join(HERE, "ece_evidence.py")
 PY = sys.executable
 
-DEFAULT_CSV = "/home/shuaiw/MODIFI/tmp/figures/motif_sharing/jaccard_same_sample.csv"
-BATCH_ROOT = "/home/shuaiw/borg/paper/isolation/batch2_results"
 DATA_DIR = "/home/shuaiw/borg/revision/ece_anno"
 FIG_DIR = "/home/shuaiw/MODIFI/tmp/rev_figs/ece_anno"
 DB_DIR = os.path.join(DATA_DIR, "db")
+
+# Per-dataset config: CSV, sample-dir root, and CSV column mapping.
+DATASETS = {
+    "isolate": {
+        "csv": "/home/shuaiw/MODIFI/tmp/figures/motif_sharing/jaccard_same_sample.csv",
+        "batch_root": "/home/shuaiw/borg/paper/isolation/batch2_results",
+        "cols": {"sample": "prefix", "seqname": "mge_contig", "type": "mge_type",
+                 "length": "mge_length", "mgedepth": "mge_depth",
+                 "hostdepth": "host_depth", "lineage": "host_lineage"},
+    },
+    "metagenome": {
+        "csv": "/home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/network_99/mge_host_gc_cov.csv",
+        "batch_root": "/home/shuaiw/borg/paper/run2",
+        "cols": {"sample": "sample", "seqname": "MGE", "type": "MGE_type",
+                 "length": "mge_len", "mgedepth": "MGE_cov",
+                 "hostdepth": "host_cov", "lineage": "host_taxa"},
+    },
+}
 
 SUPPORT_COLS = ["support_circular", "support_genomad", "support_marker", "support_coverage"]
 DROP_LEGACY = ["confidence", "confidence_reason"]
@@ -46,9 +62,9 @@ def reclassify(d):
     return d.drop(columns=[c for c in DROP_LEGACY if c in d.columns])
 
 
-def run_one(sample, ece_csv, threads, resume):
-    work_dir = os.path.join(BATCH_ROOT, sample)
-    out_dir = os.path.join(DATA_DIR, "per_sample", sample)
+def run_one(sample, ece_csv, batch_root, per_sample_root, cols, threads, resume):
+    work_dir = os.path.join(batch_root, sample)
+    out_dir = os.path.join(per_sample_root, sample)
     out_tsv = os.path.join(out_dir, "ece_evidence.tsv")
     if resume and os.path.exists(out_tsv):
         return sample, "skipped (resume)", out_tsv
@@ -57,6 +73,8 @@ def run_one(sample, ece_csv, threads, resume):
     cmd = [PY, ENGINE, "--sample", sample, "--work_dir", work_dir,
            "--ece_csv", ece_csv, "--out_dir", out_dir, "--db_dir", DB_DIR,
            "--threads", str(threads)]
+    for k, v in cols.items():
+        cmd += [f"--col_{k}", v]
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         return sample, "ok", out_tsv
@@ -173,7 +191,9 @@ def make_figure(all_df, out_pdf):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ece_csv", default=DEFAULT_CSV)
+    ap.add_argument("--dataset", choices=list(DATASETS), default="isolate",
+                    help="which ECE set: isolate (default) or metagenome")
+    ap.add_argument("--ece_csv", default=None, help="override the dataset's CSV")
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--threads", type=int, default=8)
     ap.add_argument("--resume", action="store_true")
@@ -182,19 +202,29 @@ def main():
                     help="skip running; just aggregate + summarize + plot")
     args = ap.parse_args()
 
-    os.makedirs(os.path.join(DATA_DIR, "per_sample"), exist_ok=True)
+    cfg = DATASETS[args.dataset]
+    ece_csv = args.ece_csv or cfg["csv"]
+    batch_root = cfg["batch_root"]
+    cols = cfg["cols"]
+    # isolate keeps the original DATA_DIR layout; other datasets get a subdir.
+    out_root = DATA_DIR if args.dataset == "isolate" else os.path.join(DATA_DIR, args.dataset)
+    per_sample_root = os.path.join(out_root, "per_sample")
+    fig_name = "ece_evidence.pdf" if args.dataset == "isolate" \
+        else f"ece_evidence_{args.dataset}.pdf"
+    os.makedirs(per_sample_root, exist_ok=True)
     os.makedirs(FIG_DIR, exist_ok=True)
 
     if not args.summary_only:
-        csv = pd.read_csv(args.ece_csv)
-        samples = sorted(csv["prefix"].astype(str).unique())
+        csv = pd.read_csv(ece_csv)
+        samples = sorted(csv[cols["sample"]].astype(str).unique())
         if args.limit:
             samples = samples[: args.limit]
-        print(f"running {len(samples)} samples, jobs={args.jobs}, threads={args.threads}")
+        print(f"[{args.dataset}] running {len(samples)} samples, "
+              f"jobs={args.jobs}, threads={args.threads}")
         done = failed = 0
         with ProcessPoolExecutor(max_workers=args.jobs) as ex:
-            futs = {ex.submit(run_one, s, args.ece_csv, args.threads, args.resume): s
-                    for s in samples}
+            futs = {ex.submit(run_one, s, ece_csv, batch_root, per_sample_root, cols,
+                              args.threads, args.resume): s for s in samples}
             for fut in as_completed(futs):
                 sample, status, _ = fut.result()
                 if status.startswith("FAILED") or status.startswith("MISSING"):
@@ -206,15 +236,15 @@ def main():
                     print(f"  progress {done+failed}/{len(samples)} (ok={done}, fail={failed})")
         print(f"finished: ok={done}, fail={failed}")
 
-    all_df = aggregate(os.path.join(DATA_DIR, "per_sample"))
+    all_df = aggregate(per_sample_root)
     if all_df.empty:
         print("no per-sample results to aggregate.", file=sys.stderr)
         return
-    all_tsv = os.path.join(DATA_DIR, "ece_evidence_all.tsv")
+    all_tsv = os.path.join(out_root, "ece_evidence_all.tsv")
     all_df.to_csv(all_tsv, sep="\t", index=False)
     print(f"wrote {all_tsv} ({len(all_df)} ECEs)")
-    summarize(all_df, os.path.join(DATA_DIR, "ece_evidence_summary.tsv"))
-    make_figure(all_df, os.path.join(FIG_DIR, "ece_evidence.pdf"))
+    summarize(all_df, os.path.join(out_root, "ece_evidence_summary.tsv"))
+    make_figure(all_df, os.path.join(FIG_DIR, fig_name))
 
 
 if __name__ == "__main__":
