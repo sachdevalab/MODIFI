@@ -396,13 +396,18 @@ def build_ladder(sizes, seed, threads, keep_prepped, only=None, tag=""):
 
 # --------------------------------------------------------------- single community mode
 def build_community(n_species, strains_per_species, n_background, label, seed,
-                    threads, keep_prepped, tag="", orphan_frac=0.0):
+                    threads, keep_prepped, tag="", orphan_frac=0.0, species=None):
     if tag:
         label = f"{label}_{tag}"
     donors, background, mge_df = load_pool()
 
-    # pick species, then up to K distinct strains per species
+    # pick species, then up to K distinct strains per species. --species restricts the
+    # donor-species pool to a fixed set (e.g. a single focal species for a strain panel).
     species_pool = donors["Species"].dropna().unique()
+    if species:
+        species_pool = [s for s in species_pool if s in set(species)]
+        if not species_pool:
+            raise SystemExit(f"none of --species {species} found among donor species")
     rng = pd.Series(species_pool).sample(
         n=min(n_species, len(species_pool)), random_state=seed
     ).tolist()
@@ -498,6 +503,9 @@ def main():
     pc.add_argument("--orphan-frac", type=float, default=0.0,
                     help="fraction of donor SPECIES whose host is removed to create "
                          "host-absent orphan ECEs (Part B false-positive test); e.g. 0.5")
+    pc.add_argument("--species", default=None,
+                    help="restrict donor species to this exact name (e.g. 'Escherichia coli') "
+                         "for a single-species strain panel; background stays diverse")
 
     for p in (pl, pc):
         p.add_argument("--seed", type=int, default=SEED)
@@ -516,7 +524,8 @@ def main():
     else:
         build_community(args.n_species, args.strains_per_species, args.n_background,
                         args.label, args.seed, args.threads, args.keep_prepped, tag=args.tag,
-                        orphan_frac=args.orphan_frac)
+                        orphan_frac=args.orphan_frac,
+                        species=[args.species] if args.species else None)
 
 
 if __name__ == "__main__":
