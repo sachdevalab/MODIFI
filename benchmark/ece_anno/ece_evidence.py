@@ -477,7 +477,16 @@ def ev_coverage_cv(work_dir, sample, contigs, fallback_bam):
 # ----------------------------------------------------------------------------
 # Confidence
 # ----------------------------------------------------------------------------
-def decide(row):
+def decide(row, criteria="strict"):
+    """Score one ECE. `criteria`:
+      strict (isolate): very-high needs all four lines (completeness, geNomad, marker,
+        coverage-distinctness) and neither negative flag; chromosomal flag uses SCMG + rRNA.
+      loose (metagenome): very-high needs only geNomad robustness + element marker; the
+        completeness (P1) and coverage-distinctness (P4) lines are recorded but not required,
+        and the chromosomal flag uses rRNA only (SCMG dropped). Fragmented metagenome
+        assemblies rarely carry DTR/ITR, and MGE/host abundances differ, so P1/P4/SCMG
+        over-penalize genuine elements.
+    """
     t = row["type"]
     # P1 completeness: circular (hifiasm cycle or DTR) OR complete linear (ITR).
     p1 = bool(row["circular"]) or bool(row["complete_linear"])
@@ -499,17 +508,19 @@ def decide(row):
           and pd.notna(cv) and cv < CV_MAX)
     n_pos = int(p1) + int(p2) + int(p3) + int(p4)
 
-    # chromosomal fragment: many single-copy core genes OR presence of rRNA genes.
-    flag_chr = ((row["scmg_count"] or 0) >= SCMG_MIN or (row["scmg_fraction"] or 0) > SCMG_FRAC
-                or (row["rrna_count"] or 0) > 0)
+    # chromosomal fragment: rRNA present always; single-copy core genes only in strict mode.
+    flag_chr = (row["rrna_count"] or 0) > 0
+    if criteria == "strict":
+        flag_chr = flag_chr or ((row["scmg_count"] or 0) >= SCMG_MIN
+                                or (row["scmg_fraction"] or 0) > SCMG_FRAC)
     cov_mean = row["cov_mean"]
     flag_art = ((pd.notna(cov_mean) and cov_mean < COV_MIN)
                 or (pd.notna(cv) and cv > CV_ARTIFACT)) and n_pos == 0
 
-    # very-high-confidence ECE = ALL four independent lines pass and no negative flag.
-    # This is a deliberately stringent, high-precision set for validating the
-    # ECE-host linkage method (recall is not the objective here).
-    very_high = p1 and p2 and p3 and p4 and (not flag_chr) and (not flag_art)
+    if criteria == "loose":
+        very_high = p2 and p3 and (not flag_chr) and (not flag_art)
+    else:
+        very_high = p1 and p2 and p3 and p4 and (not flag_chr) and (not flag_art)
     return pd.Series({"support_circular": p1, "support_genomad": p2,
                       "support_marker": p3, "support_coverage": p4,
                       "n_positive_lines": n_pos, "flag_chromosomal": flag_chr,
@@ -529,6 +540,8 @@ def main():
     # existing tblouts are reused, so this is cheap. Disable with --no-vogdb.
     ap.add_argument("--vogdb", dest="vogdb", action="store_true", default=True)
     ap.add_argument("--no-vogdb", dest="vogdb", action="store_false")
+    ap.add_argument("--criteria", choices=["strict", "loose"], default="strict",
+                    help="strict (isolate, all 4 lines) or loose (metagenome, geNomad+marker)")
     # CSV column mapping (defaults = isolate jaccard_same_sample.csv schema)
     ap.add_argument("--col_sample", default="prefix")
     ap.add_argument("--col_seqname", default="mge_contig")
@@ -626,7 +639,7 @@ def main():
     df["genomad_n_hallmarks"] = pd.to_numeric(
         df["genomad_n_hallmarks"], errors="coerce").fillna(0)
 
-    df = pd.concat([df, df.apply(decide, axis=1)], axis=1)
+    df = pd.concat([df, df.apply(decide, axis=1, criteria=args.criteria)], axis=1)
 
     cols = ["seq_name", "type", "length", "host_lineage",
             "circular_hifiasm", "genomad_topology", "circular", "complete_linear",

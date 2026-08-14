@@ -35,6 +35,7 @@ DATASETS = {
     "isolate": {
         "csv": "/home/shuaiw/MODIFI/tmp/figures/motif_sharing/jaccard_same_sample.csv",
         "batch_root": "/home/shuaiw/borg/paper/isolation/batch2_results",
+        "criteria": "strict",
         "cols": {"sample": "prefix", "seqname": "mge_contig", "type": "mge_type",
                  "length": "mge_length", "mgedepth": "mge_depth",
                  "hostdepth": "host_depth", "lineage": "host_lineage"},
@@ -42,6 +43,7 @@ DATASETS = {
     "metagenome": {
         "csv": "/home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/network_99/mge_host_gc_cov.csv",
         "batch_root": "/home/shuaiw/borg/paper/run2",
+        "criteria": "loose",
         "cols": {"sample": "sample", "seqname": "MGE", "type": "MGE_type",
                  "length": "mge_len", "mgedepth": "MGE_cov",
                  "hostdepth": "host_cov", "lineage": "host_taxa"},
@@ -52,17 +54,26 @@ SUPPORT_COLS = ["support_circular", "support_genomad", "support_marker", "suppor
 DROP_LEGACY = ["confidence", "confidence_reason"]
 
 
-def reclassify(d):
-    """(Re)derive very_high_confidence from the stored support/flag columns and drop
-    any legacy High/Medium/Low tiering. Works on both old- and new-schema tables."""
+def reclassify(d, criteria="strict"):
+    """(Re)derive very_high_confidence from the stored support/flag columns.
+    strict = all four support lines; loose = geNomad + marker only. In loose mode the
+    chromosomal flag drops the SCMG component (rRNA-only), recomputed from stored counts."""
     for c in SUPPORT_COLS + ["flag_chromosomal", "flag_artifact"]:
         d[c] = d[c].astype(bool)
-    d["very_high_confidence"] = (d[SUPPORT_COLS].all(axis=1)
-                                 & ~d["flag_chromosomal"] & ~d["flag_artifact"])
+    if criteria == "loose":
+        flag_chr = pd.to_numeric(d.get("rrna_count"), errors="coerce").fillna(0) > 0
+        vh = (d["support_genomad"] & d["support_marker"]
+              & ~flag_chr & ~d["flag_artifact"])
+        d["flag_chromosomal"] = flag_chr
+        d["very_high_confidence"] = vh
+    else:
+        d["very_high_confidence"] = (d[SUPPORT_COLS].all(axis=1)
+                                     & ~d["flag_chromosomal"] & ~d["flag_artifact"])
     return d.drop(columns=[c for c in DROP_LEGACY if c in d.columns])
 
 
-def run_one(sample, ece_csv, batch_root, per_sample_root, cols, threads, resume):
+def run_one(sample, ece_csv, batch_root, per_sample_root, cols, threads, resume,
+            criteria="strict"):
     work_dir = os.path.join(batch_root, sample)
     out_dir = os.path.join(per_sample_root, sample)
     out_tsv = os.path.join(out_dir, "ece_evidence.tsv")
@@ -72,7 +83,7 @@ def run_one(sample, ece_csv, batch_root, per_sample_root, cols, threads, resume)
         return sample, "MISSING work_dir", None
     cmd = [PY, ENGINE, "--sample", sample, "--work_dir", work_dir,
            "--ece_csv", ece_csv, "--out_dir", out_dir, "--db_dir", DB_DIR,
-           "--threads", str(threads)]
+           "--threads", str(threads), "--criteria", criteria]
     for k, v in cols.items():
         cmd += [f"--col_{k}", v]
     try:
@@ -82,7 +93,7 @@ def run_one(sample, ece_csv, batch_root, per_sample_root, cols, threads, resume)
         return sample, f"FAILED: {e.stderr.decode()[-300:]}", None
 
 
-def aggregate(per_sample_dir, rewrite=True):
+def aggregate(per_sample_dir, rewrite=True, criteria="strict"):
     frames = []
     for tsv in sorted(glob.glob(os.path.join(per_sample_dir, "*", "ece_evidence.tsv"))):
         sample = os.path.basename(os.path.dirname(tsv))
@@ -92,7 +103,7 @@ def aggregate(per_sample_dir, rewrite=True):
             continue
         if d.empty:
             continue
-        d = reclassify(d)
+        d = reclassify(d, criteria)
         if rewrite:  # normalize the per-sample table to the new schema on disk
             d.to_csv(tsv, sep="\t", index=False)
         d.insert(0, "sample", sample)
@@ -206,6 +217,7 @@ def main():
     ece_csv = args.ece_csv or cfg["csv"]
     batch_root = cfg["batch_root"]
     cols = cfg["cols"]
+    criteria = cfg.get("criteria", "strict")
     # isolate keeps the original DATA_DIR layout; other datasets get a subdir.
     out_root = DATA_DIR if args.dataset == "isolate" else os.path.join(DATA_DIR, args.dataset)
     per_sample_root = os.path.join(out_root, "per_sample")
@@ -224,7 +236,7 @@ def main():
         done = failed = 0
         with ProcessPoolExecutor(max_workers=args.jobs) as ex:
             futs = {ex.submit(run_one, s, ece_csv, batch_root, per_sample_root, cols,
-                              args.threads, args.resume): s for s in samples}
+                              args.threads, args.resume, criteria): s for s in samples}
             for fut in as_completed(futs):
                 sample, status, _ = fut.result()
                 if status.startswith("FAILED") or status.startswith("MISSING"):
@@ -236,7 +248,7 @@ def main():
                     print(f"  progress {done+failed}/{len(samples)} (ok={done}, fail={failed})")
         print(f"finished: ok={done}, fail={failed}")
 
-    all_df = aggregate(per_sample_root)
+    all_df = aggregate(per_sample_root, criteria=criteria)
     if all_df.empty:
         print("no per-sample results to aggregate.", file=sys.stderr)
         return
