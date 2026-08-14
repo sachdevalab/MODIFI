@@ -67,10 +67,14 @@ fi
 echo "  checkm2: $([ -f "$OUT/checkm2/quality_report.tsv" ] && echo OK || echo MISSING)"
 
 # 4. geNomad ECE calling ----------------------------------------------------------
+# geNomad ships as a Singularity container whose /opt/conda/bin (mmseqs+genomad) is NOT
+# on PATH by default -> geNomad's which('mmseqs') fails. Bypass the wrapper and set PATH
+# inside the container. /home and /groups are auto-bound (borg -> /groups/...).
 step "4. geNomad end-to-end"
+SIF=/shared/software/genomad/1.11.0/container/genomad.sif
 if [ ! -d "$OUT/Genomad/toy.contigs_summary" ]; then
-  genomad end-to-end --relaxed --enable-score-calibration --sensitivity 7.0 \
-      --threads $T --force-auto --cleanup "$OUT/toy.contigs.fa" "$OUT/Genomad" "$DB"
+  /usr/local/bin/singularity exec --bind /home,/groups "$SIF" bash -c \
+    "export PATH=/opt/conda/bin:\$PATH; genomad end-to-end --relaxed --enable-score-calibration --sensitivity 7.0 --threads $T --force-auto --cleanup '$OUT/toy.contigs.fa' '$OUT/Genomad' '$DB'"
 fi
 [ -f "$OUT/toy.mge.tsv" ] || $PY "$E2E/genomad_to_mge.py" \
     "$OUT/Genomad/toy.contigs_summary" "$OUT/toy.mge.tsv"

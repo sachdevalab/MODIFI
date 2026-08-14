@@ -14,12 +14,15 @@ import pandas as pd
 
 
 def run_hmmsearch(input_faa, hmm_db, out_tblout, threads=8,
-                  cut_ga=False, cut_tc=False, evalue=1e-5):
+                  cut_ga=False, cut_tc=False, evalue=1e-5, reuse=False):
     """Run hmmsearch of `input_faa` against a pressed `hmm_db`, writing --tblout.
 
     Uses profile gathering/trusted cutoffs when requested, else an E-value cutoff.
     Returns out_tblout. If input has no sequences, writes an empty tblout and returns.
+    If `reuse` and a non-empty tblout already exists, it is kept (skips the search).
     """
+    if reuse and os.path.exists(out_tblout) and os.path.getsize(out_tblout) > 0:
+        return out_tblout
     if not os.path.exists(input_faa) or os.path.getsize(input_faa) == 0:
         open(out_tblout, "w").close()
         return out_tblout

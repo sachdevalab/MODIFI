@@ -15,7 +15,7 @@ import sys
 
 # Curated Pfam accessions for phage structural markers -> marker class.
 # (verified present in Pfam-A 37 with matching DESC lines)
-MARKER_CLASSES = {
+VIRAL_CLASSES = {
     "PF03354": "terminase_large",   # Terminase large subunit, ATPase domain
     "PF04466": "terminase_large",   # Phage terminase large subunit
     "PF05876": "terminase_large",   # Phage terminase large subunit gpA, ATPase domain
@@ -29,6 +29,22 @@ MARKER_CLASSES = {
     "PF05136": "portal",            # Phage portal protein, lambda family
 }
 
+# Plasmid hallmark markers: replication-initiation + partition (ParA/ParB) proteins.
+PLASMID_CLASSES = {
+    "PF01446": "rep_initiation",    # Replication protein (Rep_1)
+    "PF01719": "rep_initiation",    # Plasmid replication protein, origin binding (Rep_2)
+    "PF01051": "rep_initiation",    # Initiator Replication protein, WH1 (Rep_3)
+    "PF02486": "rep_initiation",    # Replication initiation factor (Rep_trans)
+    "PF18008": "rep_initiation",    # Replication initiator protein A, C-terminal
+    "PF06970": "rep_initiation",    # Replication initiator protein A (RepA), N-terminus
+    "PF02195": "partition",         # ParB/Sulfiredoxin (ParB)
+    "PF17762": "partition",         # HTH domain found in ParB protein
+    "PF18607": "partition",         # ParA helix-turn-helix domain
+    "PF01656": "partition",         # CobQ/CobB/MinD/ParA nucleotide-binding (ParA ATPase)
+}
+
+MARKER_SETS = {"viral": VIRAL_CLASSES, "plasmid": PLASMID_CLASSES}
+
 
 def base_acc(acc: str) -> str:
     """Strip the Pfam version suffix, e.g. PF03354.14 -> PF03354."""
@@ -37,10 +53,12 @@ def base_acc(acc: str) -> str:
 
 def main():
     pfam_hmm, out_hmm = sys.argv[1], sys.argv[2]
+    marker_set = sys.argv[3] if len(sys.argv) > 3 else "viral"
+    classes = MARKER_SETS[marker_set]
     out_dir = os.path.dirname(os.path.abspath(out_hmm))
     os.makedirs(out_dir, exist_ok=True)
 
-    wanted = set(MARKER_CLASSES)
+    wanted = set(classes)
     found = {}  # base_acc -> (pfam_name, has_ga)
 
     with open(pfam_hmm) as fin, open(out_hmm, "w") as fout:
@@ -76,10 +94,10 @@ def main():
     map_path = os.path.join(out_dir, "marker_map.tsv")
     with open(map_path, "w") as m:
         m.write("accession\tclass\tpfam_name\thas_ga\n")
-        for acc in MARKER_CLASSES:
+        for acc in classes:
             name, has_ga = found.get(acc, (None, None))
             status = "MISSING" if acc not in found else ""
-            m.write(f"{acc}\t{MARKER_CLASSES[acc]}\t{name or status}\t{int(bool(has_ga))}\n")
+            m.write(f"{acc}\t{classes[acc]}\t{name or status}\t{int(bool(has_ga))}\n")
 
     missing = wanted - set(found)
     print(f"[build_viral_hmm] extracted {len(found)}/{len(wanted)} models -> {out_hmm}")

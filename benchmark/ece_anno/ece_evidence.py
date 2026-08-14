@@ -37,7 +37,8 @@ import parse_conjscan as pcj
 # ----------------------------------------------------------------------------
 # Tunable thresholds
 # ----------------------------------------------------------------------------
-GENOMAD_FDR_MAX = 0.05      # default-preset FDR cutoff for robustness re-thresholding
+GENOMAD_SCORE_MIN = 0.8     # strict (conservative-like) score floor for P2
+GENOMAD_FDR_MAX = 0.05      # strict FDR cutoff for P2
 COV_RATIO_LOW = 0.75        # coverage-distinctness band (P4)
 COV_RATIO_HIGH = 1.33
 CV_MAX = 0.75               # max CV for "uniform" coverage (P4)
@@ -45,9 +46,13 @@ CV_ARTIFACT = 1.5           # CV above this contributes to artifact flag
 COV_MIN = 1.0               # mean depth below this contributes to artifact flag
 SCMG_MIN = 5                # >= this many chromosomal single-copy markers -> chromosomal flag
 SCMG_FRAC = 0.10            # or this fraction of a marker set
+VIR_MIN_CLASSES = 2         # virus P3 needs >= this many distinct structural classes
 VOGDB_HMM = "/shared/db/vogdb/latest/hmm/VOG.all.hmm"
 
-CIRCULAR_TOPOLOGY = {"DTR", "ITR"}
+# Circularity = a closed circle only. DTR (direct terminal repeat) => circular;
+# ITR (inverted terminal repeat) => a COMPLETE LINEAR genome (not circular).
+CIRCULAR_TOPOLOGY = {"DTR"}
+COMPLETE_LINEAR_TOPOLOGY = {"ITR"}
 
 
 # ----------------------------------------------------------------------------
@@ -215,14 +220,19 @@ def subset_proteins(work_dir, sample, gp, ece_set, ref_fa, out_faa, threads):
 # Evidence lines
 # ----------------------------------------------------------------------------
 def ev_circularity(eces, gmd):
+    """Completeness signals. circular = hifiasm graph-cycle OR DTR; complete_linear = ITR
+    (a complete linear genome, NOT circular). Either indicates a complete, non-fragment
+    element and satisfies the P1 completeness line."""
     rows = []
     for name in eces["seq_name"]:
-        topo = gmd.get(name, {}).get("genomad_topology", "") or ""
+        topo = str(gmd.get(name, {}).get("genomad_topology", "") or "")
         circ_h = name.endswith("C")
-        tr = str(topo) in CIRCULAR_TOPOLOGY
+        circular = circ_h or (topo in CIRCULAR_TOPOLOGY)
+        complete_linear = topo in COMPLETE_LINEAR_TOPOLOGY
         rows.append({"seq_name": name, "circular_hifiasm": circ_h,
-                     "genomad_topology": topo, "terminal_repeat": tr,
-                     "circular_support": int(circ_h) + int(tr)})
+                     "genomad_topology": topo, "circular": circular,
+                     "complete_linear": complete_linear,
+                     "complete_support": int(circular) + int(complete_linear)})
     return pd.DataFrame(rows)
 
 
@@ -235,15 +245,16 @@ def ev_conjscan(out_dir, ece_faa, threads):
                            "/home/shuaiw/miniconda3/envs/conjscan/bin/macsyfinder")
     if os.path.getsize(ece_faa) == 0:
         return pd.DataFrame(columns=["seq_name", "conjscan_type", "conjscan_anno"])
-    if os.path.isdir(cj_dir):
-        subprocess.run(["rm", "-rf", cj_dir], check=False)
-    try:
-        subprocess.run([macsy, "--db-type", "gembase", "-o", cj_dir,
-                        "--sequence-db", ece_faa, "-w", str(threads), "-m", "CONJScan"],
-                       check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError as e:
-        print(f"[conjscan] failed: {e}", file=sys.stderr)
-        return pd.DataFrame(columns=["seq_name", "conjscan_type", "conjscan_anno"])
+    if not os.path.exists(summary):  # reuse existing ConjScan run if present
+        if os.path.isdir(cj_dir):
+            subprocess.run(["rm", "-rf", cj_dir], check=False)
+        try:
+            subprocess.run([macsy, "--db-type", "gembase", "-o", cj_dir,
+                            "--sequence-db", ece_faa, "-w", str(threads), "-m", "CONJScan"],
+                           check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError as e:
+            print(f"[conjscan] failed: {e}", file=sys.stderr)
+            return pd.DataFrame(columns=["seq_name", "conjscan_type", "conjscan_anno"])
     if not os.path.exists(summary):
         return pd.DataFrame(columns=["seq_name", "conjscan_type", "conjscan_anno"])
     parsed = pcj.parse_conjscan(summary, os.path.join(cj_dir, "conjscan_parsed.tsv"))
@@ -271,47 +282,114 @@ def _count_hits_per_contig(tblout, colname):
 
 
 VIRAL_COLS = ["seq_name", "vir_terminase_large", "vir_terminase_small",
-              "vir_major_capsid", "vir_portal", "vir_marker_total", "vog_hallmark_hits"]
+              "vir_major_capsid", "vir_portal", "vir_marker_total", "vir_n_classes",
+              "vog_hallmark_hits"]
 SCMG_COLS = ["seq_name", "scmg_bac_count", "scmg_arc_count", "scmg_count", "scmg_fraction"]
+PLAS_COLS = ["seq_name", "plas_rep_initiation", "plas_partition", "plas_marker_total"]
 
 
 def ev_viral(out_dir, ece_faa, db_dir, threads, use_vogdb):
+    """Detect the four phage structural classes (terminase L/S, major capsid, portal)
+    per contig. A class is present if EITHER the independent curated Pfam profiles OR
+    VOGdb (mapped by consensus function) detect it. vir_n_classes = size of that union;
+    this drives the virus P3 line (>= VIR_MIN_CLASSES)."""
+    classes = ["terminase_large", "terminase_small", "major_capsid", "portal"]
     vir_hmm = os.path.join(db_dir, "viral_markers", "viral_markers.hmm")
-    mapf = os.path.join(db_dir, "viral_markers", "marker_map.tsv")
-    mp = pd.read_csv(mapf, sep="\t")
+    mp = pd.read_csv(os.path.join(db_dir, "viral_markers", "marker_map.tsv"), sep="\t")
     acc2class = dict(zip(mp["accession"], mp["class"]))
     tbl = os.path.join(out_dir, "viral_pfam.tblout")
-    au.run_hmmsearch(ece_faa, vir_hmm, tbl, threads=threads, cut_ga=True)
+    au.run_hmmsearch(ece_faa, vir_hmm, tbl, threads=threads, cut_ga=True, reuse=True)
     df = au.parse_hmmer_tblout(tbl)
-    classes = ["terminase_large", "terminase_small", "major_capsid", "portal"]
-    percontig = {}
+    pfam = {}  # contig -> {class: set(genes)}
     if not df.empty:
         df["contig"] = df["gene_id"].map(au.gene_to_contig)
         df["class"] = df["query_acc"].map(acc2class)
-        # distinct genes per (contig,class)
         for (contig, cls), sub in df.groupby(["contig", "class"]):
-            percontig.setdefault(contig, {}).setdefault(cls, set()).update(sub["gene_id"])
-    # VOGdb backstop
-    vog_counts = {}
-    if use_vogdb and os.path.exists(VOGDB_HMM) and os.path.getsize(ece_faa) > 0:
-        vtbl = os.path.join(out_dir, "viral_vogdb.tblout")
-        au.run_hmmsearch(ece_faa, VOGDB_HMM, vtbl, threads=threads, evalue=1e-5)
-        s, _ = _count_hits_per_contig(vtbl, "vog")
-        vog_counts = s.to_dict()
+            pfam.setdefault(contig, {}).setdefault(cls, set()).update(sub["gene_id"])
+
+    # VOGdb structural classes (reuse tblout if present; map VOG -> class by function)
+    vog_cls = {}       # contig -> set(class)
+    vog_counts = {}    # contig -> total VOG hits (info)
+    vmapf = os.path.join(db_dir, "viral_markers", "vog_structural_map.tsv")
+    vtbl = os.path.join(out_dir, "viral_vogdb.tblout")
+    if (use_vogdb and os.path.exists(vmapf)
+            and (os.path.exists(vtbl) or os.path.getsize(ece_faa) > 0)):
+        if os.path.exists(VOGDB_HMM):
+            au.run_hmmsearch(ece_faa, VOGDB_HMM, vtbl, threads=threads, evalue=1e-5, reuse=True)
+        vog2c = dict(zip(*[pd.read_csv(vmapf, sep="\t")[c] for c in ("vog", "class")]))
+        vh = au.parse_hmmer_tblout(vtbl)
+        if not vh.empty:
+            vh["contig"] = vh["gene_id"].map(au.gene_to_contig)
+            for contig, sub in vh.groupby("contig"):
+                vog_counts[contig] = int(sub["gene_id"].nunique())
+                cls = {vog2c[q] for q in sub["query_name"] if q in vog2c}
+                if cls:
+                    vog_cls[contig] = cls
+
     rows = []
-    for name in set(percontig) | set(vog_counts):
-        cc = percontig.get(name, {})
-        counts = {c: len(cc.get(c, set())) for c in classes}
+    for name in set(pfam) | set(vog_counts):
+        pf = {c: len(pfam.get(name, {}).get(c, set())) for c in classes}
+        present = {c for c in classes if pf[c] > 0} | vog_cls.get(name, set())
         rows.append({
             "seq_name": name,
-            "vir_terminase_large": counts["terminase_large"],
-            "vir_terminase_small": counts["terminase_small"],
-            "vir_major_capsid": counts["major_capsid"],
-            "vir_portal": counts["portal"],
-            "vir_marker_total": sum(counts.values()),
+            "vir_terminase_large": pf["terminase_large"],
+            "vir_terminase_small": pf["terminase_small"],
+            "vir_major_capsid": pf["major_capsid"],
+            "vir_portal": pf["portal"],
+            "vir_marker_total": sum(pf.values()),
+            "vir_n_classes": len(present),  # union of Pfam + VOGdb structural classes
             "vog_hallmark_hits": int(vog_counts.get(name, 0)),
         })
     return pd.DataFrame(rows, columns=VIRAL_COLS)
+
+
+def ev_plasmid_markers(out_dir, ece_faa, db_dir, threads):
+    """Plasmid hallmark markers: replication-initiation (Rep) + partition (ParA/ParB)."""
+    hmm = os.path.join(db_dir, "plasmid_markers", "plasmid_markers.hmm")
+    mapf = os.path.join(db_dir, "plasmid_markers", "marker_map.tsv")
+    if not os.path.exists(hmm):
+        return pd.DataFrame(columns=PLAS_COLS)
+    acc2class = dict(zip(*[pd.read_csv(mapf, sep="\t")[c] for c in ("accession", "class")]))
+    tbl = os.path.join(out_dir, "plasmid_pfam.tblout")
+    au.run_hmmsearch(ece_faa, hmm, tbl, threads=threads, cut_ga=True, reuse=True)
+    df = au.parse_hmmer_tblout(tbl)
+    rows = []
+    if not df.empty:
+        df["contig"] = df["gene_id"].map(au.gene_to_contig)
+        df["class"] = df["query_acc"].map(acc2class)
+        for contig, sub in df.groupby("contig"):
+            rep = sub.loc[sub["class"] == "rep_initiation", "gene_id"].nunique()
+            par = sub.loc[sub["class"] == "partition", "gene_id"].nunique()
+            rows.append({"seq_name": contig, "plas_rep_initiation": int(rep),
+                         "plas_partition": int(par), "plas_marker_total": int(rep + par)})
+    return pd.DataFrame(rows, columns=PLAS_COLS)
+
+
+def ev_rrna(out_dir, ece_fna, db_dir, threads):
+    """Detect rRNA genes (16S/23S) on the ECE contigs via cmsearch vs Rfam CMs.
+    Presence of rRNA is chromosomal evidence (ECEs are depleted of rRNA)."""
+    cm = os.path.join(db_dir, "rrna", "rrna.cm")
+    if not os.path.exists(cm) or not os.path.exists(ece_fna) or os.path.getsize(ece_fna) == 0:
+        return {}
+    tbl = os.path.join(out_dir, "rrna.tblout")
+    if not (os.path.exists(tbl) and os.path.getsize(tbl) > 0):  # reuse if present
+        try:
+            subprocess.run(["cmsearch", "--cut_ga", "--noali", "--cpu", str(threads),
+                            "--tblout", tbl, cm, ece_fna],
+                           check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError as e:
+            print(f"[rrna] cmsearch failed: {e}", file=sys.stderr)
+            return {}
+    counts = {}
+    if os.path.exists(tbl):
+        with open(tbl) as f:
+            for line in f:
+                if line.startswith("#") or not line.strip():
+                    continue
+                p = line.split()
+                # tblout: col0 = target (contig) name
+                counts[p[0]] = counts.get(p[0], 0) + 1
+    return counts
 
 
 def ev_scmg(out_dir, ece_faa, db_dir, threads):
@@ -320,7 +398,7 @@ def ev_scmg(out_dir, ece_faa, db_dir, threads):
     for base in ("bac71", "arc76"):
         hmm = os.path.join(db_dir, "scmg", f"{base}.hmm")
         tbl = os.path.join(out_dir, f"scmg_{base}.tblout")
-        au.run_hmmsearch(ece_faa, hmm, tbl, threads=threads, cut_ga=True)
+        au.run_hmmsearch(ece_faa, hmm, tbl, threads=threads, cut_ga=True, reuse=True)
         df = au.parse_hmmer_tblout(tbl)
         if df.empty:
             continue
@@ -401,20 +479,29 @@ def ev_coverage_cv(work_dir, sample, contigs, fallback_bam):
 # ----------------------------------------------------------------------------
 def decide(row):
     t = row["type"]
-    p1 = bool(row["circular_hifiasm"]) or bool(row["terminal_repeat"])
-    p2 = bool(row["survives_default_threshold"]) and (row["genomad_n_hallmarks"] or 0) >= 1
+    # P1 completeness: circular (hifiasm cycle or DTR) OR complete linear (ITR).
+    p1 = bool(row["circular"]) or bool(row["complete_linear"])
+    # P2 geNomad robustness (strict): calibrated score >= 0.8 AND FDR <= 0.05.
+    p2 = (row["genomad_score"] or 0) >= GENOMAD_SCORE_MIN and \
+         pd.notna(row["genomad_fdr"]) and row["genomad_fdr"] <= GENOMAD_FDR_MAX
+    # P3 type-specific marker (stringent).
     if t == "virus":
-        p3 = (row["vir_marker_total"] or 0) >= 1 or (row["vog_hallmark_hits"] or 0) >= 1
+        # >= 2 distinct structural classes (terminase L/S, capsid, portal) — avoids
+        # single phage-tail hallmark false positives.
+        p3 = (row["vir_n_classes"] or 0) >= VIR_MIN_CLASSES
     else:  # plasmid / novel
         p3 = (row["conjscan_type"] not in (None, "None", "")) or \
-             (row["genomad_conjugation_genes"] or 0) > 0
+             (row["genomad_conjugation_genes"] or 0) > 0 or \
+             (row["plas_marker_total"] or 0) > 0
     ratio = row["cov_ratio"]
     cv = row["cov_cv"]
     p4 = (pd.notna(ratio) and (ratio < COV_RATIO_LOW or ratio > COV_RATIO_HIGH)
           and pd.notna(cv) and cv < CV_MAX)
     n_pos = int(p1) + int(p2) + int(p3) + int(p4)
 
-    flag_chr = (row["scmg_count"] or 0) >= SCMG_MIN or (row["scmg_fraction"] or 0) > SCMG_FRAC
+    # chromosomal fragment: many single-copy core genes OR presence of rRNA genes.
+    flag_chr = ((row["scmg_count"] or 0) >= SCMG_MIN or (row["scmg_fraction"] or 0) > SCMG_FRAC
+                or (row["rrna_count"] or 0) > 0)
     cov_mean = row["cov_mean"]
     flag_art = ((pd.notna(cov_mean) and cov_mean < COV_MIN)
                 or (pd.notna(cv) and cv > CV_ARTIFACT)) and n_pos == 0
@@ -438,6 +525,8 @@ def main():
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--db_dir", default="/home/shuaiw/borg/revision/ece_anno/db")
     ap.add_argument("--threads", type=int, default=8)
+    # VOGdb contributes to viral structural-class detection (union with Pfam); the
+    # existing tblouts are reused, so this is cheap. Disable with --no-vogdb.
     ap.add_argument("--vogdb", dest="vogdb", action="store_true", default=True)
     ap.add_argument("--no-vogdb", dest="vogdb", action="store_false")
     # CSV column mapping (defaults = isolate jaccard_same_sample.csv schema)
@@ -473,18 +562,26 @@ def main():
     src, n_prot = subset_proteins(args.work_dir, args.sample, gp, ece_set, ref_fa,
                                   ece_faa, args.threads)
     print(f"[{args.sample}] proteins: {src} ({n_prot} ORFs)")
+    # ECE contig nucleotides (for rRNA cmsearch) — ECE contigs only, never the whole assembly
+    ece_fna = os.path.join(args.out_dir, "ece_contigs.fna")
+    _extract_ece_contigs(args.work_dir, args.sample, gp, ece_set, ref_fa, ece_fna)
 
     # evidence frames
     df = eces.copy()
     df = df.merge(ev_circularity(eces, gmd), on="seq_name", how="left")
     df = df.merge(ev_conjscan(args.out_dir, ece_faa, args.threads), on="seq_name", how="left")
-    # VOGdb is the expensive scan; only run it when a virus-type ECE is present.
+    # VOGdb is off by default (info only); only scan when a virus ECE is present.
     run_vogdb = args.vogdb and bool((eces["type"] == "virus").any())
     df = df.merge(ev_viral(args.out_dir, ece_faa, args.db_dir, args.threads, run_vogdb),
+                  on="seq_name", how="left")
+    df = df.merge(ev_plasmid_markers(args.out_dir, ece_faa, args.db_dir, args.threads),
                   on="seq_name", how="left")
     df = df.merge(ev_scmg(args.out_dir, ece_faa, args.db_dir, args.threads),
                   on="seq_name", how="left")
     df = df.merge(ev_genes_crosscheck(genes, ece_set), on="seq_name", how="left")
+    # rRNA presence (chromosomal signal)
+    rrna_map = ev_rrna(args.out_dir, ece_fna, args.db_dir, args.threads)
+    df["rrna_count"] = df["seq_name"].map(rrna_map)
 
     # geNomad robustness columns (genomad_topology already provided by ev_circularity)
     gsum = pd.DataFrame([{"seq_name": k, "genomad_score": v["genomad_score"],
@@ -498,7 +595,10 @@ def main():
               "genomad_conjugation_genes"]:
         if c not in df.columns:
             df[c] = np.nan
-    df["survives_default_threshold"] = df["genomad_fdr"] <= GENOMAD_FDR_MAX
+    df["genomad_score"] = pd.to_numeric(df["genomad_score"], errors="coerce")
+    df["genomad_fdr"] = pd.to_numeric(df["genomad_fdr"], errors="coerce")
+    df["survives_strict"] = (df["genomad_score"] >= GENOMAD_SCORE_MIN) & \
+                            (df["genomad_fdr"] <= GENOMAD_FDR_MAX)
 
     # coverage
     df["cov_mean"] = pd.to_numeric(df["mge_depth"], errors="coerce")
@@ -508,15 +608,16 @@ def main():
     df["cov_cv"] = df["seq_name"].map(cv_map)
 
     # fill / types
-    int_cols = ["circular_support", "vir_terminase_large", "vir_terminase_small",
-                "vir_major_capsid", "vir_portal", "vir_marker_total", "vog_hallmark_hits",
-                "scmg_bac_count", "scmg_arc_count", "scmg_count", "genes_uscg",
-                "genes_virus_hallmark", "genes_conjscan_hits"]
+    int_cols = ["complete_support", "vir_terminase_large", "vir_terminase_small",
+                "vir_major_capsid", "vir_portal", "vir_marker_total", "vir_n_classes",
+                "vog_hallmark_hits", "plas_rep_initiation", "plas_partition",
+                "plas_marker_total", "scmg_bac_count", "scmg_arc_count", "scmg_count",
+                "genes_uscg", "genes_virus_hallmark", "genes_conjscan_hits", "rrna_count"]
     for c in int_cols:
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
     df["scmg_fraction"] = pd.to_numeric(df.get("scmg_fraction"), errors="coerce").fillna(0.0)
-    for c in ["circular_hifiasm", "terminal_repeat"]:
+    for c in ["circular_hifiasm", "circular", "complete_linear"]:
         df[c] = df[c].fillna(False).astype(bool)
     df["conjscan_type"] = df["conjscan_type"].fillna("None")
     df["conjscan_anno"] = df.get("conjscan_anno", "").fillna("")
@@ -528,13 +629,16 @@ def main():
     df = pd.concat([df, df.apply(decide, axis=1)], axis=1)
 
     cols = ["seq_name", "type", "length", "host_lineage",
-            "circular_hifiasm", "genomad_topology", "terminal_repeat", "circular_support",
+            "circular_hifiasm", "genomad_topology", "circular", "complete_linear",
+            "complete_support",
             "conjscan_type", "conjscan_anno", "genomad_conjugation_genes", "genes_conjscan_hits",
+            "plas_rep_initiation", "plas_partition", "plas_marker_total",
             "vir_terminase_large", "vir_terminase_small", "vir_major_capsid", "vir_portal",
-            "vir_marker_total", "vog_hallmark_hits", "genes_virus_hallmark",
+            "vir_marker_total", "vir_n_classes", "vog_hallmark_hits", "genes_virus_hallmark",
             "scmg_bac_count", "scmg_arc_count", "scmg_count", "scmg_fraction", "genes_uscg",
+            "rrna_count",
             "cov_mean", "cov_cv", "host_depth", "cov_ratio",
-            "genomad_score", "genomad_fdr", "genomad_n_hallmarks", "survives_default_threshold",
+            "genomad_score", "genomad_fdr", "genomad_n_hallmarks", "survives_strict",
             "support_circular", "support_genomad", "support_marker", "support_coverage",
             "n_positive_lines", "flag_chromosomal", "flag_artifact", "very_high_confidence"]
     df = df[[c for c in cols if c in df.columns]]
