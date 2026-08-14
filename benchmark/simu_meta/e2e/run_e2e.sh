@@ -9,10 +9,17 @@ DB=/groups/diamond/databases/genomad/v1.7/
 GGRENAME=/home/rohan/dev/pipeline/workflow/scripts/gg_rename_assembly.py
 PY=/home/shuaiw/miniconda3/envs/modifi/bin/python
 export PATH=/shared/software/bin:$PATH
-T=16
+T=${SLURM_CPUS_ON_NODE:-${E2E_THREADS:-16}}     # full node on SLURM, else 16
 cd "$OUT"
 
 step(){ echo -e "\n=== [$(date +%H:%M)] $* ==="; }
+
+# 0. reads: generate HiFi fastq from the merged BAM if not already present --------
+step "0. fastq from merged BAM"
+if [ ! -f "$OUT/toy.fq.gz" ]; then
+  samtools fastq -@ $T "$OUT/toy.bam" | gzip -c > "$OUT/toy.fq.gz"
+fi
+echo "  reads: $(du -h "$OUT/toy.fq.gz" | cut -f1)"
 
 # 1. de-novo co-assembly ----------------------------------------------------------
 step "1. hifiasm_meta co-assembly"

@@ -2,12 +2,10 @@
 """
 plot_threshold_impact.py — how each threshold's VALUE changes accuracy (Part G / C5).
 
-Directly interpretable companion to the ROC figure: x-axis = the parameter value,
-y-axis = recall / precision / F1 of the ECE-host assignment, pooled over ALL completed
-ladder + background communities. One parameter is swept while the others are held at
-default (score>0.5, specificity<0.01). Replicates
-(seeds 42-46) give a mean +/- SD shaded band. Denominator for recall = every planted
-ECE (unassigned counts as a miss).
+Computed on the bg_300 community (300 genomes — the microbiome-scale complexity point):
+x-axis = the parameter value, y-axis = recall / precision / F1 of the ECE-host assignment.
+One parameter is swept while the others are held at default (score>0.5, specificity<0.01).
+Denominator for recall = every planted ECE (unassigned counts as a miss).
 
 Vector PDF -> /home/shuaiw/MODIFI/tmp/rev_figs/simu_meta/threshold/threshold_impact.pdf
 """
@@ -26,7 +24,7 @@ os.makedirs(OUT, exist_ok=True)
 plt.rcParams.update({"font.size": 10, "axes.grid": True, "grid.alpha": 0.3})
 BLUE, ORANGE, GREEN, GREY = "#0072B2", "#D55E00", "#009E73", "#888888"
 
-SETTINGS = ["ladder_25", "ladder_40", "ladder_58", "bg_80", "bg_150", "bg_300"]
+SETTING = "bg_300"                       # microbiome-scale complexity point
 S0, P0 = 0.5, 0.01                       # default holds while sweeping another parameter
 
 
@@ -49,27 +47,18 @@ def mean_ece_frac(mi):
     return float(np.mean(fr)) if fr else 0.0
 
 
-def gather_rep(rep):
-    """Pool best-host calls (host_summary) + total ECE count over all settings for one
-    replicate. rep 1 = bare labels; rep>=2 = _repN."""
-    rows, total = [], 0
-    for s in SETTINGS:
-        label = s if rep == 1 else f"{s}_rep{rep}"
-        d = f"{ROOT}/{label}"
-        hs = f"{d}/modifi/{label}/host_summary.csv"
-        mge = f"{d}/{label}.mge_list.tsv"
-        if not (os.path.exists(hs) and os.path.exists(mge)):
-            continue
-        total += len(pd.read_csv(mge, sep="\t"))
-        h = pd.read_csv(hs)
-        if h.empty:
-            continue
-        h["correct"] = h["MGE"].map(sra) == h["host"].map(sra)
-        h["ece_frac"] = h["motif_info"].apply(mean_ece_frac)
-        rows.append(h[["MGE", "final_score", "specificity", "total_sites", "ece_frac", "correct"]])
-    if not rows or total == 0:
+def gather(label):
+    """best-host calls (host_summary) + total planted-ECE count for one community."""
+    d = f"{ROOT}/{label}"
+    hs = f"{d}/modifi/{label}/host_summary.csv"
+    mge = f"{d}/{label}.mge_list.tsv"
+    if not (os.path.exists(hs) and os.path.exists(mge)):
         return None
-    return pd.concat(rows, ignore_index=True), total
+    total = pd.read_csv(mge, sep="\t")["seq_name"].nunique()
+    h = pd.read_csv(hs)
+    h["correct"] = h["MGE"].map(sra) == h["host"].map(sra)
+    h["ece_frac"] = h["motif_info"].apply(mean_ece_frac)
+    return h[["MGE", "final_score", "specificity", "total_sites", "ece_frac", "correct"]], total
 
 
 def metrics_vs(best, total, param, grid):
@@ -109,27 +98,28 @@ PANELS = [
 
 
 def main():
-    reps = [r for r in range(1, 6) if gather_rep(r)]
-    data = {r: gather_rep(r) for r in reps}
-    print(f"[plot] replicates with data: {reps}")
+    g = gather(SETTING)
+    if g is None:
+        raise SystemExit(f"{SETTING} host_summary/mge_list not found")
+    best, total = g
+    print(f"[plot] {SETTING}: {len(best)} scored ECEs / {total} planted")
 
     fig, ax = plt.subplots(2, 2, figsize=(13, 10.5))
     for a, (param, grid, name, cited, xscale) in zip(ax.ravel(), PANELS):
-        R = np.vstack([metrics_vs(*data[r], param, grid)[0] for r in reps])
-        P = np.vstack([metrics_vs(*data[r], param, grid)[1] for r in reps])
-        F = np.vstack([metrics_vs(*data[r], param, grid)[2] for r in reps])
-        band(a, grid, R, BLUE, "recall")
-        band(a, grid, P, ORANGE, "precision")
-        band(a, grid, F, GREEN, "F1")
+        R, P, F = metrics_vs(best, total, param, grid)
+        a.plot(grid, R, color=BLUE, lw=2, label="recall")
+        a.plot(grid, P, color=ORANGE, lw=2, label="precision")
+        a.plot(grid, F, color=GREEN, lw=2, label="F1")
+        a.axvline({"final_score": S0, "specificity": P0, "ece_frac": 0.0, "total_sites": 0}[param],
+                  color=GREY, ls=":", lw=1.2)
         if xscale == "log":
             a.set_xscale("log")
         a.set(xlabel=f"{name} threshold", ylabel="metric", ylim=(0, 1.10),
               title=f"Accuracy vs {name}")
         a.legend(loc="lower left", fontsize=9)
-    n = len(reps)
-    fig.suptitle(f"How each threshold changes ECE-host accuracy "
-                 f"(pooled ladder+background; band = ±SD over {n} replicate"
-                 f"{'s' if n>1 else ''})", fontsize=12.5, y=0.995)
+    fig.suptitle(f"How each threshold changes ECE-host accuracy — {SETTING} "
+                 f"(300 genomes, microbiome-scale complexity; {total} planted ECEs)",
+                 fontsize=12.5, y=0.995)
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     pdf = f"{OUT}/threshold_impact.pdf"
     fig.savefig(pdf, bbox_inches="tight")

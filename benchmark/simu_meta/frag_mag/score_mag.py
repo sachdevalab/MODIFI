@@ -64,7 +64,8 @@ def main():
         fig.tight_layout()
         out = os.path.join(RES, "frag_completeness_contamination.pdf")
         fig.savefig(out, bbox_inches="tight"); fig.savefig(out.replace(".pdf", ".png"), dpi=150)
-        print(f"\nwrote {out}")
+        print(f"\nwrote {out}  [NOTE: synthetic fragmentation is confounded (fragmentation "
+              f"lowers baseline; miss_penalty scales with completeness) - not a valid completeness result]")
 
 
 if __name__ == "__main__":
