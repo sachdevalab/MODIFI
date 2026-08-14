@@ -25,10 +25,12 @@ for comp in 50 60 70 80 90 100; do
     [ -f "$res" ] && { echo "skip $tag (done)"; continue; }
     binf="$D/bins/${tag}.bin"
     $PY "$FM/make_bins.py" "$D/fragment_map.tsv" "$binf" "$comp" "$contam"
+    # MODIFI writes correct per-ECE bin predictions (hosts/) then crashes on its final
+    # host_summary write in this bin setup -> tolerate the non-zero exit, aggregate hosts/ ourselves.
     $PY "$MAIN" --run_steps host -o "$WORK" -b "$SRC/ladder_58_rep2.bam" \
         -r "$D/ladder58_frag.ref.fa" --mge_file "$SRC/ladder_58_rep2.mge_list.tsv" \
-        --bin_file "$binf" --threads "$T" > "$D/results/${tag}.linkage.log" 2>&1
-    cp "$WORK/host_summary.csv" "$res" 2>/dev/null && echo "  $tag done ($(($(wc -l <"$res")-1)) ECEs)"
+        --bin_file "$binf" --threads "$T" > "$D/results/${tag}.linkage.log" 2>&1 || true
+    $PY "$FM/agg_hosts.py" "$WORK/hosts" "$res" && echo "  $tag done ($(($(wc -l <"$res")-1)) ECEs)"
   done
 done
 $PY "$FM/score_mag.py" "$D/results"
