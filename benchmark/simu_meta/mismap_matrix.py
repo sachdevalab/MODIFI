@@ -21,7 +21,7 @@ import build_community as bc
 
 PBMM2 = os.path.join(bc.MODIFI_ENV_BIN, "pbmm2")
 SKANI = "/shared/software/bin/skani"
-OUTFIG = "/home/shuaiw/MODIFI/tmp/rev_figs/simu_meta/strain_het"
+OUTFIG = "/home/shuaiw/MODIFI/tmp/rev_figs/simu_meta/e_coli"
 T = "32"
 
 
@@ -126,8 +126,9 @@ def _plot(D, label, labels, frac, ani_out, ds, gmap):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     os.makedirs(OUTFIG, exist_ok=True)
-    # ANI matrix aligned to ds order
-    ani = pd.read_csv(ani_out, sep="\t", index_col=0)
+    # skani --full-matrix: line1 = count, then square matrix rows "genome_path v1 v2 ..."
+    ani = pd.read_csv(ani_out, sep="\t", skiprows=1, header=None, index_col=0)
+    ani.columns = list(ani.index)                      # square, same order as rows
     base = {os.path.basename(gmap[s]): s for s in ds if isinstance(gmap.get(s), str)}
     # map skani row/col files -> strain label
     def lab(fn):
@@ -135,12 +136,26 @@ def _plot(D, label, labels, frac, ani_out, ds, gmap):
     ani.index = [lab(i) for i in ani.index]; ani.columns = [lab(c) for c in ani.columns]
 
     fig, ax = plt.subplots(1, 2, figsize=(13, 5.4))
-    im0 = ax[0].imshow(frac, cmap="magma", vmin=0, vmax=max(0.05, np.nanmax(frac - np.eye(len(frac)))))
-    ax[0].set(xticks=range(len(labels)), yticks=range(len(labels)),
-              title="A. cross-strain read mis-mapping\n(fraction of a strain's reads -> each strain, MAPQ>=20)",
-              xlabel="mapped-to strain", ylabel="true origin strain")
+    # upper triangle only, diagonal (self-mapping ~99%) masked so off-diagonal mis-mapping
+    # is visible; symmetrize the two directions (i<->j) into the upper cell, shown in %
+    n = len(labels)
+    U = np.full((n, n), np.nan)
+    for i in range(n):
+        for j in range(i + 1, n):
+            U[i, j] = max(frac[i, j], frac[j, i]) * 100          # % of origin reads mis-mapped
+    cmap = plt.cm.YlOrRd.copy(); cmap.set_bad("#eeeeee")     # light -> red, no black
+    vmax = np.nanmax(U) if np.isfinite(np.nanmax(U)) else 1.0
+    im0 = ax[0].imshow(U, cmap=cmap, vmin=0, vmax=vmax)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if np.isfinite(U[i, j]):
+                ax[0].text(j, i, f"{U[i, j]:.2f}", ha="center", va="center", fontsize=6.5,
+                           color="white" if U[i, j] > vmax * 0.6 else "#444444")
+    ax[0].set(xticks=range(n), yticks=range(n),
+              title="A. cross-strain read mis-mapping (MAPQ>=20)\n(% of a strain's reads -> the other strain; upper triangle)",
+              xlabel="strain", ylabel="strain")
     ax[0].set_xticklabels(labels, rotation=90, fontsize=7); ax[0].set_yticklabels(labels, fontsize=7)
-    fig.colorbar(im0, ax=ax[0], label="read fraction")
+    fig.colorbar(im0, ax=ax[0], label="mis-mapping rate (%)")
     # off-diagonal mis-map vs ANI scatter
     xs, ys = [], []
     for i, a in enumerate(labels):
@@ -149,7 +164,7 @@ def _plot(D, label, labels, frac, ani_out, ds, gmap):
                 v = ani.loc[a, b]
                 if pd.notna(v):
                     xs.append(float(v)); ys.append(frac[i, j] * 100)
-    ax[1].scatter(xs, ys, s=30, color="#0072B2", edgecolor="k", lw=0.3)
+    ax[1].scatter(xs, ys, s=34, color="#0072B2", edgecolor="#555555", lw=0.4)
     ax[1].set(xlabel="pairwise ANI (%)", ylabel="mis-mapping rate (% of origin reads)",
               title="B. cross-strain mis-mapping vs strain similarity")
     fig.suptitle(f"{label}: cross-strain read mis-mapping among con-specific strains", y=1.02, fontsize=12)
