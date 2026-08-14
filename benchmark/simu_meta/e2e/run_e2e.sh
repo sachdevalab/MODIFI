@@ -3,7 +3,7 @@
 # assemble -> label contig origin (skani) -> group by origin -> CheckM2 -> geNomad -> MODIFI.
 # Each step is guarded (skips if its output exists) so the driver is re-runnable.
 set -uo pipefail
-OUT=/home/shuaiw/borg/paper/simu_meta_dir/C4_toy
+OUT=${1:-/home/shuaiw/borg/paper/simu_meta_dir/C4_toy}   # pass a dir to run on another toy
 E2E=/home/shuaiw/MODIFI/benchmark/simu_meta/e2e
 DB=/groups/diamond/databases/genomad/v1.7/
 GGRENAME=/home/rohan/dev/pipeline/workflow/scripts/gg_rename_assembly.py
@@ -66,18 +66,12 @@ PYEOF
 fi
 echo "  checkm2: $([ -f "$OUT/checkm2/quality_report.tsv" ] && echo OK || echo MISSING)"
 
-# 4. geNomad ECE calling ----------------------------------------------------------
-# geNomad ships as a Singularity container whose /opt/conda/bin (mmseqs+genomad) is NOT
-# on PATH by default -> geNomad's which('mmseqs') fails. Bypass the wrapper and set PATH
-# inside the container. /home and /groups are auto-bound (borg -> /groups/...).
-step "4. geNomad end-to-end"
-SIF=/shared/software/genomad/1.11.0/container/genomad.sif
-if [ ! -d "$OUT/Genomad/toy.contigs_summary" ]; then
-  /usr/local/bin/singularity exec --bind /home,/groups "$SIF" bash -c \
-    "export PATH=/opt/conda/bin:\$PATH; genomad end-to-end --relaxed --enable-score-calibration --sensitivity 7.0 --threads $T --force-auto --cleanup '$OUT/toy.contigs.fa' '$OUT/Genomad' '$DB'"
-fi
-[ -f "$OUT/toy.mge.tsv" ] || $PY "$E2E/genomad_to_mge.py" \
-    "$OUT/Genomad/toy.contigs_summary" "$OUT/toy.mge.tsv"
+# 4. ECE selection by ground-truth mapping (no geNomad) ---------------------------
+# geNomad 1.11 is incompatible with the on-disk marker DB (reads columns by position;
+# v1.7/v1.9 DBs carry an extra USCG column -> crashes in annotate). We instead select ECE
+# contigs by skani-mapping assembled contigs to the KNOWN curated ECE sequences.
+step "4. select ECEs by ground-truth mapping (skani vs curated ECEs)"
+[ -f "$OUT/toy.mge.tsv" ] || $PY "$E2E/ground_truth_ece.py" "$OUT"
 
 # 5. MODIFI (contig-level, NO --bin_file) -----------------------------------------
 step "5. MODIFI host linkage (contig-level)"
