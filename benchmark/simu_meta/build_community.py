@@ -167,11 +167,18 @@ def prep_orphan_bam(sample, genome, ece_contigs, native_dp, target_dp,
     ece_fa = f"{out_prefix}.ece.fa"
     pbmm2 = os.path.join(MODIFI_ENV_BIN, "pbmm2")
 
-    # 1. align to own assembly. Run in the (out-of-repo) prep dir so `pbmm2 --sort`'s
-    # samtools temp files land there, not in the git working tree.
+    # 1. align to own assembly, then sort SEPARATELY. Do NOT use `pbmm2 align --sort`:
+    # its piped-in samtools sort dies with SIGPIPE when many jobs run concurrently and the
+    # sort temp write fails. Align to an unsorted BAM, then `samtools sort -T` with an
+    # explicit temp prefix in the (out-of-repo) prep dir so temps land on borg, not /home
+    # or /tmp.
     workdir = os.path.dirname(os.path.abspath(out_prefix))
+    aln_uns = f"{out_prefix}.selfaln.unsorted.bam"
     subprocess.run([pbmm2, "align", "--preset", "CCS", "-j", str(threads),
-                    genome, src, aln, "--sort"], check=True, cwd=workdir)
+                    genome, src, aln_uns], check=True, cwd=workdir)
+    subprocess.run(["samtools", "sort", "-@", str(threads), "-T", f"{out_prefix}.sorttmp",
+                    "-o", aln, aln_uns], check=True)
+    os.remove(aln_uns)
     subprocess.run(["samtools", "index", "-@", str(threads), aln], check=True)
     # 2. read names over the ECE contig(s)
     with open(names, "w") as fh:

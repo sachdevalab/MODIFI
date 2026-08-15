@@ -45,8 +45,14 @@ def rg_to_sample(man):
 def align(D, label):
     aln = f"{D}/{label}.mismap.bam"
     if not os.path.exists(aln):
+        # align unsorted, then samtools sort -T separately (avoid pbmm2 --sort SIGPIPE /
+        # temp-fill under concurrency)
+        uns = f"{D}/{label}.mismap.unsorted.bam"
         subprocess.run([PBMM2, "align", "--preset", "CCS", "-j", T,
-                        f"{D}/{label}.ref.fa", f"{D}/{label}.bam", aln, "--sort"], check=True)
+                        f"{D}/{label}.ref.fa", f"{D}/{label}.bam", uns], check=True)
+        subprocess.run(["samtools", "sort", "-@", T, "-T", f"{D}/{label}.sorttmp",
+                        "-o", aln, uns], check=True)
+        os.remove(uns)
         subprocess.run(["samtools", "index", "-@", T, aln], check=True)
     return aln
 
