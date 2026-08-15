@@ -395,8 +395,42 @@ def build_ladder(sizes, seed, threads, keep_prepped, only=None, tag=""):
 
 
 # --------------------------------------------------------------- single community mode
+def select_background(background, n_background, donor_species, seed,
+                      exclude_species=None, exclude_donor=False):
+    """Round-robin ECE-free background across species (new/non-donor species first) to
+    maximise diversity. exclude_species: species to drop entirely (e.g. orphan species).
+    exclude_donor: also drop ALL donor species (clean donor/bg split, e.g. strain_mix)."""
+    if n_background <= 0:
+        return background.iloc[0:0]
+    bg_pool = background[background["MGE_bool"] == 0].copy()
+    if exclude_species:
+        bg_pool = bg_pool[~bg_pool["Species"].isin(exclude_species)]
+    if exclude_donor:
+        bg_pool = bg_pool[~bg_pool["Species"].isin(donor_species)]
+    groups = {sp: g.sample(frac=1, random_state=seed) for sp, g in bg_pool.groupby("Species")}
+    new_sp = pd.Series([s for s in groups if s not in donor_species]).sample(
+        frac=1, random_state=seed).tolist()
+    ovl_sp = pd.Series([s for s in groups if s in donor_species]).sample(
+        frac=1, random_state=seed).tolist()
+    sp_order = new_sp + ovl_sp
+    selected, r = [], 0
+    while len(selected) < n_background:
+        added = 0
+        for sp in sp_order:
+            if len(selected) >= n_background:
+                break
+            g = groups[sp]
+            if r < len(g):
+                selected.append(g.iloc[r]); added += 1
+        if added == 0:
+            break  # pool exhausted
+        r += 1
+    return pd.DataFrame(selected)
+
+
 def build_community(n_species, strains_per_species, n_background, label, seed,
-                    threads, keep_prepped, tag="", orphan_frac=0.0, species=None):
+                    threads, keep_prepped, tag="", orphan_frac=0.0, species=None,
+                    bg_exclude_donor=False):
     if tag:
         label = f"{label}_{tag}"
     donors, background, mge_df = load_pool()
@@ -432,42 +466,11 @@ def build_community(n_species, strains_per_species, n_background, label, seed,
         orphan_rows = donor_rows[donor_rows["Species"].isin(orphan_species)].copy()
         donor_rows = donor_rows[~donor_rows["Species"].isin(orphan_species)].copy()
 
-    # background: restrict to ECE-free isolates (MGE_bool==0) so no unscored ECE contig
-    # can be spuriously predicted as a host. Select ROUND-ROBIN across species (one strain
-    # per species per round, new/non-donor species ordered first) to MAXIMISE species
-    # diversity and avoid a few strain-rich species (e.g. H. influenzae, B. pertussis)
-    # dominating the background.
-    if n_background > 0:
-        bg_pool = background[background["MGE_bool"] == 0].copy()
-        # orphan species must stay ABSENT -> never let a con-specific host slip in via bg
-        if orphan_species:
-            bg_pool = bg_pool[~bg_pool["Species"].isin(orphan_species)]
-        donor_species = set(donor_rows["Species"].dropna())
-        # per-species strain order shuffled by seed (so replicates draw different strains);
-        # species ordered new/non-donor first, shuffled within each block by seed.
-        groups = {sp: g.sample(frac=1, random_state=seed) for sp, g in bg_pool.groupby("Species")}
-        new_sp = pd.Series([s for s in groups if s not in donor_species]).sample(
-            frac=1, random_state=seed).tolist()
-        ovl_sp = pd.Series([s for s in groups if s in donor_species]).sample(
-            frac=1, random_state=seed).tolist()
-        sp_order = new_sp + ovl_sp
-        selected = []
-        r = 0
-        while len(selected) < n_background:
-            added = 0
-            for sp in sp_order:
-                if len(selected) >= n_background:
-                    break
-                g = groups[sp]
-                if r < len(g):
-                    selected.append(g.iloc[r])
-                    added += 1
-            if added == 0:
-                break  # pool exhausted
-            r += 1
-        bg_rows = pd.DataFrame(selected)
-    else:
-        bg_rows = background.iloc[0:0]
+    # background: ECE-free isolates, round-robin across species (diversity). orphan species
+    # stay ABSENT; bg_exclude_donor additionally drops ALL donor species (clean split).
+    bg_rows = select_background(background, n_background, set(donor_rows["Species"].dropna()),
+                               seed, exclude_species=orphan_species,
+                               exclude_donor=bg_exclude_donor)
 
     print(f"[{label}] planted-donors={len(donor_rows)} "
           f"({donor_rows['Species'].nunique()} species) "
@@ -506,6 +509,9 @@ def main():
     pc.add_argument("--species", default=None,
                     help="restrict donor species to this exact name (e.g. 'Escherichia coli') "
                          "for a single-species strain panel; background stays diverse")
+    pc.add_argument("--bg-exclude-donor-species", action="store_true",
+                    help="exclude ALL donor species from the background (clean donor/bg "
+                         "split; used by strain_mix so K is the only con-specific variable)")
 
     for p in (pl, pc):
         p.add_argument("--seed", type=int, default=SEED)
@@ -525,7 +531,8 @@ def main():
         build_community(args.n_species, args.strains_per_species, args.n_background,
                         args.label, args.seed, args.threads, args.keep_prepped, tag=args.tag,
                         orphan_frac=args.orphan_frac,
-                        species=[args.species] if args.species else None)
+                        species=[args.species] if args.species else None,
+                        bg_exclude_donor=args.bg_exclude_donor_species)
 
 
 if __name__ == "__main__":
