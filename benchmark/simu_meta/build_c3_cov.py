@@ -13,14 +13,16 @@ import build_community as bc
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--depth", type=int, required=True, help="donor target depth (5/10/20/40)")
+    ap.add_argument("--tag", default="", help="replicate suffix, e.g. rep2 -> cov_d<depth>_rep2")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--threads", type=int, default=32)
     a = ap.parse_args()
     bc.DEPTH_DONOR = a.depth                          # monkeypatch the donor target depth
-    print(f"[cov_d{a.depth}] donor depth={a.depth}x (bg={bc.DEPTH_BG}x), bg_80 composition seed {a.seed}")
+    print(f"[cov_d{a.depth}{('_'+a.tag) if a.tag else ''}] donor depth={a.depth}x "
+          f"(bg={bc.DEPTH_BG}x), bg_80 composition seed {a.seed}")
     bc.build_community(n_species=40, strains_per_species=1, n_background=40,
                        label=f"cov_d{a.depth}", seed=a.seed, threads=a.threads,
-                       keep_prepped=False)
+                       keep_prepped=False, tag=a.tag)
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ OUT = "/home/shuaiw/MODIFI/tmp/rev_figs/simu_meta/coverage"
 os.makedirs(OUT, exist_ok=True)
 plt.rcParams.update({"font.size": 11, "axes.grid": True, "grid.alpha": 0.3})
 BLUE, ORANGE = "#0072B2", "#D55E00"
-POINTS = [(5, "cov_d5"), (10, "cov_d10"), (20, "cov_d20"), (30, "bg_80"), (40, "cov_d40")]
+POINTS = [(10, "cov_d10"), (20, "cov_d20"), (30, "bg_80"), (40, "cov_d40")]
 
 
 def sra(x):
@@ -42,9 +42,7 @@ def main():
     for x, r, p in zip(dep, rec, prec):
         ax.annotate(f"{r:.2f}", (x, r), textcoords="offset points", xytext=(0, -15), ha="center", fontsize=9, color=BLUE)
         ax.annotate(f"{p:.2f}", (x, p), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=9, color=ORANGE)
-    ax.axvspan(0, 5, color="#f2dede", alpha=0.5, zorder=0)
-    ax.text(5, 0.05, "min_ctg_cov floor", fontsize=8, color="#a94442", ha="left")
-    ax.set(xlabel="donor sequencing depth (x)", ylabel="metric", ylim=(-0.02, 1.05),
+    ax.set(xlabel="donor sequencing depth (x)", ylabel="metric", ylim=(0, 1.05),
            title="C3: ECE-host recall & precision vs coverage\n(bg_80 composition; background fixed 10x; rep1)")
     ax.set_xticks(dep)
     ax.legend(loc="center right", fontsize=10)

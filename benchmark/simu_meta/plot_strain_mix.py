@@ -114,8 +114,9 @@ def main():
     sa = band(axD, "strain_acc", "#009E73", "o", "strain accuracy")
     for xv, y in zip(x, sa):
         if y == y:
-            axD.annotate(f"{y:.1f}%", (xv, y), textcoords="offset points", xytext=(0, 9), ha="center", fontsize=9)
-    axD.set(ylim=(80, 101), title="D. Strain accuracy (of correct-species calls)", ylabel="strain accuracy (%)")
+            axD.annotate(f"{y:.1f}%", (xv, y), textcoords="offset points", xytext=(0, -15),
+                         ha="center", va="top", fontsize=9)
+    axD.set(ylim=(0, 100), title="D. Strain accuracy (of correct-species calls)", ylabel="strain accuracy (%)")
     for a in (axB, axC, axD):
         a.set_xticks(x); a.set_xticklabels(xt); a.set_xlabel(xl)
 
