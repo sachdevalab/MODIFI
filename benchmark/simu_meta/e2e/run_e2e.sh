@@ -68,8 +68,11 @@ for o, recs in seqs.items():
         for n,s in recs: w.write(f">{n}\n{s}\n")
 print(f"wrote {len(seqs)} per-origin MAG fastas")
 PYEOF
-  checkm2 predict --input "$OUT/mags" --output-directory "$OUT/checkm2" \
-      --force -x .fasta --threads $T
+  # route CheckM2/DIAMOND temp files to roomy /groups scratch, not the small node /tmp
+  # (node /tmp overflow gave "No space left on device" and a MISSING checkm2 report)
+  mkdir -p "$OUT/checkm2_tmp"
+  TMPDIR="$OUT/checkm2_tmp" checkm2 predict --input "$OUT/mags" --output-directory "$OUT/checkm2" \
+      --tmpdir "$OUT/checkm2_tmp" --force -x .fasta --threads $T
 fi
 echo "  checkm2: $([ -f "$OUT/checkm2/quality_report.tsv" ] && echo OK || echo MISSING)"
 
