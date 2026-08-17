@@ -1,6 +1,7 @@
 test/output/
 output/
 biotite_CLAUDE.md
+CLAUDE.md
 
 # NFS temporary files
 .nfs*
