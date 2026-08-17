@@ -111,7 +111,8 @@ def main():
     Rms = np.array([[sweep_point(lab, ms_tag(v)) for v in MS_GRID] for lab in REPS])
     Rmf = np.array([[sweep_point(lab, f"mf{v}") for v in MF_GRID] for lab in REPS])
 
-    fig, ax = plt.subplots(1, 4, figsize=(21, 4.7))
+    fig, axg = plt.subplots(2, 2, figsize=(13, 9.4))
+    ax = axg.ravel()
 
     # A: final_score
     rec_s = band(ax[0], sgrid, Rs[:, :, 0], BLUE, "-", "recall")
@@ -120,7 +121,7 @@ def main():
     ax[0].axvline(S0, color=GREY, ls=":", lw=1)
     ax[0].text(S0, 1.03, "default 0.5", ha="center", va="bottom", fontsize=8, color=GREY)
     ax[0].set(xlabel="final_score accept threshold (> x)", ylabel="metric", ylim=(0, 1.12),
-              title="A. Linkage score\n(specificity, min_frac, min_sites at default)")
+              title="a. Linkage score\n(specificity, min_frac, min_sites at default)")
     ax[0].legend(loc="center left", fontsize=9)
 
     # B: specificity
@@ -131,7 +132,7 @@ def main():
     ax[1].text(P0, 1.03, "default 0.01", ha="center", va="bottom", fontsize=8, color=GREY)
     ax[1].set_xscale("log")
     ax[1].set(xlabel="specificity accept threshold (< x)", ylabel="metric", ylim=(0, 1.12),
-              title="B. Specificity\n(final_score, min_frac, min_sites at default)")
+              title="b. Specificity\n(final_score, min_frac, min_sites at default)")
     ax[1].legend(loc="center left", fontsize=9)
 
     # C: min_sites (min_detect), re-run
@@ -141,7 +142,7 @@ def main():
     ax[2].axvline(MS_DEF, color=GREY, ls=":", lw=1)
     ax[2].text(MS_DEF, 1.03, "default 30", ha="center", va="bottom", fontsize=8, color=GREY)
     ax[2].set(xlabel="min modified-site count per motif (min_sites)", ylabel="metric",
-              ylim=(0, 1.12), title="C. Min modified-site count\n(final_score, specificity, min_frac at default)")
+              ylim=(0, 1.12), title="c. Min modified-site count\n(final_score, specificity, min_frac at default)")
     ax[2].legend(loc="center left", fontsize=9)
 
     # D: min_frac (motif fraction), re-run
@@ -151,7 +152,7 @@ def main():
     ax[3].axvline(MF_DEF, color=GREY, ls=":", lw=1)
     ax[3].text(MF_DEF, 1.03, "default 0.4", ha="center", va="bottom", fontsize=8, color=GREY)
     ax[3].set(xlabel="motif modified-fraction threshold (min_frac)", ylabel="metric",
-              ylim=(0, 1.12), title="D. Motif fraction\n(final_score, specificity, min_sites at default)")
+              ylim=(0, 1.12), title="d. Motif fraction\n(final_score, specificity, min_sites at default)")
     ax[3].legend(loc="center left", fontsize=9)
 
     npl = np.mean([npl for _, npl, _ in reps]); nor = np.mean([nor for _, _, nor in reps])
