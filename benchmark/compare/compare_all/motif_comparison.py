@@ -152,17 +152,37 @@ def build_gffs():
         print(f"  {n:8s} ipd={ip:>7}  fibertools={ftc[c]:>6}  jasmine={jc[c]:>5}")
 
 # ---------------- motif-set aggregation (union across the 10 genomes) ----------------
+# MODIFI default motif-retention criteria (main.py defaults) + RC collapse
+from Bio.Seq import Seq
+MIN_FRAC = 0.4
+MIN_SITES = 30
+
+def canon(m):
+    """RC-collapse: a motif and its reverse complement map to one canonical
+    string (palindromes map to themselves). Same Bio.Seq dependency as
+    scripts/derep_motifs.py."""
+    m = m.strip().upper()
+    try:
+        rc = str(Seq(m).reverse_complement())
+    except Exception:
+        rc = m
+    return min(m, rc)
+
 def _add(motifs, info, m, row):
     m = (m or "").strip().upper()
     if not m:
         return
-    motifs.add(m)
     try:
         fr = float(row.get("fraction", 0) or 0)
+        nd = int(float(row.get("nDetected", 0) or 0))
     except ValueError:
-        fr = 0
-    if m not in info or fr > float(info[m].get("fraction", 0) or 0):
-        info[m] = row
+        return
+    if fr < MIN_FRAC or nd < MIN_SITES:        # MODIFI default filter, all tools
+        return
+    cm = canon(m)                               # collapse reverse-complement pairs
+    motifs.add(cm)
+    if cm not in info or fr > float(info[cm].get("fraction", 0) or 0):
+        info[cm] = row
 
 def load_modifi_native():
     """Union of MODIFI-HiFi native motifs across per-contig motifs/*.csv."""
@@ -271,6 +291,8 @@ def draw_upset(fig, sets, names, colors):
     for i, t in enumerate(ax_set.get_yticklabels()):
         t.set_color(colors[i]); t.set_fontweight("bold")
     ax_set.tick_params(length=0)
+    # ax_mat shares y with ax_set; suppress the duplicated (clipped) labels on it
+    ax_mat.tick_params(labelleft=False, left=False)
 
 
 # ---------------- analyze ----------------
@@ -307,11 +329,22 @@ def analyze():
     venn_sets = [sets["MODIFI_hifi"], sets["ipdSummary"], sets["fibertools"], sets["jasmine"]]
     venn_names = ["MODIFI (HiFi)", "ipdSummary", "fibertools (6mA)", "jasmine (5mC)"]
     venn_cols = [OI["blue"], OI["orange"], OI["green"], OI["purple"]]
+    # figure source data (per-intersection) next to the figure, for reproducibility
+    combo = {}
+    for m in all_motifs:
+        combo.setdefault(tuple(venn_names[i] for i in range(4) if m in venn_sets[i]), []).append(m)
+    with open(FIG / "fig_motif_upset.intersections.csv", "w", newline="") as f:
+        w = csv.writer(f); w.writerow(["tools_in_intersection", "n_motifs", "motifs"])
+        for key, ms in sorted(combo.items(), key=lambda kv: -len(kv[1])):
+            if key:
+                w.writerow(["+".join(key), len(ms), ";".join(sorted(ms))])
+    import shutil as _sh
+    _sh.copyfile(OUT / "motif_presence.csv", FIG / "fig_motif_upset.presence.csv")
     # primary: UpSet plot (clear for 4 sets)
     fig = plt.figure(figsize=(11, 6))
     draw_upset(fig, venn_sets, venn_names, venn_cols)
-    fig.suptitle("Methylation-motif concordance across tools "
-                 "(per-genome discovery, union over 10 circular soil genomes)", fontsize=12)
+    fig.suptitle("Methylation-motif concordance across tools (10 circular soil genomes; "
+                 "motifs filtered frac≥0.4 & ≥30 sites, RC-collapsed)", fontsize=11)
     fig.savefig(FIG / "fig_motif_upset.png", bbox_inches="tight")
     fig.savefig(FIG / "fig_motif_upset.pdf", bbox_inches="tight")
     plt.close(fig)
@@ -348,6 +381,7 @@ def analyze():
         return (f"- **MODIFI-HiFi vs {b}**: MODIFI={len(M)}, {b}={len(B)}, shared={sh}, "
                 f"Jaccard={sh/tot:.2f}" + (f"  (shared: {sorted(M & B)})" if sh else ""))
     md = ["# MODIFI vs SOTA — motif-level comparison (10 circular soil genomes, test_100)\n",
+          "Motifs per tool = union over contigs, filtered by MODIFI defaults (fraction≥0.4, nDetected≥30), reverse-complement pairs collapsed to one.\n",
           "Per-genome motif discovery; union of motifs across the 10 genomes. MODIFI uses its "
           "native motifs; ipdSummary/fibertools/jasmine use motifMaker on their per-contig calls.\n",
           "## Overlap with MODIFI-HiFi\n", line("ipdSummary"), line("fibertools"), line("jasmine"), ""]
@@ -363,6 +397,7 @@ def analyze():
         md.append(f"\n**Subread efficiency:** MODIFI is {ipd['wall_hr']/mod['wall_hr']:.1f}x faster wall-clock, "
                   f"{ipd['cpu_hr']/mod['cpu_hr']:.1f}x less CPU, {ipd['rss_gb']/mod['rss_gb']:.1f}x less peak memory than ipdSummary.\n")
     (OUT / "summary.md").write_text("\n".join(md))
+    (FIG / "summary.md").write_text("\n".join(md))   # next to the figure, for reproduction
     print(f"  wrote {OUT}/summary.md and {OUT}/motif_presence.csv")
     print("\n".join(md))
 
