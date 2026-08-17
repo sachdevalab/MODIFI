@@ -124,6 +124,19 @@ def main():
                  f"mean +/- 95% CI, n={min(nrep)}-{max(nrep)} reps)", fontsize=12.5, y=1.02)
     fig.tight_layout()
     out = f"{OUT}/strain_mix_recall_precision.pdf"
+    # Source Data: per-K summary next to the figure (Nature-style reproducibility)
+    src = pd.DataFrame({"K": K, "donor_strains": ndon, "total_genomes": ntot, "n_rep": nrep,
+        "species_recall_mean": [agg(M[k]["sp_rec"])[0] for k in K],
+        "species_recall_ci":   [agg(M[k]["sp_rec"])[1] for k in K],
+        "species_precision_mean": [agg(M[k]["sp_prec"])[0] for k in K],
+        "species_precision_ci":   [agg(M[k]["sp_prec"])[1] for k in K],
+        "strain_recall_mean": [agg(M[k]["st_rec"])[0] for k in K],
+        "strain_recall_ci":   [agg(M[k]["st_rec"])[1] for k in K],
+        "strain_precision_mean": [agg(M[k]["st_prec"])[0] for k in K],
+        "strain_precision_ci":   [agg(M[k]["st_prec"])[1] for k in K],
+        "strain_accuracy_mean": [agg(M[k]["strain_acc"])[0] for k in K],
+        "strain_accuracy_ci":   [agg(M[k]["strain_acc"])[1] for k in K]})
+    src.to_csv(out.replace(".pdf", "_sourcedata.csv"), index=False)
     fig.savefig(out, bbox_inches="tight"); fig.savefig(out.replace(".pdf", ".png"), dpi=150, bbox_inches="tight")
     print(f"wrote {out} | reps per K: {dict(zip(K, nrep))}")
 
