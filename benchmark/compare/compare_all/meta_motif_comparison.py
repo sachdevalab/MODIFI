@@ -103,17 +103,18 @@ def main():
     sets["MODIFI-sub"] = union_motifs([f"{MODIFI_SUB216}/motifs/{c}.motifs.csv" for c in contigs])
     sets["ipdSummary"] = union_motifs([f"{PC}/ipdSummary/{c}.motifs.csv" for c in contigs])
     sets["fibertools"] = union_motifs([f"{PC}/fibertools/{c}.motifs.csv" for c in contigs])
-    sets["jasmine"] = union_motifs([f"{PC}/jasmine/{c}.motifs.csv" for c in contigs])
+    sets["SMAC"] = union_motifs([f"{PC}/SMAC/{c}.motifs.csv" for c in contigs])   # single-molecule 6mA
 
-    # include a tool if it was RUN (has per-contig motif files), even if 0 motifs
-    # survive the filter (e.g. jasmine) -- so the plot documents it was evaluated.
+    # include a tool if it was RUN (has per-contig motif files), even if 0 motifs survive.
     def ran(t):
         d = {"MODIFI-HiFi": f"{MODIFI_HIFI}/motifs", "MODIFI-sub": f"{MODIFI_SUB216}/motifs"}.get(t, f"{PC}/{t}")
         return len(glob.glob(f"{d}/*.motifs.csv")) > 0
-    order = [t for t in ["MODIFI-HiFi", "MODIFI-sub", "ipdSummary", "fibertools", "jasmine"]
+    # jasmine excluded: it is a mammalian 5mC-CpG caller, not designed for microbes.
+    # SMAC appears once its per-contig motifs exist.
+    order = [t for t in ["MODIFI-HiFi", "MODIFI-sub", "ipdSummary", "SMAC", "fibertools"]
              if sets[t] or ran(t)]
     cols = {"MODIFI-HiFi": OI["blue"], "MODIFI-sub": OI["vermillion"], "ipdSummary": OI["orange"],
-            "fibertools": OI["green"], "jasmine": OI["purple"]}
+            "SMAC": OI["purple"], "fibertools": OI["green"]}
     for t in order:
         print(f"  {t:12s}: {len(sets[t])} motifs")
 
@@ -176,12 +177,10 @@ def main():
     if ipd["n"]:
         md.append(f"| ipdSummary | {ipd['n']} contigs (per-contig) | {ipd['wall_hr']:.2f} h | {ipd['cpu_hr']:.1f} | {ipd['rss_gb']:.1f} |")
     md.append(f"| fibertools | {ft['n']} contigs (per-contig) | {ft['wall_hr']:.2f} h | {ft['cpu_hr']:.1f} | {ft['rss_gb']:.1f} |")
-    md.append(f"| jasmine+pb-CpG | {jas['n']} contigs (per-contig) | {jas['wall_hr']:.2f} h | {jas['cpu_hr']:.1f} | {jas['rss_gb']:.1f} |")
     md.append("\n_Per-contig wall/contig_: "
-              f"fibertools {ft['wall_hr']*3600/max(ft['n'],1):.0f}s, "
-              f"jasmine {jas['wall_hr']*3600/max(jas['n'],1):.0f}s"
+              f"fibertools {ft['wall_hr']*3600/max(ft['n'],1):.0f}s"
               + (f", ipdSummary {ipd['wall_hr']*3600/max(ipd['n'],1):.0f}s" if ipd['n'] else "")
-              + ". (fibertools/jasmine CPU-h inflated by node oversubscription; wall is reliable.)\n")
+              + ". (fibertools CPU-h inflated by node oversubscription; wall is reliable.)\n")
     for d in (OUT, FIG):
         open(f"{d}/summary.md", "w").write("\n".join(md))
     print("\n".join(md))

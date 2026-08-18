@@ -310,7 +310,7 @@ def analyze():
     sets["MODIFI_hifi"], infos["MODIFI_hifi"] = load_modifi_native()
     for t in MM_TOOLS:
         sets[t], infos[t] = aggregate_motifmaker(t)
-    order = ["MODIFI_hifi", "ipdSummary", "fibertools", "jasmine"]
+    order = ["MODIFI_hifi", "ipdSummary", "fibertools"]  # jasmine excluded (mammalian 5mC-CpG caller)
     for nm in order:
         print(f"  {nm:15s} motifs: {len(sets[nm])}  {sorted(sets[nm])[:10]}")
 
@@ -328,13 +328,13 @@ def analyze():
             w.writerow([fmt(m)] + [("1" if m in sets[nm] else "0") for nm in order] + [mt])
 
     # one combined 4-set Venn (MODIFI-HiFi + all three SOTA tools)
-    venn_sets = [sets["MODIFI_hifi"], sets["ipdSummary"], sets["fibertools"], sets["jasmine"]]
-    venn_names = ["MODIFI (HiFi)", "ipdSummary", "fibertools (6mA)", "jasmine (5mC)"]
-    venn_cols = [OI["blue"], OI["orange"], OI["green"], OI["purple"]]
+    venn_sets = [sets["MODIFI_hifi"], sets["ipdSummary"], sets["fibertools"]]
+    venn_names = ["MODIFI (HiFi)", "ipdSummary", "fibertools (6mA)"]
+    venn_cols = [OI["blue"], OI["orange"], OI["green"]]
     # figure source data (per-intersection) next to the figure, for reproducibility
     combo = {}
     for m in all_motifs:
-        combo.setdefault(tuple(venn_names[i] for i in range(4) if m in venn_sets[i]), []).append(m)
+        combo.setdefault(tuple(venn_names[i] for i in range(len(venn_names)) if m in venn_sets[i]), []).append(m)
     with open(FIG / "fig_motif_upset.intersections.csv", "w", newline="") as f:
         w = csv.writer(f); w.writerow(["tools_in_intersection", "n_motifs", "motifs"])
         for key, ms in sorted(combo.items(), key=lambda kv: -len(kv[1])):
@@ -386,7 +386,7 @@ def analyze():
           "Motifs per tool = union over contigs, filtered by MODIFI defaults (fraction≥0.4, nDetected≥30); a motif is identified by (motifString, centerPos), reverse-complement pairs collapsed to one.\n",
           "Per-genome motif discovery; union of motifs across the 10 genomes. MODIFI uses its "
           "native motifs; ipdSummary/fibertools/jasmine use motifMaker on their per-contig calls.\n",
-          "## Overlap with MODIFI-HiFi\n", line("ipdSummary"), line("fibertools"), line("jasmine"), ""]
+          "## Overlap with MODIFI-HiFi\n", line("ipdSummary"), line("fibertools"), ""]
     md.append("## Runtime / memory\n")
     md.append("| tool | read type | scope | wall (h) | CPU (h) | peak RSS (GB) |")
     md.append("|---|---|---|---|---|---|")
@@ -394,7 +394,6 @@ def analyze():
     if mod: md.append(f"| MODIFI | subreads | test_100 (327 ctg) | {mod['wall_hr']:.2f} | {mod['cpu_hr']:.1f} | {mod['rss_gb']:.1f} |")
     if mh_t["n"]: md.append(f"| MODIFI | HiFi | merged 10 genomes | {mh_t['wall_hr']:.2f} | {mh_t['cpu_hr']:.2f} | {mh_t['rss_gb']:.1f} |")
     if ft_t["n"]: md.append(f"| fibertools | HiFi | merged 10 genomes | {ft_t['wall_hr']:.2f} | {ft_t['cpu_hr']:.2f} | {ft_t['rss_gb']:.1f} |")
-    if jas_t["n"]: md.append(f"| jasmine+pb-CpG | HiFi | merged 10 genomes | {jas_t['wall_hr']:.2f} | {jas_t['cpu_hr']:.2f} | {jas_t['rss_gb']:.1f} |")
     if ipd and mod:
         md.append(f"\n**Subread efficiency:** MODIFI is {ipd['wall_hr']/mod['wall_hr']:.1f}x faster wall-clock, "
                   f"{ipd['cpu_hr']/mod['cpu_hr']:.1f}x less CPU, {ipd['rss_gb']/mod['rss_gb']:.1f}x less peak memory than ipdSummary.\n")

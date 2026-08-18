@@ -41,7 +41,8 @@ COLUMNS = [
     ("vir_terminase_small", "Pfam hits: small terminase subunit"),
     ("vir_major_capsid", "Pfam hits: major capsid protein"),
     ("vir_portal", "Pfam hits: portal protein"),
-    ("vir_n_classes", "Distinct structural classes present (terminase L/S, capsid, portal) via Pfam OR VOGdb"),
+    ("n_virus_structural_classes", "Number of distinct viral structural gene classes present (terminase large, terminase small, major capsid, portal), detected by Pfam OR VOGdb; the value the virus P3 cutoff is applied to"),
+    ("vir_n_classes", "Alias of n_virus_structural_classes (kept for backward compatibility)"),
     ("vog_hallmark_hits", "Total VOGdb hits on the element (informational)"),
     # chromosomal negative
     ("scmg_count", "Distinct bacterial/archaeal single-copy core genes hit (chromosomal signal; used only in strict mode)"),
@@ -85,6 +86,7 @@ def main():
     meta = pd.read_csv(CSV)[["MGE", "host", "host_phylum", "environment"]].rename(
         columns={"MGE": "seq_name"}).drop_duplicates("seq_name")
     df = e.merge(meta, on="seq_name", how="left")
+    df["n_virus_structural_classes"] = df["vir_n_classes"]
     df["retained"] = df["very_high_confidence"].map({True: "yes", False: "no"})
     df["exclusion_reason"] = df.apply(exclusion_reason, axis=1)
     ordered = [c for c, _ in COLUMNS if c in df.columns]
