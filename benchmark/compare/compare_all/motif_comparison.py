@@ -157,16 +157,16 @@ from Bio.Seq import Seq
 MIN_FRAC = 0.4
 MIN_SITES = 30
 
-def canon(m):
-    """RC-collapse: a motif and its reverse complement map to one canonical
-    string (palindromes map to themselves). Same Bio.Seq dependency as
-    scripts/derep_motifs.py."""
+def canon(m, cpos):
+    """Canonical (motifString, centerPos) identity; a motif and its reverse
+    complement (with the methylated position flipped, centerPos->len-1-centerPos)
+    collapse to one entry. Same Bio.Seq dependency as scripts/derep_motifs.py."""
     m = m.strip().upper()
     try:
         rc = str(Seq(m).reverse_complement())
     except Exception:
         rc = m
-    return min(m, rc)
+    return min((m, cpos), (rc, len(m) - 1 - cpos))
 
 def _add(motifs, info, m, row):
     m = (m or "").strip().upper()
@@ -175,11 +175,12 @@ def _add(motifs, info, m, row):
     try:
         fr = float(row.get("fraction", 0) or 0)
         nd = int(float(row.get("nDetected", 0) or 0))
+        cpos = int(float(row.get("centerPos", 0) or 0))
     except ValueError:
         return
     if fr < MIN_FRAC or nd < MIN_SITES:        # MODIFI default filter, all tools
         return
-    cm = canon(m)                               # collapse reverse-complement pairs
+    cm = canon(m, cpos)                          # (motifString, centerPos), RC-collapsed
     motifs.add(cm)
     if cm not in info or fr > float(info[cm].get("fraction", 0) or 0):
         info[cm] = row
@@ -313,17 +314,18 @@ def analyze():
     for nm in order:
         print(f"  {nm:15s} motifs: {len(sets[nm])}  {sorted(sets[nm])[:10]}")
 
-    # motif x tool presence table
+    # motif x tool presence table  (motif identity = motifString@centerPos)
+    fmt = lambda mp: f"{mp[0]}@{mp[1]}"
     all_motifs = sorted(set().union(*sets.values())) if sets else []
     with open(OUT / "motif_presence.csv", "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["motif"] + order + ["modType(any)"])
+        w.writerow(["motif@centerPos"] + order + ["modType(any)"])
         for m in all_motifs:
             mt = ""
             for nm in order:
                 if m in infos[nm]:
                     mt = infos[nm][m].get("modificationType", "") or mt
-            w.writerow([m] + [("1" if m in sets[nm] else "0") for nm in order] + [mt])
+            w.writerow([fmt(m)] + [("1" if m in sets[nm] else "0") for nm in order] + [mt])
 
     # one combined 4-set Venn (MODIFI-HiFi + all three SOTA tools)
     venn_sets = [sets["MODIFI_hifi"], sets["ipdSummary"], sets["fibertools"], sets["jasmine"]]
@@ -337,7 +339,7 @@ def analyze():
         w = csv.writer(f); w.writerow(["tools_in_intersection", "n_motifs", "motifs"])
         for key, ms in sorted(combo.items(), key=lambda kv: -len(kv[1])):
             if key:
-                w.writerow(["+".join(key), len(ms), ";".join(sorted(ms))])
+                w.writerow(["+".join(key), len(ms), ";".join(fmt(x) for x in sorted(ms))])
     import shutil as _sh
     _sh.copyfile(OUT / "motif_presence.csv", FIG / "fig_motif_upset.presence.csv")
     # primary: UpSet plot (clear for 4 sets)
@@ -379,9 +381,9 @@ def analyze():
     def line(b):
         B = sets[b]; sh = len(M & B); tot = len(M | B)
         return (f"- **MODIFI-HiFi vs {b}**: MODIFI={len(M)}, {b}={len(B)}, shared={sh}, "
-                f"Jaccard={sh/tot:.2f}" + (f"  (shared: {sorted(M & B)})" if sh else ""))
+                f"Jaccard={sh/tot:.2f}" + (f"  (shared: {[fmt(x) for x in sorted(M & B)]})" if sh else ""))
     md = ["# MODIFI vs SOTA — motif-level comparison (10 circular soil genomes, test_100)\n",
-          "Motifs per tool = union over contigs, filtered by MODIFI defaults (fraction≥0.4, nDetected≥30), reverse-complement pairs collapsed to one.\n",
+          "Motifs per tool = union over contigs, filtered by MODIFI defaults (fraction≥0.4, nDetected≥30); a motif is identified by (motifString, centerPos), reverse-complement pairs collapsed to one.\n",
           "Per-genome motif discovery; union of motifs across the 10 genomes. MODIFI uses its "
           "native motifs; ipdSummary/fibertools/jasmine use motifMaker on their per-contig calls.\n",
           "## Overlap with MODIFI-HiFi\n", line("ipdSummary"), line("fibertools"), line("jasmine"), ""]

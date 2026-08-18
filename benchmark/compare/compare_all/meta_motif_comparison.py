@@ -26,16 +26,19 @@ MIN_FRAC = 0.4
 MIN_SITES = 30
 
 
-def canon(m):
-    """Collapse a motif and its reverse complement to one canonical string
-    (RC pair counted once); palindromes map to themselves. Uses Bio.Seq like
-    the repo's scripts/derep_motifs.py."""
+def canon(m, cpos):
+    """Canonical (motifString, centerPos) identity. A motif and its reverse
+    complement are the same modification and are collapsed to one entry; when
+    flipping to the RC the methylated position is flipped too
+    (centerPos -> len-1-centerPos), so the same motif keeps the same centerPos.
+    Two motifs are 'the same' only if BOTH string and centerPos match."""
     m = m.strip().upper()
     try:
         rc = str(Seq(m).reverse_complement())
     except Exception:
         rc = m
-    return min(m, rc)
+    rc_cpos = len(m) - 1 - cpos
+    return min((m, cpos), (rc, rc_cpos))
 
 OUT = "/home/shuaiw/borg/paper/ipdsummary/compare_all_meta"
 FIG = "/home/shuaiw/MODIFI/tmp/rev_figs/compare_all_meta"
@@ -65,11 +68,12 @@ def union_motifs(files):
             try:
                 frac = float(row.get("fraction", 0) or 0)
                 nd = int(float(row.get("nDetected", 0) or 0))
+                cpos = int(float(row.get("centerPos", 0) or 0))
             except ValueError:
                 continue
             if frac < MIN_FRAC or nd < MIN_SITES:
                 continue
-            s.add(canon(m))
+            s.add(canon(m, cpos))          # (motifString, centerPos) identity
     return s
 
 
@@ -101,8 +105,13 @@ def main():
     sets["fibertools"] = union_motifs([f"{PC}/fibertools/{c}.motifs.csv" for c in contigs])
     sets["jasmine"] = union_motifs([f"{PC}/jasmine/{c}.motifs.csv" for c in contigs])
 
-    # keep tools that have motifs (subread-side sets appear once those jobs finish)
-    order = [t for t in ["MODIFI-HiFi", "MODIFI-sub", "ipdSummary", "fibertools", "jasmine"] if sets[t]]
+    # include a tool if it was RUN (has per-contig motif files), even if 0 motifs
+    # survive the filter (e.g. jasmine) -- so the plot documents it was evaluated.
+    def ran(t):
+        d = {"MODIFI-HiFi": f"{MODIFI_HIFI}/motifs", "MODIFI-sub": f"{MODIFI_SUB216}/motifs"}.get(t, f"{PC}/{t}")
+        return len(glob.glob(f"{d}/*.motifs.csv")) > 0
+    order = [t for t in ["MODIFI-HiFi", "MODIFI-sub", "ipdSummary", "fibertools", "jasmine"]
+             if sets[t] or ran(t)]
     cols = {"MODIFI-HiFi": OI["blue"], "MODIFI-sub": OI["vermillion"], "ipdSummary": OI["orange"],
             "fibertools": OI["green"], "jasmine": OI["purple"]}
     for t in order:
@@ -110,12 +119,13 @@ def main():
 
     # motif x tool presence table + the exact per-intersection data behind the UpSet,
     # written NEXT TO THE FIGURE for reproducibility (and to OUT).
+    fmt = lambda mp: f"{mp[0]}@{mp[1]}"   # (motifString, centerPos) -> "MOTIF@pos"
     allm = sorted(set().union(*[sets[t] for t in order]))
     for d in (OUT, FIG):
         with open(f"{d}/fig_motif_upset.presence.csv", "w", newline="") as f:
-            w = csv.writer(f); w.writerow(["motif"] + order)
+            w = csv.writer(f); w.writerow(["motif@centerPos"] + order)
             for m in allm:
-                w.writerow([m] + [("1" if m in sets[t] else "0") for t in order])
+                w.writerow([fmt(m)] + [("1" if m in sets[t] else "0") for t in order])
     combo = {}
     for m in allm:
         combo.setdefault(tuple(t for t in order if m in sets[t]), []).append(m)
@@ -123,7 +133,7 @@ def main():
         with open(f"{d}/fig_motif_upset.intersections.csv", "w", newline="") as f:
             w = csv.writer(f); w.writerow(["tools_in_intersection", "n_motifs", "motifs"])
             for key, ms in sorted(combo.items(), key=lambda kv: -len(kv[1])):
-                w.writerow(["+".join(key), len(ms), ";".join(sorted(ms))])
+                w.writerow(["+".join(key), len(ms), ";".join(fmt(x) for x in sorted(ms))])
 
     # UpSet
     fig = plt.figure(figsize=(12, 6))
@@ -144,7 +154,7 @@ def main():
     ms = parse_time(f"{MODIFI_SUB216}.time")   # MODIFI subreads on the 216-contig sub-ref
 
     md = [f"# Whole-metagenome motif comparison — {len(contigs)} contigs (≥100kb, HiFi≥10x)\n",
-          "Motifs per tool = union over contigs, filtered by MODIFI defaults (fraction≥0.4, nDetected≥30), reverse-complement pairs collapsed to one.\n",
+          "Motifs per tool = union over contigs, filtered by MODIFI defaults (fraction≥0.4, nDetected≥30); a motif is identified by (motifString, centerPos), and reverse-complement pairs (with matched centerPos) collapsed to one.\n",
           "## Motif counts and overlap\n"]
     if sets.get("MODIFI-HiFi"):
         M = sets["MODIFI-HiFi"]
