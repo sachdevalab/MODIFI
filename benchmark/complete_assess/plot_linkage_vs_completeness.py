@@ -180,10 +180,17 @@ def main():
                 sep="\t", index=False)
     print(summ.to_string(index=False))
 
-    summ_c = summarize(df, "contamination", CONT_EDGES, CONT_LABELS)
+    # Contamination axis: restrict to reasonably complete contigs (completeness >= 50%)
+    # so the contamination effect is not confounded by incompleteness. Without this, the
+    # bins are dominated by the many very-incomplete contigs and contamination is
+    # meaningless (a contig cannot be assessed for contamination when barely assembled).
+    COMP_FLOOR = 50.0
+    df_c = df[df["completeness"] >= COMP_FLOOR]
+    summ_c = summarize(df_c, "contamination", CONT_EDGES, CONT_LABELS)
     summ_c.to_csv(os.path.join(OUT, "linkage_vs_contamination_summary.tsv"),
                   sep="\t", index=False)
-    print("\n[by contamination]")
+    print(f"\n[by contamination, completeness >= {COMP_FLOOR:.0f}%: "
+          f"{len(df_c)}/{len(df)} contigs]")
     print(summ_c.to_string(index=False))
 
     # Combined figure: A = completeness, B = contamination (both linkage rate).
@@ -191,7 +198,7 @@ def main():
     rate_panel(ax[0], summ, COMP_LABELS, "Host contig completeness (%)",
                "a. Linkage rate vs. host completeness")
     rate_panel(ax[1], summ_c, CONT_LABELS, "Host contig contamination (%)",
-               "b. Linkage rate vs. host contamination")
+               f"b. Linkage rate vs. host contamination\n(completeness ≥ {COMP_FLOOR:.0f}%)")
     fig.tight_layout()
     out_pdf = os.path.join(OUT, "linkage_vs_mag_quality.pdf")
     fig.savefig(out_pdf, bbox_inches="tight")
