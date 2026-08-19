@@ -7,15 +7,18 @@ motifMaker step used for the other tools can be applied to SMAC.
 SMAC penetrance columns (from 10-Penetrance.pl): contig, pos(1-based), strand,
 n_6mA, coverage, penetration(=n_6mA/coverage).
 
-Usage: parse_smac_penetrance.py <penetrance_file>
-Writes: motifs_compare/percontig/SMAC_gff/<contig>.gff
+Usage: parse_smac_penetrance.py <penetrance_file> [ref.fa] [out_gff_dir]
+  Default ref = ref216.fa, default out dir = motifs_compare/percontig/SMAC_gff/.
+  For the per-contig array run, pass the single-contig ref.fa and the contig's
+  working dir so it writes just that one <contig>.gff.
+Writes: <out_gff_dir>/<contig>.gff
 """
 from __future__ import annotations
 import os, sys
 
 OUT = "/home/shuaiw/borg/paper/ipdsummary/compare_all_meta"
-REF216 = f"{OUT}/ref216.fa"
-GFFDIR = f"{OUT}/motifs_compare/percontig/SMAC_gff"
+REF216 = sys.argv[2] if len(sys.argv) > 2 else f"{OUT}/ref216.fa"
+GFFDIR = sys.argv[3] if len(sys.argv) > 3 else f"{OUT}/motifs_compare/percontig/SMAC_gff"
 FT_FRAC, MINCOV = 0.50, 4      # same thresholds as the other 6mA/aggregate tools
 
 _COMP = str.maketrans("ACGTNacgtn", "TGCANtgcan")
