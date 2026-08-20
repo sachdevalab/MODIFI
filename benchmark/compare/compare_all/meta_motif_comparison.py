@@ -103,18 +103,19 @@ def main():
     sets["MODIFI-sub"] = union_motifs([f"{MODIFI_SUB216}/motifs/{c}.motifs.csv" for c in contigs])
     sets["ipdSummary"] = union_motifs([f"{PC}/ipdSummary/{c}.motifs.csv" for c in contigs])
     sets["fibertools"] = union_motifs([f"{PC}/fibertools/{c}.motifs.csv" for c in contigs])
-    sets["SMAC"] = union_motifs([f"{PC}/SMAC/{c}.motifs.csv" for c in contigs])   # single-molecule 6mA
 
     # include a tool if it was RUN (has per-contig motif files), even if 0 motifs survive.
     def ran(t):
         d = {"MODIFI-HiFi": f"{MODIFI_HIFI}/motifs", "MODIFI-sub": f"{MODIFI_SUB216}/motifs"}.get(t, f"{PC}/{t}")
         return len(glob.glob(f"{d}/*.motifs.csv")) > 0
-    # jasmine excluded: it is a mammalian 5mC-CpG caller, not designed for microbes.
-    # SMAC appears once its per-contig motifs exist.
-    order = [t for t in ["MODIFI-HiFi", "MODIFI-sub", "ipdSummary", "SMAC", "fibertools"]
+    # jasmine excluded: mammalian 5mC-CpG caller, not designed for microbes.
+    # SMAC excluded: its single-molecule design needs >=20 CCS passes/molecule, but
+    # these long-insert metagenome subreads average ~11 passes, so per-position
+    # coverage collapses to ~2x and it cannot be run fairly here.
+    order = [t for t in ["MODIFI-HiFi", "MODIFI-sub", "ipdSummary", "fibertools"]
              if sets[t] or ran(t)]
     cols = {"MODIFI-HiFi": OI["blue"], "MODIFI-sub": OI["vermillion"], "ipdSummary": OI["orange"],
-            "SMAC": OI["purple"], "fibertools": OI["green"]}
+            "fibertools": OI["green"]}
     for t in order:
         print(f"  {t:12s}: {len(sets[t])} motifs")
 
