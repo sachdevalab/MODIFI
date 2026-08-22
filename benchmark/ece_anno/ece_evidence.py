@@ -270,7 +270,7 @@ def ev_conjscan(out_dir, ece_faa, threads):
             ctype = "None"
         rows.append({"seq_name": r["contig"], "conjscan_type": ctype,
                      "conjscan_anno": r["conjscan_anno"]})
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=["seq_name", "conjscan_type", "conjscan_anno"])
 
 
 def _count_hits_per_contig(tblout, colname):
@@ -432,10 +432,13 @@ def ev_genes_crosscheck(genes, ece_set):
         cj_hits = int((cj.notna() & (cj.astype(str) != "NA")).sum()) if cj is not None else 0
         rows.append({"seq_name": contig, "genes_uscg": int(uscg),
                      "genes_virus_hallmark": int(vh), "genes_conjscan_hits": cj_hits})
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=["seq_name", "genes_uscg", "genes_virus_hallmark",
+                                       "genes_conjscan_hits"])
 
 
 def _cv_from_pileup(bam_file, contig, region=None):
+    """Return (cov_cv, zero_frac): coefficient of variation of per-base depth and the
+    fraction of positions with zero coverage, from one pileup pass."""
     import pysam
     b = pysam.AlignmentFile(bam_file, "rb")
     try:
@@ -444,7 +447,7 @@ def _cv_from_pileup(bam_file, contig, region=None):
         L = max(b.lengths) if b.lengths else 0
     if not L:
         b.close()
-        return float("nan")
+        return float("nan"), float("nan")
     cov = np.zeros(L, dtype=np.int32)
     it = b.pileup(contig, truncate=True) if region else b.pileup(truncate=True)
     for col in it:
@@ -452,26 +455,28 @@ def _cv_from_pileup(bam_file, contig, region=None):
             cov[col.reference_pos] = col.nsegments
     b.close()
     m = float(cov.mean())
-    return float(np.sqrt(cov.var()) / m) if m > 0 else float("nan")
+    cv = float(np.sqrt(cov.var()) / m) if m > 0 else float("nan")
+    zero_frac = float((cov == 0).mean())
+    return cv, zero_frac
 
 
 def ev_coverage_cv(work_dir, sample, contigs, fallback_bam):
-    """Per-contig coverage CV (sqrt(var)/mean of per-base depth).
-
-    Prefers the small per-contig BAMs under <work_dir>/<sample>_methylation4/bams/,
-    falling back to the whole-sample alignment only if a per-contig BAM is absent.
-    """
+    """Per-contig coverage CV and zero-coverage fraction. Prefers the small per-contig
+    BAMs under <work_dir>/<sample>_methylation4/bams/, falling back to the whole-sample
+    alignment only if a per-contig BAM is absent. Returns (cv_map, zerofrac_map)."""
     bam_dir = os.path.join(work_dir, f"{sample}_methylation4", "bams")
-    out = {}
+    cv_map, zf_map = {}, {}
     for c in contigs:
         pcb = os.path.join(bam_dir, f"{c}.bam")
         if os.path.exists(pcb):
-            out[c] = _cv_from_pileup(pcb, c, region=False)
+            cv, zf = _cv_from_pileup(pcb, c, region=False)
         elif os.path.exists(fallback_bam):
-            out[c] = _cv_from_pileup(fallback_bam, c, region=True)
+            cv, zf = _cv_from_pileup(fallback_bam, c, region=True)
         else:
-            out[c] = float("nan")
-    return out
+            cv, zf = float("nan"), float("nan")
+        cv_map[c] = cv
+        zf_map[c] = zf
+    return cv_map, zf_map
 
 
 # ----------------------------------------------------------------------------
@@ -617,8 +622,9 @@ def main():
     df["cov_mean"] = pd.to_numeric(df["mge_depth"], errors="coerce")
     df["host_depth"] = pd.to_numeric(df["host_depth"], errors="coerce")
     df["cov_ratio"] = df["cov_mean"] / df["host_depth"]
-    cv_map = ev_coverage_cv(args.work_dir, args.sample, list(ece_set), bam)
+    cv_map, zf_map = ev_coverage_cv(args.work_dir, args.sample, list(ece_set), bam)
     df["cov_cv"] = df["seq_name"].map(cv_map)
+    df["zero_frac"] = df["seq_name"].map(zf_map)
 
     # fill / types
     int_cols = ["complete_support", "vir_terminase_large", "vir_terminase_small",
@@ -650,7 +656,7 @@ def main():
             "vir_marker_total", "vir_n_classes", "vog_hallmark_hits", "genes_virus_hallmark",
             "scmg_bac_count", "scmg_arc_count", "scmg_count", "scmg_fraction", "genes_uscg",
             "rrna_count",
-            "cov_mean", "cov_cv", "host_depth", "cov_ratio",
+            "cov_mean", "cov_cv", "zero_frac", "host_depth", "cov_ratio",
             "genomad_score", "genomad_fdr", "genomad_n_hallmarks", "survives_strict",
             "support_circular", "support_genomad", "support_marker", "support_coverage",
             "n_positive_lines", "flag_chromosomal", "flag_artifact", "very_high_confidence"]

@@ -33,14 +33,9 @@ BLUE, ORANGE, GREEN, GREY = "#0072B2", "#D55E00", "#009E73", "#888888"
 RUN2 = "/home/shuaiw/borg/paper/run2"
 OUT = "/home/shuaiw/MODIFI/tmp/rev_figs/complete_assess"
 
-# Restrict to the 59 metagenomes used across the paper's other analyses (samples with
-# >=1 HQ "best" contig; best_ctg_num > 0 in genome_data_all_samples.csv, matching the
-# cross-environment analysis's "59 samples, 9 environments"). Keeps the sample set
-# consistent across figures. Excludes 5 asthma/infant_gut samples with no HQ contig.
-VALID_SAMPLES = set(
-    l.strip() for l in open(os.path.join(os.path.dirname(__file__), "valid_59_samples.txt"))
-    if l.strip()
-)
+# All metagenomes with a linkage run (every sample that has a *_methylation4 dir; 64 of
+# the 72 run2 samples, the other 8 have only *_methylation_time). No sample restriction:
+# this figure pools all 64 metagenomes.
 
 # MODIFI default linkage filter (scripts/estimate_linkage.py:587-588)
 SPEC_CUT = 0.01      # specificity < 0.01
@@ -77,8 +72,6 @@ def build_contig_table():
         sample_dir = os.path.dirname(mdir)
         sample = os.path.basename(sample_dir)
 
-        if sample not in VALID_SAMPLES:            # keep the 59-metagenome set only
-            continue
         contigs_list = os.path.join(mdir, "contigs_list.txt")
         host_summary = os.path.join(mdir, "host_summary.csv")
         checkm = os.path.join(sample_dir, "checkM2", "quality_report.tsv")

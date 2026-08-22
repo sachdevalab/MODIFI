@@ -48,6 +48,27 @@ DATASETS = {
                  "length": "mge_len", "mgedepth": "MGE_cov",
                  "hostdepth": "host_cov", "lineage": "host_taxa"},
     },
+    # ALL depth>=5 & length>=1kb plasmid/virus ECEs in the 59 metagenomes (linked + unlinked)
+    "metagenome_all": {
+        "csv": "/home/shuaiw/borg/revision/ece_anno/all_metagenome_eces.csv",
+        "batch_root": "/home/shuaiw/borg/paper/run2",
+        "criteria": "loose",
+        "cols": {"sample": "sample", "seqname": "MGE", "type": "MGE_type",
+                 "length": "mge_len", "mgedepth": "MGE_cov",
+                 "hostdepth": "host_cov", "lineage": "host_taxa"},
+    },
+    # Multi-caller expansion: the combined-set ECEs (>=5x) that are NOT already in the
+    # metagenome_all evidence (NEW non-geNomad calls + geNomad calls from the 5 samples
+    # not covered before). Evidence computed here; the "any-strong-caller" P2 is applied
+    # in post (needs the `methods` column), so raw criteria=loose just fills the columns.
+    "expanded_new": {
+        "csv": "/home/shuaiw/borg/revision/ece_anno/expanded/needs_evidence.csv",
+        "batch_root": "/home/shuaiw/borg/paper/run2",
+        "criteria": "loose",
+        "cols": {"sample": "sample", "seqname": "MGE", "type": "MGE_type",
+                 "length": "mge_len", "mgedepth": "MGE_cov",
+                 "hostdepth": "host_cov", "lineage": "host_taxa"},
+    },
 }
 
 SUPPORT_COLS = ["support_circular", "support_genomad", "support_marker", "support_coverage"]
