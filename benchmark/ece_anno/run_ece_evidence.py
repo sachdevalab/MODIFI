@@ -69,6 +69,16 @@ DATASETS = {
                  "length": "mge_len", "mgedepth": "MGE_cov",
                  "hostdepth": "host_cov", "lineage": "host_taxa"},
     },
+    # Delta: the additional NEW non-geNomad contigs that appeared after VS1 finished more
+    # samples (mostly VS1-unique viral). Separate per_sample dir; aggregation reads both.
+    "expanded_delta": {
+        "csv": "/home/shuaiw/borg/revision/ece_anno/expanded/needs_evidence_delta.csv",
+        "batch_root": "/home/shuaiw/borg/paper/run2",
+        "criteria": "loose",
+        "cols": {"sample": "sample", "seqname": "MGE", "type": "MGE_type",
+                 "length": "mge_len", "mgedepth": "MGE_cov",
+                 "hostdepth": "host_cov", "lineage": "host_taxa"},
+    },
 }
 
 SUPPORT_COLS = ["support_circular", "support_genomad", "support_marker", "support_coverage"]

@@ -106,6 +106,31 @@ def set_density(target_profile, motif_set, length_bp):
     return n, n / (length_bp / 1000.0)
 
 
+def gff_mod_count(path, min_score=30):
+    """Total modified positions on a contig from its per-contig kinModCall GFF, counting
+    `modified_base` lines whose score (column 6) is >= min_score. Motif-independent.
+    Returns None if the GFF is absent."""
+    if not os.path.exists(path):
+        return None
+    n = 0
+    try:
+        with open(path) as fh:
+            for line in fh:
+                if not line or line[0] == "#":
+                    continue
+                f = line.rstrip("\n").split("\t")
+                if len(f) < 6 or f[2] != "modified_base":
+                    continue
+                try:
+                    if float(f[5]) >= min_score:
+                        n += 1
+                except ValueError:
+                    continue
+    except OSError:
+        return None
+    return n
+
+
 def read_depth(path):
     """mean_depth.csv -> {contig: (depth, length_or_None)}."""
     out = {}
@@ -219,6 +244,7 @@ def build_records(dataset, sample, work_dir, mge_path, profiles_dir,
     # ---- host genome motif set(s) for ground-truth datasets ----
     # host contigs = non-MGE contigs with depth >= gate. Grouped by SRA prefix for the
     # simulated community; a single group ("__ISO__") for a pure isolate.
+    gffs_dir = os.path.join(work_dir, "gffs")
     host_set_by_group = {}
     host_len_by_group = {}
     host_loci_by_group = {}
@@ -279,7 +305,7 @@ def build_records(dataset, sample, work_dir, mge_path, profiles_dir,
             linked = confident
             true_host_present = np.nan
 
-        # motif density
+        # recognition-site density (host or ECE-self motif set)
         ece_prof = prof(ece)
         if ground_truth:
             motif_set_source = "host"
@@ -297,12 +323,22 @@ def build_records(dataset, sample, work_dir, mge_path, profiles_dir,
         passes_depth = (dep == dep) and (dep >= DEPTH_GATE)
         passes_full = passes_depth and (ece_len is not None) and (ece_len >= LEN_GATE)
 
+        # modification sites/density from the ECE's own GFF (motif-independent, score >= 30);
+        # only read the GFF for depth-passing ECEs to bound I/O
+        n_mod, mod_dens = np.nan, np.nan
+        if passes_depth:
+            nmod = gff_mod_count(os.path.join(gffs_dir, f"{ece}.gff"))
+            if nmod is not None:
+                n_mod = nmod
+                mod_dens = nmod / (ece_len / 1000.0) if ece_len else np.nan
+
         records.append(dict(
             dataset=dataset, sample=sample, rep=rep if rep else sample,
             ece_id=ece, type=typ, ece_len=ece_len, depth=dep,
             passes_depth_gate=passes_depth, passes_full_gate=passes_full,
             motif_set_source=motif_set_source, n_motif_sites=n_sites,
             motif_density_per_kb=dens, host_own_density_per_kb=host_own_density,
+            n_mod_sites=n_mod, mod_density_per_kb=mod_dens,
             assigned_host=assigned_host, final_score=final_score, specificity=specificity,
             confident_link=confident, correct_host=correct, linked=linked,
             true_host_present=true_host_present,
