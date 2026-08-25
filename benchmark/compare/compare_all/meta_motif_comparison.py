@@ -140,9 +140,7 @@ def main():
     # UpSet
     fig = plt.figure(figsize=(12, 6))
     draw_upset(fig, [sets[t] for t in order], order, [cols[t] for t in order])
-    tag = "" if "ipdSummary" in order else " (HiFi side; MODIFI-sub + ipdSummary pending)"
-    fig.suptitle(f"Methylation-motif concordance across tools — {len(contigs)} contigs "
-                 f"(≥100kb, HiFi≥10x); motifs filtered frac≥0.4 & ≥30 sites, RC-collapsed{tag}", fontsize=11)
+    # no in-figure title; description belongs in the figure caption (Suppl. Fig. X)
     fig.savefig(f"{FIG}/fig_motif_upset.png", bbox_inches="tight")
     fig.savefig(f"{FIG}/fig_motif_upset.pdf", bbox_inches="tight")
     plt.close(fig)
