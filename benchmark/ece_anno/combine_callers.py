@@ -14,7 +14,8 @@ RUN2 = "/home/shuaiw/borg/paper/run2"
 REV = "/home/shuaiw/borg/revision/ece_callers"
 OUT = "/home/shuaiw/borg/revision/ece_anno/expanded"
 PLASX_MIN = 0.5
-VS1_CATS = {"1", "2"}  # confident VirSorter1 categories (skip 3 = "not so sure")
+# VirSorter1: keep all free-phage categories (1/2/3), exclude prophages -- handled by section
+# tracking in vs1_calls() (prophages are integrated, i.e. not extrachromosomal).
 os.makedirs(OUT, exist_ok=True)
 
 samples = sorted(pd.read_csv(
@@ -55,7 +56,7 @@ def vs2_calls(s):
     if os.path.exists(p):
         for _, r in pd.read_csv(p, sep="\t").iterrows():
             f = str(r["seqname"]).split("||")
-            if len(f) > 1 and "_partial" in f[1]:
+            if len(f) > 1 and "partial" in f[1]:   # skip provirus regions (contig||..partial)
                 continue
             out.add(f[0])
     return out
@@ -76,18 +77,28 @@ def vibrant_calls(s):
 
 
 def vs1_calls(s):
+    # VIRSorter_global-phage-signal.csv has 6 sections by "## N -" header: sections 1-3 are
+    # "Complete phage contigs" (FREE PHAGE), sections 4-6 are "Prophages" (INTEGRATED). The
+    # Category column (col 5) resets to 1/2/3 within EACH section, so free-vs-prophage lives only
+    # in the section header. Keep only free-phage contigs (all categories 1/2/3); exclude prophages.
     p = f"{REV}/{s}/vs1_out/VIRSorter_global-phage-signal.csv"
     out = set()
     if os.path.exists(p):
+        in_phage = False
         for line in open(p):
-            if line.startswith("##") or line.startswith("Contig_id"):
+            if line.startswith("##"):
+                if "Complete phage" in line:
+                    in_phage = True
+                elif "Prophage" in line:
+                    in_phage = False
+                # the repeated "## Contig_id,..." header leaves in_phage unchanged
+                continue
+            if line.startswith("Contig_id") or not in_phage:
                 continue
             c = line.split(",")
             if len(c) < 5:
                 continue
-            cat = c[4].strip()
-            if cat in VS1_CATS:
-                out.add(re.sub(r"^VIRSorter_", "", c[0]))
+            out.add(re.sub(r"^VIRSorter_", "", c[0]))
     return out
 
 

@@ -20,18 +20,19 @@ comb = comb[~comb.methods.str.contains("genomad")].copy()   # NEW non-geNomad on
 comb["key"] = comb["sample"] + "|" + comb["MGE"].astype(str)
 len_map = dict(zip(comb["key"], comb["mge_len"]))
 
-# gather evidence
+# gather evidence (both the initial expanded_new run and the VS1-completion delta run)
 frames = []
-for tsv in glob.glob(f"{D}/expanded_new/per_sample/*/ece_evidence.tsv"):
-    s = os.path.basename(os.path.dirname(tsv))
-    try:
-        d = pd.read_csv(tsv, sep="\t")
-    except Exception:
-        continue
-    if d.empty:
-        continue
-    d["sample"] = s
-    frames.append(d)
+for base in ("expanded_new", "expanded_delta"):
+    for tsv in glob.glob(f"{D}/{base}/per_sample/*/ece_evidence.tsv"):
+        s = os.path.basename(os.path.dirname(tsv))
+        try:
+            d = pd.read_csv(tsv, sep="\t")
+        except Exception:
+            continue
+        if d.empty:
+            continue
+        d["sample"] = s
+        frames.append(d)
 ev = pd.concat(frames, ignore_index=True)
 ev["key"] = ev["sample"] + "|" + ev["seq_name"].astype(str)
 ev = ev.drop_duplicates("key")

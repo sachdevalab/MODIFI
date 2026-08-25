@@ -79,6 +79,16 @@ DATASETS = {
                  "length": "mge_len", "mgedepth": "MGE_cov",
                  "hostdepth": "host_cov", "lineage": "host_taxa"},
     },
+    # Refresh: NEW non-geNomad contigs that appeared after PlasX finished + VS1's big soil
+    # samples completed (combined set grew to 25k). Own per_sample dir; downstream reads all three.
+    "expanded_refresh": {
+        "csv": "/home/shuaiw/borg/revision/ece_anno/expanded/needs_evidence_refresh_light.csv",
+        "batch_root": "/home/shuaiw/borg/paper/run2",
+        "criteria": "loose",
+        "cols": {"sample": "sample", "seqname": "MGE", "type": "MGE_type",
+                 "length": "mge_len", "mgedepth": "MGE_cov",
+                 "hostdepth": "host_cov", "lineage": "host_taxa"},
+    },
 }
 
 SUPPORT_COLS = ["support_circular", "support_genomad", "support_marker", "support_coverage"]
@@ -104,7 +114,7 @@ def reclassify(d, criteria="strict"):
 
 
 def run_one(sample, ece_csv, batch_root, per_sample_root, cols, threads, resume,
-            criteria="strict"):
+            criteria="strict", vogdb=True):
     work_dir = os.path.join(batch_root, sample)
     out_dir = os.path.join(per_sample_root, sample)
     out_tsv = os.path.join(out_dir, "ece_evidence.tsv")
@@ -115,6 +125,9 @@ def run_one(sample, ece_csv, batch_root, per_sample_root, cols, threads, resume,
     cmd = [PY, ENGINE, "--sample", sample, "--work_dir", work_dir,
            "--ece_csv", ece_csv, "--out_dir", out_dir, "--db_dir", DB_DIR,
            "--threads", str(threads), "--criteria", criteria]
+    if not vogdb:
+        cmd.append("--no-vogdb")   # VOGdb's 26k-profile search is the bottleneck and is not
+                                   # needed: P3 is driven from the stored Pfam class counts.
     for k, v in cols.items():
         cmd += [f"--col_{k}", v]
     try:
@@ -239,6 +252,8 @@ def main():
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--threads", type=int, default=8)
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--no-vogdb", dest="vogdb", action="store_false", default=True,
+                    help="skip VOGdb hmmsearch (26k profiles); P3 uses Pfam classes only")
     ap.add_argument("--limit", type=int, default=0, help="only first N samples (debug)")
     ap.add_argument("--summary-only", action="store_true",
                     help="skip running; just aggregate + summarize + plot")
@@ -267,7 +282,7 @@ def main():
         done = failed = 0
         with ProcessPoolExecutor(max_workers=args.jobs) as ex:
             futs = {ex.submit(run_one, s, ece_csv, batch_root, per_sample_root, cols,
-                              args.threads, args.resume, criteria): s for s in samples}
+                              args.threads, args.resume, criteria, args.vogdb): s for s in samples}
             for fut in as_completed(futs):
                 sample, status, _ = fut.result()
                 if status.startswith("FAILED") or status.startswith("MISSING"):
