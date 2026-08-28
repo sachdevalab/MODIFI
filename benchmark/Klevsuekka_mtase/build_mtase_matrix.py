@@ -22,7 +22,6 @@ Outputs (source-data CSVs) go to tmp/rev_figs/Klevsuekka_mtase/.
 
 import os
 import re
-import subprocess
 import pandas as pd
 
 # ----------------------------------------------------------------------------
@@ -31,12 +30,6 @@ import pandas as pd
 RUN2 = "/home/shuaiw/borg/paper/run2"
 METHY = "methylation4"            # canonical run
 OUT_DIR = "/home/shuaiw/MODIFI/tmp/rev_figs/Klevsuekka_mtase"
-
-# mmseqs work dir (extracted FASTA + clustering outputs). NOT on the small /home SSD.
-WORK_DIR = "/home/shuaiw/borg/revision/MTase"
-MMSEQS = "/shared/software/bin/mmseqs"
-MIN_SEQ_ID = 0.9                  # ortholog identity threshold (~99% ANI genomes)
-MIN_COV = 0.8
 
 # The 15 MAGs of dRep secondary cluster 248_1 (Klebsiella pneumoniae).
 MAGS = [
@@ -119,11 +112,6 @@ def motifs_path(mag):
     return os.path.join(RUN2, s, f"{s}_{METHY}", "motifs", f"{mag}.motifs.csv")
 
 
-def faa_path(mag):
-    s = sample_of(mag)
-    return os.path.join(RUN2, s, f"{s}_{METHY}", "RM_systems", "all_ctgs_RM.rm.genes.faa")
-
-
 def load_mtases(mag):
     """Return the MTase (MT/IIG) genes for one MAG, deduplicated by Operon."""
     df = pd.read_csv(rm_table_path(mag), sep="\t", dtype=str)
@@ -136,64 +124,6 @@ def load_mtases(mag):
     df["Predicted methylation"] = df["Predicted methylation"].fillna("").str.strip()
     df["MAG"] = mag
     return df
-
-
-def read_faa(path):
-    """Parse a protein FASTA -> {gene_id: sequence}. Gene id = 1st header token."""
-    seqs, gid, buf = {}, None, []
-    with open(path) as f:
-        for line in f:
-            if line.startswith(">"):
-                if gid is not None:
-                    seqs[gid] = "".join(buf)
-                gid = line[1:].split()[0]
-                buf = []
-            else:
-                buf.append(line.strip())
-    if gid is not None:
-        seqs[gid] = "".join(buf)
-    return seqs
-
-
-def cluster_orthologs(gene_ids):
-    """
-    Extract protein sequences for `gene_ids` from the per-sample .faa files, write
-    a combined FASTA to WORK_DIR, run mmseqs easy-cluster, and return a dict
-    gene_id -> cluster representative gene_id.
-    """
-    os.makedirs(WORK_DIR, exist_ok=True)
-    # cache faa per sample so each file is read once
-    faa_cache = {}
-    fasta = os.path.join(WORK_DIR, "kp248_mtase.faa")
-    missing = []
-    with open(fasta, "w") as out:
-        for g in sorted(gene_ids):
-            mag = "_".join(g.split("_")[:-1])         # contig = gene minus last field
-            fp = faa_path(mag)
-            if fp not in faa_cache:
-                faa_cache[fp] = read_faa(fp)
-            seq = faa_cache[fp].get(g)
-            if seq is None:
-                missing.append(g)
-                continue
-            out.write(f">{g}\n{seq}\n")
-    if missing:
-        print(f"WARNING: {len(missing)} gene(s) had no protein sequence: {missing}")
-
-    prefix = os.path.join(WORK_DIR, "kp248_mtase_clu")
-    tmp = os.path.join(WORK_DIR, "mmseqs_tmp")
-    cmd = [MMSEQS, "easy-cluster", fasta, prefix, tmp,
-           "--min-seq-id", str(MIN_SEQ_ID), "-c", str(MIN_COV),
-           "--cov-mode", "0", "-v", "1"]
-    print("Running:", " ".join(cmd))
-    subprocess.run(cmd, check=True)
-
-    gene2rep = {}
-    with open(prefix + "_cluster.tsv") as f:
-        for line in f:
-            rep, member = line.rstrip("\n").split("\t")
-            gene2rep[member] = rep
-    return gene2rep
 
 
 def load_detected_motifs(mag):
@@ -230,14 +160,40 @@ def most_common_nonempty(series):
     return pd.Series(vals).mode().iloc[0]
 
 
-def cluster_label(genes):
-    """Human label for an ortholog cluster: representative REBASE homolog + motif."""
+def short_family(hmm):
+    """Compact HMM family id: 'Type_II_MTases_FAM_4' -> 'II-4', 'Type_IIG_4' -> 'IIG-4'."""
+    m = re.match(r"Type_(I|II|III|IV)_MTases_FAM_(\d+)", str(hmm))
+    if m:
+        return f"{m.group(1)}-{m.group(2)}"
+    m = re.match(r"Type_(IIG)_(\d+)", str(hmm))
+    if m:
+        return f"{m.group(1)}-{m.group(2)}"
+    return str(hmm)
+
+
+def short_label(hmm, motif):
+    """Compact column label: short family id + recognition motif when present."""
+    fam = short_family(hmm)
+    return f"{fam} {motif}" if motif else fam
+
+
+def group_label(genes):
+    """
+    Human label for an HMM group: the HMM family name with a representative REBASE
+    homolog and recognition motif appended when available, e.g.
+    'Type_II_MTases_FAM_4 | M.Ksp2N3DamP (GATC)'.
+    """
+    hmm = most_common_nonempty(genes["HMM"]) or "unknown_HMM"
     homolog = most_common_nonempty(genes["REBASE homolog"])
     motif = first_nonempty(genes["Homolog motif"])
-    if not homolog:
-        homolog = f"[HMM] {most_common_nonempty(genes['HMM'])}"
-    base = re.sub(r"^\[HMM\] ", "", homolog)
-    return f"{base} ({motif})" if motif else base
+    tail = ""
+    if homolog and motif:
+        tail = f" | {homolog} ({motif})"
+    elif homolog:
+        tail = f" | {homolog}"
+    elif motif:
+        tail = f" | ({motif})"
+    return hmm + tail
 
 
 # ----------------------------------------------------------------------------
@@ -251,18 +207,14 @@ def main():
     genes["system_type"] = genes["System Type"].apply(clean_systype)
     detected_by_mag = {m: load_detected_motifs(m) for m in MAGS}
 
-    # ---- 2. cluster the protein sequences into ortholog groups ----
-    gene2rep = cluster_orthologs(set(genes["Gene"]))
-    genes["cluster_rep"] = genes["Gene"].map(gene2rep)
-    if genes["cluster_rep"].isna().any():
-        # any gene without a sequence becomes its own singleton cluster
-        genes["cluster_rep"] = genes["cluster_rep"].fillna(genes["Gene"])
+    # ---- 2. group MTases by HMM family (for consistency; no protein clustering) ----
+    genes["cluster_rep"] = genes["HMM"].fillna("unknown_HMM").replace("", "unknown_HMM")
 
-    # ---- 3. assign each cluster a stable key + consensus annotation ----
+    # ---- 3. assign each group a stable key + consensus annotation ----
     cl_info = {}
     for rep, grp in genes.groupby("cluster_rep"):
         cl_info[rep] = {
-            "label": cluster_label(grp),
+            "label": group_label(grp),
             "rebase_homolog": most_common_nonempty(grp["REBASE homolog"]),
             "hmm": most_common_nonempty(grp["HMM"]),
             "motif": first_nonempty(grp["Homolog motif"]),
@@ -334,6 +286,7 @@ def main():
 
     annot_df = pd.DataFrame([{
         "cluster": cl_info[r]["label"],
+        "short_label": short_label(cl_info[r]["hmm"], cl_info[r]["motif"]),
         "rebase_homolog": cl_info[r]["rebase_homolog"],
         "hmm": cl_info[r]["hmm"], "motif": cl_info[r]["motif"],
         "mod_type": cl_info[r]["mod_type"], "system_type": cl_info[r]["system_type"],
@@ -356,8 +309,7 @@ def main():
     catalog_df.to_csv(os.path.join(OUT_DIR, "mtase_catalog.csv"), index=False)
 
     # ---- screen summary ----
-    print(f"\nKp 248_1 MTase repertoire: {len(MAGS)} MAGs x {len(keys)} ortholog clusters "
-          f"(mmseqs {MIN_SEQ_ID} id / {MIN_COV} cov)\n")
+    print(f"\nKp 248_1 MTase repertoire: {len(MAGS)} MAGs x {len(keys)} HMM families\n")
     print("Per-MAG MTase gene count (MT/IIG):")
     for m in MAGS:
         print(f"  {m:16s} {int(copy_df.loc[m].sum()):3d}")

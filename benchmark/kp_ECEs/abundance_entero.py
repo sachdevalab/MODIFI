@@ -36,14 +36,16 @@ def parse_lineage(classification):
     return out
 
 
-def main():
-    lengths = pd.read_csv(LEN_TSV, sep="\t", header=None, names=["contig", "length"])
-    len_map = dict(zip(lengths["contig"], lengths["length"]))
-
-    samples = sorted(
+def cohort_samples(prefix):
+    return sorted(
         [os.path.basename(os.path.dirname(os.path.dirname(p)))
-         for p in glob.glob(f"{R2}/infant_*/GTDB/gtdbtk.bac120.summary.tsv")],
+         for p in glob.glob(f"{R2}/{prefix}_*/GTDB/gtdbtk.bac120.summary.tsv")],
         key=lambda s: int(s.split("_")[1]))
+
+
+def main():
+    # both cohorts; contig lengths read per-sample from the assembly .fai
+    samples = cohort_samples("infant") + cohort_samples("asthma")
 
     rows = []            # per sample x species Enterobacteriaceae abundance
     ctx_rows = []        # per sample context (Enterobacteriaceae community fraction)
@@ -52,6 +54,11 @@ def main():
         abund = f"{AB}/{s}/abundance_{s}.tsv"
         if not (os.path.exists(gtdb) and os.path.exists(abund)):
             continue
+        fai = f"{R2}/{s}/{s}.hifiasm.p_ctg.rename.fa.fai"
+        if not os.path.exists(fai):
+            continue
+        len_map = dict(pd.read_csv(fai, sep="\t", header=None, usecols=[0, 1]).values)
+        cohort = s.split("_")[0]
         tax = pd.read_csv(gtdb, sep="\t")[["user_genome", "classification"]]
         tax = tax.rename(columns={"user_genome": "contig"})
         cov = pd.read_csv(abund, sep="\t")
@@ -99,6 +106,7 @@ def main():
 
         ctx_rows.append({
             "sample": s,
+            "cohort": cohort,
             # cell-abundance (depth) share of Enterobacteriaceae among reconstructed genomes
             "entero_depthfrac_of_genomes": round(ent_depth / total_genome_depth, 4) if total_genome_depth else 0.0,
             # whole-metagenome base fraction (standard relative abundance, includes unclassified in denom)
@@ -118,6 +126,7 @@ def main():
             sp_mass = g["mass"].sum()
             rows.append({
                 "sample": s,
+                "cohort": cohort,
                 "species": re.sub(r"^s__", "", sp),
                 "genus": g["genus"].iloc[0],
                 "rel_abundance_entero": round(depth / ent_depth, 5),

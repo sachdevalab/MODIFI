@@ -37,9 +37,10 @@ ann  <- read.csv(file.path(io, "mtase_column_annotation.csv"),
 ann <- ann[colnames(pres), , drop = FALSE]
 
 # ---- column labels ----
-# Column keys are ortholog clusters; the cluster label already carries the
-# representative REBASE homolog and its recognition motif, e.g. "M.Ksp2N3DamP (GATC)".
-col_labels <- colnames(pres)
+# Two rows describe each column: the full HMM family name (bottom column names)
+# and the recognition motif (a separate text track above the columns).
+col_labels <- ann$hmm
+motif_lab  <- ifelse(ann$motif == "" | is.na(ann$motif), "n/a", ann$motif)
 modtype    <- ifelse(ann$mod_type == "" | is.na(ann$mod_type), "unknown", ann$mod_type)
 systype    <- ifelse(ann$system_type == "" | is.na(ann$system_type), "unknown", ann$system_type)
 
@@ -55,7 +56,20 @@ top_anno <- HeatmapAnnotation(
   annotation_name_side = "left",
   simple_anno_size = unit(3.5, "mm"),
   gap = unit(1, "mm"),
-  show_legend = TRUE
+  show_legend = FALSE            # legends built manually and packed into one column
+)
+
+# bottom labels: full HMM family name (top), recognition motif directly below it.
+# Explicit band heights keep the long HMM names from overflowing into the motif row.
+bot_anno <- HeatmapAnnotation(
+  HMM   = anno_text(col_labels, rot = 90, just = "right",
+                    location = unit(1, "npc"), gp = gpar(fontsize = 8)),
+  Motif = anno_text(motif_lab, rot = 90, just = "right",
+                    location = unit(1, "npc"), gp = gpar(fontsize = 7)),
+  annotation_height = unit.c(unit(4, "cm"), unit(3, "cm")),
+  annotation_name_gp = gpar(fontsize = 8),
+  annotation_name_side = "left",
+  gap = unit(2, "mm")
 )
 
 # ---- activity overlay ----
@@ -90,27 +104,34 @@ ht <- Heatmap(
   show_row_names = TRUE,
   row_names_side = "right",
   row_names_gp = gpar(fontsize = 9),
-  column_labels = col_labels,
-  column_names_gp = gpar(fontsize = 7),
-  column_names_rot = 90,
+  show_column_names = FALSE,       # HMM + motif shown via bottom_annotation instead
 
   top_annotation = top_anno,
+  bottom_annotation = bot_anno,
   width  = unit(0.55 * ncol(pres), "cm"),
   height = unit(0.55 * nrow(pres), "cm"),
 
-  heatmap_legend_param = list(
-    title = "MTase gene",
-    at = c(0, 1), labels = c("absent", "present"),
-    title_gp = gpar(fontsize = 9, fontface = "bold"),
-    labels_gp = gpar(fontsize = 8)
-  )
+  show_heatmap_legend = FALSE     # legends built manually and packed into one column
 )
 
-# manual legend for the activity overlay
+# ---- all legends, stacked in a single column ----
+lt <- gpar(fontsize = 9, fontface = "bold")
+ll <- gpar(fontsize = 8)
+
+gene_lgd <- Legend(title = "MTase gene", title_gp = lt, labels_gp = ll,
+                   labels = c("absent", "present"),
+                   legend_gp = gpar(fill = c("#f0f0f0", "#3690c0")))
+
+mod_present <- intersect(names(mod_pal), unique(modtype))
+mod_lgd <- Legend(title = "Mod type", title_gp = lt, labels_gp = ll,
+                  labels = mod_present, legend_gp = gpar(fill = mod_pal[mod_present]))
+
+sys_present <- intersect(names(sys_pal), unique(systype))
+sys_lgd <- Legend(title = "RM system", title_gp = lt, labels_gp = ll,
+                  labels = sys_present, legend_gp = gpar(fill = sys_pal[sys_present]))
+
 act_lgd <- Legend(
-  title = "Activity (motif)",
-  title_gp = gpar(fontsize = 9, fontface = "bold"),
-  labels_gp = gpar(fontsize = 8),
+  title = "Activity (motif)", title_gp = lt, labels_gp = ll,
   labels = c("detected", "not detected", "no REBASE motif"),
   graphics = list(
     function(x, y, w, h) grid.circle(x, y, r = unit(1.4, "mm"),
@@ -122,15 +143,18 @@ act_lgd <- Legend(
   )
 )
 
-w_in <- 0.55 * ncol(pres) / 2.54 + 6
-h_in <- 0.55 * nrow(pres) / 2.54 + 4
+packed <- packLegend(gene_lgd, mod_lgd, sys_lgd, act_lgd,
+                     direction = "vertical", gap = unit(5, "mm"),
+                     max_height = unit(30, "cm"))
+
+w_in <- 0.55 * ncol(pres) / 2.54 + 5
+h_in <- 0.55 * nrow(pres) / 2.54 + 5.5
 
 for (dev in c("pdf", "png")) {
   f <- file.path(io, paste0("Kp248_1_mtase_presence_absence.", dev))
   if (dev == "pdf") pdf(f, width = w_in, height = h_in)
   else png(f, width = w_in, height = h_in, units = "in", res = 300)
-  draw(ht, heatmap_legend_side = "right", annotation_legend_side = "right",
-       annotation_legend_list = list(act_lgd))
+  draw(ht, annotation_legend_side = "right", annotation_legend_list = list(packed))
   dev.off()
   cat(sprintf("wrote %s\n", f))
 }

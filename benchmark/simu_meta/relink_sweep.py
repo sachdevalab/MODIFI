@@ -31,6 +31,14 @@ def _no_gc(data, *a, **k):
     return data
 EL.report_gc = _no_gc
 
+# sort_top_by_cos_sim() breaks ties among 2-3 equal-top-score hosts using per-contig FASTA
+# k-mer similarity; with contigs/ cleaned, kmer_freq_sim_bin_worker hits bin_1_len==0 and
+# calls sys.exit(1), silently killing the whole run for any plasmid that has a top-score tie
+# (get_kmer_freq.py:178-180). We don't stage contigs, so neutralize the tie-break: keep the
+# tied hosts in their existing (final_score) order. Best-host / operating-point metrics are
+# unaffected (tied hosts share the same final_score).
+EL.sort_top_by_cos_sim = lambda data, *a, **k: data
+
 
 def main():
     ap = argparse.ArgumentParser()

@@ -23,7 +23,7 @@ contig2sp = dict(zip(ann["contig"], ann["species"]))
 cu = pd.read_csv(os.path.join(DATADIR, "jf8_contig_unitig.tsv"), sep="\t",
                  header=None, names=["contig", "unitig"])
 contig2unitig = dict(zip(cu["contig"], cu["unitig"]))
-bp = pd.read_csv(os.path.join(DATADIR, "jf8_family_boldpos.csv"))
+bp = pd.read_csv(os.path.join(DATADIR, "jf8_wga_boldpos.csv"))
 mod_pos = dict(zip(bp["motif"], bp["centerPos"]))
 
 legend_order = ["Ruminococcus gnavus", "Escherichia coli", "Clostridium bolteae",
