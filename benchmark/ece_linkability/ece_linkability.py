@@ -60,6 +60,28 @@ OUT_CSV = "/home/shuaiw/borg/revision/ece_linkability/ece_linkability_master.csv
 
 sra = lambda x: str(x).split("_")[0]
 
+# optional strict isolate ECE whitelist {sample: {ece: (type, len, depth)}}, set from --iso_strict
+ISO_STRICT_MAP = None
+
+
+def load_iso_strict(path):
+    """filterpass_isolate CSV -> {sample: {ece: (type, len, depth)}} for pass==1 rows."""
+    df = pd.read_csv(path)
+    df = df[df["pass"] == 1]
+    m = {}
+    for _, r in df.iterrows():
+        s, e = str(r["sample"]), str(r["MGE"])
+        try:
+            ln = int(float(r["mge_len"]))
+        except (ValueError, TypeError):
+            ln = None
+        try:
+            dep = float(r["mge_depth"])
+        except (ValueError, TypeError):
+            dep = np.nan
+        m.setdefault(s, {})[e] = (str(r["MGE_type"]), ln, dep)
+    return m
+
 
 # ----------------------------------------------------------------------
 # small readers
@@ -184,6 +206,29 @@ def read_all_mge(path):
     return out
 
 
+def read_host_candidates(path):
+    """hosts/<ece>.host_prediction.csv -> list of (host, final_score, specificity) for every
+    candidate host of one ECE (the full ranked list, not just the best). [] if absent."""
+    if not os.path.exists(path):
+        return []
+    out = []
+    try:
+        with open(path) as fh:
+            for row in csv.DictReader(fh):
+                try:
+                    fs = float(row["final_score"])
+                except (KeyError, ValueError, TypeError):
+                    fs = np.nan
+                try:
+                    sp = float(row["specificity"])
+                except (KeyError, ValueError, TypeError):
+                    sp = np.nan
+                out.append((row.get("host", ""), fs, sp))
+    except OSError:
+        return []
+    return out
+
+
 def read_host_summary(path):
     """host_summary.csv -> {MGE: (host, final_score, specificity, MGE_len)} keeping best score."""
     out = {}
@@ -221,17 +266,25 @@ def read_host_summary(path):
 # generic per-sample assembler
 # ----------------------------------------------------------------------
 def build_records(dataset, sample, work_dir, mge_path, profiles_dir,
-                  ground_truth, rep=None):
+                  ground_truth, rep=None, ece_override=None, override_depth=None):
     """Return a list of per-ECE dict records for one sample/run.
 
     ground_truth: True for isolate/simulated (host known -> host motif set, correctness),
-                  False for metagenome (ECE-self motif set, any confident link)."""
+                  False for metagenome (ECE-self motif set, any confident link).
+    ece_override: if given, {ece: (type, len)} to use as the ECE universe instead of all_mge
+                  (still uses all_mge names to identify host contigs). override_depth: {ece: depth}
+                  fallback when mean_depth.csv lacks the contig."""
     mge = read_all_mge(mge_path)
-    if not mge:
-        return []
     depth = read_depth(os.path.join(work_dir, "mean_depth.csv"))
     hs = read_host_summary(os.path.join(work_dir, "host_summary.csv"))
     mge_names = set(mge.keys())
+    if ece_override is not None:
+        mge_names |= set(ece_override.keys())
+        universe = ece_override
+    else:
+        universe = mge
+    if not universe:
+        return []
 
     # profile cache within this sample
     pcache = {}
@@ -278,8 +331,10 @@ def build_records(dataset, sample, work_dir, mge_path, profiles_dir,
             host_loci_by_group[g] = tot_loci
 
     records = []
-    for ece, (typ, mlen) in mge.items():
+    for ece, (typ, mlen) in universe.items():
         dep, dlen = depth.get(ece, (np.nan, None))
+        if (dep != dep) and override_depth:
+            dep = override_depth.get(ece, np.nan)
         ece_len = mlen or dlen
         row = hs.get(ece)
         assigned_host = row[0] if row else ""
@@ -295,9 +350,18 @@ def build_records(dataset, sample, work_dir, mge_path, profiles_dir,
         if ground_truth:
             if dataset == "simulated":
                 correct = bool(assigned_host) and sra(assigned_host) == sra(ece)
-            else:  # isolate: single strain -> correct if host is a chromosomal (non-MGE) contig
-                correct = bool(assigned_host) and assigned_host not in mge_names
-            linked = confident and correct
+            else:  # isolate: single strain -> correct if a confident candidate host is a
+                   # chromosomal (non-MGE) contig. Scan the full ranked candidate list, not just
+                   # the top host: the true host still counts even if it is not ranked #1.
+                correct = bool(assigned_host) and (assigned_host not in mge_names) and confident
+                if not correct:
+                    for h, fs, sp in read_host_candidates(
+                            os.path.join(work_dir, "hosts", f"{ece}.host_prediction.csv")):
+                        if fs == fs and sp == sp and fs > S0 and sp < P0 \
+                                and h and h not in mge_names:
+                            correct = True
+                            break
+            linked = correct if dataset != "simulated" else (confident and correct)
             true_host_present = (sra(ece) in host_set_by_group) if dataset == "simulated" \
                 else ("__ISO__" in host_set_by_group)
         else:
@@ -353,9 +417,16 @@ def worker_isolate(sample):
     work_dir = os.path.join(ISO_BASE, sample, sample + ISO_VARIANT)
     mge_path = os.path.join(ISO_BASE, sample, "all_mge.tsv")
     profiles_dir = os.path.join(work_dir, "profiles")
+    override = odepth = None
+    if ISO_STRICT_MAP is not None:
+        entry = ISO_STRICT_MAP.get(sample)
+        if not entry:
+            return []
+        override = {e: (t, l) for e, (t, l, d) in entry.items()}
+        odepth = {e: d for e, (t, l, d) in entry.items()}
     try:
         return build_records("isolate", sample, work_dir, mge_path, profiles_dir,
-                             ground_truth=True)
+                             ground_truth=True, ece_override=override, override_depth=odepth)
     except Exception as e:  # never let one sample kill the pool
         return [dict(dataset="isolate", sample=sample, ece_id="__ERROR__", error=str(e))]
 
@@ -418,15 +489,23 @@ def main():
     ap.add_argument("--threads", type=int, default=64)
     ap.add_argument("--datasets", default="isolate,simulated,metagenome")
     ap.add_argument("--out", default=OUT_CSV)
+    ap.add_argument("--iso_strict", default=None,
+                    help="restrict isolate ECEs to pass==1 rows of this filterpass CSV")
     args = ap.parse_args()
     threads = min(args.threads, 64)
     want = set(args.datasets.split(","))
 
+    global ISO_STRICT_MAP
+    if args.iso_strict:
+        ISO_STRICT_MAP = load_iso_strict(args.iso_strict)
+        print(f"[isolate] strict ECE list: {sum(len(v) for v in ISO_STRICT_MAP.values())} "
+              f"pass ECEs across {len(ISO_STRICT_MAP)} samples")
+
     all_recs = []
 
     if "isolate" in want:
-        roster = isolate_roster()
-        print(f"[isolate] {len(roster)} pure high-depth isolates")
+        roster = sorted(ISO_STRICT_MAP) if ISO_STRICT_MAP else isolate_roster()
+        print(f"[isolate] {len(roster)} isolates")
         with Pool(threads) as pool:
             for recs in pool.imap_unordered(worker_isolate, roster, chunksize=8):
                 all_recs.extend(recs)

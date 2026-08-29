@@ -100,7 +100,8 @@ pC <- two_panel("n_mod_sites", "modification sites (score >= 30)", "c  Modificat
 pD <- two_panel("mod_density_per_kb", "modification density (sites / kb)", "d  Modification density", logtest = FALSE)
 
 fig <- (pA + pB) / (pC + pD) +
-  plot_annotation(title = "Isolate ECEs (1,120 evaluable plasmids and viruses)",
+  plot_annotation(title = sprintf("Isolate ECEs (%s evaluable plasmids and viruses)",
+                                  format(nrow(A), big.mark = ",")),
                   theme = theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5)))
 
 ggsave(file.path(OUT, "fig_isolate_linkability.pdf"), fig, width = 10.5, height = 9, device = cairo_pdf)

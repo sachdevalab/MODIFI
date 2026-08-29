@@ -1,380 +1,318 @@
-sample	environment	type	MGE	host	validated
-96plex	mock	plasmid	96plex_60_C	96plex_5_L	0
-96plex	mock	plasmid	96plex_8_C	96plex_7_C	0
-96plex	mock	plasmid	96plex_18_C	96plex_7_C	0
-96plex	mock	plasmid	96plex_69_C	96plex_5_L	0
-96plex	mock	plasmid	96plex_61_C	96plex_5_L	0
-96plex	mock	plasmid	96plex_38_C	96plex_7_C	0
-96plex	mock	plasmid	96plex_78_C	96plex_13_C	0
-96plex	mock	plasmid	96plex_63_C	96plex_17_C	0
-96plex	mock	plasmid	96plex_37_L	96plex_5_L	0
-ERR12723528_mice	mice_gut	virus	ERR12723528_mice_98_C	ERR12723528_mice_7_C	0
-ERR12723528_mice	mice_gut	plasmid	ERR12723528_mice_124_C	ERR12723528_mice_5_C	1
-ERR12723528_mice	mice_gut	plasmid	ERR12723528_mice_171_L	ERR12723528_mice_43_L	0
-ERR12723528_mice	mice_gut	plasmid	ERR12723528_mice_30_L	ERR12723528_mice_181_L	0
-ERR12723528_mice	mice_gut	virus	ERR12723528_mice_224_L	ERR12723528_mice_181_L	0
-ERR12723528_mice	mice_gut	plasmid	ERR12723528_mice_87_L	ERR12723528_mice_181_L	0
-ERR12723528_mice	mice_gut	plasmid	ERR12723528_mice_269_L	ERR12723528_mice_181_L	0
-ERR12723528_mice	mice_gut	plasmid	ERR12723528_mice_338_L	ERR12723528_mice_181_L	0
-ERR12723529_mice	mice_gut	plasmid	ERR12723529_mice_188_L	ERR12723529_mice_26_L	0
-ERR12723529_mice	mice_gut	plasmid	ERR12723529_mice_110_L	ERR12723529_mice_26_L	0
-SRR23446539_sugarcane	sugarcane	plasmid	SRR23446539_sugarcane_478_L	SRR23446539_sugarcane_36_L	0
-SRR23446539_sugarcane	sugarcane	plasmid	SRR23446539_sugarcane_93_L	SRR23446539_sugarcane_18_L	0
-SRR23446540_sugarcane	sugarcane	plasmid	SRR23446540_sugarcane_7_L	SRR23446540_sugarcane_1_C	0
-SRR23446540_sugarcane	sugarcane	plasmid	SRR23446540_sugarcane_29_L	SRR23446540_sugarcane_10_L	0
-asthma_1	infant_gut	plasmid	asthma_1_1135_C	asthma_1_21_L	0
-asthma_1	infant_gut	plasmid	asthma_1_1035_C	asthma_1_20_L	0
-asthma_1	infant_gut	plasmid	asthma_1_1899_L	asthma_1_21_L	0
-asthma_1	infant_gut	plasmid	asthma_1_477_L	asthma_1_21_L	0
-asthma_1	infant_gut	plasmid	asthma_1_446_L	asthma_1_21_L	0
-asthma_1	infant_gut	virus	asthma_1_1756_L	asthma_1_57_L	0
-asthma_1	infant_gut	plasmid	asthma_1_376_L	asthma_1_57_L	0
-asthma_1	infant_gut	plasmid	asthma_1_1713_L	asthma_1_21_L	0
-asthma_11	infant_gut	plasmid	asthma_11_1225_C	asthma_11_8_C	0
-asthma_11	infant_gut	plasmid	asthma_11_214_C	asthma_11_8_C	0
-asthma_11	infant_gut	plasmid	asthma_11_387_C	asthma_11_11_L	0
-asthma_11	infant_gut	plasmid	asthma_11_233_C	asthma_11_6_L	0
-asthma_11	infant_gut	virus	asthma_11_943_L	asthma_11_3_L	0
-asthma_11	infant_gut	plasmid	asthma_11_1215_C	asthma_11_78_L	0
-asthma_11	infant_gut	plasmid	asthma_11_107_C	asthma_11_22_L	0
-asthma_11	infant_gut	virus	asthma_11_1094_L	asthma_11_164_L	0
-asthma_12	infant_gut	plasmid	asthma_12_13_C	asthma_12_2_L	0
-asthma_12	infant_gut	plasmid	asthma_12_97_L	asthma_12_6_L	0
-asthma_12	infant_gut	virus	asthma_12_625_L	asthma_12_11_C	0
-asthma_13	infant_gut	plasmid	asthma_13_443_C	asthma_13_14_L	0
-asthma_13	infant_gut	plasmid	asthma_13_157_C	asthma_13_6_L	0
-asthma_13	infant_gut	plasmid	asthma_13_412_L	asthma_13_9_L	0
-asthma_13	infant_gut	plasmid	asthma_13_68_C	asthma_13_61_L	0
-asthma_13	infant_gut	plasmid	asthma_13_991_C	asthma_13_13_C	0
-asthma_13	infant_gut	plasmid	asthma_13_948_C	asthma_13_2_L	0
-asthma_13	infant_gut	plasmid	asthma_13_731_L	asthma_13_6_L	0
-asthma_13	infant_gut	plasmid	asthma_13_587_C	asthma_13_52_L	0
-asthma_13	infant_gut	plasmid	asthma_13_206_L	asthma_13_13_C	0
-asthma_13	infant_gut	virus	asthma_13_154_C	asthma_13_46_L	0
-asthma_13	infant_gut	plasmid	asthma_13_78_C	asthma_13_2_L	0
-asthma_13	infant_gut	plasmid	asthma_13_66_C	asthma_13_46_L	0
-asthma_13	infant_gut	plasmid	asthma_13_236_L	asthma_13_43_L	0
-asthma_13	infant_gut	plasmid	asthma_13_487_L	asthma_13_48_L	0
-asthma_13	infant_gut	plasmid	asthma_13_509_C	asthma_13_54_L	0
-asthma_13	infant_gut	plasmid	asthma_13_570_L	asthma_13_22_L	0
-asthma_13	infant_gut	virus	asthma_13_1357_L	asthma_13_53_L	0
-asthma_14	infant_gut	plasmid	asthma_14_49_C	asthma_14_17_C	0
-asthma_14	infant_gut	plasmid	asthma_14_58_C	asthma_14_7_L	0
-asthma_14	infant_gut	plasmid	asthma_14_96_C	asthma_14_20_L	0
-asthma_14	infant_gut	plasmid	asthma_14_211_C	asthma_14_20_L	0
-asthma_14	infant_gut	virus	asthma_14_106_L	asthma_14_5_L	0
-asthma_15	infant_gut	plasmid	asthma_15_708_C	asthma_15_16_L	0
-asthma_15	infant_gut	plasmid	asthma_15_1019_C	asthma_15_36_C	0
-asthma_15	infant_gut	plasmid	asthma_15_236_C	asthma_15_36_C	0
-asthma_15	infant_gut	plasmid	asthma_15_921_L	asthma_15_18_L	0
-asthma_15	infant_gut	plasmid	asthma_15_360_L	asthma_15_18_L	0
-asthma_15	infant_gut	virus	asthma_15_82_L	asthma_15_46_L	0
-asthma_15	infant_gut	plasmid	asthma_15_411_L	asthma_15_41_L	0
-asthma_15	infant_gut	virus	asthma_15_993_L	asthma_15_195_L	0
-asthma_15	infant_gut	plasmid	asthma_15_1707_L	asthma_15_195_L	0
-asthma_18	infant_gut	virus	asthma_18_112_C	asthma_18_1_L	0
-asthma_18	infant_gut	plasmid	asthma_18_7_C	asthma_18_8_L	0
-asthma_18	infant_gut	virus	asthma_18_122_L	asthma_18_8_L	0
-asthma_19	infant_gut	plasmid	asthma_19_125_C	asthma_19_1_C	0
-asthma_19	infant_gut	plasmid	asthma_19_1285_C	asthma_19_20_L	0
-asthma_2	infant_gut	plasmid	asthma_2_375_C	asthma_2_23_L	0
-asthma_2	infant_gut	plasmid	asthma_2_767_L	asthma_2_140_L	0
-asthma_2	infant_gut	virus	asthma_2_274_L	asthma_2_23_L	0
-asthma_2	infant_gut	virus	asthma_2_425_L	asthma_2_71_L	0
-asthma_2	infant_gut	plasmid	asthma_2_340_L	asthma_2_71_L	0
-asthma_2	infant_gut	plasmid	asthma_2_318_L	asthma_2_140_L	0
-asthma_20	infant_gut	plasmid	asthma_20_24_C	asthma_20_6_L	0
-asthma_20	infant_gut	plasmid	asthma_20_19_C	asthma_20_6_L	0
-asthma_3	infant_gut	plasmid	asthma_3_194_C	asthma_3_11_L	0
-asthma_3	infant_gut	plasmid	asthma_3_1281_C	asthma_3_42_C	0
-asthma_3	infant_gut	plasmid	asthma_3_1595_L	asthma_3_7_L	0
-asthma_3	infant_gut	plasmid	asthma_3_348_L	asthma_3_105_L	0
-asthma_3	infant_gut	plasmid	asthma_3_1701_C	asthma_3_75_C	0
-asthma_3	infant_gut	plasmid	asthma_3_944_C	asthma_3_87_L	0
-asthma_3	infant_gut	plasmid	asthma_3_1148_L	asthma_3_52_L	0
-asthma_3	infant_gut	plasmid	asthma_3_2277_L	asthma_3_39_L	0
-asthma_3	infant_gut	virus	asthma_3_2484_L	asthma_3_65_L	0
-asthma_4	infant_gut	plasmid	asthma_4_1370_L	asthma_4_149_L	0
-asthma_4	infant_gut	plasmid	asthma_4_25_L	asthma_4_51_L	0
-asthma_4	infant_gut	plasmid	asthma_4_75_L	asthma_4_1_L	0
-asthma_4	infant_gut	plasmid	asthma_4_105_L	asthma_4_1_L	0
-asthma_4	infant_gut	plasmid	asthma_4_8_L	asthma_4_51_L	0
-asthma_4	infant_gut	plasmid	asthma_4_99_L	asthma_4_1_L	0
-asthma_4	infant_gut	plasmid	asthma_4_273_L	asthma_4_1_L	0
-asthma_4	infant_gut	plasmid	asthma_4_213_L	asthma_4_1_L	0
-asthma_4	infant_gut	plasmid	asthma_4_168_L	asthma_4_1_L	0
-asthma_4	infant_gut	plasmid	asthma_4_351_L	asthma_4_1_L	0
-asthma_4	infant_gut	virus	asthma_4_1407_L	asthma_4_51_L	0
-asthma_5	infant_gut	plasmid	asthma_5_1118_L	asthma_5_1_L	0
-asthma_5	infant_gut	plasmid	asthma_5_548_L	asthma_5_1_L	0
-asthma_5	infant_gut	virus	asthma_5_73_L	asthma_5_1_L	0
-asthma_5	infant_gut	plasmid	asthma_5_196_C	asthma_5_91_C	0
-asthma_5	infant_gut	plasmid	asthma_5_1486_L	asthma_5_1_L	0
-asthma_5	infant_gut	plasmid	asthma_5_1143_L	asthma_5_1_L	0
-asthma_5	infant_gut	plasmid	asthma_5_761_L	asthma_5_1_L	0
-asthma_5	infant_gut	plasmid	asthma_5_958_L	asthma_5_68_L	0
-asthma_5	infant_gut	virus	asthma_5_1010_L	asthma_5_1_L	0
-asthma_5	infant_gut	plasmid	asthma_5_1102_L	asthma_5_1_L	0
-asthma_5	infant_gut	virus	asthma_5_1101_L	asthma_5_1_L	0
-asthma_5	infant_gut	plasmid	asthma_5_520_L	asthma_5_4_C	0
-asthma_5	infant_gut	plasmid	asthma_5_890_L	asthma_5_1_L	0
-asthma_5	infant_gut	plasmid	asthma_5_1735_L	asthma_5_1_L	0
-asthma_9	infant_gut	plasmid	asthma_9_126_C	asthma_9_7_C	1
-asthma_9	infant_gut	plasmid	asthma_9_713_C	asthma_9_7_C	0
-asthma_9	infant_gut	plasmid	asthma_9_207_L	asthma_9_3_L	0
-asthma_9	infant_gut	plasmid	asthma_9_64_L	asthma_9_3_L	0
-asthma_9	infant_gut	plasmid	asthma_9_204_C	asthma_9_36_L	0
-asthma_9	infant_gut	plasmid	asthma_9_1336_C	asthma_9_36_L	0
-asthma_9	infant_gut	plasmid	asthma_9_400_C	asthma_9_17_L	0
-asthma_9	infant_gut	virus	asthma_9_3319_L	asthma_9_131_L	0
-asthma_9	infant_gut	plasmid	asthma_9_2210_L	asthma_9_3_L	0
-asthma_9	infant_gut	plasmid	asthma_9_114_L	asthma_9_36_L	0
-asthma_9	infant_gut	virus	asthma_9_667_C	asthma_9_17_L	0
-asthma_9	infant_gut	plasmid	asthma_9_2740_L	asthma_9_138_L	0
-asthma_9	infant_gut	plasmid	asthma_9_358_L	asthma_9_206_L	0
-asthma_9	infant_gut	plasmid	asthma_9_3892_L	asthma_9_31_L	0
-asthma_9	infant_gut	virus	asthma_9_322_L	asthma_9_29_L	0
-asthma_9	infant_gut	plasmid	asthma_9_217_C	asthma_9_280_C	0
-asthma_9	infant_gut	plasmid	asthma_9_3050_L	asthma_9_141_L	0
-asthma_9	infant_gut	plasmid	asthma_9_3722_L	asthma_9_138_L	0
-asthma_9	infant_gut	plasmid	asthma_9_3351_L	asthma_9_131_L	0
-asthma_9	infant_gut	plasmid	asthma_9_3807_L	asthma_9_280_C	0
-asthma_9	infant_gut	plasmid	asthma_9_3104_L	asthma_9_8_C	0
-asthma_9	infant_gut	plasmid	asthma_9_117_L	asthma_9_29_L	0
-asthma_9	infant_gut	plasmid	asthma_9_1930_L	asthma_9_2_L	0
-cow_1	cow_rumen	virus	cow_1_36872_C	cow_1_3459_L	0
-cow_1	cow_rumen	virus	cow_1_1757_C	cow_1_69_L	0
-cow_1	cow_rumen	virus	cow_1_44915_L	cow_1_5455_L	0
-cow_1	cow_rumen	plasmid	cow_1_642_C	cow_1_427_L	0
-cow_1	cow_rumen	plasmid	cow_1_7316_L	cow_1_1457_L	0
-cow_1	cow_rumen	virus	cow_1_11001_C	cow_1_5455_L	0
-cow_1	cow_rumen	plasmid	cow_1_2707_L	cow_1_490_L	0
-cow_1	cow_rumen	virus	cow_1_2061_C	cow_1_3459_L	0
-cow_1	cow_rumen	virus	cow_1_44483_C	cow_1_5455_L	0
-cow_1	cow_rumen	plasmid	cow_1_19646_L	cow_1_427_L	0
-cow_1	cow_rumen	virus	cow_1_44744_C	cow_1_490_L	0
-cow_1	cow_rumen	virus	cow_1_33032_L	cow_1_2891_L	0
-cow_1	cow_rumen	virus	cow_1_34310_C	cow_1_6722_L	0
-cow_1	cow_rumen	virus	cow_1_30306_C	cow_1_1140_L	0
-cow_1	cow_rumen	virus	cow_1_13697_C	cow_1_2891_L	0
-cow_1	cow_rumen	virus	cow_1_14131_C	cow_1_3459_L	0
-cow_1	cow_rumen	virus	cow_1_42920_C	cow_1_5455_L	0
-cow_1	cow_rumen	virus	cow_1_38167_C	cow_1_2891_L	0
-cow_1	cow_rumen	plasmid	cow_1_5097_C	cow_1_742_L	0
-cow_1	cow_rumen	virus	cow_1_3965_L	cow_1_490_L	0
-cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_251_C	cow_bioreactor_1_636_C	0
-cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_5494_L	cow_bioreactor_1_636_C	0
-cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_5495_C	cow_bioreactor_1_636_C	0
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_1161_C	cow_bioreactor_1_196_C	0
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_8172_C	cow_bioreactor_1_11_L	0
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_2419_C	cow_bioreactor_1_63_C	0
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_4519_C	cow_bioreactor_1_1566_L	0
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_417_C	cow_bioreactor_1_11_L	0
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_10126_C	cow_bioreactor_1_1566_L	0
-cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_9549_C	cow_bioreactor_1_3_C	0
-cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_2497_L	cow_bioreactor_1_636_C	1
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_1896_C	cow_bioreactor_1_459_L	0
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_5464_C	cow_bioreactor_1_1566_L	0
-cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_359_C	cow_bioreactor_1_166_C	0
-cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_9948_L	cow_bioreactor_1_636_C	1
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_8858_L	cow_bioreactor_1_1020_L	0
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_5445_C	cow_bioreactor_1_63_C	0
-cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_555_C	cow_bioreactor_1_5_C	0
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_518_L	cow_bioreactor_1_169_L	0
-cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_9505_L	cow_bioreactor_1_1020_L	0
-cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_8680_L	cow_bioreactor_1_459_L	0
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_11102_L	cow_bioreactor_2_601_C	0
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_5991_L	cow_bioreactor_2_601_C	0
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_243_L	cow_bioreactor_2_601_C	0
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_5994_L	cow_bioreactor_2_601_C	0
-cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_6348_C	cow_bioreactor_2_727_L	0
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_11443_L	cow_bioreactor_2_601_C	1
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_9778_L	cow_bioreactor_2_601_C	0
-cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_13951_C	cow_bioreactor_2_727_L	0
-cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_8096_C	cow_bioreactor_2_174_C	0
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_6956_L	cow_bioreactor_2_601_C	1
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_8874_C	cow_bioreactor_2_727_L	0
-cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_8119_L	cow_bioreactor_2_727_L	0
-cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_2474_C	cow_bioreactor_2_394_L	0
-cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_139_C	cow_bioreactor_2_727_L	0
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_13682_L	cow_bioreactor_2_601_C	1
-cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_4109_L	cow_bioreactor_2_130_L	0
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_2024_L	cow_bioreactor_2_727_L	0
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_4430_L	cow_bioreactor_2_601_C	1
-cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_1925_C	cow_bioreactor_2_727_L	0
-cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_9890_L	cow_bioreactor_2_727_L	0
-cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_19365_C	cow_bioreactor_4_1750_C	1
-cow_bioreactor_4	cow_bioreactor	plasmid	cow_bioreactor_4_4701_L	cow_bioreactor_4_257_C	0
-cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_30715_C	cow_bioreactor_4_793_L	0
-cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_2184_L	cow_bioreactor_4_1750_C	0
-cow_bioreactor_4	cow_bioreactor	plasmid	cow_bioreactor_4_3519_C	cow_bioreactor_4_5210_L	0
-cow_bioreactor_4	cow_bioreactor	plasmid	cow_bioreactor_4_4233_L	cow_bioreactor_4_793_L	0
-cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_2186_L	cow_bioreactor_4_1750_C	0
-cow_bioreactor_4	cow_bioreactor	plasmid	cow_bioreactor_4_15461_L	cow_bioreactor_4_257_C	0
-cow_bioreactor_4	cow_bioreactor	plasmid	cow_bioreactor_4_4120_L	cow_bioreactor_4_1011_L	0
-cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_29207_L	cow_bioreactor_4_5210_L	0
-cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_20513_L	cow_bioreactor_4_1750_C	1
-cow_bioreactor_4	cow_bioreactor	plasmid	cow_bioreactor_4_28032_L	cow_bioreactor_4_974_L	0
-cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_31448_L	cow_bioreactor_4_793_L	0
-cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_3068_L	cow_bioreactor_4_5210_L	0
-cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_1514_C	cow_bioreactor_5_1162_C	0
-cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_1513_L	cow_bioreactor_5_1162_C	0
-cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_13571_L	cow_bioreactor_5_1162_C	1
-cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_1515_L	cow_bioreactor_5_1162_C	0
-cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_12905_L	cow_bioreactor_5_1162_C	1
-cow_bioreactor_5	cow_bioreactor	plasmid	cow_bioreactor_5_10575_L	cow_bioreactor_5_15_L	0
-cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_18894_L	cow_bioreactor_5_1162_C	1
-cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_24556_L	cow_bioreactor_5_1162_C	1
-cow_bioreactor_5	cow_bioreactor	plasmid	cow_bioreactor_5_2710_L	cow_bioreactor_5_63_L	0
-cow_bioreactor_5	cow_bioreactor	plasmid	cow_bioreactor_5_13074_L	cow_bioreactor_5_141_L	0
-cow_bioreactor_5	cow_bioreactor	plasmid	cow_bioreactor_5_18088_L	cow_bioreactor_5_1162_C	1
-cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_20398_L	cow_bioreactor_5_307_L	1
-infant_1	infant_gut	plasmid	infant_1_13_L	infant_1_1_C	0
-infant_1	infant_gut	virus	infant_1_55_L	infant_1_9_C	0
-infant_1	infant_gut	plasmid	infant_1_18_C	infant_1_6_C	0
-infant_12	infant_gut	plasmid	infant_12_35_C	infant_12_1_C	0
-infant_12	infant_gut	plasmid	infant_12_28_C	infant_12_1_C	0
-infant_12	infant_gut	plasmid	infant_12_5_C	infant_12_1_C	0
-infant_12	infant_gut	plasmid	infant_12_43_L	infant_12_17_L	0
-infant_12	infant_gut	virus	infant_12_30_L	infant_12_17_L	0
-infant_13	adult_gut	plasmid	infant_13_46_C	infant_13_9_L	0
-infant_14	infant_gut	plasmid	infant_14_61_C	infant_14_13_L	0
-infant_14	infant_gut	virus	infant_14_240_C	infant_14_3_C	0
-infant_14	infant_gut	virus	infant_14_489_L	infant_14_35_L	0
-infant_15	infant_gut	plasmid	infant_15_395_C	infant_15_1_C	0
-infant_15	infant_gut	plasmid	infant_15_133_C	infant_15_1_C	0
-infant_15	infant_gut	plasmid	infant_15_166_C	infant_15_3_L	0
-infant_15	infant_gut	virus	infant_15_79_C	infant_15_3_L	0
-infant_15	infant_gut	plasmid	infant_15_319_L	infant_15_6_C	0
-infant_15	infant_gut	plasmid	infant_15_35_C	infant_15_19_L	0
-infant_15	infant_gut	plasmid	infant_15_483_C	infant_15_19_L	0
-infant_16	infant_gut	plasmid	infant_16_133_C	infant_16_3_C	0
-infant_16	infant_gut	plasmid	infant_16_5_C	infant_16_9_L	0
-infant_16	infant_gut	plasmid	infant_16_15_L	infant_16_9_L	0
-infant_16	infant_gut	plasmid	infant_16_2_C	infant_16_9_L	0
-infant_16	infant_gut	virus	infant_16_174_L	infant_16_9_L	0
-infant_16	infant_gut	virus	infant_16_113_C	infant_16_9_L	0
-infant_16	infant_gut	plasmid	infant_16_13_C	infant_16_9_L	0
-infant_17	infant_gut	plasmid	infant_17_58_C	infant_17_10_C	0
-infant_17	infant_gut	virus	infant_17_89_L	infant_17_10_C	0
-infant_17	infant_gut	plasmid	infant_17_18_C	infant_17_1_C	0
-infant_17	infant_gut	plasmid	infant_17_4_C	infant_17_1_C	0
-infant_18	infant_gut	plasmid	infant_18_29_C	infant_18_2_C	0
-infant_19	infant_gut	plasmid	infant_19_4_L	infant_19_1_C	0
-infant_19	infant_gut	plasmid	infant_19_344_L	infant_19_1_C	0
-infant_2	infant_gut	plasmid	infant_2_8_C	infant_2_6_C	0
-infant_2	infant_gut	plasmid	infant_2_267_C	infant_2_3_C	0
-infant_2	infant_gut	plasmid	infant_2_60_C	infant_2_3_C	0
-infant_2	infant_gut	plasmid	infant_2_280_C	infant_2_6_C	0
-infant_2	infant_gut	plasmid	infant_2_460_L	infant_2_6_C	0
-infant_20	infant_gut	plasmid	infant_20_30_C	infant_20_5_C	0
-infant_20	infant_gut	plasmid	infant_20_32_C	infant_20_3_C	0
-infant_20	infant_gut	plasmid	infant_20_66_C	infant_20_31_L	0
-infant_20	infant_gut	plasmid	infant_20_147_L	infant_20_31_L	0
-infant_20	infant_gut	plasmid	infant_20_85_L	infant_20_31_L	0
-infant_21	infant_gut	virus	infant_21_16_C	infant_21_5_L	0
-infant_21	infant_gut	plasmid	infant_21_170_C	infant_21_5_L	0
-infant_21	infant_gut	plasmid	infant_21_75_C	infant_21_10_L	0
-infant_21	infant_gut	plasmid	infant_21_135_L	infant_21_1_C	0
-infant_21	infant_gut	plasmid	infant_21_39_L	infant_21_5_L	0
-infant_21	infant_gut	plasmid	infant_21_36_L	infant_21_5_L	0
-infant_23	infant_gut	plasmid	infant_23_11_C	infant_23_8_C	0
-infant_23	infant_gut	plasmid	infant_23_76_L	infant_23_8_C	0
-infant_23	infant_gut	plasmid	infant_23_81_C	infant_23_8_C	0
-infant_24	infant_gut	plasmid	infant_24_18_C	infant_24_3_C	0
-infant_24	infant_gut	plasmid	infant_24_14_C	infant_24_3_C	0
-infant_24	infant_gut	plasmid	infant_24_139_L	infant_24_3_C	0
-infant_24	infant_gut	plasmid	infant_24_25_L	infant_24_3_C	0
-infant_25	infant_gut	plasmid	infant_25_27_C	infant_25_32_C	0
-infant_25	infant_gut	plasmid	infant_25_53_C	infant_25_32_C	0
-infant_25	infant_gut	plasmid	infant_25_778_L	infant_25_32_C	0
-infant_25	infant_gut	virus	infant_25_51_C	infant_25_32_C	0
-infant_25	infant_gut	plasmid	infant_25_210_C	infant_25_38_C	0
-infant_25	infant_gut	plasmid	infant_25_681_L	infant_25_32_C	0
-infant_25	infant_gut	plasmid	infant_25_666_L	infant_25_32_C	0
-infant_25	infant_gut	plasmid	infant_25_850_L	infant_25_32_C	0
-infant_25	infant_gut	plasmid	infant_25_775_L	infant_25_32_C	0
-infant_25	infant_gut	plasmid	infant_25_386_L	infant_25_32_C	0
-infant_25	infant_gut	plasmid	infant_25_919_L	infant_25_32_C	0
-infant_26	infant_gut	plasmid	infant_26_18_C	infant_26_2_C	0
-infant_27	infant_gut	virus	infant_27_132_C	infant_27_5_C	0
-infant_27	infant_gut	plasmid	infant_27_34_C	infant_27_13_C	0
-infant_27	infant_gut	plasmid	infant_27_31_C	infant_27_13_C	0
-infant_27	infant_gut	plasmid	infant_27_46_L	infant_27_24_L	0
-infant_27	infant_gut	plasmid	infant_27_17_C	infant_27_14_L	0
-infant_28	infant_gut	plasmid	infant_28_47_C	infant_28_18_C	0
-infant_28	infant_gut	plasmid	infant_28_15_C	infant_28_6_C	0
-infant_28	infant_gut	plasmid	infant_28_58_L	infant_28_1_C	0
-infant_3	infant_gut	plasmid	infant_3_287_C	infant_3_12_C	0
-infant_3	infant_gut	plasmid	infant_3_289_C	infant_3_12_C	0
-infant_3	infant_gut	plasmid	infant_3_68_C	infant_3_11_C	0
-infant_3	infant_gut	plasmid	infant_3_3_C	infant_3_11_C	0
-infant_3	infant_gut	virus	infant_3_89_L	infant_3_9_C	0
-infant_3	infant_gut	plasmid	infant_3_41_C	infant_3_11_C	0
-infant_3	infant_gut	virus	infant_3_770_C	infant_3_9_C	0
-infant_4	infant_gut	plasmid	infant_4_61_C	infant_4_23_C	0
-infant_4	infant_gut	plasmid	infant_4_7_C	infant_4_16_C	0
-infant_4	infant_gut	plasmid	infant_4_338_C	infant_4_16_C	0
-infant_4	infant_gut	plasmid	infant_4_361_C	infant_4_16_C	0
-infant_4	infant_gut	plasmid	infant_4_386_C	infant_4_16_C	0
-infant_4	infant_gut	plasmid	infant_4_24_C	infant_4_16_C	0
-infant_4	infant_gut	plasmid	infant_4_112_L	infant_4_11_L	0
-infant_4	infant_gut	plasmid	infant_4_168_C	infant_4_16_C	0
-infant_4	infant_gut	plasmid	infant_4_188_L	infant_4_11_L	0
-infant_6	infant_gut	plasmid	infant_6_26_C	infant_6_1_C	0
-infant_6	infant_gut	plasmid	infant_6_12_C	infant_6_1_C	0
-infant_6	infant_gut	plasmid	infant_6_17_C	infant_6_1_C	0
-infant_6	infant_gut	plasmid	infant_6_40_C	infant_6_1_C	0
-infant_7	infant_gut	plasmid	infant_7_34_C	infant_7_6_C	0
-infant_8	infant_gut	plasmid	infant_8_2_L	infant_8_9_C	0
-infant_8	infant_gut	plasmid	infant_8_18_L	infant_8_9_C	0
-infant_8	infant_gut	plasmid	infant_8_26_C	infant_8_9_C	0
-infant_9	infant_gut	plasmid	infant_9_23_C	infant_9_8_C	0
-soil_1	soil	virus	soil_1_7558_C	soil_1_1743_L	0
-soil_1	soil	virus	soil_1_24605_C	soil_1_1239_L	0
-soil_1	soil	virus	soil_1_22909_C	soil_1_539_L	0
-soil_1	soil	virus	soil_1_18174_C	soil_1_2608_L	0
-soil_1	soil	virus	soil_1_6098_C	soil_1_1239_L	0
-soil_1	soil	plasmid	soil_1_21086_L	soil_1_2997_L	0
-soil_1	soil	virus	soil_1_22175_C	soil_1_1239_L	0
-soil_1	soil	virus	soil_1_18503_C	soil_1_1239_L	0
-soil_1	soil	virus	soil_1_21672_L	soil_1_562_L	0
-soil_2	soil	virus	soil_2_30187_C	soil_2_741_C	0
-soil_2	soil	plasmid	soil_2_4835_L	soil_2_737_C	0
-soil_2	soil	virus	soil_2_16117_C	soil_2_244_C	0
-soil_2	soil	plasmid	soil_2_382_L	soil_2_737_C	0
-soil_2	soil	plasmid	soil_2_14217_C	soil_2_468_C	0
-soil_2	soil	plasmid	soil_2_45400_L	soil_2_398_C	0
-soil_2	soil	virus	soil_2_37433_L	soil_2_409_L	0
-soil_2	soil	virus	soil_2_14104_C	soil_2_222_L	0
-soil_2	soil	plasmid	soil_2_12243_L	soil_2_1816_L	0
-soil_2	soil	plasmid	soil_2_2133_L	soil_2_1218_L	0
-soil_s1_1	soil	plasmid	soil_s1_1_14425_L	soil_s1_1_1656_L	0
-soil_s1_2	soil	virus	soil_s1_2_14206_L	soil_s1_2_113_C	0
-soil_s3_1	soil	virus	soil_s3_1_26664_L	soil_s3_1_124_C	0
-soil_s3_1	soil	plasmid	soil_s3_1_52444_L	soil_s3_1_515_C	0
-soil_s3_1	soil	plasmid	soil_s3_1_53803_L	soil_s3_1_515_C	0
-soil_s3_1	soil	virus	soil_s3_1_23097_C	soil_s3_1_515_C	0
-soil_s3_1	soil	virus	soil_s3_1_49886_C	soil_s3_1_250_L	0
-soil_s3_1	soil	plasmid	soil_s3_1_21170_L	soil_s3_1_5686_L	0
-soil_s3_1	soil	virus	soil_s3_1_23901_C	soil_s3_1_2205_L	0
-soil_s3_1	soil	plasmid	soil_s3_1_19544_L	soil_s3_1_5853_L	0
-soil_s3_1	soil	plasmid	soil_s3_1_17863_L	soil_s3_1_2333_L	0
-soil_s3_2	soil	virus	soil_s3_2_48227_L	soil_s3_2_322_C	0
-soil_s3_2	soil	virus	soil_s3_2_13860_C	soil_s3_2_62_C	0
-soil_s3_2	soil	plasmid	soil_s3_2_4646_C	soil_s3_2_1722_L	0
-soil_s3_2	soil	plasmid	soil_s3_2_30588_L	soil_s3_2_6301_L	0
-soil_s3_2	soil	plasmid	soil_s3_2_58511_L	soil_s3_2_1933_L	0
-soil_s4_1	soil	virus	soil_s4_1_12268_C	soil_s4_1_1189_L	0
-soil_s4_1	soil	virus	soil_s4_1_3400_C	soil_s4_1_412_C	0
-soil_s4_1	soil	virus	soil_s4_1_27358_L	soil_s4_1_71_L	0
-soil_s4_1	soil	virus	soil_s4_1_21772_L	soil_s4_1_507_L	1
-soil_s4_1	soil	virus	soil_s4_1_7759_C	soil_s4_1_71_L	0
-soil_s4_1	soil	plasmid	soil_s4_1_3701_L	soil_s4_1_300_L	0
-soil_s4_1	soil	virus	soil_s4_1_11343_L	soil_s4_1_845_L	0
-soil_s4_1	soil	plasmid	soil_s4_1_11566_C	soil_s4_1_182_C	0
-soil_s4_2	soil	virus	soil_s4_2_11982_C	soil_s4_2_177_L	0
-soil_s4_2	soil	plasmid	soil_s4_2_3135_C	soil_s4_2_1788_L	0
-soil_s4_2	soil	virus	soil_s4_2_26449_L	soil_s4_2_7021_L	0
-soil_s4_2	soil	plasmid	soil_s4_2_6617_L	soil_s4_2_1788_L	0
-soil_s4_2	soil	virus	soil_s4_2_25490_C	soil_s4_2_847_L	0
+sample	environment	type	MGE	host	host_has_array	validated
+96plex	mock	plasmid	96plex_61_C	96plex_5_L	1	0
+96plex	mock	plasmid	96plex_60_C	96plex_5_L	1	0
+96plex	mock	plasmid	96plex_78_C	96plex_13_C	1	0
+96plex	mock	plasmid	96plex_37_L	96plex_5_L	1	0
+96plex	mock	plasmid	96plex_69_C	96plex_5_L	1	0
+96plex	mock	plasmid	96plex_38_C	96plex_7_C	0	0
+96plex	mock	plasmid	96plex_63_C	96plex_17_C	0	0
+ERR12723528_mice	mice_gut	plasmid	ERR12723528_mice_124_C	ERR12723528_mice_5_C	1	1
+ERR12723528_mice	mice_gut	plasmid	ERR12723528_mice_171_L	ERR12723528_mice_43_L	0	0
+ERR12723529_mice	mice_gut	plasmid	ERR12723529_mice_110_L	ERR12723529_mice_26_L	0	0
+SRR23446539_sugarcane	sugarcane	plasmid	SRR23446539_sugarcane_478_L	SRR23446539_sugarcane_36_L	0	0
+SRR23446540_sugarcane	sugarcane	plasmid	SRR23446540_sugarcane_29_L	SRR23446540_sugarcane_10_L	0	0
+asthma_1	infant_gut	plasmid	asthma_1_376_L	asthma_1_123_L	0	0
+asthma_1	infant_gut	plasmid	asthma_1_1899_L	asthma_1_21_L	0	0
+asthma_1	infant_gut	plasmid	asthma_1_1135_C	asthma_1_21_L	0	0
+asthma_1	infant_gut	plasmid	asthma_1_477_L	asthma_1_21_L	0	0
+asthma_1	infant_gut	plasmid	asthma_1_1713_L	asthma_1_21_L	0	0
+asthma_11	infant_gut	plasmid	asthma_11_1225_C	asthma_11_8_C	0	0
+asthma_11	infant_gut	plasmid	asthma_11_233_C	asthma_11_6_L	0	0
+asthma_11	infant_gut	plasmid	asthma_11_1215_C	asthma_11_78_L	0	0
+asthma_11	infant_gut	plasmid	asthma_11_214_C	asthma_11_8_C	0	0
+asthma_11	infant_gut	plasmid	asthma_11_387_C	asthma_11_11_L	0	0
+asthma_11	infant_gut	plasmid	asthma_11_107_C	asthma_11_22_L	1	0
+asthma_11	infant_gut	virus	asthma_11_357_L	asthma_11_307_L	0	0
+asthma_11	infant_gut	virus	asthma_11_373_L	asthma_11_12_L	0	0
+asthma_11	infant_gut	virus	asthma_11_381_L	asthma_11_279_L	0	0
+asthma_12	infant_gut	plasmid	asthma_12_97_L	asthma_12_6_L	0	0
+asthma_12	infant_gut	plasmid	asthma_12_13_C	asthma_12_2_L	1	0
+asthma_13	infant_gut	plasmid	asthma_13_443_C	asthma_13_14_L	1	0
+asthma_13	infant_gut	plasmid	asthma_13_509_C	asthma_13_54_L	0	0
+asthma_13	infant_gut	plasmid	asthma_13_948_C	asthma_13_2_L	0	0
+asthma_13	infant_gut	plasmid	asthma_13_78_C	asthma_13_2_L	0	0
+asthma_13	infant_gut	plasmid	asthma_13_991_C	asthma_13_13_C	1	0
+asthma_13	infant_gut	plasmid	asthma_13_206_L	asthma_13_13_C	1	0
+asthma_13	infant_gut	plasmid	asthma_13_157_C	asthma_13_6_L	1	0
+asthma_13	infant_gut	plasmid	asthma_13_412_L	asthma_13_9_L	0	0
+asthma_13	infant_gut	plasmid	asthma_13_68_C	asthma_13_61_L	0	0
+asthma_13	infant_gut	virus	asthma_13_154_C	asthma_13_46_L	0	0
+asthma_13	infant_gut	virus	asthma_13_240_L	asthma_13_12_L	0	0
+asthma_14	infant_gut	plasmid	asthma_14_49_C	asthma_14_17_C	1	0
+asthma_14	infant_gut	plasmid	asthma_14_211_C	asthma_14_20_L	0	0
+asthma_14	infant_gut	plasmid	asthma_14_96_C	asthma_14_20_L	0	0
+asthma_14	infant_gut	plasmid	asthma_14_58_C	asthma_14_7_L	1	0
+asthma_15	infant_gut	plasmid	asthma_15_236_C	asthma_15_36_C	0	0
+asthma_15	infant_gut	plasmid	asthma_15_411_L	asthma_15_41_L	0	0
+asthma_16	infant_gut	plasmid	asthma_16_232_L	asthma_16_282_L	0	0
+asthma_18	infant_gut	plasmid	asthma_18_7_C	asthma_18_8_L	1	0
+asthma_18	infant_gut	virus	asthma_18_112_C	asthma_18_1_L	1	0
+asthma_18	infant_gut	virus	asthma_18_122_L	asthma_18_8_L	1	0
+asthma_19	infant_gut	plasmid	asthma_19_125_C	asthma_19_1_C	1	0
+asthma_2	infant_gut	plasmid	asthma_2_767_L	asthma_2_194_L	0	0
+asthma_2	infant_gut	plasmid	asthma_2_375_C	asthma_2_23_L	1	0
+asthma_20	infant_gut	plasmid	asthma_20_24_C	asthma_20_6_L	1	0
+asthma_20	infant_gut	plasmid	asthma_20_19_C	asthma_20_6_L	1	0
+asthma_3	infant_gut	plasmid	asthma_3_944_C	asthma_3_87_L	0	0
+asthma_3	infant_gut	plasmid	asthma_3_1281_C	asthma_3_42_C	0	0
+asthma_3	infant_gut	plasmid	asthma_3_348_L	asthma_3_105_L	1	0
+asthma_3	infant_gut	plasmid	asthma_3_1148_L	asthma_3_52_L	1	0
+asthma_3	infant_gut	plasmid	asthma_3_194_C	asthma_3_11_L	1	0
+asthma_4	infant_gut	plasmid	asthma_4_105_L	asthma_4_1_L	0	0
+asthma_4	infant_gut	plasmid	asthma_4_99_L	asthma_4_1_L	0	0
+asthma_4	infant_gut	plasmid	asthma_4_75_L	asthma_4_1_L	0	0
+asthma_4	infant_gut	plasmid	asthma_4_25_L	asthma_4_51_L	0	0
+asthma_4	infant_gut	plasmid	asthma_4_8_L	asthma_4_51_L	0	0
+asthma_4	infant_gut	plasmid	asthma_4_1370_L	asthma_4_149_L	0	0
+asthma_4	infant_gut	virus	asthma_4_235_L	asthma_4_1_L	0	0
+asthma_5	infant_gut	plasmid	asthma_5_520_L	asthma_5_4_C	0	0
+asthma_5	infant_gut	plasmid	asthma_5_196_C	asthma_5_91_C	0	0
+asthma_5	infant_gut	plasmid	asthma_5_761_L	asthma_5_1_L	1	0
+asthma_9	infant_gut	plasmid	asthma_9_400_C	asthma_9_17_L	0	0
+asthma_9	infant_gut	plasmid	asthma_9_126_C	asthma_9_7_C	1	1
+asthma_9	infant_gut	plasmid	asthma_9_3104_L	asthma_9_8_C	0	0
+asthma_9	infant_gut	plasmid	asthma_9_204_C	asthma_9_36_L	0	0
+asthma_9	infant_gut	plasmid	asthma_9_2740_L	asthma_9_138_L	0	0
+asthma_9	infant_gut	plasmid	asthma_9_1930_L	asthma_9_2_L	1	0
+asthma_9	infant_gut	plasmid	asthma_9_713_C	asthma_9_7_C	1	0
+asthma_9	infant_gut	plasmid	asthma_9_358_L	asthma_9_206_L	0	0
+asthma_9	infant_gut	plasmid	asthma_9_117_L	asthma_9_29_L	1	0
+asthma_9	infant_gut	plasmid	asthma_9_3050_L	asthma_9_141_L	0	0
+asthma_9	infant_gut	plasmid	asthma_9_3722_L	asthma_9_138_L	0	0
+asthma_9	infant_gut	plasmid	asthma_9_114_L	asthma_9_36_L	0	0
+asthma_9	infant_gut	plasmid	asthma_9_3807_L	asthma_9_280_C	0	0
+asthma_9	infant_gut	plasmid	asthma_9_64_L	asthma_9_3_L	1	0
+asthma_9	infant_gut	plasmid	asthma_9_207_L	asthma_9_3_L	1	0
+asthma_9	infant_gut	plasmid	asthma_9_217_C	asthma_9_280_C	0	0
+asthma_9	infant_gut	virus	asthma_9_667_C	asthma_9_17_L	0	0
+asthma_9	infant_gut	virus	asthma_9_268_L	asthma_9_36_L	0	0
+asthma_9	infant_gut	virus	asthma_9_103_L	asthma_9_36_L	0	0
+cow_1	cow_rumen	plasmid	cow_1_2707_L	cow_1_490_L	1	0
+cow_1	cow_rumen	plasmid	cow_1_7316_L	cow_1_1457_L	0	0
+cow_1	cow_rumen	plasmid	cow_1_5097_C	cow_1_742_L	0	0
+cow_1	cow_rumen	plasmid	cow_1_19646_L	cow_1_427_L	0	0
+cow_1	cow_rumen	plasmid	cow_1_642_C	cow_1_427_L	0	0
+cow_1	cow_rumen	virus	cow_1_14131_C	cow_1_3459_L	1	0
+cow_1	cow_rumen	virus	cow_1_1757_C	cow_1_69_L	1	0
+cow_1	cow_rumen	virus	cow_1_38167_C	cow_1_2891_L	0	0
+cow_1	cow_rumen	virus	cow_1_10123_C	cow_1_2891_L	0	0
+cow_1	cow_rumen	virus	cow_1_30195_C	cow_1_2891_L	0	0
+cow_1	cow_rumen	virus	cow_1_11001_C	cow_1_2891_L	0	0
+cow_1	cow_rumen	virus	cow_1_33032_L	cow_1_2891_L	0	0
+cow_1	cow_rumen	virus	cow_1_23937_L	cow_1_386_L	0	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_4519_C	cow_bioreactor_1_1566_L	0	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_5445_C	cow_bioreactor_1_63_C	1	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_1896_C	cow_bioreactor_1_459_L	1	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_8858_L	cow_bioreactor_1_1020_L	0	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_9505_L	cow_bioreactor_1_1020_L	0	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_8172_C	cow_bioreactor_1_11_L	1	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_10126_C	cow_bioreactor_1_1566_L	0	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_1161_C	cow_bioreactor_1_196_C	1	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_5464_C	cow_bioreactor_1_1566_L	0	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_2419_C	cow_bioreactor_1_63_C	1	0
+cow_bioreactor_1	cow_bioreactor	plasmid	cow_bioreactor_1_417_C	cow_bioreactor_1_11_L	1	0
+cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_9549_C	cow_bioreactor_1_3_C	0	0
+cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_5495_C	cow_bioreactor_1_636_C	1	0
+cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_2497_L	cow_bioreactor_1_636_C	1	1
+cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_8680_L	cow_bioreactor_1_459_L	1	0
+cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_251_C	cow_bioreactor_1_636_C	1	0
+cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_359_C	cow_bioreactor_1_166_C	1	0
+cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_9043_L	cow_bioreactor_1_175_L	0	0
+cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_7986_L	cow_bioreactor_1_636_C	1	0
+cow_bioreactor_1	cow_bioreactor	virus	cow_bioreactor_1_10750_L	cow_bioreactor_1_636_C	1	1
+cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_13951_C	cow_bioreactor_2_727_L	1	0
+cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_8119_L	cow_bioreactor_2_727_L	1	0
+cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_9890_L	cow_bioreactor_2_727_L	1	0
+cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_139_C	cow_bioreactor_2_727_L	1	0
+cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_6348_C	cow_bioreactor_2_727_L	1	0
+cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_8096_C	cow_bioreactor_2_174_C	1	0
+cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_4109_L	cow_bioreactor_2_130_L	1	0
+cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_2474_C	cow_bioreactor_2_394_L	0	0
+cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_11443_L	cow_bioreactor_2_601_C	1	1
+cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_8874_C	cow_bioreactor_2_727_L	1	0
+cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_13682_L	cow_bioreactor_2_601_C	1	1
+cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_6956_L	cow_bioreactor_2_601_C	1	1
+cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_11102_L	cow_bioreactor_2_601_C	1	0
+cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_5991_L	cow_bioreactor_2_601_C	1	0
+cow_bioreactor_2	cow_bioreactor	virus	cow_bioreactor_2_1925_C	cow_bioreactor_2_727_L	1	0
+cow_bioreactor_2	cow_bioreactor	plasmid	cow_bioreactor_2_6188_C	cow_bioreactor_2_61_L	0	0
+cow_bioreactor_4	cow_bioreactor	plasmid	cow_bioreactor_4_4233_L	cow_bioreactor_4_793_L	0	0
+cow_bioreactor_4	cow_bioreactor	plasmid	cow_bioreactor_4_3519_C	cow_bioreactor_4_974_L	0	0
+cow_bioreactor_4	cow_bioreactor	plasmid	cow_bioreactor_4_28032_L	cow_bioreactor_4_974_L	0	0
+cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_19365_C	cow_bioreactor_4_1750_C	1	1
+cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_30715_C	cow_bioreactor_4_793_L	0	0
+cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_2184_L	cow_bioreactor_4_1750_C	1	0
+cow_bioreactor_4	cow_bioreactor	virus	cow_bioreactor_4_2185_L	cow_bioreactor_4_1750_C	1	0
+cow_bioreactor_5	cow_bioreactor	plasmid	cow_bioreactor_5_2710_L	cow_bioreactor_5_63_L	0	0
+cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_20398_L	cow_bioreactor_5_307_L	1	1
+cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_13571_L	cow_bioreactor_5_1162_C	1	1
+cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_12905_L	cow_bioreactor_5_1162_C	1	1
+cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_1514_C	cow_bioreactor_5_1162_C	1	0
+cow_bioreactor_5	cow_bioreactor	virus	cow_bioreactor_5_18894_L	cow_bioreactor_5_1162_C	1	1
+infant_1	infant_gut	plasmid	infant_1_13_L	infant_1_1_C	0	0
+infant_1	infant_gut	plasmid	infant_1_18_C	infant_1_6_C	1	0
+infant_1	infant_gut	virus	infant_1_55_L	infant_1_9_C	1	0
+infant_12	infant_gut	plasmid	infant_12_28_C	infant_12_1_C	1	0
+infant_12	infant_gut	plasmid	infant_12_35_C	infant_12_1_C	1	0
+infant_12	infant_gut	plasmid	infant_12_5_C	infant_12_1_C	1	0
+infant_12	infant_gut	plasmid	infant_12_43_L	infant_12_17_L	0	0
+infant_12	infant_gut	virus	infant_12_30_L	infant_12_17_L	0	0
+infant_13	adult_gut	plasmid	infant_13_46_C	infant_13_9_L	1	0
+infant_14	infant_gut	plasmid	infant_14_61_C	infant_14_13_L	0	0
+infant_15	infant_gut	plasmid	infant_15_133_C	infant_15_1_C	0	0
+infant_15	infant_gut	plasmid	infant_15_166_C	infant_15_3_L	0	0
+infant_15	infant_gut	plasmid	infant_15_35_C	infant_15_19_L	0	0
+infant_15	infant_gut	virus	infant_15_79_C	infant_15_3_L	0	0
+infant_16	infant_gut	plasmid	infant_16_133_C	infant_16_3_C	1	0
+infant_16	infant_gut	plasmid	infant_16_13_C	infant_16_9_L	0	0
+infant_16	infant_gut	plasmid	infant_16_15_L	infant_16_9_L	0	0
+infant_16	infant_gut	plasmid	infant_16_2_C	infant_16_9_L	0	0
+infant_16	infant_gut	plasmid	infant_16_5_C	infant_16_9_L	0	0
+infant_16	infant_gut	virus	infant_16_113_C	infant_16_9_L	0	0
+infant_17	infant_gut	plasmid	infant_17_18_C	infant_17_1_C	1	0
+infant_17	infant_gut	plasmid	infant_17_58_C	infant_17_10_C	1	0
+infant_17	infant_gut	plasmid	infant_17_4_C	infant_17_1_C	1	0
+infant_17	infant_gut	virus	infant_17_89_L	infant_17_10_C	1	0
+infant_18	infant_gut	plasmid	infant_18_29_C	infant_18_2_C	0	0
+infant_19	infant_gut	plasmid	infant_19_4_L	infant_19_1_C	0	0
+infant_19	infant_gut	plasmid	infant_19_344_L	infant_19_1_C	0	0
+infant_2	infant_gut	plasmid	infant_2_460_L	infant_2_6_C	0	0
+infant_2	infant_gut	plasmid	infant_2_8_C	infant_2_6_C	0	0
+infant_2	infant_gut	plasmid	infant_2_60_C	infant_2_3_C	1	0
+infant_2	infant_gut	plasmid	infant_2_267_C	infant_2_3_C	1	0
+infant_20	infant_gut	plasmid	infant_20_30_C	infant_20_5_C	0	0
+infant_20	infant_gut	plasmid	infant_20_32_C	infant_20_3_C	0	0
+infant_20	infant_gut	plasmid	infant_20_66_C	infant_20_31_L	0	0
+infant_20	infant_gut	plasmid	infant_20_147_L	infant_20_31_L	0	0
+infant_21	infant_gut	plasmid	infant_21_75_C	infant_21_10_L	0	0
+infant_21	infant_gut	plasmid	infant_21_170_C	infant_21_5_L	0	0
+infant_21	infant_gut	plasmid	infant_21_135_L	infant_21_1_C	0	0
+infant_21	infant_gut	virus	infant_21_16_C	infant_21_5_L	0	0
+infant_21	infant_gut	virus	infant_21_23_L	infant_21_10_L	0	0
+infant_23	infant_gut	plasmid	infant_23_81_C	infant_23_8_C	0	0
+infant_23	infant_gut	plasmid	infant_23_11_C	infant_23_8_C	0	0
+infant_23	infant_gut	plasmid	infant_23_76_L	infant_23_8_C	0	0
+infant_24	infant_gut	plasmid	infant_24_18_C	infant_24_3_C	1	0
+infant_25	infant_gut	plasmid	infant_25_27_C	infant_25_32_C	0	0
+infant_25	infant_gut	plasmid	infant_25_53_C	infant_25_32_C	0	0
+infant_25	infant_gut	plasmid	infant_25_919_L	infant_25_32_C	0	0
+infant_25	infant_gut	plasmid	infant_25_210_C	infant_25_38_C	1	0
+infant_25	infant_gut	virus	infant_25_51_C	infant_25_32_C	0	0
+infant_26	infant_gut	plasmid	infant_26_18_C	infant_26_2_C	1	0
+infant_27	infant_gut	plasmid	infant_27_34_C	infant_27_13_C	0	0
+infant_27	infant_gut	plasmid	infant_27_17_C	infant_27_14_L	1	0
+infant_27	infant_gut	plasmid	infant_27_31_C	infant_27_13_C	0	0
+infant_27	infant_gut	plasmid	infant_27_46_L	infant_27_24_L	0	0
+infant_28	infant_gut	plasmid	infant_28_15_C	infant_28_6_C	1	0
+infant_28	infant_gut	plasmid	infant_28_47_C	infant_28_18_C	0	0
+infant_3	infant_gut	plasmid	infant_3_41_C	infant_3_11_C	0	0
+infant_3	infant_gut	plasmid	infant_3_68_C	infant_3_11_C	0	0
+infant_3	infant_gut	plasmid	infant_3_3_C	infant_3_11_C	0	0
+infant_3	infant_gut	plasmid	infant_3_289_C	infant_3_12_C	1	0
+infant_3	infant_gut	plasmid	infant_3_287_C	infant_3_12_C	1	0
+infant_3	infant_gut	virus	infant_3_770_C	infant_3_9_C	0	0
+infant_3	infant_gut	virus	infant_3_89_L	infant_3_9_C	0	0
+infant_3	infant_gut	virus	infant_3_194_L	infant_3_15_L	1	0
+infant_4	infant_gut	plasmid	infant_4_112_L	infant_4_11_L	0	0
+infant_4	infant_gut	plasmid	infant_4_7_C	infant_4_16_C	1	0
+infant_4	infant_gut	plasmid	infant_4_386_C	infant_4_16_C	1	0
+infant_4	infant_gut	plasmid	infant_4_61_C	infant_4_23_C	1	0
+infant_6	infant_gut	plasmid	infant_6_40_C	infant_6_1_C	1	0
+infant_6	infant_gut	plasmid	infant_6_12_C	infant_6_1_C	1	0
+infant_6	infant_gut	plasmid	infant_6_17_C	infant_6_1_C	1	0
+infant_6	infant_gut	plasmid	infant_6_26_C	infant_6_1_C	1	0
+infant_7	infant_gut	plasmid	infant_7_34_C	infant_7_6_C	0	0
+infant_8	infant_gut	plasmid	infant_8_18_L	infant_8_9_C	0	0
+infant_8	infant_gut	plasmid	infant_8_26_C	infant_8_9_C	0	0
+infant_8	infant_gut	plasmid	infant_8_2_L	infant_8_9_C	0	0
+infant_9	infant_gut	plasmid	infant_9_23_C	infant_9_8_C	0	0
+soil_1	soil	virus	soil_1_24605_C	soil_1_1239_L	0	0
+soil_1	soil	virus	soil_1_18503_C	soil_1_1239_L	0	0
+soil_1	soil	virus	soil_1_6098_C	soil_1_1239_L	0	0
+soil_1	soil	virus	soil_1_22175_C	soil_1_1239_L	0	0
+soil_1	soil	virus	soil_1_7558_C	soil_1_1743_L	0	0
+soil_1	soil	virus	soil_1_18124_C	soil_1_1608_C	0	0
+soil_1	soil	virus	soil_1_3372_L	soil_1_1528_L	1	0
+soil_1	soil	virus	soil_1_5071_L	soil_1_280_L	1	0
+soil_1	soil	virus	soil_1_1012_C	soil_1_873_L	0	0
+soil_1	soil	virus	soil_1_832_L	soil_1_307_L	0	0
+soil_2	soil	plasmid	soil_2_14217_C	soil_2_468_C	1	0
+soil_2	soil	plasmid	soil_2_2133_L	soil_2_1218_L	0	0
+soil_2	soil	plasmid	soil_2_382_L	soil_2_737_C	0	0
+soil_2	soil	plasmid	soil_2_4835_L	soil_2_737_C	0	0
+soil_2	soil	virus	soil_2_37433_L	soil_2_409_L	0	0
+soil_2	soil	virus	soil_2_16117_C	soil_2_244_C	0	0
+soil_2	soil	virus	soil_2_14104_C	soil_2_222_L	0	0
+soil_2	soil	virus	soil_2_20550_C	soil_2_3309_L	0	0
+soil_2	soil	virus	soil_2_30187_C	soil_2_741_C	0	0
+soil_2	soil	virus	soil_2_41673_L	soil_2_414_L	1	0
+soil_2	soil	virus	soil_2_1693_L	soil_2_3754_L	0	0
+soil_2	soil	virus	soil_2_2097_L	soil_2_5672_L	0	0
+soil_2	soil	virus	soil_2_4072_L	soil_2_3524_L	0	0
+soil_2	soil	virus	soil_2_16492_L	soil_2_3633_L	0	0
+soil_2	soil	virus	soil_2_6789_L	soil_2_245_L	1	0
+soil_2	soil	virus	soil_2_4120_L	soil_2_204_L	0	0
+soil_2	soil	virus	soil_2_27512_L	soil_2_1021_L	0	0
+soil_2	soil	virus	soil_2_8534_L	soil_2_3390_L	0	0
+soil_2	soil	virus	soil_2_1393_L	soil_2_679_L	0	0
+soil_2	soil	virus	soil_2_6138_L	soil_2_343_L	0	0
+soil_s1_1	soil	plasmid	soil_s1_1_5517_L	soil_s1_1_477_L	0	0
+soil_s1_1	soil	virus	soil_s1_1_27282_L	soil_s1_1_1506_L	0	0
+soil_s1_1	soil	plasmid	soil_s1_1_12365_C	soil_s1_1_1572_L	1	0
+soil_s1_1	soil	plasmid	soil_s1_1_32789_L	soil_s1_1_1572_L	1	0
+soil_s1_2	soil	virus	soil_s1_2_2806_L	soil_s1_2_8634_L	0	0
+soil_s1_2	soil	virus	soil_s1_2_3279_L	soil_s1_2_3388_L	0	0
+soil_s1_2	soil	virus	soil_s1_2_5180_L	soil_s1_2_2629_L	0	0
+soil_s3_1	soil	plasmid	soil_s3_1_21170_L	soil_s3_1_5853_L	0	0
+soil_s3_1	soil	plasmid	soil_s3_1_9771_L	soil_s3_1_7030_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_7989_C	soil_s3_1_29091_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_12148_C	soil_s3_1_335_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_23901_C	soil_s3_1_2205_L	1	0
+soil_s3_1	soil	virus	soil_s3_1_37147_L	soil_s3_1_282_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_4672_L	soil_s3_1_2865_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_1915_L	soil_s3_1_5853_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_10536_L	soil_s3_1_564_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_3772_L	soil_s3_1_7030_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_4040_L	soil_s3_1_1728_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_966_L	soil_s3_1_2333_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_360_L	soil_s3_1_2466_L	0	0
+soil_s3_1	soil	virus	soil_s3_1_14006_L	soil_s3_1_2551_L	0	0
+soil_s3_2	soil	plasmid	soil_s3_2_58511_L	soil_s3_2_1933_L	0	0
+soil_s3_2	soil	plasmid	soil_s3_2_4646_C	soil_s3_2_1722_L	0	0
+soil_s3_2	soil	plasmid	soil_s3_2_8253_L	soil_s3_2_1933_L	0	0
+soil_s3_2	soil	plasmid	soil_s3_2_29806_C	soil_s3_2_1933_L	0	0
+soil_s3_2	soil	plasmid	soil_s3_2_1130_L	soil_s3_2_501_L	1	0
+soil_s3_2	soil	virus	soil_s3_2_13860_C	soil_s3_2_62_C	0	0
+soil_s3_2	soil	virus	soil_s3_2_9335_L	soil_s3_2_1508_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_27816_C	soil_s3_2_4068_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_14427_L	soil_s3_2_1543_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_2706_L	soil_s3_2_4636_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_26024_L	soil_s3_2_210_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_680_L	soil_s3_2_14829_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_2553_L	soil_s3_2_1717_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_2402_L	soil_s3_2_1002_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_2424_L	soil_s3_2_1717_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_5093_L	soil_s3_2_1002_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_112_L	soil_s3_2_10716_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_6585_L	soil_s3_2_4636_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_2124_L	soil_s3_2_14829_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_9642_L	soil_s3_2_1717_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_295_L	soil_s3_2_5506_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_425_L	soil_s3_2_903_L	0	0
+soil_s3_2	soil	virus	soil_s3_2_9412_L	soil_s3_2_903_L	0	0
+soil_s4_1	soil	plasmid	soil_s4_1_3701_L	soil_s4_1_300_L	1	0
+soil_s4_1	soil	plasmid	soil_s4_1_24179_L	soil_s4_1_5834_L	0	0
+soil_s4_1	soil	plasmid	soil_s4_1_11566_C	soil_s4_1_182_C	0	0
+soil_s4_1	soil	virus	soil_s4_1_3400_C	soil_s4_1_412_C	0	0
+soil_s4_1	soil	virus	soil_s4_1_12268_C	soil_s4_1_1189_L	0	0
+soil_s4_1	soil	virus	soil_s4_1_14608_C	soil_s4_1_675_L	0	0
+soil_s4_1	soil	virus	soil_s4_1_14138_L	soil_s4_1_210_L	0	0
+soil_s4_1	soil	virus	soil_s4_1_7317_L	soil_s4_1_71_L	1	0
+soil_s4_1	soil	virus	soil_s4_1_311_L	soil_s4_1_3428_L	0	0
+soil_s4_1	soil	virus	soil_s4_1_6818_L	soil_s4_1_921_L	0	0
+soil_s4_1	soil	virus	soil_s4_1_4812_L	soil_s4_1_4254_L	0	0
+soil_s4_1	soil	virus	soil_s4_1_3011_L	soil_s4_1_920_L	0	0
+soil_s4_1	soil	virus	soil_s4_1_1960_L	soil_s4_1_1788_L	0	0
+soil_s4_1	soil	virus	soil_s4_1_566_L	soil_s4_1_4254_L	0	0
+soil_s4_2	soil	plasmid	soil_s4_2_3135_C	soil_s4_2_1788_L	1	0
+soil_s4_2	soil	virus	soil_s4_2_8327_L	soil_s4_2_10077_L	0	0

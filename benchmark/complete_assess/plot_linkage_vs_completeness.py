@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-ECE-host linkage across a gradient of host MAG/contig completeness.
+ECE-host linkage across a gradient of host MAG/contig quality.
 
 Reviewer response: assess ECE-host linkage performance across a gradient of MAG
-completeness. For each of the real run2 samples, we take the contigs MODIFI
-actually profiled for methylation (the candidate host universe), join their
-CheckM2 completeness, and mark which ones received a confident ECE linkage
-(default filter: specificity < 0.01 AND final_score > 0.5, as in
-scripts/estimate_linkage.py). Pooled across samples we plot:
-  A. linkage rate  = fraction of candidate host contigs linked to >=1 ECE, per
-                     completeness bin (Wilson 95% CI)
-  B. linkage count = number of ECE-host linkages, per completeness bin
-
-A secondary variant restricts to contamination <= 5% (the paper criterion).
+completeness (and contamination). For each of the 64 real run2 samples, we take
+the contigs MODIFI profiled for DNA modification (the candidate host universe),
+join their CheckM2 completeness/contamination, and mark which ones are the host
+of >=1 confident linkage to a curated ECE. A linkage counts iff the host_summary
+row passes the default filter (specificity < 0.01 AND final_score > 0.5, as in
+scripts/estimate_linkage.py) AND its MGE is in the curated 3880-ECE set. No host
+requirement; one ECE may link to >1 host (all passing rows counted). Pooled
+across samples we plot linkage rate (fraction of candidate host contigs linked to
+>=1 ECE, Wilson 95% CI):
+  a. vs. host completeness (all profiled contigs)
+  b. vs. host contamination (contigs with completeness >= 50%)
 """
 
 import os
@@ -37,7 +38,13 @@ OUT = "/home/shuaiw/MODIFI/tmp/rev_figs/complete_assess"
 # the 72 run2 samples, the other 8 have only *_methylation_time). No sample restriction:
 # this figure pools all 64 metagenomes.
 
-# MODIFI default linkage filter (scripts/estimate_linkage.py:587-588)
+# Curated ECE set (3880 elements across 64 samples). A host_summary row counts as a linkage
+# only if its MGE is one of these real ECEs; join key is (sample, MGE).
+ECE_SET = "/home/shuaiw/MODIFI/tmp/rev_figs/ece_anno/ece_profile_final_sourcedata_ece.csv"
+
+# MODIFI default linkage filter (scripts/estimate_linkage.py:587-588). No host requirement
+# (host need not have a phylum annotation); one ECE may link to >1 host contig (all passing
+# rows counted, no dedup to a single best host).
 SPEC_CUT = 0.01      # specificity < 0.01
 SCORE_CUT = 0.5      # final_score > 0.5
 
@@ -67,6 +74,12 @@ def build_contig_table():
     rows = []
     n_samples = 0
     n_missing_checkm = 0
+
+    # Curated ECE set: {sample: set(MGE contig IDs)}.
+    ece = pd.read_csv(ECE_SET)
+    ece_by_sample = {s: set(g["MGE"]) for s, g in ece.groupby("sample")}
+    print(f"ECE set: {len(ece)} ECEs across {len(ece_by_sample)} samples")
+
     meth_dirs = sorted(glob.glob(os.path.join(RUN2, "*", "*_methylation4")))
     for mdir in meth_dirs:
         sample_dir = os.path.dirname(mdir)
@@ -98,12 +111,15 @@ def build_contig_table():
         comp = dict(zip(cm["Name"], cm["Completeness"]))
         cont = dict(zip(cm["Name"], cm["Contamination"]))
 
-        # Confident linkages (default filter). host_summary may be empty/absent.
+        # Confident linkages: default filter AND MGE restricted to the curated ECE set.
+        # host_summary may be empty/absent. All passing (MGE, host) rows are counted.
         linked_counts = {}
-        if os.path.exists(host_summary):
+        ece_mges = ece_by_sample.get(sample, set())
+        if os.path.exists(host_summary) and ece_mges:
             hs = pd.read_csv(host_summary)
-            if len(hs) > 0 and {"specificity", "final_score", "host"} <= set(hs.columns):
-                hs = hs[(hs["specificity"] < SPEC_CUT) & (hs["final_score"] > SCORE_CUT)]
+            if len(hs) > 0 and {"specificity", "final_score", "host", "MGE"} <= set(hs.columns):
+                hs = hs[(hs["specificity"] < SPEC_CUT) & (hs["final_score"] > SCORE_CUT)
+                        & (hs["MGE"].isin(ece_mges))]
                 linked_counts = hs["host"].value_counts().to_dict()
 
         for cid in profiled:

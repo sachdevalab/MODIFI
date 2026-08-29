@@ -40,6 +40,15 @@ DATASETS = {
                  "length": "mge_length", "mgedepth": "mge_depth",
                  "hostdepth": "host_depth", "lineage": "host_lineage"},
     },
+    # ALL geNomad-derived isolate ECEs (linked + unlinked), 4052 across 1186 genomes.
+    "isolate_all": {
+        "csv": "/home/shuaiw/borg/revision/ece_anno/isolate_all/isolate_all_eces.csv",
+        "batch_root": "/home/shuaiw/borg/paper/isolation/batch2_results",
+        "criteria": "strict",
+        "cols": {"sample": "prefix", "seqname": "mge_contig", "type": "mge_type",
+                 "length": "mge_length", "mgedepth": "mge_depth",
+                 "hostdepth": "host_depth", "lineage": "host_lineage"},
+    },
     "metagenome": {
         "csv": "/home/shuaiw/MODIFI/tmp/figures/multi_env_linkage/network_99/mge_host_gc_cov.csv",
         "batch_root": "/home/shuaiw/borg/paper/run2",
