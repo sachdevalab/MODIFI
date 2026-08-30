@@ -150,7 +150,7 @@ plot_cross_taxa <- function(fig_dir) {
               position = position_dodge(width = 0.7), 
               vjust = -0.5, size = 3, color = "black") +
     labs(
-      x = "MGE-Genome Taxonomic Relationship",
+      x = "ECE-Genome Taxonomic Relationship",
       y = "Mean Jaccard Similarity",
       fill = "MGE Type"
     ) +
