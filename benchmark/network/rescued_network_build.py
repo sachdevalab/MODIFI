@@ -29,21 +29,46 @@ _, host_clu, clu_host = pld.read_drep_cluster(f"{NR}/dRep_99_out/data_tables/Cdb
 
 lk = list(csv.DictReader(open(f"{FP}/linkage_table.csv")))
 G = nx.DiGraph()
-mtype = {}; hlabel = {}; hcluster_of = {}
+mtype = {}; hlabel = {}; hcluster_of = {}; hc2host = {}
 for r in lk:
     mge, host, t = r["MGE"], r["host"], r["type"]
     mc = mge_clu.get(mge, mge)
     hc = host_clu.get(host, host)               # singleton fallback
     mtype[mc] = t
     hcluster_of[host] = hc
+    hc2host[hc] = host
     hlabel[hc] = f"{sp_label(host)} ({hc})"
     G.add_node(mc, kind=t); G.add_node(hc, kind="host")
     G.add_edge(mc, hc)
+def rep(mc):  # representative ECE contig for a cluster (alphabetically-first member)
+    return sorted(clu_mge.get(mc, [mc]))[0]
 
 hosts = [n for n in G if G.nodes[n]["kind"] == "host"]
 plas = [n for n in G if G.nodes[n]["kind"] == "plasmid"]
 viru = [n for n in G if G.nodes[n]["kind"] == "virus"]
 print(f"NETWORK: nodes={G.number_of_nodes()} (host {len(hosts)}, plasmid {len(plas)}, virus {len(viru)}) edges={G.number_of_edges()}")
+
+# ---- enrich node/edge attributes and export the whole network (matches this 411/270 graph) ----
+for m in plas + viru:
+    G.nodes[m]["type"] = mtype[m]; G.nodes[m]["label"] = rep(m)
+for h in hosts:
+    mem = hc2host.get(h, h)
+    ph = classify_taxa(ctg_taxa.get(mem, "NA"), "phylum")
+    G.nodes[h]["type"] = ph if (ph and len(ph) > 3 and ph not in ("Unknown", "p__")) else "Unclassified"
+    G.nodes[h]["label"] = hlabel[h]; G.nodes[h]["species"] = hlabel[h].rsplit(" (", 1)[0]
+for u, v in G.edges():
+    G.edges[u, v]["weight"] = 1; G.edges[u, v]["type"] = mtype.get(u, "")
+ND = "/home/shuaiw/MODIFI/tmp/rev_figs/ece_anno/network_99_revised"
+os.makedirs(ND, exist_ok=True)
+pld.assign_node_colors_for_gml(G)
+nx.write_gml(G, f"{ND}/whole_network2.gml")
+try:
+    pld.write_filtered_gml_abundant_phylum(G, f"{ND}/whole_network2_abundant_phylum.gml", min_host_per_phylum=5)
+except Exception as e:
+    print("abundant-phylum gml skipped:", e)
+pld.export_network_to_excel(G, f"{ND}/network.xlsx")
+pld.export_network_to_json(G, f"{ND}/network.json")
+print(f"exported whole-network gml/json/xlsx -> {ND}")
 
 ccs = sorted(nx.weakly_connected_components(G), key=len, reverse=True)
 lc = ccs[0]
@@ -94,8 +119,10 @@ for tick, m in zip(axh.get_xticklabels(), ece_cols):
 axtop.bar(range(len(ece_cols)), M.sum(0), color="grey"); axtop.set_ylabel("degree", fontsize=8); axtop.tick_params(labelbottom=False); axtop.set_xlim(-0.5, len(ece_cols)-0.5)
 axright.barh(range(len(host_rows)), M.sum(1), color="grey"); axright.set_xlabel("degree", fontsize=8); axright.invert_yaxis(); axright.tick_params(labelleft=False); axright.set_ylim(len(host_rows)-0.5, -0.5)
 axh.text(-0.16, 1.06, "d", transform=axh.transAxes, fontsize=18, fontweight="bold")
-fig.savefig(f"{OUT}/fig5d_largest_component.pdf", bbox_inches="tight")
-fig.savefig(f"{OUT}/fig5d_largest_component.png", bbox_inches="tight", dpi=200)
+# NOTE: the canonical Fig 5d is the crisp R geom_tile version (plot_component_heatmap_revised.R).
+# Write this matplotlib version under a distinct name so re-running this builder never clobbers it.
+fig.savefig(f"{OUT}/fig5d_largest_component_matplotlib.pdf", bbox_inches="tight")
+fig.savefig(f"{OUT}/fig5d_largest_component_matplotlib.png", bbox_inches="tight", dpi=200)
 # source data
 with open(f"{OUT}/fig5d_largest_component_sourcedata.csv", "w", newline="") as fh:
     w = csv.writer(fh); w.writerow(["host_cluster", "ECE_cluster", "MGE_type", "ECE_representative"])

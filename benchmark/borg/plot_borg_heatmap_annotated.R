@@ -47,6 +47,24 @@ italicize_mp <- function(labels) {
   exprs
 }
 
+# Display labels for the genome-class (Type) legend. Returns an expression vector aligned to
+# `levels`; Methanoperedens is italicized (genus name), the rest are plain relabeled text.
+genome_class_labels <- function(levels) {
+  disp <- c(Mp = "Methanoperedens", mini_Borg = "Mini-Borg", Mini_Chr = "Mini-Chromosome",
+            Borg = "Borg", Mp_Virus = "Mp virus", `Non-Mp` = "Non-Mp")
+  exprs <- vector("expression", length(levels))
+  for (i in seq_along(levels)) {
+    lv <- levels[i]
+    if (lv == "Mp") {
+      exprs[[i]] <- bquote(italic("Methanoperedens"))
+    } else {
+      d <- if (lv %in% names(disp)) unname(disp[lv]) else lv
+      exprs[[i]] <- bquote(.(d))
+    }
+  }
+  exprs
+}
+
 # ---- IUPAC-aware motif deduplication helpers ----
 .IUPAC <- list(A="A", C="C", G="G", T="T", R="AG", Y="CT", S="GC", W="AT", K="GT",
                M="AC", B="CGT", D="AGT", H="ACT", V="ACG", N="ACGT")
@@ -114,6 +132,7 @@ short_genome_label <- function(contig, type, borg_ref) {
     lab <- borg_ref
     lab <- sub("[-_](SR-VP|SRVP)[0-9]*_.*$", "", lab)  # drop "_SR-VP.../-SR-VP..." sample suffix
     lab <- sub("_scaf(fold)?.*$", "", lab)              # drop "_scaffold.../_scaf..." suffix
+    lab <- sub("_[0-9]+(kb|Mb|MB)$", "", lab)           # drop size suffix, e.g. "_69kb"
     if (!nzchar(lab) || is.na(lab)) lab <- borg_ref
     return(lab)
   }
@@ -317,14 +336,12 @@ personal_plot_annotated <- function(profile_df, plot_name,
   row_split_fac <- factor(as.character(comp_id), levels = ordered_comps)
 
   # ---- Colors ----
-  # Type colors: reuse the paper's network palette so the figure stays consistent.
-  ncdf <- read.csv(network_colors_file, stringsAsFactors = FALSE)
-  type_color_map <- ncdf %>%
-    filter(!is.na(genome), !is.na(Color)) %>%
-    group_by(genome, Color) %>% summarise(n = n(), .groups = 'drop') %>%
-    group_by(genome) %>% slice_max(n, n = 1, with_ties = FALSE) %>% ungroup()
-  type_colors <- setNames(type_color_map$Color, type_color_map$genome)
-  # Ensure every observed type has a color
+  # Genome-class palette (Okabe-Ito, colorblind-safe); introduced once in the paper's shared
+  # color key, so the per-panel genome-class legend is dropped below (network_colors_file no
+  # longer used for these colors).
+  genome_palette <- c(Borg = "#0072B2", mini_Borg = "#5E35B1", Mini_Chr = "#009E73",
+                      Mp = "#E69F00", Mp_Virus = "#D55E00", `Non-Mp` = "#9AA6B2")
+  type_colors <- genome_palette
   for (tp in unique(type_names)) if (is.na(type_colors[tp])) type_colors[tp] <- "#999999"
   type_colors <- type_colors[names(type_colors) %in% unique(type_names)]
 
@@ -341,22 +358,22 @@ personal_plot_annotated <- function(profile_df, plot_name,
   }
   sample_colors <- setNames(sample_pal, unique_samples)
 
-  # Heatmap value colormap (same yellow -> blue ramp)
-  col_fun <- colorRamp2(seq(0, 1, length.out = 100),
-                        colorRampPalette(c("#FFFFD4", "#C7E9B4", "#41B6C4",
-                                           "#225EA8", "#081D58"))(100))
+  # Heatmap value colormap: white -> orange -> dark red, aligned with the paper's other
+  # heatmaps (benchmark/motif_change/plot_inversion_heatmap.R).
+  col_fun <- colorRamp2(c(0, 0.5, 1), c("white", "#fc8d59", "#67001f"))
 
   # ---- Left annotation. The linkage grouping is conveyed by the row-split blocks and gaps,
   #      so a separate linkage-group bar is not needed. The Sample bar is dropped when the
   #      plot covers a single sample (nothing to distinguish). ----
   if (length(unique(sample_names)) > 1) {
     left_anno <- rowAnnotation(
-      `Type` = type_names,
+      `Genome class` = type_names,
       `Sample` = sample_names,
-      col = list(`Type` = type_colors, `Sample` = sample_colors),
+      col = list(`Genome class` = type_colors, `Sample` = sample_colors),
       annotation_name_gp = gpar(fontsize = 8),
       annotation_legend_param = list(
-        `Type` = list(title = "Type", title_gp = gpar(fontsize = 9, fontface = "bold"),
+        `Genome class` = list(title = "Genome class", title_gp = gpar(fontsize = 9, fontface = "bold"),
+                      at = names(type_colors), labels = genome_class_labels(names(type_colors)),
                       labels_gp = gpar(fontsize = 8)),
         `Sample` = list(title = "Sample", title_gp = gpar(fontsize = 9, fontface = "bold"),
                         labels_gp = gpar(fontsize = 7))
@@ -365,11 +382,12 @@ personal_plot_annotated <- function(profile_df, plot_name,
     )
   } else {
     left_anno <- rowAnnotation(
-      `Type` = type_names,
-      col = list(`Type` = type_colors),
+      `Genome class` = type_names,
+      col = list(`Genome class` = type_colors),
       annotation_name_gp = gpar(fontsize = 8),
       annotation_legend_param = list(
-        `Type` = list(title = "Type", title_gp = gpar(fontsize = 9, fontface = "bold"),
+        `Genome class` = list(title = "Genome class", title_gp = gpar(fontsize = 9, fontface = "bold"),
+                      at = names(type_colors), labels = genome_class_labels(names(type_colors)),
                       labels_gp = gpar(fontsize = 8))
       ),
       width = unit(4, "mm")
@@ -409,22 +427,31 @@ personal_plot_annotated <- function(profile_df, plot_name,
     # Rotated layout for single-sample panels: motifs as rows (readable horizontal labels),
     # genomes as columns split into the same linkage-group blocks with gaps.
     mat_t <- t(pivot_matrix)
-    # auto-size: motifs on rows (height), genomes on columns (width)
-    plot_height <- max(5, nrow(mat_t) * 0.13 + 4)
-    plot_width  <- max(4.5, ncol(mat_t) * 0.28 + 4)
+    # auto-size: narrower width, taller height (with larger fonts) for a single-sample panel
+    plot_height <- max(7, nrow(mat_t) * 0.24 + 3)
+    plot_width  <- max(3.5, ncol(mat_t) * 0.30 + 2.5)
     col_labels_short <- mapply(short_genome_label, contig_names,
                                type_names, contig_to_borg[contig_names])
+    # Modification-fraction colormap aligned with the paper's other heatmaps
+    # (benchmark/motif_change/plot_inversion_heatmap.R): white -> orange -> dark red.
+    col_fun_t <- colorRamp2(c(0, 0.5, 1), c("white", "#fc8d59", "#67001f"))
+    # Genome-class colors are introduced in the paper's shared color key, so we drop this
+    # panel's genome-class legend and keep only a compact, horizontal Modification-fraction bar.
+    hm_legend_t <- list(title = "Modification fraction",
+                        title_gp = gpar(fontsize = 11, fontface = "bold"),
+                        labels_gp = gpar(fontsize = 9),
+                        direction = "horizontal",
+                        legend_width = unit(4, "cm"),
+                        title_position = "topcenter")
     top_anno <- HeatmapAnnotation(
-      `Type` = type_names,
-      col = list(`Type` = type_colors),
-      annotation_name_gp = gpar(fontsize = 8),
-      annotation_legend_param = list(
-        `Type` = list(title = "Type", title_gp = gpar(fontsize = 9, fontface = "bold"),
-                      labels_gp = gpar(fontsize = 8))),
+      `Genome class` = type_names,
+      col = list(`Genome class` = type_colors),
+      annotation_name_gp = gpar(fontsize = 10),
+      show_legend = FALSE,
       height = unit(4, "mm"), which = "column")
     ht <- Heatmap(mat_t,
                   name = "Modification fraction",
-                  col = col_fun,
+                  col = col_fun_t,
                   column_split = row_split_fac,
                   cluster_columns = TRUE,
                   clustering_distance_columns = "pearson",
@@ -441,16 +468,18 @@ personal_plot_annotated <- function(profile_df, plot_name,
                   show_heatmap_legend = TRUE,
                   top_annotation = top_anno,
                   column_labels = col_labels_short,
-                  row_names_gp = gpar(fontsize = 6),
-                  column_names_gp = gpar(fontsize = 7),
+                  row_names_gp = gpar(fontsize = 9),
+                  column_names_gp = gpar(fontsize = 9),
                   column_names_rot = 90,
-                  heatmap_legend_param = hm_legend)
+                  heatmap_legend_param = hm_legend_t)
   }
 
+  # single-sample (transposed) panels: legends on top; full figure keeps them on the right
+  legend_side <- if (transpose) "top" else "right"
   pdf(plot_name, width = plot_width, height = plot_height)
   draw(ht, merge_legend = TRUE,
-       heatmap_legend_side = "right",
-       annotation_legend_side = "right",
+       heatmap_legend_side = legend_side,
+       annotation_legend_side = legend_side,
        padding = unit(c(2, 2, 2, 2), "mm"))
   dev.off()
   cat(paste0("Saved annotated heatmap to: ", plot_name, "\n"))

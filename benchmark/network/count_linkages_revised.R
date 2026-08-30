@@ -29,7 +29,7 @@ cat("\n=== env p-values ===\n"); print(env_p)
 p1 <- ggplot(env_counts, aes(environment, count, fill=MGE_type)) +
   geom_boxplot(outlier.shape=NA, position=position_dodge(width=.8), color="black", size=.5) +
   geom_jitter(position=position_jitterdodge(jitter.width=.2, dodge.width=.8), color="black", size=1.2, show.legend=FALSE) +
-  scale_fill_discrete(name="MGE Type") + labs(x="Habitat", y="Linkages per Sample") + mytheme +
+  scale_fill_discrete(name="ECE type") + labs(x="Habitat", y="Linkages per Sample") + mytheme +
   geom_text(data=env_p, aes(environment, y, label=star), inherit.aes=FALSE, vjust=0, size=6)
 ggsave(file.path(O,"fig5b_linkage_counts_env.pdf"), p1, width=3.5, height=6)
 ggsave(file.path(O,"fig5b_linkage_counts_env.png"), p1, width=3.5, height=6, dpi=200)
@@ -47,7 +47,7 @@ cat("\n=== phylum p-values ===\n"); print(ph_p)
 p2 <- ggplot(ph_counts, aes(host_phylum, count, fill=MGE_type)) +
   geom_boxplot(outlier.shape=NA, position=position_dodge(width=.8), color="black", size=.5) +
   geom_jitter(position=position_jitterdodge(jitter.width=.2, dodge.width=.8), color="black", size=1.2, show.legend=FALSE) +
-  scale_fill_discrete(name="MGE Type") + labs(x="Host Phylum", y="Linkages per Sample") +
+  scale_fill_discrete(name="ECE type") + labs(x="Host Phylum", y="Linkages per Sample") +
   mytheme + theme(legend.position="none") +
   geom_text(data=ph_p, aes(host_phylum, y, label=star), inherit.aes=FALSE, vjust=0, size=6)
 ggsave(file.path(O,"fig5c_linkage_counts_phylum.pdf"), p2, width=7, height=5)

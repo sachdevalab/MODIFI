@@ -156,6 +156,8 @@ def assign_node_colors_for_gml(G):
             hexcolor = others_hex
         G.nodes[n]['graphics_fill'] = hexcolor
         G.nodes[n]['color'] = hexcolor
+        # nested block so nx.write_gml emits `graphics [ fill "#..." ]`, which Gephi reads on import
+        G.nodes[n]['graphics'] = {'fill': hexcolor}
 
     # Print only node categories present in this network (for manual Gephi Partition)
     type_to_color = {}

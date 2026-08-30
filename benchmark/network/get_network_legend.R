@@ -6,8 +6,8 @@ library(ggplot2)
 # This script builds a legend showing MGE types (plasmid, virus) with shapes
 # and host phyla as colored circle entries. It saves a PDF legend file.
 
-color_path <- "network_colors.csv"
-out_pdf <- "../../tmp/figures/multi_env_linkage/network_99/network_legend.pdf"
+color_path <- "../../tmp/rev_figs/ece_anno/network_99_revised/network_colors.csv"
+out_pdf <- "../../tmp/rev_figs/ece_anno/network_99_revised/network_legend.pdf"
 
 # Optional: define explicit colors here. Keys should match category names (plasmid, virus, or phylum strings).
 # Example: custom_colors <- c(plasmid = "#A6D854", virus = "#FB9A99", "p__Proteobacteria" = "#66C2A5")
@@ -71,9 +71,9 @@ phy_labels <- sub('^p__', '', phy_categories)
 # Two legends: MGE (color + shape), Host phylum (fill)
 p <- ggplot() +
   geom_point(data = mge_df, aes(x = x, y = y, color = category, shape = category), size = 5, alpha = 0) +
-  scale_color_manual(name = "MGE", values = mge_cols, labels = mge_labels,
+  scale_color_manual(name = "ECE", values = mge_cols, labels = mge_labels,
                      guide = guide_legend(ncol = 2, override.aes = list(alpha = 1, size = 5))) +
-  scale_shape_manual(name = "MGE", values = mge_shape_map, labels = mge_labels,
+  scale_shape_manual(name = "ECE", values = mge_shape_map, labels = mge_labels,
                      guide = guide_legend(ncol = 2, override.aes = list(alpha = 1, size = 5)))
 
 if (length(phy_categories) > 0) {
@@ -86,8 +86,8 @@ if (length(phy_categories) > 0) {
 p <- p +
   theme_void() +
   theme(legend.position = "right",
-        legend.title = element_text(size = 12, family = "Arial"),
-        legend.text = element_text(size = 10, family = "Arial"))
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
 
 # Ensure output directory exists
 dir.create(dirname(out_pdf), recursive = TRUE, showWarnings = FALSE)
@@ -97,9 +97,9 @@ ggsave(out_pdf, plot = p, width = 6, height = (length(mge_categories) + length(p
 cat("Saved legend to", out_pdf, "\n")
 
 # Also write color mapping to TSV for reproducibility
-colors_out <- "../../tmp/figures/multi_env_linkage/network_99/network_legend_colors.tsv"
+colors_out <- "../../tmp/rev_figs/ece_anno/network_99_revised/network_legend_colors.tsv"
 mge_df_out <- if (length(mge_categories) > 0)
-  data.frame(legend = "MGE", category = names(mge_cols), color = as.character(mge_cols), shape = as.integer(mge_shape_map[names(mge_cols)])) else data.frame(legend = character(), category = character(), color = character(), shape = integer())
+  data.frame(legend = "ECE", category = names(mge_cols), color = as.character(mge_cols), shape = as.integer(mge_shape_map[names(mge_cols)])) else data.frame(legend = character(), category = character(), color = character(), shape = integer())
 phy_df_out <- if (length(phy_categories) > 0)
   data.frame(legend = "Host phylum", category = names(phy_cols), color = as.character(phy_cols), shape = 22L) else data.frame(legend = character(), category = character(), color = character(), shape = integer())
 cols_df <- rbind(mge_df_out, phy_df_out)
