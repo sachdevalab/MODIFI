@@ -102,8 +102,8 @@ def cos_pair(s, mge, host):
         return None, None, None
     ga, gb = gc_of(a), gc_of(b)
     try:
-        cs = kc.cosine_similarity(kmer_norm(a), kmer_norm(b))
-    except Exception:
+        cs = kc.get_ctg_sim(a.upper(), b.upper())   # get_kmer_count returns a (counts, norm) tuple;
+    except Exception:                                # get_ctg_sim does the normalise+cosine correctly
         cs = None
     return ga, gb, cs
 
