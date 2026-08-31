@@ -20,11 +20,19 @@ mge_order <- unique(df_plot$MGE)
 mge_order <- c("S_enterica_LT2_2", setdiff(mge_order, "S_enterica_LT2_2"))
 df_plot$MGE <- factor(df_plot$MGE, levels = mge_order)
 
+# Italic species binomial on the x-axis (plotmath; <G>_<species>_<strain...>_<index> -> italic "G. species")
+mge_lab <- function(brks) parse(text = sapply(as.character(brks), function(nm) {
+  tk <- strsplit(nm, "_")[[1]]
+  rest <- gsub("_", " ", paste(tk[-(1:2)], collapse = " "))
+  sprintf('italic("%s. %s")~"%s"', tk[1], tk[2], rest)
+}))
+
 # Create the plot
 p <- ggplot(df_plot, aes(x = MGE, y = similarity_value)) +
   geom_bar(stat = "identity", fill = "#5F9EA0", width = 0.7) +
   geom_text(aes(label = motif_count),
             vjust = 1.5, size = 3, color = "white") +
+  scale_x_discrete(labels = mge_lab) +
   labs(x = "",
        y = "Jaccard Similarity",
        title = "") +
