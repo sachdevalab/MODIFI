@@ -26,7 +26,7 @@ fp["key"] = fp["sample"] + "|" + fp["MGE"].astype(str)
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 11, "axes.titleweight": "bold"})
 fig, axes = plt.subplots(4, 3, figsize=(18, 21))
-def title(ax, l, t): ax.set_title(f"{l}. {t}", loc="left")
+def title(ax, l, t): ax.set_title(l, loc="left", fontweight="bold")
 
 # a) Venn
 m = fp["methods"].fillna("")
@@ -140,8 +140,7 @@ if os.path.exists(vsum):
     axj.legend(fontsize=9, loc="upper center", bbox_to_anchor=(0.5,-0.18), ncol=4, frameon=False,
                handlelength=1.2, columnspacing=1.6)
 
-fig.suptitle(f"Metagenome ECE set (strict criteria): {len(fp)} ECEs ({(fp.MGE_type=='plasmid').sum()} plasmid, {(fp.MGE_type=='virus').sum()} virus)", fontsize=14, fontweight="bold")
-fig.tight_layout(rect=[0,0,1,0.98])
+fig.tight_layout(rect=[0,0,1,1])
 # give panel j (full-width banner) a real left margin so its 3-line y-labels are not clipped
 try:
     _p=axj.get_position(); axj.set_position([0.16, _p.y0, 0.80, _p.height])
