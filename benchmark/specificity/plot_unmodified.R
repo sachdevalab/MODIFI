@@ -260,99 +260,84 @@ ggsave(paste0(fig_dir, "gram_enrichment_zero_motif_barplot.pdf"),
 ggsave(paste0(fig_dir, "gram_enrichment_zero_motif_barplot.png"),
        p_enrichment, width = 2.25, height = 4, dpi = 300)
 
-# Plot bar chart of proportion with zero motifs
-# Filter for phyla with proportion > 0
+# ================= Supplementary Figure S7 (redesigned) =================
+# Separate count + percentage bar plots (phyla grouped by domain/Gram type via facets), plus a
+# domain/type proportion comparison with Fisher's exact test p-values (no boxplots).
+DOMAIN_COLS <- c("Gram-Positive" = "#8B7AB8", "Gram-Negative" = "#E85D75", "Archaea" = "#F0A830")
+
+# Per-phylum table (phyla with >0 zero-motif genomes), grouped by domain/type then count.
 plot_df <- proportion_df[proportion_df$proportion > 0, ]
-
-# Remove p__ prefix from phylum names
 plot_df$phylum <- gsub("^p__", "", plot_df$phylum)
-
-# Classify by domain and Gram stain based on annotation file
-plot_df$domain_type <- classify_phylum_type(plot_df$phylum, phylum_class_map)
-
-# Sort by number of zero-motif genomes (descending) and set factor levels
-plot_df <- plot_df[order(-plot_df$zero_motif_genomes), ]
+plot_df$domain_type <- factor(classify_phylum_type(plot_df$phylum, phylum_class_map),
+                              levels = c("Gram-Positive", "Gram-Negative", "Archaea"))
+plot_df <- plot_df[order(plot_df$domain_type, -plot_df$zero_motif_genomes), ]
 plot_df$phylum <- factor(plot_df$phylum, levels = plot_df$phylum)
 
-# Plot 1: Number of genomes with 0 motifs
-p1 <- ggplot(plot_df, aes(x = phylum, y = zero_motif_genomes, fill = domain_type)) +
-  geom_bar(stat = "identity", width = 0.75, alpha = 0.9) +
-  geom_text(aes(label = zero_motif_genomes), 
-            vjust = -0.5, size = 3.8, fontface = "bold", color = "gray20") +
-  scale_fill_manual(values = c("Gram-Positive" = "#8B7AB8", 
-                               "Gram-Negative" = "#E85D75",
-                               "Archaea" = "#F0A830"),
-                    name = "Domain/Type") +
-  labs(x = NULL, 
-       y = "Number of Genomes\nwithout Motifs") +
-  theme_minimal() +
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.text.y = element_text(size = 11, color = "gray20"),
-        axis.title.y = element_text(size = 12, face = "bold", color = "gray10", 
-                                     margin = margin(r = 10)),
+base_theme <- theme_minimal() +
+  theme(axis.text.y = element_text(size = 10, color = "gray20"),
+        axis.title = element_text(size = 12, face = "bold", color = "gray10"),
+        strip.text = element_text(size = 10, face = "bold"),
         legend.position = "none",
-        legend.direction = "horizontal",
-        legend.title = element_text(size = 12, face = "bold"),
-        legend.text = element_text(size = 11),
-        legend.key.size = unit(0.6, "cm"),
-        legend.box.spacing = unit(0, "pt"),
-        legend.margin = margin(0, 0, 10, 0),
+        panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(),
         panel.grid.major.y = element_line(color = "gray85", linewidth = 0.3),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor = element_blank(),
-        plot.margin = margin(10, 10, 20, 10),
-        plot.background = element_rect(fill = "white", color = NA),
-        panel.background = element_rect(fill = "white", color = NA)) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.12)))
+        plot.background = element_rect(fill = "white", color = NA))
 
-# Plot 2: Proportion of genomes with 0 motifs (upside down)
-p2 <- ggplot(plot_df, aes(x = phylum, y = -percentage, fill = domain_type)) +
-  geom_bar(stat = "identity", width = 0.75, alpha = 0.9) +
-  geom_text(data = subset(plot_df, percentage >= 5),
-            aes(label = sprintf("%.1f%%", percentage)), 
-            vjust = 1.8, size = 3.5, fontface = "bold", color = "gray20") +
-  scale_fill_manual(values = c("Gram-Positive" = "#8B7AB8", 
-                               "Gram-Negative" = "#E85D75",
-                               "Archaea" = "#F0A830"),
-                    name = "Domain/Type") +
-  labs(x = "Phylum", 
-       y = "Percentage without\nMotifs (%)") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 11, 
-                                   color = "gray20", face = "plain"),
-        axis.text.y = element_text(size = 11, color = "gray20"),
-        axis.title.x = element_text(size = 12, face = "bold", color = "gray10",
-                                     margin = margin(t = 10)),
-        axis.title.y = element_text(size = 12, face = "bold", color = "gray10",
-                                     margin = margin(r = 10)),
-        legend.position = "none",
-        panel.grid.major.y = element_line(color = "gray85", linewidth = 0.3),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor = element_blank(),
-        plot.margin = margin(20, 10, 10, 10),
-        plot.background = element_rect(fill = "white", color = NA),
-        panel.background = element_rect(fill = "white", color = NA)) +
-  scale_y_continuous(expand = expansion(mult = c(0.12, 0)),
-                     labels = function(x) abs(x))
+# Panel a: count of genomes without motifs per phylum (faceted by domain/type)
+pa <- ggplot(plot_df, aes(phylum, zero_motif_genomes, fill = domain_type)) +
+  geom_col(width = 0.75, alpha = 0.9) +
+  geom_text(aes(label = zero_motif_genomes), vjust = -0.4, size = 3, color = "gray20") +
+  facet_grid(~ domain_type, scales = "free_x", space = "free_x") +
+  scale_fill_manual(values = DOMAIN_COLS, name = "Domain / Gram type") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(x = NULL, y = "Genomes without\nmotifs (count)") +
+  base_theme + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
-# Combine plots
-combined_plot <- p1 / p2 + 
-  plot_layout(heights = c(1.1, 1), guides = "collect") &
-  theme(plot.background = element_rect(fill = "white", color = NA),
-        legend.position = "top",
-        legend.direction = "horizontal",
-        legend.title = element_text(size = 12, face = "bold"),
-        legend.text = element_text(size = 11),
-        legend.key.size = unit(0.6, "cm"),
-        legend.box.spacing = unit(0, "pt"),
-        legend.margin = margin(0, 0, 10, 0))
+# Panel b: percentage of genomes without motifs per phylum (bar label = without/total)
+pb <- ggplot(plot_df, aes(phylum, percentage, fill = domain_type)) +
+  geom_col(width = 0.75, alpha = 0.9) +
+  geom_text(aes(label = sprintf("%d/%d", zero_motif_genomes, total_genomes)),
+            vjust = -0.4, size = 2.6, color = "gray30") +
+  facet_grid(~ domain_type, scales = "free_x", space = "free_x") +
+  scale_fill_manual(values = DOMAIN_COLS, name = "Domain / Gram type") +
+  scale_y_continuous(limits = c(0, 118), breaks = seq(0, 100, 25), expand = c(0, 0)) +
+  labs(x = "Phylum", y = "Genomes without\nmotifs (%)") +
+  base_theme +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 9, color = "gray20"),
+        strip.text = element_blank())
 
-ggsave(paste0(fig_dir, "zero_motif_proportion_by_phylum.pdf"), 
-       combined_plot, width = 12, height = 9, dpi = 300)
-ggsave(paste0(fig_dir, "zero_motif_proportion_by_phylum.png"), 
-       combined_plot, width = 12, height = 9, dpi = 300)
+# Panel c: domain/type proportion comparison with Fisher's exact p-values
+bar_df$domain_type <- factor(bar_df$group, levels = c("Gram-Positive", "Gram-Negative", "Archaea"))
+p_pn <- fisher.test(matrix(c(gram_pos_zero, gram_pos_with, gram_neg_zero, gram_neg_with),
+                           nrow = 2, byrow = TRUE))$p.value
+p_pa <- fisher.test(matrix(c(gram_pos_zero, gram_pos_with, archaea_zero, archaea_with),
+                           nrow = 2, byrow = TRUE))$p.value
+fmt_p <- function(p) sub("e", " %*% 10^", sprintf("italic(P) == %.1e", p))  # plotmath 4.9 x 10^-09
+ytop <- max(bar_df$percentage)
+pc <- ggplot(bar_df, aes(domain_type, percentage, fill = domain_type)) +
+  geom_col(width = 0.62, alpha = 0.9) +
+  geom_text(aes(label = sprintf("%d/%d", zero, total)), vjust = -0.5, size = 3, color = "gray20") +
+  scale_fill_manual(values = DOMAIN_COLS, name = "Domain / Gram type") +
+  scale_x_discrete(labels = c("Gram-Positive" = "Gram-\npositive",
+                              "Gram-Negative" = "Gram-\nnegative", "Archaea" = "Archaea")) +
+  scale_y_continuous(limits = c(0, ytop + 12), expand = c(0, 0)) +
+  # Gram-positive vs Gram-negative
+  annotate("segment", x = 1, xend = 2, y = ytop + 3, yend = ytop + 3) +
+  annotate("text", x = 1.5, y = ytop + 4, label = fmt_p(p_pn), parse = TRUE, size = 3) +
+  # Gram-positive vs Archaea
+  annotate("segment", x = 1, xend = 3, y = ytop + 8, yend = ytop + 8) +
+  annotate("text", x = 2, y = ytop + 9, label = fmt_p(p_pa), parse = TRUE, size = 3) +
+  labs(x = NULL, y = "Genomes without motifs (%)") +
+  base_theme + theme(axis.text.x = element_text(size = 10, color = "gray20"))
 
-print(combined_plot)
+# Combine (single flat layout so the legend collects once): a top-left, b bottom-left, c spans right column
+combined_plot <- pa + pb + pc +
+  plot_layout(design = "AAC\nBBC", guides = "collect") +
+  plot_annotation(tag_levels = "a") &
+  theme(legend.position = "bottom", legend.title = element_text(size = 11, face = "bold"),
+        legend.text = element_text(size = 10), plot.tag = element_text(face = "bold", size = 14))
 
-print(combined_plot)
+ggsave(paste0(fig_dir, "zero_motif_proportion_by_phylum.pdf"),
+       combined_plot, width = 14, height = 8, dpi = 300)
+ggsave(paste0(fig_dir, "zero_motif_proportion_by_phylum.png"),
+       combined_plot, width = 14, height = 8, dpi = 200)
+cat(sprintf("\nFig S7 redesigned. Fisher P: Gram+ vs Gram- = %.2e ; Gram+ vs Archaea = %.2e\n", p_pn, p_pa))
