@@ -115,6 +115,14 @@ create_heatmap <- function(mat, sample_info, heat_map) {
     annotation_name_side = "top"
   )
   
+  # Italic species binomial in each row label (plotmath expression; gridtext/ggtext unavailable).
+  # sample = <genus>_<species>_<strain...>_<index>; italicize "<G>. <species>", keep the rest roman.
+  row_lab <- parse(text = sapply(rownames(mat_t), function(nm) {
+    tk <- strsplit(nm, "_")[[1]]
+    rest <- gsub("_", " ", paste(tk[-(1:2)], collapse = " "))
+    sprintf('italic("%s. %s")~"%s"', tk[1], tk[2], rest)
+  }))
+
   # Define color function (white to dark red/brown)
   col_fun <- colorRamp2(c(0, 0.5, 1), c("white", "#CD5C5C", "#8B0000"))
   
@@ -133,6 +141,7 @@ create_heatmap <- function(mat, sample_info, heat_map) {
     show_row_names = TRUE,
     show_column_names = TRUE,
     row_names_side = "left",
+    row_labels = row_lab,
     row_names_gp = gpar(fontsize = 8),
     column_names_gp = gpar(fontsize = 7),
     column_names_rot = 90,
