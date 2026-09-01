@@ -69,7 +69,7 @@ draw <- function() {
              SM$strain_precision_mean, SM$strain_precision_ci, "strain-level metric", "d")
 
   # e: strain accuracy (%)
-  plot(NA, xlim = c(0.8, length(x) + 0.2), ylim = c(80, 100.5), xaxt = "n",
+  plot(NA, xlim = c(0.8, length(x) + 0.2), ylim = c(0, 100), xaxt = "n",
        xlab = XL, ylab = "strain accuracy (%)", las = 1)
   letter("e"); axis(1, at = x, labels = klab); grid(nx = NA, ny = NULL, col = "grey85")
   ok <- SM$strain_accuracy_ci > 0

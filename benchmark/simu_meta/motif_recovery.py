@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """motif_recovery.py -- motif-detection recovery vs con-specific strain depth K.
 
-Ground truth = each donor isolate's own solo MODIFI run motif set. Recovered = the motifs detected
-on that donor's contigs in the strain-mixture community. The SAME filter (fraction >= MIN_FRAC and
-nDetected >= MIN_SITES) is applied to both sides, and motif strings are reverse-complement
-canonicalized before comparison. Recovery is pooled across donors per rep, then summarized as
+Ground truth = each community genome's own solo MODIFI run motif set (all donor + background
+genomes). Recovered = the motifs detected on that genome's contigs in the strain-mixture community.
+The SAME filter (fraction >= MIN_FRAC and nDetected >= MIN_SITES) is applied to both sides; motif
+strings are reverse-complement canonicalized. Recovery is pooled across genomes per rep, summarized
 mean +/- 95% CI vs K. Pure re-analysis of files already on disk (no MODIFI runs).
 
 Writes tmp/rev_figs/simu_meta/strain_het/strain_mix_motif_recovery_sourcedata.csv.
@@ -63,10 +63,10 @@ def rep_labels(base):
 
 def rep_recovery(lab, gt_cache, missing):
     man = pd.read_csv(f"{ROOT}/{lab}/{lab}.manifest.csv")
-    donors = set(man.loc[man.role == "donor", "sample"].astype(str))
+    members = set(man["sample"].astype(str))            # ALL community genomes (donor + background)
     m = pd.read_csv(f"{ROOT}/{lab}/modifi/{lab}/all.motifs.merged.csv")
     m["iso"] = m["contig"].astype(str).str.split("_").str[0]
-    m = m[m.iso.isin(donors)]
+    m = m[m.iso.isin(members)]
     # aggregate community motifs to genome level per (isolate, motif)
     agg = (m.groupby(["iso", "motifString"], as_index=False)
              .agg(nDetected=("nDetected", "sum"), nGenome=("nGenome", "sum")))
@@ -103,10 +103,10 @@ def main():
             p, pd_, nd = rep_recovery(lab, gt_cache, missing)
             pooled.append(p); perdonor.append(pd_); ndon.append(nd)
         pm, pc = agg(pooled)
-        rows.append(dict(K=k, n_rep=len(labs), n_donor=int(np.mean(ndon)) if ndon else 0,
+        rows.append(dict(K=k, n_rep=len(labs), n_genome=int(np.mean(ndon)) if ndon else 0,
                          recovery_pooled_mean=pm, recovery_pooled_ci=pc,
                          recovery_perdonor_mean=agg(perdonor)[0]))
-        print(f"  K={k:>3}: n_rep={len(labs)} n_donor~{rows[-1]['n_donor']} "
+        print(f"  K={k:>3}: n_rep={len(labs)} n_genome~{rows[-1]['n_genome']} "
               f"pooled_recovery={pm:.3f} +/- {pc:.3f}")
     df = pd.DataFrame(rows)
     df.to_csv(f"{OUT}/strain_mix_motif_recovery_sourcedata.csv", index=False)
