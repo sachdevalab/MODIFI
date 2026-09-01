@@ -337,28 +337,38 @@ modifi --help
 modifi-linkage --help
 ```
 
-Commonly tuned options (`modifi`):
+All `modifi` options, matching `modifi --help`:
 
-| Option | Role |
-|--------|------|
-| `-o` | Output directory for all pipeline artifacts |
-| `-b` / `--aligned_bam` | Unaligned BAM (`-b/--bam`) or pre-aligned BAM (`--aligned_bam`) with kinetics |
-| `-r` | Reference FASTA (contigs) |
-| `--read_type` | `hifi` (default) or `subreads` |
-| `--threads` | Parallelism (default 64) |
-| `--min_iden` | Minimum alignment identity (default 0.97 for HiFi, 0.85 for subreads if unset) |
-| `--mge_file` / `--bin_file` | MGE table (e.g. geNomad) and optional contig→bin map for linkage |
-| `--kmer_mean_db` / `--kmer_num_db` | Optional control k-mer IPD databases; window must match `--up` / `--down` |
-| `--up` / `--down` | Upstream / downstream k-mer flank length around the modified base (defaults 7 / 3) |
-| `--min_len`, `--min_cov`, `--min_ctg_cov` | Contig and site coverage filters |
-| `--min_frac`, `--min_sites`, `--min_score` | Motif retention and modification calling thresholds |
-| `--segment` | Depth-based contig segmentation (more recall, more runtime) |
-| `--run_steps` | Restrict to a subset of steps: `split`, `load`, `control`, `compare`, `motif`, `profile`, `merge`, `host`, `anno` |
-| `--clean` | Enable cleaning step |
-| `--visu_ipd` | Write IPD distribution figures under `figs/` |
-| `--detect_misassembly` | Misassembly-related IPD ratio outputs |
-| `--annotate_rm` / `--rm_gene_file` | RM-system annotation (MicrobeMod; testing) |
-| `--binning` | Methylation-based binning (testing) |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-b`, `--bam` | None | Unaligned BAM with kinetics; will be aligned using pbmm2 |
+| `--aligned_bam` | None | Pre-aligned BAM with kinetics (must be aligned by pbmm2 so kinetic tags are present) |
+| `-r`, `--ref` | required | Reference FASTA for contigs (index with `samtools faidx` first) |
+| `-o`, `--output` | required | Output directory for all pipeline files |
+| `--read_type` | hifi | Type of reads: `subreads` or `hifi` |
+| `--min_iden` | 0.97 hifi / 0.85 subreads | Minimum identity for read alignment |
+| `--min_len` | 1000 | Minimum contig length to process |
+| `--min_cov` | 1 | Minimum read coverage to retain a base |
+| `--min_ctg_cov` | 5 | Minimum read coverage to retain a contig |
+| `--kmer_mean_db` | None | Path to optional k-mer mean IPD database |
+| `--kmer_num_db` | None | Path to optional k-mer count database |
+| `--min_frac` | 0.4 | Minimum modification fraction to retain a motif |
+| `--min_sites` | 30 | Minimum number of modified sites per motif |
+| `--min_score` | 30 | Minimum modification score for motif calling |
+| `--mge_file` | NA | MGE table (tab-separated), e.g. geNomad output, with a `seq_name` column |
+| `--threads` | 4 | Number of threads to use |
+| `--up` | 7 | Number of upstream bases for k-mer analysis |
+| `--down` | 3 | Number of downstream bases for k-mer analysis |
+| `--no-clean` | False | Keep intermediate files (disable cleaning step) |
+| `--bin_file` | None | Binning file: contig-to-bin map (tab-separated, two columns, no header) |
+| `--segment` | False | Depth-based contig segmentation (more recall, more runtime) |
+| `--visu_ipd` | False | Enable visualization of IPD distribution |
+| `--annotate_rm` | False | RM-system annotation (requires MicrobeMod in PATH) |
+| `--rm_gene_file` | None | RM gene annotation file from MicrobeMod (`.rm.genes.tsv`; for testing) |
+| `--detect_misassembly` | False | Manual misassembly detection via IPD ratio line continuity |
+| `--binning` | False | Modification-based binning (in testing) |
+| `--run_steps` | all | Steps to run (space-separated): `split load control compare motif profile merge host anno` (default runs all but `anno`) |
+| `-v`, `--version` | | Show program version and exit |
 
 
 ---
