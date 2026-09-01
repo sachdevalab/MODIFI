@@ -629,6 +629,31 @@ def get_bin_cov(cov_dict, bin_ctg_dict, min_ctg_cov, whole_ref, MGE_dict):
         #     bin_cov = 'NA'
     return bin_cov_dict
 
+def recover_contigs_from_ref(contigs_dir, needed, whole_ref):
+    """
+    Regenerate the per-contig FASTAs listed in `needed` under `contigs_dir` by
+    fetching them from the reference (via its .fai). Used when a default run
+    cleaned contigs/ away. Robust: creates the dir, skips contigs that already
+    exist or are absent from the reference, and always closes the handle.
+    """
+    missing = [c for c in needed
+               if not os.path.exists(os.path.join(contigs_dir, f"{c}.fa"))]
+    if not missing:
+        return
+    import pysam
+    os.makedirs(contigs_dir, exist_ok=True)
+    fa = pysam.FastaFile(whole_ref)          # uses the existing .fai
+    try:
+        refs = set(fa.references)
+        for name in missing:
+            if name not in refs:
+                continue
+            with open(os.path.join(contigs_dir, f"{name}.fa"), "w") as out:
+                out.write(f">{name}\n{fa.fetch(name)}\n")
+    finally:
+        fa.close()
+
+
 def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=None, min_frac = 0.5, threads = 1, min_ctg_cov = 5, min_detect = 100):
     ### cluster motifs
     fai = whole_ref + ".fai"
@@ -668,6 +693,16 @@ def batch_MGE_invade(plasmid_file, profile_dir, host_dir, whole_ref, bin_file=No
     ## remove the MGE with cov < min_ctg_cov
     MGE_dict = {k: v for k, v in MGE_dict.items() if k in cov_dict and cov_dict[k] >= min_ctg_cov}
     print ("MGE number: ", len(MGE_dict))
+
+    ## If a default run cleaned contigs/ away, regenerate only the per-contig
+    ## FASTAs the linkage GC / tetranucleotide step will read (MGEs + candidate
+    ## host contigs) from the reference, so linkage still works without --no-clean.
+    contigs_dir = os.path.join(output_dir, "contigs")
+    if not os.path.isdir(contigs_dir):
+        needed = set(MGE_dict)
+        for ctg_list in bin_ctg_dict.values():
+            needed.update(ctg_list)
+        recover_contigs_from_ref(contigs_dir, needed, whole_ref)
 
     i = 0
     all_final_score_list = []
