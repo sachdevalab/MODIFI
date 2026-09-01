@@ -30,6 +30,16 @@ cp -r "$SRC_DIR/scripts/." "$SHARE/scripts/"
 cp "$SRC_DIR/src/get_control_IPD" "$SHARE/src/"
 chmod +x "$SHARE/src/get_control_IPD"
 
+# Control database and bundled test dataset, so the layout under share/modifi
+# mirrors the repo (main.py at share root, control_db/ and test/ beside it) and
+# the self-locating test scripts resolve ../../main.py and ../../control_db/.
+if [ -d "$SRC_DIR/control_db" ]; then
+  cp -r "$SRC_DIR/control_db" "$SHARE/"
+fi
+if [ -d "$SRC_DIR/test" ]; then
+  cp -r "$SRC_DIR/test" "$SHARE/"
+fi
+
 # Entry point wrapper so users can run "modifi" from the command line
 mkdir -p "$PREFIX/bin"
 cat <<'WRAPPER' > "$PREFIX/bin/modifi"
@@ -38,3 +48,8 @@ DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 exec "$DIR/python" -B "$DIR/../share/modifi/main.py" "$@"
 WRAPPER
 chmod +x "$PREFIX/bin/modifi"
+
+# "modifi-test" wrapper: one fixed command that runs the bundled HiFi test in
+# the current directory (writes ./modifi_test/output/).
+cp "$SRC_DIR/bin/modifi-test" "$PREFIX/bin/modifi-test"
+chmod +x "$PREFIX/bin/modifi-test"

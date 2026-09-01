@@ -1,0 +1,25 @@
+#!/bin/bash
+# modifi-test: run the bundled HiFi test dataset in the current directory.
+# Results are written to ./modifi_test/output/ and a reference profile is
+# copied next to them so you can cross-reference your own run.
+set -e
+
+DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+TEST_DIR="$DIR/../share/modifi/test/hifi"
+
+if [ ! -f "$TEST_DIR/test_hifi.sh" ]; then
+  echo "ERROR: bundled test data not found at $TEST_DIR" >&2
+  echo "Reinstall MODIFI, or run the test from a cloned repo (cd test/hifi/ && bash test_hifi.sh)." >&2
+  exit 1
+fi
+
+mkdir -p modifi_test
+cd modifi_test
+
+bash "$TEST_DIR/test_hifi.sh"
+cp "$TEST_DIR/expected_motif_profile.csv" .
+
+echo ""
+echo "Done."
+echo "Your result:                 modifi_test/output/motif_profile.csv"
+echo "Reference to compare against: modifi_test/expected_motif_profile.csv"

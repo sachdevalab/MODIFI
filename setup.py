@@ -83,6 +83,18 @@ class InstallWithBinary(install):
         shutil.copy2(exe, src_dst / "get_control_IPD")
         os.chmod(src_dst / "get_control_IPD", 0o755)
 
+        # Control database and bundled test dataset, so the installed layout
+        # mirrors the repo (main.py at share root, control_db/ and test/ beside
+        # it) and the self-locating test scripts resolve ../../main.py and
+        # ../../control_db/ the same way they do in a clone.
+        for name in ("control_db", "test"):
+            dir_src = root / name
+            if dir_src.is_dir():
+                dir_dst = share_root / name
+                if dir_dst.exists():
+                    shutil.rmtree(dir_dst)
+                shutil.copytree(dir_src, dir_dst)
+
         print(f"Installed MODIFI pipeline tree under {share_root}", flush=True)
 
 
@@ -93,6 +105,7 @@ setup(
     packages=find_packages(include=["modifi_launcher", "modifi_launcher.*"]),
     include_package_data=True,
     cmdclass={"install": InstallWithBinary},
+    scripts=["bin/modifi-test"],
     entry_points={
         "console_scripts": [
             "modifi=modifi_launcher.cli:main",

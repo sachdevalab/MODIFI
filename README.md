@@ -78,16 +78,31 @@ Test that the command-line entry point is available:
 modifi --help
 ```
 
-And run the built-in test dataset:
+Run the built-in HiFi test dataset with a single command (works after either a Bioconda or a from-source install, with nothing to edit):
 
 ```bash
-cd test/hifi/
-bash test_hifi.sh
+modifi-test
 ```
+
+`modifi-test` creates a `modifi_test/` folder in your current directory and writes the results to **`modifi_test/output/`**. It also copies a reference profile next to them at `modifi_test/expected_motif_profile.csv`.
+
+> Working inside a cloned repo? You can also run the script directly: `cd test/hifi/ && bash test_hifi.sh` (results then land in `test/hifi/output/`).
+
+#### Expected test output
+
+When `modifi-test` finishes, `modifi_test/output/` holds the standard MODIFI results, including:
+
+- `summary.csv`, `all.motifs.merged.csv`, `motif_profile.csv`, `mean_depth.csv`
+- `motif_heatmap.pdf`
+- per-genome folders `gffs/`, `motifs/`, `profiles/`
+
+See the **Output Files** section below for what each of these means.
+
+To confirm your run looks right, compare your `modifi_test/output/motif_profile.csv` against the bundled reference `modifi_test/expected_motif_profile.csv`. The two list the same motifs with matching per-contig modification fractions.
 
 ### [Optional] Setup for subreads
 
-If you need to process subreads, create a separate environment with `pbcore` (requires Python 3.9 and numpy 1.22.4):
+Subreads support requires `pbcore`, which only installs in a separate environment (Python 3.9, numpy 1.22.4). It is therefore available with the from-source install below, not with the Bioconda package (which is HiFi-only). Set it up from a cloned repo:
 
 ```bash
 conda env create -n MODIFI_subreads -f subreads.env.yml
@@ -95,6 +110,15 @@ conda activate MODIFI_subreads
 pip install git+https://github.com/PacificBiosciences/pbcore.git
 pip install .
 ```
+
+To verify subreads support, run the bundled subreads test from inside the repo:
+
+```bash
+cd test/subreads/
+bash test_subreads.sh
+```
+
+Results are written to `test/subreads/output/`. To confirm the run looks right, compare your `test/subreads/output/motif_profile.csv` against the committed reference `test/subreads/expected_motif_profile.csv` (the two list the same motifs with matching per-contig modification fractions). See the **Output Files** section below for what each output file means.
 
 ---
 
