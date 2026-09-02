@@ -5,7 +5,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)](#)
 [![PacBio](https://img.shields.io/badge/PacBio-SMRT-yellow.svg)](#)
 
-**MODIFI** is a software package for detecting DNA base modifications and inferring host–mobile genetic element (MGE) linkages from **PacBio metagenomic sequencing** data. It enables precise modification calling, motif discovery, and host–MGE association in complex microbial communities, supporting both `subreads` and `HiFi` read types.
+**MODIFI** is a software package for detecting DNA base modifications and inferring host–extrachromosomal elements (ECE) linkages from **PacBio metagenomic sequencing** data. It enables precise modification calling, motif discovery, and host–ECE association in complex microbial communities, supporting both `subreads` and `HiFi` read types.
 
 ### Table of contents
 
@@ -132,12 +132,12 @@ MODIFI supports both `HiFi reads` and `subreads`. Your PacBio BAM file **must co
 |-----------|-------------------|-------------| 
 | HiFi | `fi`, `ri` | Forward/Reverse IPD (codec V1) |
 | Subreads | `ip` | IPD (raw frames or codec V1) |
-
+See [PacBio BAM format specifications](https://pacbiofileformats.readthedocs.io/en/11.0/BAM.html) for details.
 > ⚠️ **Important:** 
 > - FASTQ files do not contain kinetics information and **cannot be used**
-> - The BAM file stores kinetic information; it does not need to be pre-aligned
-> - See [PacBio BAM format specifications](https://pacbiofileformats.readthedocs.io/en/11.0/BAM.html) for details
+> - The BAM file stores kinetic information; it does not have to be pre-aligned
 > - Reference should be indexed using `samtools faidx` before running.
+> - For low-diversity samples or isolates, use pre-built k-mer database as shown in section `Control Database`. 
 
 ### Example
 
