@@ -19,7 +19,7 @@ cont <- rd("linkage_vs_contamination_summary.tsv")
 letter <- function(l) title(main = l, adj = 0, font.main = 2, cex.main = 2.0, line = 0.6)
 
 rate_panel <- function(d, xlab, l) {
-  ymax <- 1.12
+  ymax <- 0.25
   bp <- barplot(d$linkage_rate, names.arg = d$bin, col = BLUE, border = GREY,
                 ylim = c(0, ymax), xlab = xlab,
                 ylab = "Fraction of host contigs linked to >=1 ECE", las = 1)
