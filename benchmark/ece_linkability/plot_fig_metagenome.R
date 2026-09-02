@@ -95,7 +95,7 @@ luplot <- function(col, ylab, title, logy) {
   if (logy) g <- g + scale_y_log10()
   g + coord_cartesian(ylim = c(if (logy) NA else 0, ylimtop))
 }
-p_modn <- luplot("n_mod_sites", "modification sites (score >= 30)", "e  Modification site number", TRUE)
+p_modn <- luplot("n_mod_sites", "modified sites (score >= 30)", "d  Modified site number", TRUE)
 p_modf <- luplot("mod_density_per_kb", "modified sites / kb", "d  Modified site density", FALSE)
 
 # ---------- e. modification frequency by length bin (length-controlled) ----------
@@ -146,7 +146,7 @@ mk_scatter <- function(valcol, axlab, title) {
     base_theme
 }
 p_amd <- mk_scatter("density_per_kb", "density (occ/kb)", "c  Metagenome-motif density")
-p_amo <- mk_scatter("n_occ", "occurrences (count)", "d  Metagenome-motif occurrences")
+p_amo <- mk_scatter("n_occ", "motif sites (count)", "c  Metagenome-motif sites")
 
 # ---------- f. metagenome-motif density: WITHIN-SAMPLE, by length bin ----------
 # Length-binned AND same-sample-controlled: within each length bin, for every sample that has BOTH
@@ -201,10 +201,11 @@ p_lenctrl2 <- ggplot(paired_long, aes(lk, y)) +
                      panel.spacing = unit(2, "pt"))
 
 mode_lab <- if (PRE == "loose_") "loose linkage: score>0.5 & spec<0.01" else "high-confidence linkage (curated)"
-fig <- pB + pA + p_amd + p_modf + p_lenctrl2 + p_lenctrl +
-  plot_layout(ncol = 3, widths = c(1, 2, 1.2), heights = c(1, 1)) +
+# 8 panels a-h; new c = metagenome-motif sites (scatter), d = modified-site number (boxplot) after b
+fig <- pB + pA + p_amo + p_modn + p_amd + p_modf + p_lenctrl2 + p_lenctrl +
+  plot_layout(design = "AAAABBBBCCCC\nDDDDEEEEFFFF\nGGGGGGGGHHHH", heights = c(1, 1, 1)) +
   plot_annotation(tag_levels = "a", theme = theme(plot.tag = element_text(face = "bold", size = 15)))
-ggsave(file.path(OUT, sprintf("fig_metagenome_%slinkability.pdf", PRE)), fig, width = 20, height = 9, device = cairo_pdf)
-ggsave(file.path(OUT, sprintf("fig_metagenome_%slinkability.png", PRE)), fig, width = 20, height = 9, dpi = 190)
+ggsave(file.path(OUT, sprintf("fig_metagenome_%slinkability.pdf", PRE)), fig, width = 17, height = 13.5, device = cairo_pdf)
+ggsave(file.path(OUT, sprintf("fig_metagenome_%slinkability.png", PRE)), fig, width = 17, height = 13.5, dpi = 170)
 cat(sprintf("wrote fig_metagenome_%slinkability.* (%d linked; a length %s; b plasmid %s virus %s)\n",
             PRE, n_lk, star(pa), star(pw("plasmid")), star(pw("virus"))))
