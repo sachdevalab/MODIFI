@@ -47,10 +47,16 @@ def win(m, c):
 metal, amr = [], []
 for m, v in sorted(hits.items()):
     cls = clusters(v)
-    # metal island = largest cluster containing a pco/sil gene
+    # metal island = largest cluster containing a pco/sil gene.
+    # Window START at the first pco/sil gene (the shared copper/silver block) so the non-shared
+    # leading region (mer/ars front on the long loci) is trimmed; keep the tail (e.g. ter).
     metal_cls = [c for c in cls if any(s.startswith(("pco", "sil")) for a, b, s, t in c)]
     if metal_cls:
-        metal.append(win(m, max(metal_cls, key=len)))
+        c = max(metal_cls, key=len)
+        ps = [(a, b) for a, b, s, t in c if str(s).startswith(("pco", "sil"))]
+        s = max(1, min(a for a, _ in ps) - 2000)
+        e = min(lens[m], max(b for _, b in ps) + 2000)
+        metal.append(f"{m}:{s}:{e}:1")
     # amr island = each cluster containing an antibiotic AMR gene
     for c in cls:
         if any(t == "AMR" for a, b, s, t in c):

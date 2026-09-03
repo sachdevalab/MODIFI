@@ -65,14 +65,12 @@ draw_hm <- function(mat_csv, outbase, title, cluster_cols, col_label_map=NULL){
     width=unit(ncol(m)*0.75,"cm"), height=unit(nrow(m)*0.75,"cm"))
   extra <- if(!is.null(col_label_map)) 4 else 0
   w <- 8 + ncol(m)*0.5 + extra; h <- 5 + nrow(m)*0.42
-  ttl <- function(){ grid.text(title, x=unit(0.5,"npc"), y=unit(1,"npc")-unit(4,"mm"),
-                                gp=gpar(fontsize=12,fontface="bold")) }
-  pdf(file.path(FIG,paste0(outbase,".pdf")), width=w, height=h+0.4)
+  pdfpath <- file.path(FIG,paste0(outbase,".pdf"))
+  pdf(pdfpath, width=w, height=h)
   draw(ht, merge_legend=TRUE, heatmap_legend_side="right", annotation_legend_side="right",
-       padding=unit(c(10,2,16,2),"mm")); ttl(); dev.off()
-  png(file.path(FIG,paste0(outbase,".png")), width=w, height=h+0.4, units="in", res=300)
-  draw(ht, merge_legend=TRUE, heatmap_legend_side="right", annotation_legend_side="right",
-       padding=unit(c(10,2,16,2),"mm")); ttl(); dev.off()
+       padding=unit(c(4,2,16,2),"mm")); dev.off()
+  # crop the oversized canvas to the content bbox (+ matching PNG)
+  system(paste("bash /home/shuaiw/MODIFI/benchmark/kp_ECEs/crop_pdf.sh", shQuote(pdfpath)))
   write.csv(m, file.path(FIG,paste0(outbase,"_sourcedata.csv")))
   cat("wrote",outbase,"\n")
 }

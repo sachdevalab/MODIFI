@@ -10,6 +10,8 @@ NR = "/home/shuaiw/MODIFI/tmp/rev_figs/ece_anno/network_99_revised/mge_host_gc_c
 CMAP = f"{BASE}/ece_anno/high_conf_linkage/linkage_ece_cluster.tsv"
 RCLUST = f"{BASE}/network/MGE_cluster/megablast.cluster.95ani.tsv"
 EV_GLOB = [f"{BASE}/ece_anno/ece_evidence_all.tsv"] + glob.glob(f"{BASE}/ece_anno/*/ece_evidence_all.tsv")
+# strict/final ECE set: every analysed ECE must be a member of this set; others are discarded.
+STRICT = "/home/shuaiw/MODIFI/tmp/rev_figs/ece_anno/ece_profile_final_sourcedata_ece.csv"
 OUT = f"{BASE}/kp_eces/gene_profile"
 os.makedirs(OUT, exist_ok=True)
 
@@ -20,21 +22,26 @@ def genus(taxa):
 
 
 def main():
+    # strict/final ECE set (MGE column); only these are analysed, others discarded
+    strict = set(pd.read_csv(STRICT)["MGE"].astype(str))
+    print(f"[kp14] strict ECE set: {len(strict)}")
+
     nr = pd.read_csv(NR)
-    # Kp-linked MGEs -> their clusters
+    # Kp-linked MGEs (restricted to the strict set) -> their clusters
     kp_mges = set(nr[nr["host_taxa"].astype(str).str.contains("Klebsiella pneumoniae", regex=False)]["MGE"])
+    kp_mges &= strict
     cmap = pd.read_csv(CMAP, sep="\t")           # contig, cluster_id
     mge2clu = dict(zip(cmap["contig"], cmap["cluster_id"]))
     kp_clusters = sorted({mge2clu[m] for m in kp_mges if m in mge2clu})
-    print(f"[kp14] Kp-linked ECEs: {len(kp_mges)}; Kp clusters: {len(kp_clusters)}")
+    print(f"[kp14] Kp-linked ECEs (strict): {len(kp_mges)}; Kp clusters: {len(kp_clusters)}")
 
-    # full membership of each cluster (revised 95% ANI cluster file: rep<TAB>comma-members)
+    # membership of each cluster restricted to strict ECEs (rep<TAB>comma-members)
     clu_members = {}
     with open(RCLUST) as fh:
         for line in fh:
             rep, mem = line.rstrip("\n").split("\t")
             if rep in kp_clusters:
-                clu_members[rep] = mem.split(",")
+                clu_members[rep] = [m for m in mem.split(",") if m in strict]
 
     # evidence map: seq_name -> (circular_bool, length, type); union of all evidence tables
     ev = {}
