@@ -37,7 +37,7 @@ line_panel <- function(rm, rc, pm, pc, ylab, l, ylim = c(0, 1.06)) {
 }
 
 draw <- function() {
-  par(mfrow = c(2, 4), mar = c(6, 5, 3, 1.2), oma = c(0, 0, 0.4, 0),
+  par(mfrow = c(2, 3), mar = c(6, 5, 3, 1.2), oma = c(0, 0, 0.4, 0),
       cex.axis = 1.3, cex.lab = 1.5, mgp = c(3.1, 0.9, 0))
 
   # a: community strain composition (grouped bars)
@@ -79,24 +79,14 @@ draw <- function() {
   lines(x, SM$strain_accuracy_mean, col = GREEN, lwd = 2.2)
   points(x, SM$strain_accuracy_mean, pch = 21, col = GREEN, bg = GREEN, cex = 1.5)
 
-  # f: E. coli strain mixture -> chimeric assembly (italic species name, 2-line labels below axis)
-  bp <- barplot(c(ecv["chimeric_ecoli_contigs_pct"], ecv["checkm2_completeness_pct"]),
-                col = c(ORANGE, GREY), names.arg = c("", ""), border = NA,
-                ylab = "percent", ylim = c(0, 108), las = 1, width = 0.7, space = 0.8)
-  letter("f"); box()
-  yb <- -108 * 0.055
-  text(bp[1], yb, expression(atop("chimeric", italic("E. coli") ~ "contigs")), xpd = NA, cex = 1.3)
-  text(bp[2], yb, expression(atop("CheckM2", "completeness")), xpd = NA, cex = 1.3)
-
-  # g: E. coli de-novo ECE->strain linkage
+  # f: E. coli de-novo ECE->strain linkage (8 con-specific strains)
   barplot(c(ecv["denovo_strain_recall"], ecv["denovo_strain_precision"]),
           col = c(BLUE, ORANGE), names.arg = c("recall", "precision"), border = NA,
           ylab = "strain-level metric", ylim = c(0, 1.1), las = 1, width = 0.7, space = 0.8)
-  letter("g"); box()
-  plot.new()                                              # h: blank cell
+  letter("f"); box()
 }
 
-pdf(OUT, width = 22, height = 10); draw(); invisible(dev.off())
-png(sub("\\.pdf$", ".png", OUT), width = 22, height = 10, units = "in", res = 130, type = "cairo")
+pdf(OUT, width = 17, height = 10); draw(); invisible(dev.off())
+png(sub("\\.pdf$", ".png", OUT), width = 17, height = 10, units = "in", res = 130, type = "cairo")
 draw(); invisible(dev.off())
 cat("wrote", OUT, "\n")
