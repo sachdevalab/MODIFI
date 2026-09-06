@@ -45,8 +45,11 @@ OUT_DIR     = "/home/shuaiw/MODIFI/tmp/rev_figs/borg"
 FRACTION_CUTOFF = 0.4       # motif is a host motif if modified at >= this fraction on an Mp contig
 MIN_LEN         = 50000     # a contig needs >= this many bp to be a data point (density stability)
 
-HOST_COLOR = "#ffbf72"
-BORG_COLOR = "#3df3f7"
+# Okabe-Ito palette (matches the genome-class colors in the heatmap figures)
+HOST_COLOR = "#E69F00"                       # Methanoperedens host
+BORG_COLOR = "#0072B2"                        # kept for back-compat (Borg)
+ECE_COLORS = {"Borg": "#0072B2", "Mini_Chr": "#009E73", "Mp_Virus": "#D55E00"}
+ECE_LABELS = {"Borg": "Borg", "Mini_Chr": "Mini-Chromosome", "Mp_Virus": "Mp virus"}
 
 USABLE_SAMPLES = [
     "SR-VP_07_25_2022_A1_60cm",
@@ -163,13 +166,14 @@ def compute_counts(samples, threads):
     for s in samples:
         motifs = [m for (ss, m), fr in mp_motif_frac.items() if ss == s and fr >= FRACTION_CUTOFF]
         sample_hostmotifs[s] = dedupe_revcomp(motifs)
-        # Mp + Borg contigs only (mini-Borg ignored)
+        # Mp host + the Mp-associated ECEs to compare against it
         contigs = [c for c, ss in contig2sample.items()
-                   if ss == s and contig2genome.get(c) in ("Mp", "Borg")]
+                   if ss == s and contig2genome.get(c) in ("Mp", "Borg", "Mini_Chr", "Mp_Virus")]
         tasks.append((s, sample_hostmotifs[s], contigs, c2fa, c2len))
-        n_mp = sum(1 for c in contigs if contig2genome.get(c) == "Mp")
-        n_bg = sum(1 for c in contigs if contig2genome.get(c) == "Borg")
-        print(f"{s}: {len(sample_hostmotifs[s])} host motifs; Mp contigs={n_mp}, Borg contigs={n_bg}")
+        counts = {g: sum(1 for c in contigs if contig2genome.get(c) == g)
+                  for g in ("Mp", "Borg", "Mini_Chr", "Mp_Virus")}
+        print(f"{s}: {len(sample_hostmotifs[s])} host motifs; " +
+              ", ".join(f"{g}={counts[g]}" for g in ("Mp", "Borg", "Mini_Chr", "Mp_Virus")))
     if threads > 1:
         import multiprocessing as mp
         with mp.Pool(min(threads, len(tasks))) as pool:
@@ -201,10 +205,10 @@ def aggregate(df):
     genomes. Contigs shorter than MIN_LEN are dropped so densities stay stable."""
     rows = []
     for _, r in df.iterrows():
-        if r["length_bp"] < MIN_LEN or r["genome"] not in ("Mp", "Borg"):
+        if r["length_bp"] < MIN_LEN or r["genome"] not in ("Mp", "Borg", "Mini_Chr", "Mp_Virus"):
             continue
         rows.append(dict(sample=r["sample"], genome=r["genome"], contig=r["contig"],
-                         strain=strain_label(r["borg_ref"]) if r["genome"] == "Mp" else "Borg",
+                         strain=strain_label(r["borg_ref"]) if r["genome"] == "Mp" else r["genome"],
                          motif=r["motif"], sites=r["sites"], length_bp=r["length_bp"],
                          density_per_kb=r["sites"] / (r["length_bp"] / 1000.0)))
     return pd.DataFrame(rows)
@@ -317,22 +321,59 @@ def make_boxplot(agg, out_pdf):
     return pdf
 
 
-def compute_pairs(agg):
-    """One paired (host, Borg) density per (sample, host motif); host = pooled Mp density."""
+def compute_pairs(agg, ece_genome="Borg"):
+    """One paired (host, ECE) density per (sample, host motif); host = pooled Mp density,
+    ECE = pooled density of `ece_genome` (Borg / Mini_Chr / Mp_Virus)."""
     rows = []
     for (sample, motif), g in agg.groupby(["sample", "motif"]):
-        mp = g[g["genome"] == "Mp"]; bg = g[g["genome"] == "Borg"]
-        if mp.empty or bg.empty:
+        mp = g[g["genome"] == "Mp"]; ec = g[g["genome"] == ece_genome]
+        if mp.empty or ec.empty:
             continue
         h = mp["sites"].sum() / (mp["length_bp"].sum() / 1000.0)
-        b = bg["sites"].sum() / (bg["length_bp"].sum() / 1000.0)
-        rows.append((sample, motif, h, b))
-    return pd.DataFrame(rows, columns=["sample", "motif", "host", "borg"])
+        e = ec["sites"].sum() / (ec["length_bp"].sum() / 1000.0)
+        rows.append((sample, motif, h, e))
+    return pd.DataFrame(rows, columns=["sample", "motif", "host", "ece"])
 
 
 def _panel_letter(ax, letter):
     ax.text(-0.16, 1.02, letter, transform=ax.transAxes,
             fontsize=14, fontweight="bold", va="bottom", ha="right")
+
+
+def draw_box(ax, pairs, ece_genome, letter):
+    """Two-box paired plot on `ax`: Mp host vs one ECE class. Returns (n, p, median_ratio)."""
+    from scipy.stats import wilcoxon
+    ece_label = ECE_LABELS.get(ece_genome, ece_genome)
+    if len(pairs) < 3:
+        ax.axis("off")
+        return (len(pairs), float("nan"), float("nan"))
+    h = pairs["host"].values; e = pairs["ece"].values
+    stat, p = wilcoxon(h, e)
+    ratios = (pairs["ece"] / pairs["host"]).replace([np.inf], np.nan).dropna()
+    med_ratio = float(np.median(ratios))
+    ece_col = ECE_COLORS.get(ece_genome, BORG_COLOR)
+    bp = ax.boxplot([h, e], tick_labels=["Mp host", ece_label], widths=0.55,
+                    showfliers=False, patch_artist=True, medianprops=dict(color="black"))
+    for patch, col in zip(bp["boxes"], [HOST_COLOR, ece_col]):
+        patch.set_facecolor(col); patch.set_alpha(0.85)
+    rng = np.random.RandomState(0)
+    x1 = 1 + (rng.rand(len(pairs)) - 0.5) * 0.12
+    x2 = 2 + (rng.rand(len(pairs)) - 0.5) * 0.12
+    for a, b, ya, yb in zip(x1, x2, h, e):
+        ax.plot([a, b], [ya, yb], color="grey", lw=0.2, alpha=0.3, zorder=1)
+    ax.scatter(x1, h, s=9, color=HOST_COLOR, edgecolor="black", linewidth=0.2, zorder=2)
+    ax.scatter(x2, e, s=9, color=ece_col, edgecolor="black", linewidth=0.2, zorder=2)
+    ax.set_ylabel("host-motif density (motifs/kb)", fontsize=8)
+    ax.tick_params(labelsize=8)
+    ptxt = "p < 1e-300" if p == 0 else f"p = {p:.2e}"
+    ymax = max(h.max(), e.max())
+    ax.plot([1, 2], [ymax * 1.04, ymax * 1.04], color="black", lw=0.8)
+    ax.text(1.5, ymax * 1.06,
+            f"Wilcoxon {ptxt}\nmedian {ece_label}/host = {med_ratio:.2f}\nn = {len(pairs)}",
+            ha="center", va="bottom", fontsize=7.5)
+    ax.set_ylim(0, ymax * 1.26)
+    _panel_letter(ax, letter)
+    return (len(pairs), p, med_ratio)
 
 
 def make_combined(agg, out_pdf):
@@ -386,58 +427,48 @@ def make_combined(agg, out_pdf):
                   handletextpad=0.2, columnspacing=0.6, title="Mp contig", title_fontsize=6)
         _panel_letter(ax, letters[i])
 
-    # (g) box plot
-    pdf = compute_pairs(agg)
-    stat, p = wilcoxon(pdf["host"], pdf["borg"])
-    ratios = (pdf["borg"] / pdf["host"]).replace([np.inf], np.nan).dropna()
-    med_ratio = float(np.median(ratios))
-    axb = fig.add_subplot(gs[2, 1])
-    data = [pdf["host"].values, pdf["borg"].values]
-    bp = axb.boxplot(data, tick_labels=["Mp host", "Borg"], widths=0.55, showfliers=False,
-                     patch_artist=True, medianprops=dict(color="black"))
-    for patch, col in zip(bp["boxes"], [HOST_COLOR, BORG_COLOR]):
-        patch.set_facecolor(col); patch.set_alpha(0.85)
-    rng = np.random.RandomState(0)
-    x1 = 1 + (rng.rand(len(pdf)) - 0.5) * 0.12
-    x2 = 2 + (rng.rand(len(pdf)) - 0.5) * 0.12
-    for a, b, ya, yb in zip(x1, x2, pdf["host"], pdf["borg"]):
-        axb.plot([a, b], [ya, yb], color="grey", lw=0.2, alpha=0.3, zorder=1)
-    axb.scatter(x1, pdf["host"], s=9, color=HOST_COLOR, edgecolor="black", linewidth=0.2, zorder=2)
-    axb.scatter(x2, pdf["borg"], s=9, color=BORG_COLOR, edgecolor="black", linewidth=0.2, zorder=2)
-    axb.set_ylabel("host-motif density (motifs/kb)", fontsize=8)
-    axb.tick_params(labelsize=8)
-    ptxt = "p < 1e-300" if p == 0 else f"p = {p:.2e}"
-    ymax = max(pdf["host"].max(), pdf["borg"].max())
-    axb.plot([1, 2], [ymax * 1.04, ymax * 1.04], color="black", lw=0.8)
-    axb.text(1.5, ymax * 1.06, f"Wilcoxon {ptxt}\nmedian Borg/host = {med_ratio:.2f}",
-             ha="center", va="bottom", fontsize=8)
-    axb.set_ylim(0, ymax * 1.20)
-    _panel_letter(axb, letters[len(samples)])
+    # (g-i) box panels: host vs Borg / Mini-Chromosome / Mp virus
+    ece_order = ["Borg", "Mini_Chr", "Mp_Virus"]
+    stats = {}
+    all_pairs = []
+    for k, ece in enumerate(ece_order):
+        ax = fig.add_subplot(gs[2, k])
+        pr = compute_pairs(agg, ece)
+        stats[ece] = draw_box(ax, pr, ece, letters[len(samples) + k])
+        if len(pr) > 0:
+            all_pairs.append(pr.assign(ece=ece))
+    paired_all = pd.concat(all_pairs, ignore_index=True) if all_pairs else pd.DataFrame()
 
     fig.subplots_adjust(left=0.06, right=0.98, top=0.98, bottom=0.04)
     fig.savefig(out_pdf)
     plt.close(fig)
-    print(f"Saved combined figure: {out_pdf}  (Wilcoxon {ptxt}, n={len(pdf)}, median Borg/host={med_ratio:.2f})")
+
+    def _ptxt(p):
+        return "p < 1e-300" if p == 0 else f"p = {p:.2e}"
+    summary = "; ".join(f"{ECE_LABELS[e]}: n={stats[e][0]}, {_ptxt(stats[e][1])}, "
+                        f"ratio={stats[e][2]:.2f}" for e in ece_order)
+    print(f"Saved combined figure: {out_pdf}\n  {summary}")
 
     # Plain-text caption (printed to screen, NOT drawn on the figure).
     letter_map = "; ".join(f"{letters[i]}, {short_sample(s)}" for i, s in enumerate(samples))
     ab = f"{letters[0]}-{letters[len(samples)-1]}"
-    gl = letters[len(samples)]
+    gi = f"{letters[len(samples)]}-{letters[len(samples)+2]}"
+    def desc(e):
+        n, p, mr = stats[e]
+        return f"{ECE_LABELS[e]} ({letters[len(samples)+ece_order.index(e)]}: n = {n}, {_ptxt(p)}, median ratio {mr:.2f})"
     caption = (
-        "Host-motif sequence density in Methanoperedens hosts versus their Borgs. "
-        "Host motifs are the modification motifs called on Methanoperedens (Mp) contigs of each sample "
-        "(modification fraction >= 0.4), reverse-complement duplicates merged. Motif recognition sites "
-        "were counted on both strands (IUPAC-aware) in each contig >= 50 kb; density = sites per kb. "
-        f"({ab}) Per-sample scatter of each Mp host contig (colors) versus the sample's Borg contig; "
-        "each point is one host motif; dashed line, y = x; points on the x-axis are motifs absent in the "
-        f"Borg. Samples: {letter_map}. ({gl}) All samples pooled: host-motif density in the Mp host "
-        f"versus the Borg, paired by sample and motif (n = {len(pdf)}); grey lines connect paired values; "
-        f"two-sided Wilcoxon signed-rank {ptxt}; median Borg/host density ratio = {med_ratio:.2f}."
+        "Sequence density (motifs/kb) of host modification motifs in Methanoperedens hosts versus their "
+        "extrachromosomal elements. "
+        f"({ab}) Per-sample scatter of each Mp host contig versus the Borg (one point per host motif; "
+        "dashed line y = x). "
+        f"({gi}) All samples pooled, Mp host versus each element class (paired by sample and motif, "
+        "two-sided Wilcoxon): "
+        f"{desc('Borg')}; {desc('Mini_Chr')}; {desc('Mp_Virus')}."
     )
     print("\n===== FIGURE CAPTION (Methanoperedens in italics) =====\n")
     print(caption)
     print()
-    return pdf
+    return paired_all
 
 
 def print_summary(agg):
