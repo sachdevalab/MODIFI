@@ -27,7 +27,7 @@ python3 /home/shuaiw/MODIFI/benchmark/kp_ECEs/build_faf.py \
 cp "$OUT/synteny_faf.tsv" "$FIG/synteny_faf.tsv"
 
 echo "[pass2] final synteny figure"
-$L4 -gb "$GB" -c "$CFG" -faf "$OUT/synteny_faf.tsv" -alip -hl -rol -oc \
+$L4 -gb "$GB" -c "$CFG" -faf "$OUT/synteny_faf.tsv" -alip -hl -rol -oc -lls id \
    -o "$OUT/lovis4u_out" --pdf-name fig_infant_15_35_C_synteny.pdf \
    > "$OUT/lovis4u_pass2.log" 2>&1 || { echo "pass2 failed"; tail -25 "$OUT/lovis4u_pass2.log"; exit 1; }
 cp "$OUT/lovis4u_out/fig_infant_15_35_C_synteny.pdf" "$FIG/"

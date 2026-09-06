@@ -18,7 +18,7 @@ awk 'BEGIN{FS=OFS="\t"} NR==1{print;next} {$4=1; print}' "$OUT/synteny_faf.tsv" 
 draw() {
   name=$1; winfile=$2
   $L4 -gb "$GB" -c "$CFG" -faf "$OUT/synteny_faf_all.tsv" -alip \
-     -w $(cat "$OUT/$winfile") -hl -rol -oc -cl-owp \
+     -w $(cat "$OUT/$winfile") -hl -rol -oc -cl-owp -lls id \
      -o "$OUT/island_$name" --pdf-name "fig_infant_15_35_C_${name}_island.pdf" \
      > "$OUT/island_$name.log" 2>&1 || { echo "$name failed"; tail -20 "$OUT/island_$name.log"; exit 1; }
   cp "$OUT/island_$name/fig_infant_15_35_C_${name}_island.pdf" "$FIG/"
