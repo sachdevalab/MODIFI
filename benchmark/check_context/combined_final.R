@@ -68,12 +68,12 @@ draw_heatmap <- function(strain_dir, titexpr, ylab, LET){
     v <- vals[i,j]
     text(j, i, sprintf("%.2f", v), cex=0.5, col=if(v<0.45) "white" else "black")
   }
-  axis(1, at=seq_along(D), labels=paste0("-",D), tick=FALSE, line=-0.7, cex.axis=0.85)
-  mtext("upstream context (5')", side=1, line=1.7, cex=0.75)
+  axis(1, at=seq_along(D), labels=D, tick=FALSE, line=-0.7, cex.axis=0.85)
+  mtext("downstream context (3')", side=1, line=1.7, cex=0.75)
   if(ylab){
-    axis(2, at=seq_along(U), labels=paste0("+",rev(U)), las=1, tick=FALSE,
+    axis(2, at=seq_along(U), labels=rev(U), las=1, tick=FALSE,
          line=-0.4, cex.axis=0.85)
-    mtext("downstream context (3')", side=2, line=2.7, cex=0.75)
+    mtext("upstream context (5')", side=2, line=2.7, cex=0.75)
   }
   title(main=titexpr, cex.main=1.15, font.main=1)
   addlab(LET)
