@@ -26,7 +26,9 @@ def uvig(s):
 def run(ani_tsv, hostfile, host_key, host_col, mge_type, ntot, label):
     meta = pd.read_csv(f"{D}/linked_eces_meta.tsv", sep="\t")
     sub = meta[meta.MGE_type == mge_type].copy()
-    inf = dict(zip(sub.MGE, sub.host_genus.fillna("")))
+    # strip the GTDB subgenus suffix from OUR inferred genus too (genus() already strips the reference
+    # genus), so a subgenus-only difference like Ruminococcus_B vs Ruminococcus counts as agreement.
+    inf = dict(zip(sub.MGE, sub.host_genus.fillna("").map(lambda g: re.sub(r"_[A-Z]+$", "", str(g)))))
     b = pd.read_csv(ani_tsv, sep="\t")            # cols: qname,tname,num_alns,pid,qcov,tcov
     b["refid"] = b["tname"].map(uvig)
     # stream host table for the referenced ids only
