@@ -41,16 +41,25 @@ def metric_c1(lbl):
     tot = pd.read_csv(f"{C1}/{lbl}/{lbl}.mge_list.tsv", sep="\t").seq_name.nunique()
     p = (h.final_score > 0.5) & (h.specificity < 0.01)
     tp = int((p & (h.MGE.map(sra) == h.host.map(sra))).sum()); na = int(p.sum())
-    return tp / tot, (tp / na if na else np.nan)
+    return tp / tot, (tp / na if na else np.nan), tp, na, tot
 
 
-def series_c1(points):
+# per-replicate raw points, accumulated across all series so a detailed Source Data CSV (one row
+# per independent sample point) can be written alongside the aggregated mean +/- CI file.
+RAW = []
+
+
+def series_c1(points, axis, x_label):
     xs, rm, rc, pm, pc, nr = [], [], [], [], [], []
     for base, x in points:
         R = reps_c1(base)
         if not R:
             continue
         rr = [metric_c1(l) for l in R]
+        for l, (rec, prec, tp, na, tot) in zip(R, rr):
+            RAW.append(dict(axis=axis, x=x, x_label=x_label, replicate=l,
+                            recall=rec, precision=prec,
+                            n_confident_correct=tp, n_confident=na, n_total_ece=tot))
         a, b = agg([v[0] for v in rr]); c, d = agg([v[1] for v in rr])
         xs.append(x); rm.append(a); rc.append(b); pm.append(c); pc.append(d); nr.append(len(R))
     return xs, rm, rc, pm, pc, nr
@@ -77,8 +86,14 @@ def series_e2e(points):
             et = pd.read_csv(f"{d}/ece_truth.tsv", sep="\t")
             a2c = et.set_index("ece_contig")["matched_curated_ece"].to_dict()
             x2 = pd.read_csv(f"{d}/e2e_predictions.csv"); x2["cur"] = x2.MGE.map(a2c)
-            rr.append(x2[x2.correct].cur.dropna().nunique() / len(all_ece) if all_ece else np.nan)
-            pp.append(x2.correct.sum() / x2.assigned.sum() if x2.assigned.sum() else np.nan)
+            rec = x2[x2.correct].cur.dropna().nunique() / len(all_ece) if all_ece else np.nan
+            prec = x2.correct.sum() / x2.assigned.sum() if x2.assigned.sum() else np.nan
+            rr.append(rec); pp.append(prec)
+            # e2e denominators differ from C1 (recall over unique curated ECEs, precision over
+            # assigned), so the C1 integer-count columns are NA here; keep n_total_ece = planted ECEs.
+            RAW.append(dict(axis="end2end_denovo", x=x, x_label="n_genomes",
+                            replicate=os.path.basename(d), recall=rec, precision=prec,
+                            n_confident_correct=np.nan, n_confident=np.nan, n_total_ece=len(all_ece)))
         a, b = agg(rr); c, d = agg(pp)
         xs.append(x); rm.append(a); rc.append(b); pm.append(c); pc.append(d); nr.append(len(dirs))
     return xs, rm, rc, pm, pc, nr
@@ -100,8 +115,8 @@ def main():
     COV_PTS = [("cov_d10", 10), ("cov_d20", 20), ("bg_80", 30), ("cov_d40", 40)]
     E2E_PTS = [("bg_80", 80), ("bg_150", 150), ("bg_300", 300)]
 
-    ca = series_c1(C1_PTS)
-    cb = series_c1(COV_PTS)
+    ca = series_c1(C1_PTS, "complexity", "n_genomes")
+    cb = series_c1(COV_PTS, "coverage", "donor_depth_x")
     cc = series_e2e(E2E_PTS)
 
     fig, ax = plt.subplots(1, 3, figsize=(16.5, 4.8))
@@ -126,6 +141,12 @@ def main():
                              recall_mean=s[1][i], recall_ci=s[2][i],
                              precision_mean=s[3][i], precision_ci=s[4][i]))
     pd.DataFrame(rows).to_csv(out.replace(".pdf", "_sourcedata.csv"), index=False)
+    # detailed Source Data: one row per independent sample point (per-replicate raw recall/precision)
+    raw_cols = ["axis", "x", "x_label", "replicate", "recall", "precision",
+                "n_confident_correct", "n_confident", "n_total_ece"]
+    raw_out = out.replace(".pdf", "_rawpoints_sourcedata.csv")
+    pd.DataFrame(RAW)[raw_cols].to_csv(raw_out, index=False)
+    print(f"wrote {raw_out} ({len(RAW)} raw points)")
     fig.savefig(out, bbox_inches="tight"); fig.savefig(out.replace(".pdf", ".png"), dpi=150, bbox_inches="tight")
     print(f"wrote {out}")
     for r in rows:

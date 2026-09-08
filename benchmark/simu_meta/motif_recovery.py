@@ -95,13 +95,15 @@ def agg(v):
 
 def main():
     gt_cache, missing = {}, set()
-    rows = []
+    rows, raw = [], []
     for k, base in KDEF:
         labs = rep_labels(base)
         pooled, perdonor, ndon = [], [], []
         for lab in labs:
             p, pd_, nd = rep_recovery(lab, gt_cache, missing)
             pooled.append(p); perdonor.append(pd_); ndon.append(nd)
+            raw.append(dict(K=k, replicate=lab, n_genome=nd,
+                            recovery_pooled=p, recovery_perdonor=pd_))
         pm, pc = agg(pooled)
         rows.append(dict(K=k, n_rep=len(labs), n_genome=int(np.mean(ndon)) if ndon else 0,
                          recovery_pooled_mean=pm, recovery_pooled_ci=pc,
@@ -111,6 +113,11 @@ def main():
     df = pd.DataFrame(rows)
     df.to_csv(f"{OUT}/strain_mix_motif_recovery_sourcedata.csv", index=False)
     print(f"wrote {OUT}/strain_mix_motif_recovery_sourcedata.csv")
+    # detailed Source Data: one row per independent sample point (per-replicate raw recovery)
+    raw_out = f"{OUT}/strain_mix_motif_recovery_rawpoints_sourcedata.csv"
+    pd.DataFrame(raw)[["K", "replicate", "n_genome", "recovery_pooled", "recovery_perdonor"]] \
+        .to_csv(raw_out, index=False)
+    print(f"wrote {raw_out} ({len(raw)} raw points)")
     if missing:
         print(f"[warn] {len(missing)} donor accessions had no ground-truth all.motifs.csv: "
               f"{sorted(missing)[:8]}{' ...' if len(missing) > 8 else ''}")

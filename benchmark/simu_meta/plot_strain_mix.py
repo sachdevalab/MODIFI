@@ -46,10 +46,11 @@ def rep_metrics(label, sp_of):
     ei, hi = h.MGE.map(sra), h.host.map(sra)
     cs = h["pass"] & (ei == hi)                                   # correct strain (exact isolate)
     csp = h["pass"] & (ei.map(sp_of) == hi.map(sp_of)) & ei.map(sp_of).notna()  # correct species
-    na = int(h["pass"].sum())
-    return dict(sp_rec=csp.sum() / tot, sp_prec=csp.sum() / na if na else np.nan,
-                st_rec=cs.sum() / tot, st_prec=cs.sum() / na if na else np.nan,
-                strain_acc=100 * cs.sum() / csp.sum() if csp.sum() else np.nan)
+    na = int(h["pass"].sum()); ncsp = int(csp.sum()); ncs = int(cs.sum())
+    return dict(sp_rec=ncsp / tot, sp_prec=ncsp / na if na else np.nan,
+                st_rec=ncs / tot, st_prec=ncs / na if na else np.nan,
+                strain_acc=100 * ncs / ncsp if ncsp else np.nan,
+                n_correct_species=ncsp, n_correct_strain=ncs, n_confident=na, n_total_ece=tot)
 
 
 def agg(vals):
@@ -72,6 +73,7 @@ def main():
 
     K, x, ndon, ntot, nrep = [], [], [], [], []
     M = {k: {"sp_rec": [], "sp_prec": [], "st_rec": [], "st_prec": [], "strain_acc": []} for k, _ in KDEF}
+    raw = []  # one row per independent sample point (per-replicate raw values)
     for i, (k, base) in enumerate(KDEF):
         labs = rep_labels(base)
         if not labs:
@@ -80,6 +82,12 @@ def main():
             m = rep_metrics(lab, sp_of)
             for key in M[k]:
                 M[k][key].append(m[key])
+            raw.append(dict(K=k, replicate=lab,
+                            species_recall=m["sp_rec"], species_precision=m["sp_prec"],
+                            strain_recall=m["st_rec"], strain_precision=m["st_prec"],
+                            strain_accuracy=m["strain_acc"],
+                            n_correct_species=m["n_correct_species"], n_correct_strain=m["n_correct_strain"],
+                            n_confident=m["n_confident"], n_total_ece=m["n_total_ece"]))
         K.append(k); x.append(i); nrep.append(len(labs))
         dn, tn = strain_counts(base); ndon.append(dn); ntot.append(tn)
 
@@ -137,8 +145,15 @@ def main():
         "strain_accuracy_mean": [agg(M[k]["strain_acc"])[0] for k in K],
         "strain_accuracy_ci":   [agg(M[k]["strain_acc"])[1] for k in K]})
     src.to_csv(out.replace(".pdf", "_sourcedata.csv"), index=False)
+    # detailed Source Data: one row per independent sample point (per-replicate raw values)
+    raw_cols = ["K", "replicate", "species_recall", "species_precision", "strain_recall",
+                "strain_precision", "strain_accuracy", "n_correct_species", "n_correct_strain",
+                "n_confident", "n_total_ece"]
+    raw_out = out.replace(".pdf", "_rawpoints_sourcedata.csv")
+    pd.DataFrame(raw)[raw_cols].to_csv(raw_out, index=False)
     fig.savefig(out, bbox_inches="tight"); fig.savefig(out.replace(".pdf", ".png"), dpi=150, bbox_inches="tight")
     print(f"wrote {out} | reps per K: {dict(zip(K, nrep))}")
+    print(f"wrote {raw_out} ({len(raw)} raw points)")
 
 
 if __name__ == "__main__":

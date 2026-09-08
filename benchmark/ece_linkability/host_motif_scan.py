@@ -93,6 +93,7 @@ def worker(sample):
                 continue
             ece_occ = sum(count_occ(s, m) for m in motifs)
             rows.append(dict(sample=sample, ece=ece, type=typ,
+                             n_motifs=len(motifs), motif=";".join(motifs),
                              host_density=host_density, ece_density=ece_occ / (L / 1000.0)))
         return rows
     except Exception as e:
@@ -117,8 +118,9 @@ def main():
     df = df[df.type.isin(["plasmid", "virus"])].dropna(subset=["host_density", "ece_density"])
 
     os.makedirs(C.OUT, exist_ok=True)
-    df[["type", "host_density", "ece_density"]].to_csv(
-        os.path.join(C.OUT, f"{STEM}_sourcedata.csv"), index=False)
+    out = df[["sample", "ece", "type", "n_motifs", "motif", "host_density", "ece_density"]].rename(
+        columns={"sample": "host_genome_id", "ece": "ece_genome_id"})
+    out.to_csv(os.path.join(C.OUT, f"{STEM}_sourcedata.csv"), index=False)
 
     from scipy import stats
     print(f"ECEs plotted: {len(df)}  {df.type.value_counts().to_dict()}")
