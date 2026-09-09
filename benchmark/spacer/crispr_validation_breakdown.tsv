@@ -247,8 +247,6 @@ soil_2	soil	virus	soil_2_20550_C	soil_2_3309_L	0	0
 soil_2	soil	virus	soil_2_30187_C	soil_2_741_C	0	0
 soil_2	soil	virus	soil_2_41673_L	soil_2_414_L	1	0
 soil_2	soil	virus	soil_2_1693_L	soil_2_3754_L	0	0
-soil_2	soil	virus	soil_2_2097_L	soil_2_5672_L	0	0
-soil_2	soil	virus	soil_2_4072_L	soil_2_3524_L	0	0
 soil_2	soil	virus	soil_2_16492_L	soil_2_3633_L	0	0
 soil_2	soil	virus	soil_2_6789_L	soil_2_245_L	1	0
 soil_2	soil	virus	soil_2_4120_L	soil_2_204_L	0	0
@@ -288,9 +286,7 @@ soil_s3_2	soil	virus	soil_s3_2_27816_C	soil_s3_2_4068_L	0	0
 soil_s3_2	soil	virus	soil_s3_2_14427_L	soil_s3_2_1543_L	0	0
 soil_s3_2	soil	virus	soil_s3_2_2706_L	soil_s3_2_4636_L	0	0
 soil_s3_2	soil	virus	soil_s3_2_26024_L	soil_s3_2_210_L	0	0
-soil_s3_2	soil	virus	soil_s3_2_680_L	soil_s3_2_14829_L	0	0
 soil_s3_2	soil	virus	soil_s3_2_2553_L	soil_s3_2_1717_L	0	0
-soil_s3_2	soil	virus	soil_s3_2_2402_L	soil_s3_2_1002_L	0	0
 soil_s3_2	soil	virus	soil_s3_2_2424_L	soil_s3_2_1717_L	0	0
 soil_s3_2	soil	virus	soil_s3_2_5093_L	soil_s3_2_1002_L	0	0
 soil_s3_2	soil	virus	soil_s3_2_112_L	soil_s3_2_10716_L	0	0
@@ -309,7 +305,6 @@ soil_s4_1	soil	virus	soil_s4_1_14608_C	soil_s4_1_675_L	0	0
 soil_s4_1	soil	virus	soil_s4_1_14138_L	soil_s4_1_210_L	0	0
 soil_s4_1	soil	virus	soil_s4_1_7317_L	soil_s4_1_71_L	1	0
 soil_s4_1	soil	virus	soil_s4_1_311_L	soil_s4_1_3428_L	0	0
-soil_s4_1	soil	virus	soil_s4_1_6818_L	soil_s4_1_921_L	0	0
 soil_s4_1	soil	virus	soil_s4_1_4812_L	soil_s4_1_4254_L	0	0
 soil_s4_1	soil	virus	soil_s4_1_3011_L	soil_s4_1_920_L	0	0
 soil_s4_1	soil	virus	soil_s4_1_1960_L	soil_s4_1_1788_L	0	0

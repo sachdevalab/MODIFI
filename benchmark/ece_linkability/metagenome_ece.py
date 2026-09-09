@@ -25,8 +25,8 @@ from ece_linkability import (read_profile, filtered_set, set_density,
                              read_host_summary, gff_mod_count)
 
 STRICT = "/home/shuaiw/borg/revision/ece_anno/expanded/filterpass_FINAL.csv"
-# authoritative high-confidence linkage set (317 strict ECEs); linked = MGE present here
-LINKED_TABLE = "/home/shuaiw/MODIFI/tmp/rev_figs/ece_anno/mge_host_gc_cov_final.csv"
+# authoritative high-confidence linkage set (312 strict ECEs); linked = MGE present here
+LINKED_TABLE = "/home/shuaiw/borg/revision/ece_anno/expanded/final_profile/linkage_table.csv"
 RUN = "/home/shuaiw/borg/paper/run2"
 VARIANTS = ["_methylation3", "_methylation4", "_methylation2", "_methylation"]
 STRICT_MAP = None   # {sample: {MGE: (type, mge_len)}}, set in main (inherited by fork)

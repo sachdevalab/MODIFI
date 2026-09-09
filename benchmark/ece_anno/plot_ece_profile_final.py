@@ -28,6 +28,9 @@ plt.rcParams.update({"font.size": 9, "axes.titlesize": 11, "axes.titleweight": "
 fig, axes = plt.subplots(4, 3, figsize=(18, 21))
 def title(ax, l, t): ax.set_title(l, loc="left", fontweight="bold")
 
+SD = {}   # per-panel Source Data (sheet name -> DataFrame), exact plotted values
+FIT = []  # (panel, pearson_r, p_value, slope, intercept) for the scatter fits
+
 # a) Venn
 m = fp["methods"].fillna("")
 sets = {"geNomad": set(fp.loc[m.str.contains("genomad"),"key"]),
@@ -37,6 +40,13 @@ sets = {"geNomad": set(fp.loc[m.str.contains("genomad"),"key"]),
         "PlasX": set(fp.loc[m.str.contains("plasx"),"key"])}
 venn(sets, cmap=["#4C78A8","#F58518","#54A24B","#B279A2","#E45756"], fontsize=7, legend_loc="upper left", ax=axes[0,0])
 title(axes[0,0], "a", f"Callers (n={len(fp)})")
+# SD a: per-ECE caller membership (Venn input) + set sizes
+_a = fp[["sample","MGE","MGE_type"]].rename(columns={"MGE_type":"type"}).copy()
+for cname, ckey in [("geNomad","genomad"),("VirSorter1","virsorter1"),("VirSorter2","virsorter2"),
+                    ("VIBRANT","vibrant"),("PlasX","plasx")]:
+    _a[cname] = m.str.contains(ckey).values
+SD["a_callers"] = _a
+SD["a_caller_set_sizes"] = pd.DataFrame({"caller": list(sets), "n_ECEs": [len(v) for v in sets.values()]})
 
 # b) length
 ax=axes[0,1]; title(ax,"b","ECE length")
@@ -56,6 +66,7 @@ ax.set_xscale("log"); ax.set_xlabel("mean depth (x)"); ax.set_ylabel("ECEs"); ax
 ax=axes[1,0]; title(ax,"d","Environment")
 ct=ece.groupby(["environment","type"]).size().unstack(fill_value=0).reindex(columns=TYPES, fill_value=0)
 ct["s"]=ct.sum(1); ct=ct.sort_values("s",ascending=False).drop(columns="s")
+SD["d_environment"] = ct.reset_index()   # environment, plasmid, virus (bar heights)
 x=np.arange(len(ct)); w=0.4
 ax.bar(x-w/2, ct["plasmid"], w, color=CP, label="plasmid"); ax.bar(x+w/2, ct["virus"], w, color=CV, label="virus")
 ax.set_xticks(x); ax.set_xticklabels(ct.index, rotation=45, ha="right"); ax.set_ylabel("ECEs"); ax.legend()
@@ -80,6 +91,11 @@ def scat(ax,l,t,x,y,logg):
     else:
         r,p=pearsonr(xv,yv); b,a0=np.polyfit(xv,yv,1); xs=np.linspace(xv.min(),xv.max(),50); ax.plot(xs,a0+b*xs,"k-",lw=1.3)
     ax.text(0.05,0.93,f"r={r:.2f}\np={p:.1e}",transform=ax.transAxes,va="top",fontsize=9); ax.legend(fontsize=8)
+    # SD: per-linkage plotted points (+ fit on log10 for logg panels)
+    SD[f"{l}_{'depth_sim' if logg else 'gc'}"] = d[["sample","MGE","type",x,y]].rename(
+        columns={x: ("ECE_cov" if logg else "ECE_GC"), y: ("host_cov" if logg else "host_GC")})
+    FIT.append((f"{l} ({'log10 '+x+' vs '+y if logg else x+' vs '+y})", round(float(r),4),
+                float(f"{p:.3e}"), round(float(b),4), round(float(a0),4)))
 scat(axes[1,2],"f","GC similarity (ECE vs host)","MGE_gc","host_gc",False); axes[1,2].set_xlabel("ECE GC"); axes[1,2].set_ylabel("host GC")
 scat(axes[2,0],"g","Depth similarity (ECE vs host)","MGE_cov","host_cov",True); axes[2,0].set_xlabel("ECE cov (log)"); axes[2,0].set_ylabel("host cov (log)")
 
@@ -89,6 +105,11 @@ d=lk.dropna(subset=["cos_sim"])
 order=d.groupby("environment")["cos_sim"].median().sort_values(ascending=False).index.tolist()
 hcmap=plt.get_cmap("tab10"); hcol={h:hcmap(i%10) for i,h in enumerate(order)}
 data=[d[d.environment==h]["cos_sim"].values for h in order]
+SD["h_cosine_values"] = d[["sample","MGE","type","environment","cos_sim"]].copy()
+SD["h_cosine_boxstats"] = pd.DataFrame([
+    {"environment":h, "n":len(v), "min":np.min(v), "q1":np.percentile(v,25),
+     "median":np.median(v), "q3":np.percentile(v,75), "max":np.max(v)}
+    for h,v in zip(order, data)])
 bp=ax.boxplot(data, patch_artist=True, showfliers=True, flierprops=dict(marker=".",markersize=3))
 for patch,h in zip(bp["boxes"],order): patch.set_facecolor(hcol[h])
 for med in bp["medians"]: med.set_color("black")
@@ -102,6 +123,7 @@ if os.path.exists(cf) and os.path.getsize(cf)>30:
     for t in TYPES:
         if t not in piv.columns: piv[t]=0
     piv["s"]=piv["plasmid"]+piv["virus"]; piv=piv.sort_values("s",ascending=False).drop(columns="s")
+    SD["i_crispr"] = piv.reset_index()   # Sample, plasmid, virus (consistent-linkage counts)
     x=np.arange(len(piv)); ax.bar(x,piv["plasmid"],color=CP,label="plasmid"); ax.bar(x,piv["virus"],bottom=piv["plasmid"],color=CV,label="virus")
     ax.set_xticks(x); ax.set_xticklabels(piv.index,rotation=90,fontsize=7); ax.set_ylabel("consistent linkages"); ax.legend()
 
@@ -112,6 +134,7 @@ title(axj,"j","IMG-catalogue host validation")
 vsum=f"{OUT}/ece_validation_summary_strict.csv"
 if os.path.exists(vsum):
     vs=pd.read_csv(vsum)
+    SD["j_img_validation"] = vs.copy()   # type, category, n (panel-j bar values)
     catlev=["host-supported (agrees)","host mismatch","no comparable reference"]
     vpal={"host-supported (agrees)":"#238b45","host mismatch":"#d7301f","no comparable reference":"#e0e0e0"}
     vtypes=["Plasmids (IMG/PR)","Viruses (IMG/VR)"]
@@ -146,7 +169,42 @@ try:
     _p=axj.get_position(); axj.set_position([0.16, _p.y0, 0.80, _p.height])
 except Exception: pass
 for ext in ("pdf","png"): fig.savefig(f"{OUT}/ece_profile_final.{ext}", bbox_inches="tight", dpi=200)
-# sourcedata
+# sourcedata: keep the two broad raw tables ...
 ece.to_csv(f"{OUT}/ece_profile_final_sourcedata_ece.csv", index=False)
 lk.to_csv(f"{OUT}/ece_profile_final_sourcedata_linkage.csv", index=False)
-print("wrote ece_profile_final.pdf/.png + sourcedata")
+
+# ... plus a detailed per-panel Source Data workbook (exact plotted values, sheets a-j)
+SD["b_length"] = ece[["MGE","type","length"]].rename(columns={"length":"length_bp"})
+SD["c_depth"] = ece[["MGE","type","depth"]].rename(columns={"depth":"mean_depth"})
+SD["e_linkage_score"] = ece[["MGE","type","best_score"]].rename(columns={"best_score":"best_final_score"})
+SD["fit_stats"] = pd.DataFrame(FIT, columns=["panel","pearson_r","p_value","slope","intercept"])
+SD["README"] = pd.DataFrame({"sheet": [
+    "a_callers / a_caller_set_sizes","b_length","c_depth","d_environment","e_linkage_score",
+    "f_gc","g_depth_sim","h_cosine_values / h_cosine_boxstats","i_crispr","j_img_validation","fit_stats"],
+    "panel": ["a","b","c","d","e","f","g","h","i","j","f,g"],
+    "content": [
+        "per-ECE caller membership (Venn input); set sizes",
+        "per-ECE ECE length (bp); histogram input",
+        "per-ECE mean sequencing depth; histogram input",
+        "ECE counts per environment x type (bar heights)",
+        "per-ECE best MODIFI host-linkage final_score; histogram input",
+        "per-linkage ECE vs host GC (scatter points)",
+        "per-linkage ECE vs host coverage (scatter points, log-log)",
+        "per-linkage cosine by habitat; boxplot summary stats (as ordered)",
+        "per-sample CRISPR-consistent linkage counts by type",
+        "IMG/PR + IMG/VR host-validation category counts; see img_match_manual_check.csv for per-linkage detail",
+        "Pearson r, p, slope, intercept for the f and g fits"]})
+sheet_order = ["README","a_callers","a_caller_set_sizes","b_length","c_depth","d_environment",
+               "e_linkage_score","f_gc","g_depth_sim","h_cosine_values","h_cosine_boxstats",
+               "i_crispr","j_img_validation","fit_stats"]
+xlsx = f"{OUT}/ece_profile_final_sourcedata.xlsx"
+try:
+    with pd.ExcelWriter(xlsx, engine="openpyxl") as xw:
+        for sh in sheet_order:
+            if sh in SD: SD[sh].to_excel(xw, sheet_name=sh[:31], index=False)
+    print(f"wrote ece_profile_final.pdf/.png + 2 raw CSVs + per-panel {xlsx}")
+except Exception as e:
+    d2 = f"{OUT}/ece_profile_final_sourcedata"; os.makedirs(d2, exist_ok=True)
+    for sh in sheet_order:
+        if sh in SD: SD[sh].to_csv(f"{d2}/{sh}.csv", index=False)
+    print(f"wrote ece_profile_final.pdf/.png + 2 raw CSVs + per-panel CSV dir {d2} (openpyxl missing: {e})")

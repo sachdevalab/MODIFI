@@ -36,11 +36,17 @@ OUT = "/home/shuaiw/MODIFI/tmp/rev_figs/complete_assess"
 
 # All metagenomes with a linkage run (every sample that has a *_methylation4 dir; 64 of
 # the 72 run2 samples, the other 8 have only *_methylation_time). No sample restriction:
-# this figure pools all 64 metagenomes.
+# this figure pools all 64 metagenomes. The candidate host universe (denominator) and the
+# per-contig completeness/contamination come from run2 (contigs_list.txt + checkM2).
 
-# Curated ECE set (3880 elements across 64 samples). A host_summary row counts as a linkage
-# only if its MGE is one of these real ECEs; join key is (sample, MGE).
-ECE_SET = "/home/shuaiw/MODIFI/tmp/rev_figs/ece_anno/ece_profile_final_sourcedata_ece.csv"
+# Re-run linkage: per-sample raw scored host tables from the re-run against the new ECE set.
+# Same schema as MODIFI host_summary.csv (MGE, host, final_score, specificity, ...). Covers all
+# 64 samples and all 3873 ECEs; supersedes the stale run2 host_summary.csv (Dec 2025).
+LINKAGE_ROOT = "/home/shuaiw/borg/revision/network/per_sample"
+
+# Curated ECE set (3873 elements across 64 samples: 2490 virus, 1383 plasmid). A host_summary
+# row counts as a linkage only if its MGE is one of these real ECEs; join key is (sample, MGE).
+ECE_SET = "/home/shuaiw/borg/revision/ece_anno/expanded/filterpass_FINAL.csv"
 
 # MODIFI default linkage filter (scripts/estimate_linkage.py:587-588). No host requirement
 # (host need not have a phylum annotation); one ECE may link to >1 host contig (all passing
@@ -72,12 +78,14 @@ def build_contig_table():
     """Return a pooled per-contig DataFrame over all profiled contigs across
     samples, with completeness, contamination, linked flag and n_linkages."""
     rows = []
+    linkages = []          # one row per passing ECE-host pair
     n_samples = 0
     n_missing_checkm = 0
 
-    # Curated ECE set: {sample: set(MGE contig IDs)}.
+    # Curated ECE set: {sample: set(MGE)} and (sample, MGE) -> MGE_type.
     ece = pd.read_csv(ECE_SET)
     ece_by_sample = {s: set(g["MGE"]) for s, g in ece.groupby("sample")}
+    ece_type = dict(zip(zip(ece["sample"], ece["MGE"]), ece["MGE_type"]))
     print(f"ECE set: {len(ece)} ECEs across {len(ece_by_sample)} samples")
 
     meth_dirs = sorted(glob.glob(os.path.join(RUN2, "*", "*_methylation4")))
@@ -86,13 +94,14 @@ def build_contig_table():
         sample = os.path.basename(sample_dir)
 
         contigs_list = os.path.join(mdir, "contigs_list.txt")
-        host_summary = os.path.join(mdir, "host_summary.csv")
+        # Re-run linkage table for this sample (per-candidate scores vs the new ECE set).
+        host_summary = os.path.join(LINKAGE_ROOT, sample, "host_summary.csv")
         checkm = os.path.join(sample_dir, "checkM2", "quality_report.tsv")
         if not (os.path.exists(contigs_list) and os.path.exists(checkm)):
             continue
         n_samples += 1
 
-        # Candidate host universe: contigs MODIFI profiled for methylation.
+        # Candidate host universe: contigs MODIFI profiled for DNA modification.
         profiled = []
         with open(contigs_list) as fh:
             for line in fh:
@@ -112,7 +121,8 @@ def build_contig_table():
         cont = dict(zip(cm["Name"], cm["Contamination"]))
 
         # Confident linkages: default filter AND MGE restricted to the curated ECE set.
-        # host_summary may be empty/absent. All passing (MGE, host) rows are counted.
+        # For each ECE we retain ALL host contigs whose row passes the filter (no dedup to a
+        # single best host); host_summary may be empty/absent.
         linked_counts = {}
         ece_mges = ece_by_sample.get(sample, set())
         if os.path.exists(host_summary) and ece_mges:
@@ -121,6 +131,21 @@ def build_contig_table():
                 hs = hs[(hs["specificity"] < SPEC_CUT) & (hs["final_score"] > SCORE_CUT)
                         & (hs["MGE"].isin(ece_mges))]
                 linked_counts = hs["host"].value_counts().to_dict()
+                for _, r in hs.iterrows():
+                    h = r["host"]
+                    linkages.append({
+                        "sample": sample,
+                        "MGE": r["MGE"],
+                        "MGE_type": ece_type.get((sample, r["MGE"]), ""),
+                        "host": h,
+                        "final_score": r["final_score"],
+                        "specificity": r["specificity"],
+                        "cos_sim": r.get("cos_sim", ""),
+                        "MGE_cov": r.get("MGE_cov", ""),
+                        "host_cov": r.get("host_cov", ""),
+                        "host_completeness": comp.get(h, ""),
+                        "host_contamination": cont.get(h, ""),
+                    })
 
         for cid in profiled:
             if cid not in comp:
@@ -137,9 +162,14 @@ def build_contig_table():
             })
 
     df = pd.DataFrame(rows)
+    link_df = pd.DataFrame(linkages, columns=[
+        "sample", "MGE", "MGE_type", "host", "final_score", "specificity",
+        "cos_sim", "MGE_cov", "host_cov", "host_completeness", "host_contamination"])
     print(f"pooled {n_samples} samples, {len(df)} profiled contigs with CheckM2 "
-          f"({n_missing_checkm} profiled contigs dropped for missing CheckM2 row)")
-    return df
+          f"({n_missing_checkm} profiled contigs dropped for missing CheckM2 row); "
+          f"{len(link_df)} pass-filter linkages, "
+          f"{link_df[['sample','host']].drop_duplicates().shape[0]} distinct linked hosts")
+    return df, link_df
 
 
 def summarize(df, col, edges, labels):
@@ -190,8 +220,26 @@ def rate_panel(ax, summary, labels, xlabel, title):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    df = build_contig_table()
+    df, link_df = build_contig_table()
     n_samp = df["sample"].nunique()
+
+    # Full pass-filter linkage table: one row per ECE-host pair (an ECE with >1 passing
+    # host gets multiple rows).
+    link_df.to_csv(os.path.join(OUT, "linkage_pass_filter_table.csv"), index=False)
+    print(f"wrote pass-filter linkage table: {len(link_df)} ECE-host pairs")
+
+    # Raw source data: one row per profiled contig (every independent data point the bars
+    # aggregate), with its completeness/contamination, the bins it falls in, and its
+    # linked outcome. Saved next to the figure per Source Data convention.
+    raw = df.copy()
+    raw["completeness_bin"] = pd.cut(raw["completeness"], bins=COMP_EDGES,
+                                     labels=COMP_LABELS, right=False, include_lowest=True)
+    raw["contamination_bin"] = pd.cut(raw["contamination"], bins=CONT_EDGES,
+                                      labels=CONT_LABELS, right=False, include_lowest=True)
+    raw = raw[["sample", "contig", "completeness", "contamination",
+               "completeness_bin", "contamination_bin", "linked", "n_linkages"]]
+    raw.to_csv(os.path.join(OUT, "linkage_vs_mag_quality_sourcedata.csv"), index=False)
+    print(f"wrote raw source data: {len(raw)} contigs")
 
     # Bin by completeness (contamination ignored) and by contamination
     # (completeness ignored).
