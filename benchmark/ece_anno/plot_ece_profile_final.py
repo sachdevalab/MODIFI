@@ -135,6 +135,9 @@ vsum=f"{OUT}/ece_validation_summary_strict.csv"
 if os.path.exists(vsum):
     vs=pd.read_csv(vsum)
     SD["j_img_validation"] = vs.copy()   # type, category, n (panel-j bar values)
+    # per-linkage detail for the comparable (genus-resolved) linkages: ECE + our host + IMG ref + host
+    _mc = f"{OUT}/img_match_manual_check.csv"
+    if os.path.exists(_mc): SD["j_img_comparable"] = pd.read_csv(_mc)
     catlev=["host-supported (agrees)","host mismatch","no comparable reference"]
     vpal={"host-supported (agrees)":"#238b45","host mismatch":"#d7301f","no comparable reference":"#e0e0e0"}
     vtypes=["Plasmids (IMG/PR)","Viruses (IMG/VR)"]
@@ -180,7 +183,8 @@ SD["e_linkage_score"] = ece[["MGE","type","best_score"]].rename(columns={"best_s
 SD["fit_stats"] = pd.DataFrame(FIT, columns=["panel","pearson_r","p_value","slope","intercept"])
 SD["README"] = pd.DataFrame({"sheet": [
     "a_callers / a_caller_set_sizes","b_length","c_depth","d_environment","e_linkage_score",
-    "f_gc","g_depth_sim","h_cosine_values / h_cosine_boxstats","i_crispr","j_img_validation","fit_stats"],
+    "f_gc","g_depth_sim","h_cosine_values / h_cosine_boxstats","i_crispr",
+    "j_img_validation / j_img_comparable","fit_stats"],
     "panel": ["a","b","c","d","e","f","g","h","i","j","f,g"],
     "content": [
         "per-ECE caller membership (Venn input); set sizes",
@@ -192,11 +196,13 @@ SD["README"] = pd.DataFrame({"sheet": [
         "per-linkage ECE vs host coverage (scatter points, log-log)",
         "per-linkage cosine by habitat; boxplot summary stats (as ordered)",
         "per-sample CRISPR-consistent linkage counts by type",
-        "IMG/PR + IMG/VR host-validation category counts; see img_match_manual_check.csv for per-linkage detail",
+        "j_img_validation = category counts (bar heights); j_img_comparable = per-linkage detail for the "
+        "64 comparable linkages (ECE, our host contig+genus+full taxonomy, IMG reference id+host+full "
+        "taxonomy, ANI, query coverage, is_match)",
         "Pearson r, p, slope, intercept for the f and g fits"]})
 sheet_order = ["README","a_callers","a_caller_set_sizes","b_length","c_depth","d_environment",
                "e_linkage_score","f_gc","g_depth_sim","h_cosine_values","h_cosine_boxstats",
-               "i_crispr","j_img_validation","fit_stats"]
+               "i_crispr","j_img_validation","j_img_comparable","fit_stats"]
 xlsx = f"{OUT}/ece_profile_final_sourcedata.xlsx"
 try:
     with pd.ExcelWriter(xlsx, engine="openpyxl") as xw:
