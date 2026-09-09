@@ -178,22 +178,11 @@ def short_label(hmm, motif):
 
 
 def group_label(genes):
-    """
-    Human label for an HMM group: the HMM family name with a representative REBASE
-    homolog and recognition motif appended when available, e.g.
-    'Type_II_MTases_FAM_4 | M.Ksp2N3DamP (GATC)'.
-    """
-    hmm = most_common_nonempty(genes["HMM"]) or "unknown_HMM"
+    """Column label = REBASE homolog (fallback to HMM family when no REBASE hit)."""
     homolog = most_common_nonempty(genes["REBASE homolog"])
-    motif = first_nonempty(genes["Homolog motif"])
-    tail = ""
-    if homolog and motif:
-        tail = f" | {homolog} ({motif})"
-    elif homolog:
-        tail = f" | {homolog}"
-    elif motif:
-        tail = f" | ({motif})"
-    return hmm + tail
+    if homolog:
+        return homolog
+    return f"[HMM] {most_common_nonempty(genes['HMM']) or 'unknown'}"
 
 
 # ----------------------------------------------------------------------------
@@ -207,8 +196,10 @@ def main():
     genes["system_type"] = genes["System Type"].apply(clean_systype)
     detected_by_mag = {m: load_detected_motifs(m) for m in MAGS}
 
-    # ---- 2. group MTases by HMM family (for consistency; no protein clustering) ----
-    genes["cluster_rep"] = genes["HMM"].fillna("unknown_HMM").replace("", "unknown_HMM")
+    # ---- 2. group MTases by REBASE homolog (fallback to HMM when no REBASE hit) ----
+    rebase = genes["REBASE homolog"].fillna("").str.strip()
+    hmm_key = "[HMM] " + genes["HMM"].fillna("unknown").replace("", "unknown")
+    genes["cluster_rep"] = rebase.where(rebase != "", hmm_key)
 
     # ---- 3. assign each group a stable key + consensus annotation ----
     cl_info = {}
@@ -234,8 +225,10 @@ def main():
         seen[rep] = lab
         cl_info[rep]["label"] = lab
 
-    # order columns: by system type then label, for a tidy default
-    reps = sorted(cl_info, key=lambda r: (cl_info[r]["system_type"], cl_info[r]["label"]))
+    # order columns so genes of the same HMM family are contiguous (system type ->
+    # HMM family -> motif -> label), giving clean HMM-family blocks in the plot.
+    reps = sorted(cl_info, key=lambda r: (cl_info[r]["system_type"], cl_info[r]["hmm"],
+                                          cl_info[r]["motif"], cl_info[r]["label"]))
     keys = [cl_info[r]["label"] for r in reps]
     rep_of_key = {cl_info[r]["label"]: r for r in reps}
 

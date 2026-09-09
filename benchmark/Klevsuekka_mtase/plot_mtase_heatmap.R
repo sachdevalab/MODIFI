@@ -37,39 +37,33 @@ ann  <- read.csv(file.path(io, "mtase_column_annotation.csv"),
 ann <- ann[colnames(pres), , drop = FALSE]
 
 # ---- column labels ----
-# Two rows describe each column: the full HMM family name (bottom column names)
-# and the recognition motif (a separate text track above the columns).
-col_labels <- ann$hmm
-motif_lab  <- ifelse(ann$motif == "" | is.na(ann$motif), "n/a", ann$motif)
+# One label per column: REBASE homolog with its recognition motif appended in
+# parentheses when there is one (no "n/a" for motif-less genes). HMM family, mod
+# type and RM system are shown as annotation bars above.
+homolog    <- sub("^\\[HMM\\] ", "", rownames(ann))          # REBASE homolog
+has_motif  <- !(ann$motif == "" | is.na(ann$motif))
+col_labels <- ifelse(has_motif, paste0(homolog, " (", ann$motif, ")"), homolog)
 modtype    <- ifelse(ann$mod_type == "" | is.na(ann$mod_type), "unknown", ann$mod_type)
 systype    <- ifelse(ann$system_type == "" | is.na(ann$system_type), "unknown", ann$system_type)
+hmmfam     <- ann$hmm
 
 mod_pal <- c(m6A = "#1b7837", m5C = "#762a83", m4C = "#e08214", unknown = "#dddddd")
 sys_pal <- c("Type I" = "#4575b4", "Type II" = "#91bfdb", "Type IIG" = "#fee090",
              "Type III" = "#fc8d59", "Type IV" = "#d73027", unknown = "#dddddd")
+hmm_levels <- unique(hmmfam)
+hmm_pal <- structure(grDevices::hcl.colors(length(hmm_levels), "Dark 3"),
+                     names = hmm_levels)
 
 top_anno <- HeatmapAnnotation(
+  `HMM family`  = hmmfam,
   `Mod type`    = modtype,
   `RM system`   = systype,
-  col = list(`Mod type` = mod_pal, `RM system` = sys_pal),
+  col = list(`HMM family` = hmm_pal, `Mod type` = mod_pal, `RM system` = sys_pal),
   annotation_name_gp = gpar(fontsize = 8),
   annotation_name_side = "left",
   simple_anno_size = unit(3.5, "mm"),
   gap = unit(1, "mm"),
   show_legend = FALSE            # legends built manually and packed into one column
-)
-
-# bottom labels: full HMM family name (top), recognition motif directly below it.
-# Explicit band heights keep the long HMM names from overflowing into the motif row.
-bot_anno <- HeatmapAnnotation(
-  HMM   = anno_text(col_labels, rot = 90, just = "right",
-                    location = unit(1, "npc"), gp = gpar(fontsize = 8)),
-  Motif = anno_text(motif_lab, rot = 90, just = "right",
-                    location = unit(1, "npc"), gp = gpar(fontsize = 7)),
-  annotation_height = unit.c(unit(4, "cm"), unit(3, "cm")),
-  annotation_name_gp = gpar(fontsize = 8),
-  annotation_name_side = "left",
-  gap = unit(2, "mm")
 )
 
 # ---- activity overlay ----
@@ -97,17 +91,17 @@ ht <- Heatmap(
 
   cluster_rows = FALSE,                            # fixed MAG order (Fig 3e)
   row_order = FIG3E_ORDER,
-  cluster_columns = TRUE,
-  clustering_distance_columns = "binary",
-  clustering_method_columns = "average",
+  cluster_columns = FALSE,                         # keep HMM-family column order
+  column_order = colnames(pres),
 
   show_row_names = TRUE,
   row_names_side = "right",
   row_names_gp = gpar(fontsize = 9),
-  show_column_names = FALSE,       # HMM + motif shown via bottom_annotation instead
+  column_labels = col_labels,      # REBASE homolog (motif) on one line
+  column_names_gp = gpar(fontsize = 7),
+  column_names_rot = 90,
 
   top_annotation = top_anno,
-  bottom_annotation = bot_anno,
   width  = unit(0.55 * ncol(pres), "cm"),
   height = unit(0.55 * nrow(pres), "cm"),
 
@@ -130,6 +124,9 @@ sys_present <- intersect(names(sys_pal), unique(systype))
 sys_lgd <- Legend(title = "RM system", title_gp = lt, labels_gp = ll,
                   labels = sys_present, legend_gp = gpar(fill = sys_pal[sys_present]))
 
+hmm_lgd <- Legend(title = "HMM family", title_gp = lt, labels_gp = ll,
+                  labels = hmm_levels, legend_gp = gpar(fill = hmm_pal[hmm_levels]))
+
 act_lgd <- Legend(
   title = "Activity (motif)", title_gp = lt, labels_gp = ll,
   labels = c("detected", "not detected", "no REBASE motif"),
@@ -143,7 +140,7 @@ act_lgd <- Legend(
   )
 )
 
-packed <- packLegend(gene_lgd, mod_lgd, sys_lgd, act_lgd,
+packed <- packLegend(gene_lgd, act_lgd, mod_lgd, sys_lgd, hmm_lgd,
                      direction = "vertical", gap = unit(5, "mm"),
                      max_height = unit(30, "cm"))
 
