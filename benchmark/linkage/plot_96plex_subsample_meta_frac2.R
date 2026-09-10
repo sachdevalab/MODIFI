@@ -27,13 +27,13 @@ p1 <- ggplot(df, aes(x = fraction, y = recall)) +
   geom_line() +
   geom_point(size = 2) +
   theme_bw() +
-  labs(x = "96plex fraction (%)", y = "Recall")
+  labs(x = "PB24 fraction (%)", y = "Recall")
 
 p2 <- ggplot(df, aes(x = fraction, y = precision)) +
   geom_line() +
   geom_point(size = 2) +
   theme_bw() +
-  labs(x = "96plex fraction (%)", y = "Precision")
+  labs(x = "PB24 fraction (%)", y = "Precision")
 
 ## plot boxplot for depth, each fraction has a boxplot
 df_dp <- df_dp %>%
@@ -44,7 +44,7 @@ df_dp$fraction <- factor(df_dp$fraction)
 p3 <- ggplot(df_dp, aes(x = fraction, y = depth)) +
   geom_boxplot(outlier.shape = NA) +
   theme_bw() +
-  labs(x = "96plex fraction (%)", y = "Depth") +
+  labs(x = "PB24 fraction (%)", y = "Depth") +
   ylim(0, 220)
 
 
