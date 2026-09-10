@@ -107,6 +107,8 @@ dc$bin <- cut(dc$mge_len, breaks = edges_l, include.lowest = TRUE)
 lv <- levels(dc$bin)
 binlab <- sapply(strsplit(gsub("[][()]", "", lv), ","), function(x)
   sprintf("%g-%g\nkb", round(as.numeric(x[1]) / 1000), round(as.numeric(x[2]) / 1000)))
+binlab[length(binlab)] <- sprintf(">%g\nkb",
+  round(as.numeric(strsplit(gsub("[][()]", "", tail(lv, 1)), ",")[[1]][1]) / 1000))
 mlm <- lm(mod_density_per_kb ~ lk + log10(mge_len), data = dc)
 p_link <- summary(mlm)$coefficients["lkunlinked", 4]
 binp <- sapply(lv, function(b) {
@@ -185,6 +187,8 @@ paired_long$bin <- factor(paired_long$bin, lvf)
 paired_long$lk <- factor(paired_long$lk, c("linked", "unlinked"))
 strip <- setNames(sapply(strsplit(gsub("[][()]", "", lvf), ","), function(x)
   sprintf("%g-%gkb", round(as.numeric(x[1]) / 1000), round(as.numeric(x[2]) / 1000))), lvf)
+strip[length(strip)] <- sprintf(">%gkb",
+  round(as.numeric(strsplit(gsub("[][()]", "", tail(lvf, 1)), ",")[[1]][1]) / 1000))
 statf <- data.frame(bin = factor(lvf, lvf), lab = ptxtf, y = max(paired_long$y, na.rm = TRUE))
 p_lenctrl2 <- ggplot(paired_long, aes(lk, y)) +
   geom_line(aes(group = sample), color = "grey70", alpha = 0.5, linewidth = 0.25) +
