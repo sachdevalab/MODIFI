@@ -13,16 +13,12 @@ B$type <- factor(B$type, c("plasmid", "virus"))
 cols <- c(plasmid = "#009E73", virus = "#D55E00")
 
 lim <- max(B$host_density, B$ece_density, na.rm = TRUE) * 1.02
-pw <- function(t) {
-  s <- B[B$type == t, ]
-  wilcox.test(s$host_density, s$ece_density, paired = TRUE)$p.value
-}
-below <- function(t) { s <- B[B$type == t, ]; mean(s$ece_density < s$host_density) * 100 }
-p_pl <- pw("plasmid"); p_vi <- pw("virus")
 n_pl <- sum(B$type == "plasmid"); n_vi <- sum(B$type == "virus")
-lab <- sprintf(paste0("plasmid (n=%d): %.0f%% below y=x, Wilcoxon paired p = %.1e\n",
-                      "virus (n=%d): %.0f%% below y=x, Wilcoxon paired p = %.1e"),
-               n_pl, below("plasmid"), p_pl, n_vi, below("virus"), p_vi)
+# pooled over plasmid + virus: one paired Wilcoxon on all ECEs
+p_all <- wilcox.test(B$host_density, B$ece_density, paired = TRUE)$p.value
+below_all <- mean(B$ece_density < B$host_density) * 100
+lab <- sprintf("%d ECEs (plasmid + virus)\n%.0f%% below y=x, Wilcoxon paired p = %.1e",
+               nrow(B), below_all, p_all)
 
 p <- ggplot(B, aes(host_density, ece_density, color = type)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.6) +
@@ -41,4 +37,5 @@ p <- ggplot(B, aes(host_density, ece_density, color = type)) +
 
 ggsave(file.path(OUT, paste0(STEM, ".pdf")), p, width = 5.8, height = 5.6, device = cairo_pdf)
 ggsave(file.path(OUT, paste0(STEM, ".png")), p, width = 5.8, height = 5.6, dpi = 300)
-cat(sprintf("wrote %s.pdf/.png  (plasmid p=%.2e, virus p=%.2e)\n", STEM, p_pl, p_vi))
+cat(sprintf("wrote %s.pdf/.png  (pooled plasmid+virus paired p=%.2e, %.0f%% below)\n",
+            STEM, p_all, below_all))

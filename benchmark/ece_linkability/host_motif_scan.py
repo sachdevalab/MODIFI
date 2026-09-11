@@ -14,6 +14,7 @@ occurrences/kb on the host chromosome; y = host-set occurrences/kb on each ECE.
 Writes fig_host_motif_density_sourcedata.csv (type, host_density, ece_density) for plot_host_motif_density.R.
 """
 import os
+import re
 import csv
 from multiprocessing import Pool
 
@@ -25,7 +26,7 @@ from Bio.Seq import Seq
 
 import ece_plot_common as C
 from ece_linkability import (read_profile, filtered_set, read_all_mge,
-                             ISO_BASE, ISO_VARIANT, load_iso_strict)
+                             ISO_BASE, ISO_VARIANT, ISO_SUMMARY, load_iso_strict)
 
 STRICT = "/home/shuaiw/borg/revision/ece_anno/isolate_all/filterpass_isolate_FINAL.csv"
 STEM = "fig_host_motif_density"
@@ -101,6 +102,35 @@ def worker(sample):
                      host_density=np.nan, ece_density=np.nan)]
 
 
+def load_species_depth(path):
+    """isolation_sample_summary.tsv -> {Sample: (species, Average_DP)}; species parsed from GTDB Lineage."""
+    m = {}
+    if not os.path.exists(path):
+        return m
+    df = pd.read_csv(path, sep="\t")
+    for _, r in df.iterrows():
+        lin = r.get("Lineage")
+        sp = re.search(r"s__([^;]*)", lin) if isinstance(lin, str) else None
+        sp = sp.group(1).strip() if sp else ""
+        try:
+            dp = float(r.get("Average_DP"))
+        except (ValueError, TypeError):
+            dp = np.nan
+        m[str(r["Sample"])] = (sp or "", dp)
+    return m
+
+
+def one_strain_per_species(df):
+    """Keep one host_genome_id per species: the ECE-bearing strain with the highest host_depth.
+    Isolates with no species label are kept individually (each is its own group)."""
+    strain = df.groupby("host_genome_id", as_index=False).agg(
+        species=("species", "first"), host_depth=("host_depth", "first"))
+    named = strain[strain.species != ""].sort_values("host_depth", ascending=False).drop_duplicates("species")
+    unnamed = strain[strain.species == ""]
+    keep = set(named.host_genome_id) | set(unnamed.host_genome_id)
+    return df[df.host_genome_id.isin(keep)].copy()
+
+
 def main():
     global STRICT_MAP
     STRICT_MAP = load_iso_strict(STRICT)
@@ -117,15 +147,30 @@ def main():
         df = df[df.ece != "__ERROR__"]
     df = df[df.type.isin(["plasmid", "virus"])].dropna(subset=["host_density", "ece_density"])
 
+    # annotate each isolate with GTDB species + sequencing depth
+    spd = load_species_depth(ISO_SUMMARY)
+    df = df.rename(columns={"sample": "host_genome_id", "ece": "ece_genome_id"})
+    df["species"] = df.host_genome_id.map(lambda s: spd.get(s, ("", np.nan))[0])
+    df["host_depth"] = df.host_genome_id.map(lambda s: spd.get(s, ("", np.nan))[1])
+
+    cols = ["host_genome_id", "ece_genome_id", "type", "n_motifs", "motif",
+            "species", "host_depth", "host_density", "ece_density"]
     os.makedirs(C.OUT, exist_ok=True)
-    out = df[["sample", "ece", "type", "n_motifs", "motif", "host_density", "ece_density"]].rename(
-        columns={"sample": "host_genome_id", "ece": "ece_genome_id"})
-    out.to_csv(os.path.join(C.OUT, f"{STEM}_sourcedata.csv"), index=False)
+    # full table (all ECE-bearing strains) for transparency; deduped table is what the figure uses
+    df[cols].to_csv(os.path.join(C.OUT, f"{STEM}_full_sourcedata.csv"), index=False)
+    dd = one_strain_per_species(df)
+    dd[cols].to_csv(os.path.join(C.OUT, f"{STEM}_sourcedata.csv"), index=False)
 
     from scipy import stats
-    print(f"ECEs plotted: {len(df)}  {df.type.value_counts().to_dict()}")
+    print(f"full: {len(df)} ECEs across {df.host_genome_id.nunique()} isolates "
+          f"({(df.species != '').sum()} rows named, {df.species.replace('', np.nan).nunique()} species)")
+    print(f"deduped (one strain/species): {len(dd)} ECEs across {dd.host_genome_id.nunique()} isolates  "
+          f"{dd.type.value_counts().to_dict()}")
+    p_all = stats.wilcoxon(dd.host_density, dd.ece_density).pvalue
+    below_all = float(np.mean(dd.ece_density < dd.host_density)) * 100
+    print(f"  pooled: {below_all:.0f}% below y=x, paired Wilcoxon p={p_all:.2e}")
     for t in ["plasmid", "virus"]:
-        sub = df[df.type == t]
+        sub = dd[dd.type == t]
         p = stats.wilcoxon(sub.host_density, sub.ece_density).pvalue
         below = float(np.mean(sub.ece_density < sub.host_density)) * 100
         print(f"  {t}: n={len(sub)} host {sub.host_density.median():.2f} ECE {sub.ece_density.median():.2f} "
