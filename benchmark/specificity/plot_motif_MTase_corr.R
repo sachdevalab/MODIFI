@@ -23,7 +23,7 @@ plot_MTase <- function(df_all_data, fig_dir) {
 
     p_text <- sprintf("p = %.2e", p_value)
 
-  annotation_text <- sprintf("r = %.3f\n%s", r_value, p_text)
+  annotation_text <- sprintf("r = %.2f\n%s", r_value, p_text)
   
   # Scatter plot with regression line and jitter to handle overlapping points
   p1 <- ggplot(df_all_data, aes(x = RM_num, y = motif_num, color = environment)) +
@@ -51,7 +51,7 @@ plot_MTase <- function(df_all_data, fig_dir) {
          width = 5, height = 4)
   
   cat("Plot saved to:", output_file, "\n")
-  cat(sprintf("Pearson correlation: r = %.3f, p = %.3e\n", r_value, p_value))
+  cat(sprintf("Pearson correlation: r = %.2f, p = %.3e\n", r_value, p_value))
   
   return(p1)
 }
